@@ -82,6 +82,7 @@ model Organization {
   paidAt        DateTime?
   createdAt     DateTime   @default(now())
   updatedAt     DateTime   @updatedAt
+  profile       Json       @default("{}")
 
   memberships   Membership[]
   invitations   Invitation[]

@@ -3,7 +3,7 @@ import { getTemplate, TEMPLATES, templateImage, type BuiltTemplate } from './tem
 import { pickTemplateId, type GenerateInput } from './generate';
 import { defaultStyleFor } from './blocks';
 
-// Default to a fast, cost-appropriate model for per-signup generation.
+// Default to a strong copywriting model for per-signup generation.
 // Override with ANTHROPIC_MODEL (e.g. claude-opus-5) if desired.
 const MODEL = process.env.ANTHROPIC_MODEL || 'claude-sonnet-5';
 
@@ -25,7 +25,7 @@ interface AiSite {
   pages: { title: string; slug: string; isHome?: boolean; sections: Section[] }[];
 }
 
-const SYSTEM = `Tu es directeur éditorial, concepteur-rédacteur senior et expert des associations.
+const SYSTEM = `Tu es directeur éditorial, concepteur-rédacteur senior, expert des associations et analyste de contexte.
 À partir des informations d'une association, tu rédiges le contenu COMPLET d'un site vitrine, dans la langue demandée, avec des textes riches, chaleureux, concrets et bien écrits (pas de texte générique de remplissage).
 
 Tu réponds UNIQUEMENT avec un objet JSON valide (aucun texte avant ou après, pas de balises markdown), respectant ce format :
@@ -48,18 +48,22 @@ Chaque "section" a un "type" parmi :
 Génère obligatoirement un site entièrement neuf comprenant au minimum : Accueil, Notre histoire, Nos actions, Notre impact, S'engager / Devenir bénévole, Faire un don et Contact. Crée une page Actualités uniquement si des actualités sont fournies.
 
 RÈGLES ÉDITORIALES OBLIGATOIRES :
+- Avant de rédiger, analyse mentalement le projet : cause réelle, public concerné, problèmes auxquels l’association répond, contexte social/historique, objections possibles, preuves ou éléments de crédibilité disponibles. Ne montre pas cette analyse : elle sert à écrire mieux.
 - Analyse réellement les réponses : ne colle jamais un champ brut dans une phrase si cela sonne faux.
 - Si un champ est très court, abrégé, mal orthographié ou écrit comme un mot-clé (ex. "LGBT", "jeunes", "quartier"), reformule-le en public/problématique compréhensible.
 - N’utilise jamais de tournure mécanique du type "en faveur de [champ]" si le résultat peut être maladroit. Préfère "auprès de", "avec", "pour accompagner", "pour défendre", "pour soutenir", selon le sens réel.
 - Corrige discrètement les fautes évidentes dans les textes fournis, sans changer l’intention.
 - Si le projet concerne l’identité, l’expression de genre, les vêtements ou les personnes LGBT+, écris avec respect, précision et naturel : liberté d’être soi-même, lutte contre les discriminations, écoute, sensibilisation, soutien.
-- Chaque page comporte 4 à 7 sections utiles et différentes.
-- Chaque section de texte contient 120 à 220 mots, répartis en 2 à 4 paragraphes.
-- Les cartes contiennent des explications concrètes de 35 à 70 mots chacune.
+- Ajoute du contexte utile lorsque c’est pertinent : repères historiques, constats sociaux, cadre local, évolution d’une cause, rôle des associations, besoins du public, références à des institutions ou rapports connus.
+- Tu peux citer une statistique, un fait historique, une institution ou un rapport seulement si c’est une information très connue et fiable. Ne fabrique jamais de chiffre, de date, de nom de rapport, de partenaire ou de source. Si tu n’es pas sûr, écris un constat qualitatif sans chiffre précis.
+- Les références doivent rester lisibles pour le grand public : par exemple "les travaux d’acteurs publics et associatifs montrent que…" plutôt qu’une bibliographie lourde.
+- Chaque page comporte 5 à 8 sections utiles et différentes.
+- Chaque section de texte contient 160 à 280 mots, répartis en 2 à 4 paragraphes.
+- Les cartes contiennent des explications concrètes de 45 à 90 mots chacune.
 - L'accueil raconte la cause, la réponse de l'association, ses actions, son impact et les façons d'aider.
 - La page histoire développe l'origine, les valeurs, la méthode et la vision.
 - La page actions transforme toutes les informations fournies en programmes précis, jamais en généralités.
-- La page impact explique les résultats attendus sans inventer de chiffres absents des réponses.
+- La page impact explique les résultats attendus, les changements observables et les indicateurs possibles, sans inventer de chiffres propres à l’association.
 - La page engagement détaille bénévolat, adhésion, partenariat et relais de communication.
 - Ne répète pas le même paragraphe d'une page à l'autre.
 - Sur une même page, chaque bloc doit avoir un rôle éditorial différent : présentation, méthode, action, impact, engagement ou contact. Deux blocs ne doivent jamais dire la même chose avec les mêmes mots.
@@ -73,8 +77,7 @@ async function callClaude(prompt: string): Promise<AiSite | null> {
     const res = await client.messages.create({
       model: MODEL,
       max_tokens: 14000,
-      // Copywriting doesn't need thinking; disable for speed/latency.
-      thinking: { type: 'disabled' },
+      thinking: { type: 'enabled', budget_tokens: 2000 },
       system: SYSTEM,
       messages: [{ role: 'user', content: prompt }],
     });
@@ -110,6 +113,8 @@ function buildPrompt(input: GenerateInput): string {
   return `${languageInstruction}
 
 Important : les informations ci-dessous peuvent être courtes, mal orthographiées ou incomplètes. Tu dois les comprendre, les reformuler et les transformer en vrais textes de site. Ne recopie pas bêtement les mots du questionnaire dans des phrases toutes faites.
+
+Ajoute de la profondeur : quand la cause s’y prête, explique aussi le contexte historique ou social, les faits connus, les besoins du public et pourquoi l’action associative est utile. Les statistiques, études et références ne sont autorisées que si elles sont sûres ; sinon, reste factuel sans inventer.
 
 Crée le site complet de cette association :
 

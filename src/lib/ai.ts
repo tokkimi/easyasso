@@ -70,31 +70,88 @@ CONTEXTE, STATISTIQUES ET RÉFÉRENCES — déballe ta science, mais intelligemm
 - Ne confonds pas le contexte du secteur (autorisé, connaissances générales fiables) avec les résultats de l'association (uniquement ceux du questionnaire).
 
 RÈGLES DE RÉDACTION :
-- Chaque page comporte 3 à 6 sections utiles, chacune avec un rôle éditorial différent (présentation, contexte, méthode, action, impact, engagement, contact). Deux blocs ne disent jamais la même chose avec les mêmes mots.
+- LA PAGE « NOS ACTIONS » EST LA PLUS IMPORTANTE : c'est elle qui explique en détail ce que fait l'association. Développe-la vraiment (4 à 6 sections), en décrivant chaque action concrètement : en quoi elle consiste, pour qui, comment elle se déroule, ce qu'elle permet. C'est le cœur du site.
+- Les autres pages sont plus concises (2 à 4 sections) : va à l'essentiel, sans remplissage.
+- Chaque page a un rôle éditorial différent (présentation, contexte, action, impact, engagement, contact). Deux blocs ne disent jamais la même chose avec les mêmes mots.
 - Écris des textes concrets, riches et humains, nourris du contexte ci-dessus. Développe avec de la vraie matière (faits, contexte fiable, actions précises) — jamais avec des phrases creuses ou du remplissage. Si l'association donne peu d'informations propres, appuie-toi sur le contexte fiable de la cause plutôt que de tourner à vide.
 - L'accueil dit qui nous sommes, pourquoi la cause compte (contexte à l'appui), ce que nous faisons concrètement et comment aider — directement, sans méta-discours.
 - La page actions transforme les informations fournies en actions concrètes et nommées, replacées dans leur contexte.
 - La page impact décrit ce que change notre action ; les chiffres de résultat propres à l'association viennent du questionnaire, mais tu peux rappeler l'enjeu global.
 - Le ton est chaleureux, direct, crédible et immédiatement publiable.`;
 
+// Walk the "pages" array object by object, brace-matching and respecting
+// strings, so we can recover every COMPLETE page even if the response was cut
+// off mid-array (token cap). The important "Nos actions" page comes early and
+// is preserved even when the tail is truncated.
+function salvagePages(body: string): AiSite['pages'] {
+  const key = body.indexOf('"pages"');
+  if (key < 0) return [];
+  let i = body.indexOf('[', key);
+  if (i < 0) return [];
+  const pages: any[] = [];
+  i++;
+  while (i < body.length) {
+    while (i < body.length && body[i] !== '{' && body[i] !== ']') i++;
+    if (i >= body.length || body[i] === ']') break;
+    let depth = 0, inStr = false, esc = false;
+    const start = i;
+    for (; i < body.length; i++) {
+      const ch = body[i];
+      if (inStr) {
+        if (esc) esc = false;
+        else if (ch === '\\') esc = true;
+        else if (ch === '"') inStr = false;
+      } else if (ch === '"') inStr = true;
+      else if (ch === '{') depth++;
+      else if (ch === '}') { depth--; if (depth === 0) { i++; break; } }
+    }
+    if (depth !== 0) break; // last object is truncated → stop
+    try {
+      const obj = JSON.parse(body.slice(start, i));
+      if (obj && Array.isArray(obj.sections)) pages.push(obj);
+    } catch { /* skip a malformed page, keep the rest */ }
+  }
+  return pages;
+}
+
+function parseAiSite(text: string): AiSite | null {
+  const cleaned = text.replace(/^```(?:json)?/i, '').replace(/```$/i, '').trim();
+  const start = cleaned.indexOf('{');
+  if (start < 0) return null;
+  const body = cleaned.slice(start);
+  // 1) Strict parse of the whole object (normal case).
+  const end = body.lastIndexOf('}');
+  if (end > 0) {
+    try {
+      const obj = JSON.parse(body.slice(0, end + 1)) as AiSite;
+      if (obj && Array.isArray(obj.pages) && obj.pages.length) return obj;
+    } catch { /* fall through to salvage */ }
+  }
+  // 2) Salvage complete pages from a truncated response.
+  const pages = salvagePages(body);
+  if (pages.length) {
+    const tag = body.match(/"tagline"\s*:\s*"([^"]*)"/);
+    return { tagline: tag?.[1] || '', pages };
+  }
+  return null;
+}
+
 async function callClaude(prompt: string): Promise<AiSite | null> {
+  const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+  // Stream so a long generation keeps the connection alive instead of tripping
+  // the request/idle timeout (the classic reason the call "fails" and the
+  // deterministic fallback takes over). Salvage partial JSON on top of that.
   try {
-    const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-    const res = await client.messages.create({
+    const stream = client.messages.stream({
       model: MODEL,
-      max_tokens: 14000,
-      // Copywriting doesn't need extended thinking; `budget_tokens` is also
-      // rejected (400) on claude-sonnet-5, which would break generation.
+      max_tokens: 16000,
       thinking: { type: 'disabled' },
       system: SYSTEM,
       messages: [{ role: 'user', content: prompt }],
     });
-    const text = res.content.map((b) => (b.type === 'text' ? b.text : '')).join('').trim();
-    const json = text.replace(/^```(?:json)?/i, '').replace(/```$/i, '').trim();
-    const start = json.indexOf('{');
-    const end = json.lastIndexOf('}');
-    if (start < 0 || end < 0) return null;
-    return JSON.parse(json.slice(start, end + 1)) as AiSite;
+    const msg = await stream.finalMessage();
+    const text = msg.content.map((b) => (b.type === 'text' ? b.text : '')).join('').trim();
+    return parseAiSite(text);
   } catch (e) {
     console.error('AI generation failed:', e);
     return null;

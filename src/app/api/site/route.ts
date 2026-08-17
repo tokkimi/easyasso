@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { requireApiPermission, handleApiError } from '@/lib/api';
 import { PERMISSIONS } from '@/lib/permissions';
 import { prisma } from '@/lib/prisma';
+import { attachDomainToEasyAsso, normalizeCustomerDomain, removeDomainFromEasyAsso } from '@/lib/vercel-domains';
 
 // Update site: header/footer/theme/publish/customDomain
 export async function PATCH(req: Request) {
@@ -11,11 +12,20 @@ export async function PATCH(req: Request) {
     // Domain changes need a dedicated permission
     if (body.customDomain !== undefined) {
       const ctx = await requireApiPermission(PERMISSIONS.SITE_DOMAIN);
-      const domain = String(body.customDomain || '').trim().toLowerCase().replace(/^https?:\/\//, '').replace(/\/.*$/, '');
+      const domain = normalizeCustomerDomain(body.customDomain);
+      const current = await prisma.site.findUniqueOrThrow({ where: { organizationId: ctx.org.id } });
+      if (domain === current.customDomain) return NextResponse.json(current);
+
+      // A customer domain is added as an alias of this project. This never
+      // replaces or edits EasyAsso's own production domain.
+      if (domain) await attachDomainToEasyAsso(domain);
       const site = await prisma.site.update({
         where: { organizationId: ctx.org.id },
         data: { customDomain: domain || null, domainVerified: false },
       });
+      if (current.customDomain) {
+        try { await removeDomainFromEasyAsso(current.customDomain); } catch (error) { console.error('Unable to remove previous customer domain', error); }
+      }
       return NextResponse.json(site);
     }
 

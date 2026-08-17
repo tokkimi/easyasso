@@ -25,7 +25,7 @@ export function platformBankDetails() {
   return {
     iban: process.env.EASYASSO_BANK_IBAN || '',
     bic: process.env.EASYASSO_BANK_BIC || '',
-    holder: process.env.EASYASSO_BANK_HOLDER || 'EasyAsso',
+    holder: 'Une Digitale',
     bankName: process.env.EASYASSO_BANK_NAME || '',
   };
 }

@@ -5,9 +5,10 @@ import { PRICE_EUR } from '@/lib/stripe';
 import { platformBankDetails } from '@/lib/platform-admin';
 
 function paymentReference(org: { id: string; slug: string }, existing?: string) {
-  if (existing) return existing;
-  const cleanSlug = org.slug.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 10) || 'ASSO';
-  return `EA-${cleanSlug}-${org.id.slice(-6).toUpperCase()}`;
+  const cleanId = org.id.toUpperCase().replace(/[^A-Z0-9]/g, '');
+  const neutralReference = `EA-${cleanId.slice(-10) || 'DOSSIER'}`;
+  if (existing === neutralReference) return existing;
+  return neutralReference;
 }
 
 export async function POST() {

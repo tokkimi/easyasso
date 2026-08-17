@@ -57,15 +57,37 @@ export async function POST(req: Request) {
       chequeEnabled: b.donationChequeEnabled ?? previousProfile.donationChequeEnabled ?? false,
       chequePayable: b.donationChequePayable ?? previousProfile.donationChequePayable ?? '', chequeAddress: b.donationChequeAddress ?? previousProfile.donationChequeAddress ?? '',
     };
-    let donationPage = generated.pages.find((page: any) => /(^don$|donat|soutenir|support)/i.test(`${page.slug} ${page.title}`));
+    const isDonationText = (value = '') => /\bfaire[-\s]*un[-\s]*don\b|\bdon\b|donat|soutenir|support|donate/i.test(value);
+    let donationPage = generated.pages.find((page: any) => isDonationText(`${page.slug} ${page.title}`));
     if (!donationPage) {
       donationPage = { title: input.language === 'en' ? 'Donate' : 'Faire un don', slug: input.language === 'en' ? 'donate' : 'don', isHome: false, showInNav: true, blocks: [] };
       generated.pages.push(donationPage);
     }
+    const donationHref = `/${donationPage.slug}`;
+    const fixDonationButton = (button: any) => {
+      if (!button) return button;
+      const label = String(button.text || '');
+      const href = String(button.href || '');
+      if (isDonationText(label) || href === '/don' || href === '/donate' || href === '#don') return { ...button, href: donationHref };
+      return button;
+    };
+    generated.header = { ...(generated.header as any), cta: fixDonationButton((generated.header as any)?.cta) };
+    generated.footer = {
+      ...(generated.footer as any),
+      columns: (((generated.footer as any)?.columns || []) as any[]).map((column) => ({
+        ...column,
+        links: (column.links || []).map((link: any) => isDonationText(`${link.label || ''} ${link.href || ''}`) ? { ...link, href: donationHref } : link),
+      })),
+    };
     if (donationPage) {
       donationPage.blocks = donationPage.blocks.filter((block: any) => block.type !== 'html' && !(block.type === 'text' && /collez ici|stripe|helloasso|configur/i.test(block.content?.text || '')));
       donationPage.blocks.push({ type: 'donation', order: donationPage.blocks.length, content: donation, style: defaultStyleFor('donation') });
       donationPage.blocks.forEach((block: any, order: number) => { block.order = order; });
+    }
+    for (const page of generated.pages) {
+      for (const block of page.blocks || []) {
+        if (block.content?.button) block.content.button = fixDonationButton(block.content.button);
+      }
     }
 
     const site = await prisma.site.findUniqueOrThrow({ where: { organizationId: ctx.org.id } });

@@ -242,7 +242,7 @@ export function EditorClient({ site: initial, canEdit, canPublish, siteUrl }: { 
                 onClick={() => { if (canEdit) { setSelectedBlock(b.id); setTab('blocks'); setMobileInspector(true); } }}
                 className={`group relative cursor-pointer ${selectedBlock === b.id ? 'ring-2 ring-brand-500' : 'hover:ring-1 hover:ring-brand-200'}`}
               >
-                <PublicBlock type={b.type} content={b.content} style={b.style} organizationId={(initial as any).organizationId} />
+                <PublicBlock type={b.type} content={b.content} style={b.style} basePath="#" organizationId={(initial as any).organizationId} />
                 {canEdit && selectedBlock === b.id && (
                   <div className="absolute right-2 top-2 flex gap-1 rounded-lg bg-gray-900/90 p-1 text-white">
                     <button onClick={(e) => { e.stopPropagation(); moveBlock(b.id, -1); }} disabled={i === 0} className="rounded p-1 hover:bg-white/20 disabled:opacity-30"><ArrowUp className="h-3.5 w-3.5" /></button>

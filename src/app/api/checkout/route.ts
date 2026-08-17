@@ -13,10 +13,17 @@ export async function POST() {
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 
-  // Demo mode: skip real payment, activate immediately.
-  if (isDemoMode || !stripe) {
+  // Explicit local/demo mode only: skip real payment.
+  if (isDemoMode) {
     await activateOrganization(org.id);
     return NextResponse.json({ url: '/onboarding/success?demo=1' });
+  }
+
+  if (!stripe) {
+    return NextResponse.json(
+      { error: 'Le paiement sécurisé est momentanément indisponible. Aucun débit n’a été effectué.' },
+      { status: 503 }
+    );
   }
 
   await prisma.organization.update({ where: { id: org.id }, data: { planStatus: 'PENDING_PAYMENT' } });

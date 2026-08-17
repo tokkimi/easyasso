@@ -4,14 +4,18 @@ import {
   Plus, Trash2, ArrowUp, ArrowDown, Monitor, Smartphone, Eye, Home, GripVertical,
   Type, Heading, Image as ImageIcon, Video, MousePointerClick, Share2, Columns, MoveVertical, Code,
   PanelTop, PanelBottom, Palette, Files, ChevronLeft, Check,
+  GalleryThumbnails, PanelsTopLeft, GalleryHorizontalEnd, Images, LayoutGrid, Megaphone,
 } from 'lucide-react';
 import { BLOCK_LIBRARY, type BlockType, type ButtonConfig } from '@/lib/blocks';
 import { PublicBlock } from '@/components/site/PublicBlock';
-import { ColorGrid, AlignPicker, Field, Toggle } from './controls';
+import { ColorGrid, AlignPicker, Field, Toggle, ImageInput } from './controls';
 
 const ICONS: Record<string, any> = {
   Heading, Type, Image: ImageIcon, Video, MousePointerClick, Share2, Columns, MoveVertical, Code,
+  GalleryThumbnails, PanelsTopLeft, GalleryHorizontalEnd, Images, LayoutGrid, Megaphone,
 };
+
+const CARD_ICON_CHOICES = ['Heart', 'Users', 'HandHeart', 'HandCoins', 'Star', 'Gift', 'Leaf', 'Home', 'BookOpen', 'Shield', 'Sparkles', 'Handshake'];
 
 type Block = { id: string; type: string; order: number; content: any; style: any };
 type Page = { id: string; title: string; slug: string; isHome: boolean; showInNav: boolean; order: number; blocks: Block[] };
@@ -241,14 +245,31 @@ export function EditorClient({ site: initial, canEdit, canPublish, siteUrl }: { 
       {/* Block palette modal */}
       {showPalette && (
         <div className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4" onClick={() => setShowPalette(false)}>
-          <div className="w-full max-w-lg rounded-2xl bg-white p-5" onClick={(e) => e.stopPropagation()}>
-            <h3 className="mb-3 font-bold text-gray-900">Choisir un type de bloc</h3>
+          <div className="max-h-[85vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white p-5" onClick={(e) => e.stopPropagation()}>
+            <h3 className="mb-1 font-bold text-gray-900">Ajouter un bloc</h3>
+            <p className="mb-4 text-sm text-gray-500">Choisissez une mise en page prête à l’emploi, puis remplacez le texte et les photos.</p>
+
+            <p className="mb-2 text-xs font-bold uppercase tracking-wide text-brand-600">✨ Mises en page prêtes</p>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-              {BLOCK_LIBRARY.map((b) => {
+              {BLOCK_LIBRARY.filter((b) => b.group === 'layouts').map((b) => {
                 const Icon = ICONS[b.icon] || Type;
                 return (
                   <button key={b.type} onClick={() => addBlock(b.type)} className="flex flex-col items-start gap-1 rounded-xl border border-gray-200 p-3 text-left hover:border-brand-400 hover:bg-brand-50">
                     <Icon className="h-5 w-5 text-brand-600" />
+                    <span className="text-sm font-semibold text-gray-900">{b.label}</span>
+                    <span className="text-xs text-gray-500">{b.description}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            <p className="mb-2 mt-5 text-xs font-bold uppercase tracking-wide text-gray-400">Blocs simples</p>
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+              {BLOCK_LIBRARY.filter((b) => b.group === 'basics').map((b) => {
+                const Icon = ICONS[b.icon] || Type;
+                return (
+                  <button key={b.type} onClick={() => addBlock(b.type)} className="flex flex-col items-start gap-1 rounded-xl border border-gray-200 p-3 text-left hover:border-brand-400 hover:bg-brand-50">
+                    <Icon className="h-5 w-5 text-gray-600" />
                     <span className="text-sm font-semibold text-gray-900">{b.label}</span>
                     <span className="text-xs text-gray-500">{b.description}</span>
                   </button>
@@ -284,7 +305,7 @@ function BlockInspector({ block, onContent, onStyle, onDelete }: { block: Block;
 
       {block.type === 'image' && (
         <>
-          <Field label="URL de l’image"><input className="input" placeholder="https://…" value={c.url || ''} onChange={(e) => onContent({ ...c, url: e.target.value })} /></Field>
+          <ImageInput label="Image" value={c.url} onChange={(url) => onContent({ ...c, url })} />
           <Field label="Texte alternatif"><input className="input" value={c.alt || ''} onChange={(e) => onContent({ ...c, alt: e.target.value })} /></Field>
           <Field label="Légende"><input className="input" value={c.caption || ''} onChange={(e) => onContent({ ...c, caption: e.target.value })} /></Field>
           <Field label="Alignement"><AlignPicker value={s.align} onChange={(a) => onStyle({ ...s, align: a })} /></Field>
@@ -324,6 +345,97 @@ function BlockInspector({ block, onContent, onStyle, onDelete }: { block: Block;
 
       {block.type === 'html' && (
         <Field label="Code HTML / intégration (HelloAsso, carte…)"><textarea className="input min-h-[140px] font-mono text-xs" value={c.html || ''} onChange={(e) => onContent({ ...c, html: e.target.value })} /></Field>
+      )}
+
+      {block.type === 'banner' && (
+        <>
+          <ImageInput label="Photo de fond" value={c.image} onChange={(image) => onContent({ ...c, image })} />
+          <Field label="Titre"><input className="input" value={c.title || ''} onChange={(e) => onContent({ ...c, title: e.target.value })} /></Field>
+          <Field label="Sous-titre"><textarea className="input" value={c.subtitle || ''} onChange={(e) => onContent({ ...c, subtitle: e.target.value })} /></Field>
+          <Field label={`Hauteur : ${c.height || 460}px`}><input type="range" min={240} max={720} value={c.height || 460} onChange={(e) => onContent({ ...c, height: +e.target.value })} className="w-full" /></Field>
+          <Field label={`Assombrir la photo : ${c.overlay ?? 45}%`}><input type="range" min={0} max={80} value={c.overlay ?? 45} onChange={(e) => onContent({ ...c, overlay: +e.target.value })} className="w-full" /></Field>
+          <div className="border-t border-gray-100 pt-3"><p className="mb-2 text-sm font-semibold text-gray-700">Bouton</p><ButtonEditor value={c.button} onChange={(button) => onContent({ ...c, button })} /></div>
+        </>
+      )}
+
+      {block.type === 'textimage' && (
+        <>
+          <Field label="Titre"><input className="input" value={c.title || ''} onChange={(e) => onContent({ ...c, title: e.target.value })} /></Field>
+          <Field label="Texte"><textarea className="input min-h-[110px]" value={c.text || ''} onChange={(e) => onContent({ ...c, text: e.target.value })} /></Field>
+          <ImageInput label="Image" value={c.image} onChange={(image) => onContent({ ...c, image })} />
+          <Field label="Position de l’image">
+            <div className="inline-flex rounded-lg border border-gray-200 p-0.5">
+              <button type="button" onClick={() => onContent({ ...c, imageSide: 'left' })} className={`rounded-md px-3 py-1.5 text-sm ${c.imageSide === 'left' ? 'bg-brand-600 text-white' : 'text-gray-600'}`}>À gauche</button>
+              <button type="button" onClick={() => onContent({ ...c, imageSide: 'right' })} className={`rounded-md px-3 py-1.5 text-sm ${(c.imageSide || 'right') === 'right' ? 'bg-brand-600 text-white' : 'text-gray-600'}`}>À droite</button>
+            </div>
+          </Field>
+          <div className="border-t border-gray-100 pt-3"><p className="mb-2 text-sm font-semibold text-gray-700">Bouton (optionnel)</p><ButtonEditor value={c.button} onChange={(button) => onContent({ ...c, button })} /></div>
+        </>
+      )}
+
+      {block.type === 'gallery' && (
+        <>
+          <Field label="Colonnes">
+            <select className="input" value={c.columns || 3} onChange={(e) => onContent({ ...c, columns: +e.target.value })}>
+              <option value={2}>2</option><option value={3}>3</option><option value={4}>4</option>
+            </select>
+          </Field>
+          <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Photos</p>
+          {(c.images || []).map((img: string, i: number) => (
+            <div key={i} className="rounded-lg border border-gray-100 p-2">
+              <ImageInput value={img} onChange={(url) => { const next = [...c.images]; next[i] = url; onContent({ ...c, images: next }); }} />
+              <button type="button" onClick={() => onContent({ ...c, images: c.images.filter((_: any, j: number) => j !== i) })} className="mt-1 text-xs text-red-500">Retirer</button>
+            </div>
+          ))}
+          <button type="button" onClick={() => onContent({ ...c, images: [...(c.images || []), ''] })} className="btn btn-ghost w-full text-sm"><Plus className="h-4 w-4" /> Ajouter une photo</button>
+        </>
+      )}
+
+      {block.type === 'slideshow' && (
+        <>
+          <Field label={`Défilement : ${c.interval || 4}s`}><input type="range" min={2} max={10} value={c.interval || 4} onChange={(e) => onContent({ ...c, interval: +e.target.value })} className="w-full" /></Field>
+          <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Images du diaporama</p>
+          {(c.slides || []).map((sl: any, i: number) => (
+            <div key={i} className="rounded-lg border border-gray-100 p-2">
+              <ImageInput value={sl.image} onChange={(image) => { const next = [...c.slides]; next[i] = { ...sl, image }; onContent({ ...c, slides: next }); }} />
+              <input className="input mt-1" placeholder="Légende (optionnel)" value={sl.caption || ''} onChange={(e) => { const next = [...c.slides]; next[i] = { ...sl, caption: e.target.value }; onContent({ ...c, slides: next }); }} />
+              <button type="button" onClick={() => onContent({ ...c, slides: c.slides.filter((_: any, j: number) => j !== i) })} className="mt-1 text-xs text-red-500">Retirer</button>
+            </div>
+          ))}
+          <button type="button" onClick={() => onContent({ ...c, slides: [...(c.slides || []), { image: '', caption: '' }] })} className="btn btn-ghost w-full text-sm"><Plus className="h-4 w-4" /> Ajouter une image</button>
+        </>
+      )}
+
+      {block.type === 'cards' && (
+        <>
+          <Field label="Colonnes">
+            <select className="input" value={c.columns || 3} onChange={(e) => onContent({ ...c, columns: +e.target.value })}>
+              <option value={2}>2</option><option value={3}>3</option><option value={4}>4</option>
+            </select>
+          </Field>
+          {(c.items || []).map((it: any, i: number) => (
+            <div key={i} className="space-y-2 rounded-lg border border-gray-100 p-2">
+              <Field label="Icône">
+                <select className="input" value={it.icon || 'Heart'} onChange={(e) => { const next = [...c.items]; next[i] = { ...it, icon: e.target.value }; onContent({ ...c, items: next }); }}>
+                  {CARD_ICON_CHOICES.map((ic) => <option key={ic} value={ic}>{ic}</option>)}
+                </select>
+              </Field>
+              <input className="input" placeholder="Titre" value={it.title || ''} onChange={(e) => { const next = [...c.items]; next[i] = { ...it, title: e.target.value }; onContent({ ...c, items: next }); }} />
+              <textarea className="input" placeholder="Texte" value={it.text || ''} onChange={(e) => { const next = [...c.items]; next[i] = { ...it, text: e.target.value }; onContent({ ...c, items: next }); }} />
+              <button type="button" onClick={() => onContent({ ...c, items: c.items.filter((_: any, j: number) => j !== i) })} className="text-xs text-red-500">Retirer</button>
+            </div>
+          ))}
+          <button type="button" onClick={() => onContent({ ...c, items: [...(c.items || []), { icon: 'Heart', title: 'Nouveau', text: '' }] })} className="btn btn-ghost w-full text-sm"><Plus className="h-4 w-4" /> Ajouter une carte</button>
+        </>
+      )}
+
+      {block.type === 'cta' && (
+        <>
+          <Field label="Titre"><input className="input" value={c.title || ''} onChange={(e) => onContent({ ...c, title: e.target.value })} /></Field>
+          <Field label="Texte"><textarea className="input" value={c.text || ''} onChange={(e) => onContent({ ...c, text: e.target.value })} /></Field>
+          <Field label="Couleur de fond"><ColorGrid value={s.background} onChange={(col) => onStyle({ ...s, background: col })} /></Field>
+          <div className="border-t border-gray-100 pt-3"><p className="mb-2 text-sm font-semibold text-gray-700">Bouton</p><ButtonEditor value={c.button} onChange={(button) => onContent({ ...c, button })} /></div>
+        </>
       )}
 
       <Field label="Espacement vertical"><input type="range" min={0} max={80} value={s.paddingY ?? 16} onChange={(e) => onStyle({ ...s, paddingY: +e.target.value })} className="w-full" /></Field>
@@ -371,7 +483,7 @@ function HeaderEditor({ value, onChange }: { value: any; onChange: (v: any) => v
     <div className="space-y-4">
       <h3 className="font-bold text-gray-900">En-tête</h3>
       <Field label="Texte du logo"><input className="input" value={h.logoText || ''} onChange={(e) => set({ logoText: e.target.value })} /></Field>
-      <Field label="Logo (URL d’image, optionnel)"><input className="input" placeholder="https://…" value={h.logoUrl || ''} onChange={(e) => set({ logoUrl: e.target.value })} /></Field>
+      <ImageInput label="Logo (image, optionnel)" value={h.logoUrl} onChange={(logoUrl) => set({ logoUrl })} />
       <Toggle checked={h.showNav ?? true} onChange={(v) => set({ showNav: v })} label="Afficher le menu" />
       <Toggle checked={h.sticky ?? true} onChange={(v) => set({ sticky: v })} label="En-tête fixe au défilement" />
       <Field label="Couleur de fond"><ColorGrid value={h.background} onChange={(c) => set({ background: c })} /></Field>
@@ -390,7 +502,7 @@ function FooterEditor({ value, onChange }: { value: any; onChange: (v: any) => v
     <div className="space-y-4">
       <h3 className="font-bold text-gray-900">Pied de page</h3>
       <Field label="Texte du logo"><input className="input" value={f.logoText || ''} onChange={(e) => set({ logoText: e.target.value })} /></Field>
-      <Field label="Logo (URL d’image)"><input className="input" value={f.logoUrl || ''} onChange={(e) => set({ logoUrl: e.target.value })} /></Field>
+      <ImageInput label="Logo (image)" value={f.logoUrl} onChange={(logoUrl) => set({ logoUrl })} />
       <Field label="Texte de présentation"><textarea className="input min-h-[70px]" value={f.text || ''} onChange={(e) => set({ text: e.target.value })} /></Field>
       <Field label="Texte “tous droits réservés”"><input className="input" value={f.allRightsText || ''} onChange={(e) => set({ allRightsText: e.target.value })} /></Field>
       <div className="border-t border-gray-100 pt-3">

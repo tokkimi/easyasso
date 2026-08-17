@@ -1,7 +1,78 @@
 'use client';
-import { AlignLeft, AlignCenter, AlignRight } from 'lucide-react';
+import { useRef, useState } from 'react';
+import { AlignLeft, AlignCenter, AlignRight, Upload, Link2, Loader2, X } from 'lucide-react';
 import { COLOR_PALETTE } from '@/lib/colors';
 import type { Align } from '@/lib/blocks';
+
+// Downscale an uploaded image in the browser to a data URL (no external storage needed).
+function fileToDataUrl(file: File, maxDim = 1400): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        let { width, height } = img;
+        if (width > maxDim || height > maxDim) {
+          const r = Math.min(maxDim / width, maxDim / height);
+          width = Math.round(width * r);
+          height = Math.round(height * r);
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return reject(new Error('canvas'));
+        ctx.drawImage(img, 0, 0, width, height);
+        const type = file.type === 'image/png' ? 'image/png' : 'image/jpeg';
+        resolve(canvas.toDataURL(type, 0.85));
+      };
+      img.onerror = reject;
+      img.src = reader.result as string;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+export function ImageInput({ value, onChange, label }: { value?: string; onChange: (url: string) => void; label?: string }) {
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [mode, setMode] = useState<'upload' | 'url'>('upload');
+  const [loading, setLoading] = useState(false);
+
+  async function onFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    setLoading(true);
+    try { onChange(await fileToDataUrl(f)); } finally { setLoading(false); }
+  }
+
+  return (
+    <div>
+      {label && <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-500">{label}</label>}
+      {value ? (
+        <div className="relative mb-2 overflow-hidden rounded-lg border border-gray-200">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={value} alt="" className="max-h-32 w-full object-cover" />
+          <button type="button" onClick={() => onChange('')} className="absolute right-1 top-1 rounded-full bg-black/60 p-1 text-white hover:bg-black" aria-label="Retirer"><X className="h-3.5 w-3.5" /></button>
+        </div>
+      ) : null}
+      <div className="mb-2 inline-flex rounded-lg border border-gray-200 p-0.5 text-xs">
+        <button type="button" onClick={() => setMode('upload')} className={`flex items-center gap-1 rounded-md px-2 py-1 ${mode === 'upload' ? 'bg-brand-600 text-white' : 'text-gray-600'}`}><Upload className="h-3.5 w-3.5" /> Importer</button>
+        <button type="button" onClick={() => setMode('url')} className={`flex items-center gap-1 rounded-md px-2 py-1 ${mode === 'url' ? 'bg-brand-600 text-white' : 'text-gray-600'}`}><Link2 className="h-3.5 w-3.5" /> Lien</button>
+      </div>
+      {mode === 'upload' ? (
+        <>
+          <input ref={fileRef} type="file" accept="image/*" hidden onChange={onFile} />
+          <button type="button" onClick={() => fileRef.current?.click()} className="btn btn-ghost w-full text-sm" disabled={loading}>
+            {loading ? <><Loader2 className="h-4 w-4 animate-spin" /> Traitement…</> : <><Upload className="h-4 w-4" /> Choisir une image</>}
+          </button>
+        </>
+      ) : (
+        <input className="input" placeholder="https://…" value={value?.startsWith('data:') ? '' : value || ''} onChange={(e) => onChange(e.target.value)} />
+      )}
+    </div>
+  );
+}
 
 export function ColorGrid({ value, onChange }: { value?: string; onChange: (c: string) => void }) {
   return (

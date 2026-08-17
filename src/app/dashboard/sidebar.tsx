@@ -5,14 +5,14 @@ import { usePathname } from 'next/navigation';
 import { signOut } from 'next-auth/react';
 import {
   LayoutDashboard, Files, HandCoins, Users, Megaphone, Calculator, BarChart3,
-  Settings, LogOut, ExternalLink, Menu, X, UserCog, Palette,
+  Settings, LogOut, ExternalLink, Menu, X, UserCog, Palette, LayoutTemplate,
 } from 'lucide-react';
 import { PERMISSIONS } from '@/lib/permissions';
 
 const NAV = [
   { href: '/dashboard', label: 'Tableau de bord', icon: LayoutDashboard, perm: null },
   { href: '/dashboard/editor', label: 'Éditeur du site', icon: Palette, perm: PERMISSIONS.SITE_VIEW },
-  { href: '/dashboard/pages', label: 'Pages', icon: Files, perm: PERMISSIONS.SITE_EDIT },
+  { href: '/dashboard/themes', label: 'Modèles de site', icon: LayoutTemplate, perm: PERMISSIONS.SITE_EDIT },
   { href: '/dashboard/donations', label: 'Dons', icon: HandCoins, perm: PERMISSIONS.DONATIONS_VIEW },
   { href: '/dashboard/campaigns', label: 'Campagnes', icon: Megaphone, perm: PERMISSIONS.CAMPAIGNS_VIEW },
   { href: '/dashboard/donors', label: 'Donateurs (CRM)', icon: Users, perm: PERMISSIONS.DONORS_VIEW },

@@ -1,8 +1,10 @@
 import { prisma } from './prisma';
 import { randomSubdomain } from './utils';
-import { DEFAULT_HEADER, DEFAULT_FOOTER, defaultContentFor, defaultStyleFor } from './blocks';
+import { DEFAULT_HEADER, DEFAULT_FOOTER } from './blocks';
 import { DEFAULT_THEME } from './colors';
 import { SYSTEM_ROLE_PERMISSIONS } from './permissions';
+import { TEMPLATES } from './templates';
+import { applyTemplateToSite } from './apply-template';
 
 // Creates an organization + default site + starter pages for a user, and makes
 // the user the OWNER. Returns the created organization.
@@ -68,34 +70,9 @@ export async function createOrganizationForUser(userId: string, assoName: string
     include: { site: true },
   });
 
-  // Create starter pages with a few blocks each
-  const home = await prisma.page.create({
-    data: { siteId: org.site!.id, title: 'Accueil', slug: 'accueil', order: 0, isHome: true },
-  });
-  await prisma.block.createMany({
-    data: [
-      { pageId: home.id, type: 'heading', order: 0, content: { text: `Bienvenue chez ${assoName}` } as any, style: defaultStyleFor('heading') as any },
-      { pageId: home.id, type: 'text', order: 1, content: defaultContentFor('text') as any, style: defaultStyleFor('text') as any },
-      { pageId: home.id, type: 'button', order: 2, content: { button: { text: 'Faire un don', href: '/don', color: '#1b5df5', variant: 'solid', align: 'center' } } as any, style: { align: 'center', paddingY: 16 } as any },
-    ],
-  });
-
-  const don = await prisma.page.create({
-    data: { siteId: org.site!.id, title: 'Faire un don', slug: 'don', order: 1 },
-  });
-  await prisma.block.createMany({
-    data: [
-      { pageId: don.id, type: 'heading', order: 0, content: { text: 'Soutenez notre action' } as any, style: defaultStyleFor('heading') as any },
-      { pageId: don.id, type: 'text', order: 1, content: { text: 'Votre don nous permet d’agir concrètement. Merci pour votre générosité.' } as any, style: defaultStyleFor('text') as any },
-    ],
-  });
-
-  const contact = await prisma.page.create({
-    data: { siteId: org.site!.id, title: 'Contact', slug: 'contact', order: 2 },
-  });
-  await prisma.block.create({
-    data: { pageId: contact.id, type: 'heading', order: 0, content: { text: 'Nous contacter' } as any, style: defaultStyleFor('heading') as any },
-  });
+  // Populate the site with the first ready-made template so it looks great
+  // from the start. The association can switch template anytime.
+  await applyTemplateToSite(org.site!.id, TEMPLATES[0], assoName);
 
   return org;
 }

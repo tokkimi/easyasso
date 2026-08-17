@@ -35,7 +35,8 @@ export default async function SuccessPage({
         <p className="mt-2 text-gray-600">
           Bienvenue {ctx.user.name?.split(' ')[0]} ! Vous pouvez maintenant tout personnaliser en toute autonomie.
         </p>
-        <Link href="/dashboard" className="btn btn-primary mt-6 w-full py-3">Accéder à mon tableau de bord</Link>
+        <Link href="/dashboard/themes?welcome=1" className="btn btn-primary mt-6 w-full py-3">Choisir le style de mon site</Link>
+        <Link href="/dashboard" className="mt-2 block text-sm text-gray-500 hover:text-gray-700">Aller directement au tableau de bord</Link>
       </div>
     </div>
   );

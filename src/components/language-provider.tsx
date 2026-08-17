@@ -176,6 +176,21 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     setLocaleState(preferred);
   }, []);
   useEffect(() => {
+    if (!pathname.startsWith('/dashboard')) return;
+    fetch('/api/organization/profile').then((response) => response.ok ? response.json() : null).then((profile) => {
+      if (profile?.language === 'fr' || profile?.language === 'en') {
+        localStorage.setItem('easyasso-language', profile.language);
+        setLocaleState(profile.language);
+      }
+    }).catch(() => {});
+    const onProfileLanguage = (event: Event) => {
+      const language = (event as CustomEvent).detail;
+      if (language === 'fr' || language === 'en') setLocaleState(language);
+    };
+    window.addEventListener('easyasso-language-change', onProfileLanguage);
+    return () => window.removeEventListener('easyasso-language-change', onProfileLanguage);
+  }, [pathname]);
+  useEffect(() => {
     if (isAssociationSite) return;
     document.documentElement.lang = locale;
     translateTree(document.body, locale);

@@ -13,7 +13,7 @@ export function SettingsClient({ org, site, freeUrl, rootDomain, canDomain, cate
   const [verifying, setVerifying] = useState(false);
   const [savingDomain, setSavingDomain] = useState(false);
   const [domainChoice, setDomainChoice] = useState<'connect' | 'buy' | null>(site.customDomain ? 'connect' : null);
-  const [profile, setProfile] = useState({ year: '', category: '', mission: '', functioning: '', actions: '', beneficiaries: '', goodToKnow: '', city: '', email: '', legalName: '', registrationNumber: '', legalAddress: '', publicationDirector: '', facebook: '', instagram: '', linkedin: '', youtube: '', ...(org.profile || {}) });
+  const [profile, setProfile] = useState({ language: 'fr', year: '', category: '', mission: '', functioning: '', actions: '', beneficiaries: '', goodToKnow: '', city: '', email: '', legalName: '', registrationNumber: '', legalAddress: '', publicationDirector: '', facebook: '', instagram: '', linkedin: '', youtube: '', ...(org.profile || {}) });
 
   async function saveName() {
     await fetch('/api/site', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name }) });
@@ -41,7 +41,12 @@ export function SettingsClient({ org, site, freeUrl, rootDomain, canDomain, cate
   async function saveProfile() {
     const res = await fetch('/api/organization/profile', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(profile) });
     setMsg(res.ok ? 'Fiche de l’association enregistrée. Le générateur sera automatiquement prérempli.' : 'Impossible d’enregistrer ces informations.');
-    if (res.ok) router.refresh();
+    if (res.ok) {
+      localStorage.setItem('easyasso-language', profile.language);
+      document.cookie = `easyasso-language=${profile.language};path=/;max-age=31536000;samesite=lax`;
+      window.dispatchEvent(new CustomEvent('easyasso-language-change', { detail: profile.language }));
+      router.refresh();
+    }
     setTimeout(() => setMsg(''), 3500);
   }
 
@@ -63,6 +68,7 @@ export function SettingsClient({ org, site, freeUrl, rootDomain, canDomain, cate
       <div className="card mb-6">
         <h2 className="mb-1 flex items-center gap-2 font-bold text-gray-900"><Building2 className="h-5 w-5" /> Fiche de l’association</h2>
         <p className="mb-5 text-sm text-gray-500">Ces informations sont conservées et préremplissent automatiquement le générateur magique.</p>
+        <div className="mb-4 max-w-xs"><label className="label">Langue de votre espace</label><select className="input" value={profile.language} onChange={(e) => setProfileField('language', e.target.value)}><option value="fr">Français</option><option value="en">English</option></select></div>
         <div className="grid gap-4 sm:grid-cols-3">
           <div><label className="label">Année de création</label><input className="input" value={profile.year} onChange={(e) => setProfileField('year', e.target.value)} placeholder="2015" /></div>
           <div className="sm:col-span-2"><label className="label">Cause / type d’association</label><select className="input" value={profile.category} onChange={(e) => setProfileField('category', e.target.value)}><option value="">Choisir une cause</option>{categories.map((category: any) => <option key={category.id} value={category.id}>{category.name}</option>)}</select></div>

@@ -97,7 +97,10 @@ function buildPrompt(input: GenerateInput): string {
     input.city ? `Ville : ${input.city}` : '',
     input.email ? `Email de contact : ${input.email}` : '',
   ].filter(Boolean);
-  return `Crée le site complet de cette association :\n\n${lines.join('\n')}`;
+  const languageInstruction = input.language === 'en'
+    ? 'Write the ENTIRE generated website in natural, professional English. Every title, paragraph, button and navigation label must be in English.'
+    : 'Rédige l’intégralité du site en français naturel et professionnel.';
+  return `${languageInstruction}\n\nCrée le site complet de cette association :\n\n${lines.join('\n')}`;
 }
 
 // Convert AI sections into our block model, injecting the association's photos.
@@ -159,7 +162,7 @@ export async function aiGenerateSite(input: GenerateInput): Promise<BuiltTemplat
   let homeAssigned = false;
   const usedSlugs = new Set<string>();
 
-  const aiPages = ai.pages.filter((p) => input.news?.trim() || !/actualit/i.test(`${p.slug} ${p.title}`));
+  const aiPages = ai.pages.filter((p) => input.news?.trim() || !/actualit|news/i.test(`${p.slug} ${p.title}`));
   t.pages = aiPages.slice(0, 8).map((p, i) => {
     let slug = slugify(p.slug || p.title || `page-${i}`);
     while (usedSlugs.has(slug)) slug = `${slug}-${i}`;

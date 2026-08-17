@@ -41,6 +41,7 @@ function fillPhotos(photos: string[], fallback: string[], n: number): string[] {
 
 export interface GenerateInput {
   name: string;
+  language?: 'fr' | 'en';
   year?: string;
   mission?: string;       // à propos / mission principale
   functioning?: string;   // comment l'association fonctionne
@@ -108,7 +109,7 @@ export function buildGeneratedSite(input: GenerateInput): BuiltTemplate {
   t.footer.logoUrl = input.logoUrl || undefined;
   if (copy.footerText) t.footer.text = copy.footerText;
   if (!input.news?.trim()) {
-    t.pages = t.pages.filter((page) => page.slug !== 'actualites' && !/actualit/i.test(page.title));
+    t.pages = t.pages.filter((page) => !/actualit|news/i.test(`${page.slug} ${page.title}`));
   }
 
   for (const page of t.pages) {
@@ -150,6 +151,32 @@ export function buildGeneratedSite(input: GenerateInput): BuiltTemplate {
     const exact = [input.email ? `Email : ${input.email.trim()}` : '', input.city ? `Adresse : ${input.city.trim()}` : ''].filter(Boolean).join('\n\n');
     const text = contact.blocks.find((b: any) => b.type === 'text');
     if (text) text.content.text = `${exact}\n\n${copy.contactText}`;
+  }
+
+  // Reliable English fallback when the AI provider is unavailable: never
+  // return a French template to an association whose saved language is English.
+  if (input.language === 'en') {
+    const block = (type: string, content: any) => ({ type, order: 0, content, style: defaultStyleFor(type as any) });
+    const page = (title: string, slug: string, intro: string, extra: any[] = []) => ({
+      title, slug, isHome: slug === 'home', showInNav: true,
+      blocks: [block('heading', { text: title }), block('text', { text: intro }), ...extra],
+    });
+    const mission = input.mission || `${copy.name} brings people together around a meaningful cause.`;
+    t.header.logoText = copy.name;
+    t.footer.logoText = copy.name;
+    t.footer.text = mission;
+    t.pages = [
+      { title: 'Home', slug: 'home', isHome: true, showInNav: true, blocks: [
+        block('banner', { image: photos[0] || '', title: copy.name, subtitle: mission, overlay: 45, height: 460, button: { text: 'Support us', href: '/get-involved', color: '#ffffff', variant: 'solid', align: 'center' } }),
+        block('textimage', { title: 'Our mission', text: mission, image: photos[1] || photos[0] || '', imageSide: 'right' }),
+      ] },
+      page('Our story', 'our-story', [input.year ? `Founded in ${input.year}, ${copy.name} has grown around a clear ambition.` : '', mission, input.functioning || 'Our members and volunteers work together to turn this ambition into practical, lasting action.'].filter(Boolean).join('\n\n')),
+      page('Our work', 'our-work', input.actions || input.functioning || mission),
+      page('Our impact', 'our-impact', [input.beneficiaries ? `We work alongside ${input.beneficiaries}.` : '', input.goodToKnow || '', 'We focus on useful action, responsible use of resources and lasting relationships with the people and partners around us.'].filter(Boolean).join('\n\n')),
+      page('Get involved', 'get-involved', 'Volunteer, become a member, share our work or support a project. Every contribution helps our association move forward.', [block('cta', { title: 'Take action with us', text: 'Contact our team to find the best way to help.', button: { text: 'Contact us', href: '/contact', color: '#1b5df5', variant: 'solid', align: 'center' } })]),
+      ...(input.news?.trim() ? [page('News', 'news', input.news)] : []),
+      page('Contact', 'contact', [input.email ? `Email: ${input.email}` : '', input.city ? `Location: ${input.city}` : '', 'Questions, partnership ideas or ready to get involved? We would be delighted to hear from you.'].filter(Boolean).join('\n\n')),
+    ];
   }
 
   reindex(t.pages);

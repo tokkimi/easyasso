@@ -28,7 +28,7 @@ export function GenerateClient({ orgName, profile, categories, welcome }: { orgN
   const router = useRouter();
   const [f, setF] = useState({
     name: orgName || '', year: profile.year || '', mission: profile.mission || '', functioning: profile.functioning || '', actions: profile.actions || '',
-    beneficiaries: profile.beneficiaries || '', goodToKnow: profile.goodToKnow || '', news: '', city: profile.city || '', email: profile.email || '', category: profile.category || '',
+    language: profile.language || 'fr', beneficiaries: profile.beneficiaries || '', goodToKnow: profile.goodToKnow || '', news: '', city: profile.city || '', email: profile.email || '', category: profile.category || '',
   });
   const [logo, setLogo] = useState('');
   const [photos, setPhotos] = useState<string[]>(['']);

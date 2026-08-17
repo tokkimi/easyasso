@@ -5,6 +5,7 @@ import { PERMISSIONS } from '@/lib/permissions';
 import { prisma } from '@/lib/prisma';
 
 const schema = z.object({
+  language: z.enum(['fr', 'en']).optional().default('fr'),
   year: z.string().max(4).optional().default(''),
   category: z.string().max(80).optional().default(''),
   mission: z.string().max(6000).optional().default(''),
@@ -23,6 +24,14 @@ const schema = z.object({
   linkedin: z.string().url().or(z.literal('')).optional().default(''),
   youtube: z.string().url().or(z.literal('')).optional().default(''),
 });
+
+export async function GET() {
+  try {
+    const ctx = await requireApiPermission(PERMISSIONS.ORG_SETTINGS);
+    const org = await prisma.organization.findUniqueOrThrow({ where: { id: ctx.org.id }, select: { profile: true } });
+    return NextResponse.json(org.profile);
+  } catch (e) { return handleApiError(e); }
+}
 
 export async function PATCH(req: Request) {
   try {

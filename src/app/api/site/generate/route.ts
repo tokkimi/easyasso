@@ -21,6 +21,7 @@ export async function POST(req: Request) {
 
     const input: GenerateInput = {
       name,
+      language: b.language === 'en' ? 'en' : 'fr',
       year: b.year || undefined,
       mission: b.mission || b.description || undefined,
       functioning: b.functioning || undefined,

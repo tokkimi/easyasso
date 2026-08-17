@@ -8,7 +8,7 @@ const PRICE = process.env.NEXT_PUBLIC_PRICE_EUR || '250';
 
 export default function RegisterPage() {
   const router = useRouter();
-  const [form, setForm] = useState({ name: '', assoName: '', email: '', password: '' });
+  const [form, setForm] = useState({ name: '', assoName: '', email: '', password: '', language: 'fr' as 'fr' | 'en' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -24,6 +24,8 @@ export default function RegisterPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Erreur');
+      localStorage.setItem('easyasso-language', form.language);
+      document.cookie = `easyasso-language=${form.language};path=/;max-age=31536000;samesite=lax`;
       // Auto sign-in then head to checkout
       const login = await signIn('credentials', { redirect: false, email: form.email, password: form.password });
       if (login?.error) throw new Error('Connexion impossible après inscription.');
@@ -61,6 +63,13 @@ export default function RegisterPage() {
             <div>
               <label className="label">Mot de passe</label>
               <input className="input" type="password" required minLength={6} value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} placeholder="6 caractères minimum" />
+            </div>
+            <div>
+              <label className="label">Langue de votre espace / Workspace language</label>
+              <select className="input" value={form.language} onChange={(e) => setForm({ ...form, language: e.target.value as 'fr' | 'en' })}>
+                <option value="fr">Français</option>
+                <option value="en">English</option>
+              </select>
             </div>
             {error && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
             <button className="btn btn-primary w-full py-3" disabled={loading}>

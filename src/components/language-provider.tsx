@@ -74,6 +74,39 @@ const translations: Record<string, string> = {
   'Des pages dédiées à vos actions': 'Dedicated pages for your activities', 'Une présentation claire de votre impact': 'A clear presentation of your impact',
   'Des parcours pour adhérer, aider ou donner': 'Journeys to join, help or donate', 'Une page contact avec vos vraies coordonnées': 'A contact page with your real details',
   'Essayer l’outil magique': 'Try the magic builder', 'Aucune page générique copiée-collée': 'No generic copy-and-paste pages',
+  'Créer le site de votre association': 'Create your association website', 'Votre nom': 'Your name', '6 caractères minimum': '6 characters minimum',
+  'Déjà un compte ?': 'Already have an account?', 'Pas encore de compte ?': 'New to EasyAsso?', 'Votre site est activé 🎉': 'Your website is active 🎉',
+  'Choisir le style de mon site': 'Choose my website style', 'Aller directement au tableau de bord': 'Go straight to the dashboard',
+  'Votre adresse générée automatiquement': 'Your automatically generated address', 'Vous pourrez relier votre propre nom de domaine ensuite.': 'You can connect your own domain afterwards.',
+  'Répondez au petit questionnaire : votre site complet, avec des textes développés, se crée tout seul.': 'Answer a short questionnaire: your complete website, with substantial copy, creates itself.',
+  'À propos / votre mission ★': 'About you / your mission ★', 'Champ le plus important — sert de base à tous les textes.': 'The most important field — it is the foundation for all your copy.',
+  'Comment fonctionne l’association ?': 'How does the association operate?', 'Vos actions concrètes': 'Your key activities', 'Public aidé / bénéficiaires': 'People supported / beneficiaries',
+  'Détection automatique ✨': 'Automatic detection ✨', 'Bon à savoir': 'Good to know', 'Email de contact': 'Contact email', 'Logo (optionnel)': 'Logo (optional)',
+  'Vos photos (optionnel)': 'Your photos (optional)', 'Ajouter une photo': 'Add a photo', 'Création de votre site…': 'Creating your website…',
+  '★ champ requis. Vous pourrez tout modifier ensuite dans l’éditeur.': '★ required field. You can edit everything afterwards.',
+  'Voici la situation de votre association en un coup d’œil.': 'Here is your association at a glance.', 'Créez votre site en un clic ✨': 'Create your website in one click ✨',
+  'Lancer le générateur': 'Launch the builder', 'Logo, polices & couleurs': 'Logo, fonts & colors', 'Choisir un modèle': 'Choose a template', 'Éditer mon site': 'Edit my website',
+  'Dons des 12 derniers mois': 'Donations over the last 12 months', 'Derniers dons': 'Latest donations', 'Aucun don enregistré pour le moment.': 'No donations recorded yet.',
+  'Identité du site': 'Website identity', 'Enregistré': 'Saved', 'Police d’écriture': 'Font', 'Couleurs du site': 'Website colors',
+  'Couleur principale (boutons, accents)': 'Primary color (buttons, accents)', 'Couleur de fond du site': 'Website background color', 'Couleur du texte': 'Text color',
+  'Votre association': 'Your association', 'Faire un don': 'Donate', 'Ensemble, changeons les choses': 'Together, let’s make a difference',
+  'Bouton plein': 'Filled button', 'Bouton contour': 'Outline button', 'Importer': 'Upload', 'Retirer': 'Remove', 'Traitement…': 'Processing…', 'Choisir une image': 'Choose an image',
+  'Votre base de contacts et le classement des meilleurs donateurs.': 'Your contact database and top donor ranking.', 'Rechercher un donateur…': 'Search donors…',
+  'Aucun donateur': 'No donors', 'Total donné': 'Total donated', 'Prénom': 'First name', 'Code postal': 'Postal code', 'Particulier': 'Individual', 'Entreprise': 'Company', 'Notes': 'Notes',
+  'Nouveau': 'New', 'Nouvelle': 'New', 'Libellé': 'Description', 'Aucune': 'None', 'Opération': 'Transaction', 'Export comptable': 'Accounting export',
+  'Catégories :': 'Categories:', '+ ajouter': '+ add', 'Aucune opération enregistrée': 'No transactions recorded', 'Ajouter une opération': 'Add a transaction',
+  'Nouvelle opération': 'New transaction', 'Nouvelle catégorie': 'New category', 'Recettes, dépenses, catégories et solde de votre association.': 'Income, expenses, categories and your association balance.',
+  'Nom, adresse du site, nom de domaine et abonnement.': 'Name, website address, domain and plan.', 'Nom de l’association / du site': 'Association / website name',
+  'Choisir une cause': 'Choose a cause', 'Votre adresse gratuite, disponible immédiatement :': 'Your free address, available immediately:',
+  'Par exemple mon-association.fr': 'For example my-association.org', 'Nous vous guidons, sans abonnement d’hébergement inutile': 'We guide you, with no unnecessary hosting plan',
+  '1. Choisissez et achetez votre adresse': '1. Choose and purchase your domain', 'Chercher une adresse disponible': 'Find an available domain', 'Dernière étape': 'Final step',
+  'Gérez vos bénévoles et leurs permissions, dans le détail.': 'Manage volunteers and their permissions in detail.', 'Inviter': 'Invite', 'Membres': 'Members', '(vous)': '(you)',
+  'Invitations en attente': 'Pending invitations', 'Rôles personnalisés': 'Custom roles', 'Nouveau rôle': 'New role',
+  'Aucun rôle personnalisé. Les rôles système suffisent souvent.': 'No custom roles. System roles are often enough.', 'Envoyer l’invitation': 'Send invitation',
+  'Nom du rôle': 'Role name', 'Enregistrer le rôle': 'Save role', 'Choisissez le style de votre site': 'Choose your website style',
+  'Choisir': 'Choose', 'Appliquer ce modèle ?': 'Apply this template?', 'Appliquer': 'Apply', 'Audience du site': 'Website audience', 'Visiteurs': 'Visitors', 'Vues': 'Views',
+  'Protection animale': 'Animal welfare', 'Environnement': 'Environment', 'Santé & handicap': 'Health & disability', 'Culture & patrimoine': 'Culture & heritage',
+  'Club sportif': 'Sports club', 'Humanitaire': 'Humanitarian aid', 'Solidarité locale': 'Local solidarity', 'Aînés': 'Older people', 'Enfance & éducation': 'Children & education',
 };
 
 const reverse = Object.fromEntries(Object.entries(translations).map(([fr, en]) => [en, fr]));
@@ -83,7 +116,15 @@ function translateText(value: string, locale: Locale) {
   const leading = value.match(/^\s*/)?.[0] || '';
   const trailing = value.match(/\s*$/)?.[0] || '';
   const clean = value.trim();
-  const translated = locale === 'en' ? translations[clean] : reverse[clean];
+  const table = locale === 'en' ? translations : reverse;
+  let translated = table[clean];
+  if (!translated && clean.length > 8) {
+    let partial = clean;
+    for (const [source, target] of Object.entries(table)) {
+      if (source.length >= 8 && partial.includes(source)) partial = partial.replaceAll(source, target);
+    }
+    if (partial !== clean) translated = partial;
+  }
   return translated ? `${leading}${translated}${trailing}` : value;
 }
 
@@ -109,12 +150,14 @@ function translateTree(root: Node, locale: Locale) {
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const [locale, setLocaleState] = useState<Locale>('fr');
   const pathname = usePathname();
+  const isAssociationSite = pathname.startsWith('/s/') || pathname.startsWith('/domain/') || pathname.startsWith('/theme-preview/');
   useEffect(() => {
     const saved = localStorage.getItem('easyasso-language');
     const preferred = saved === 'en' || (!saved && navigator.language.toLowerCase().startsWith('en')) ? 'en' : 'fr';
     setLocaleState(preferred);
   }, []);
   useEffect(() => {
+    if (isAssociationSite) return;
     document.documentElement.lang = locale;
     translateTree(document.body, locale);
     const observer = new MutationObserver((changes) => changes.forEach((change) => {
@@ -123,14 +166,13 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     }));
     observer.observe(document.body, { childList: true, subtree: true, characterData: true });
     return () => observer.disconnect();
-  }, [locale]);
+  }, [locale, isAssociationSite]);
   const setLocale = (next: Locale) => {
     localStorage.setItem('easyasso-language', next);
     document.cookie = `easyasso-language=${next};path=/;max-age=31536000;samesite=lax`;
     setLocaleState(next);
   };
   const value = useMemo(() => ({ locale, setLocale, t: (text: string) => locale === 'en' ? translations[text] || text : text }), [locale]);
-  const isAssociationSite = pathname.startsWith('/s/') || pathname.startsWith('/domain/') || pathname.startsWith('/theme-preview/');
   return <LocaleContext.Provider value={value}>{children}{!isAssociationSite && <LanguageSwitcher />}</LocaleContext.Provider>;
 }
 

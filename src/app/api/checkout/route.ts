@@ -3,6 +3,7 @@ import { requireOrg } from '@/lib/session';
 import { stripe, isDemoMode, PRICE_EUR } from '@/lib/stripe';
 import { activateOrganization } from '@/lib/activation';
 import { prisma } from '@/lib/prisma';
+import { airwallexConfigured, createAirwallexPaymentLink } from '@/lib/airwallex';
 
 export async function POST() {
   const ctx = await requireOrg();
@@ -17,6 +18,15 @@ export async function POST() {
   if (isDemoMode) {
     await activateOrganization(org.id);
     return NextResponse.json({ url: '/onboarding/success?demo=1' });
+  }
+
+  if (airwallexConfigured) {
+    const payment = await createAirwallexPaymentLink({ organizationId: org.id, organizationName: org.name, amount: PRICE_EUR });
+    await prisma.organization.update({
+      where: { id: org.id },
+      data: { planStatus: 'PENDING_PAYMENT', airwallexPaymentLinkId: payment.id },
+    });
+    return NextResponse.json({ url: payment.url });
   }
 
   if (!stripe) {

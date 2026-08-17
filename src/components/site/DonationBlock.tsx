@@ -14,8 +14,10 @@ export function DonationBlock({ content, organizationId }: { content: any; organ
   const [form, setForm] = useState({ firstName: '', lastName: '', email: '', birthDate: '', address: '', postalCode: '', city: '', website: '' });
   const selectedAmount = amount || Number(customAmount) || 0;
   const total = selectedAmount + (solidarity ? 1 : 0);
-  const paymentUrl = content.cardEnabled ? (content.stripeUrl || content.helloAssoUrl || '') : '';
-  const paymentMethod = paymentUrl ? (content.stripeUrl ? 'STRIPE' : 'HELLOASSO') : 'OTHER';
+  const stripeEnabled = !!content.cardEnabled && !!content.stripeUrl;
+  const helloAssoEnabled = (content.helloAssoEnabled ?? !!content.helloAssoUrl) && !!content.helloAssoUrl;
+  const paymentUrl = stripeEnabled ? content.stripeUrl : helloAssoEnabled ? content.helloAssoUrl : '';
+  const paymentMethod = stripeEnabled ? 'STRIPE' : helloAssoEnabled ? 'HELLOASSO' : 'OTHER';
   const set = (key: string, value: string) => setForm((current) => ({ ...current, [key]: value }));
 
   async function submit(event: React.FormEvent) {

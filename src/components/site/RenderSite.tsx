@@ -5,24 +5,32 @@ import { PublicBlock } from './PublicBlock';
 import { PublicHeader, PublicFooter } from './PublicChrome';
 import { themeStyle, brandCss } from '@/lib/render';
 import { googleFontsHref } from '@/lib/fonts';
+import { canShowPublicSite } from '@/lib/plan';
 
 type SiteWithPages = NonNullable<Awaited<ReturnType<typeof loadSiteBySubdomain>>>;
 
 export async function loadSiteBySubdomain(subdomain: string) {
   return prisma.site.findUnique({
     where: { subdomain },
-    include: { pages: { orderBy: { order: 'asc' }, include: { blocks: { orderBy: { order: 'asc' } } } } },
+    include: {
+      organization: { select: { planStatus: true, trialEndsAt: true } },
+      pages: { orderBy: { order: 'asc' }, include: { blocks: { orderBy: { order: 'asc' } } } },
+    },
   });
 }
 export async function loadSiteByDomain(domain: string) {
   return prisma.site.findFirst({
     where: { customDomain: domain, domainVerified: true },
-    include: { pages: { orderBy: { order: 'asc' }, include: { blocks: { orderBy: { order: 'asc' } } } } },
+    include: {
+      organization: { select: { planStatus: true, trialEndsAt: true } },
+      pages: { orderBy: { order: 'asc' }, include: { blocks: { orderBy: { order: 'asc' } } } },
+    },
   });
 }
 
 export function RenderSite({ site, basePath, slug }: { site: SiteWithPages; basePath: string; slug?: string }) {
-  if (!site || !site.published) notFound();
+  if (!site) notFound();
+  if (!site.published || !canShowPublicSite(site.organization)) return <SiteOffline />;
 
   const header = { ...DEFAULT_HEADER, ...(site.header as any) } as HeaderConfig;
   const footer = { ...DEFAULT_FOOTER, ...(site.footer as any) } as FooterConfig;
@@ -64,5 +72,19 @@ export function RenderSite({ site, basePath, slug }: { site: SiteWithPages; base
       </main>
       <PublicFooter footer={footer} orgId={site.organizationId} basePath={basePath} nav={nav} />
     </div>
+  );
+}
+
+function SiteOffline() {
+  return (
+    <main className="grid min-h-screen place-items-center bg-gray-50 px-4 py-12 text-center">
+      <section className="w-full max-w-lg rounded-[2rem] bg-white p-8 shadow-sm ring-1 ring-gray-200">
+        <p className="text-sm font-bold uppercase tracking-[0.2em] text-brand-600">Site hors ligne</p>
+        <h1 className="mt-3 text-3xl font-black text-gray-900">Ce site est temporairement indisponible.</h1>
+        <p className="mt-4 text-gray-600">
+          L’association doit finaliser son activation pour remettre son site en ligne.
+        </p>
+      </section>
+    </main>
   );
 }

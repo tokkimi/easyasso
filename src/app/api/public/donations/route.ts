@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { rateLimit, rateLimitExceeded } from '@/lib/rate-limit';
+import { canShowPublicSite } from '@/lib/plan';
 
 const schema = z.object({
   organizationId: z.string().min(1), amountEuros: z.coerce.number().positive().max(1000000),
@@ -16,8 +17,11 @@ export async function POST(request: Request) {
   try {
     if (!rateLimit(request, 'public-donation', 20, 15 * 60 * 1000).ok) return rateLimitExceeded();
     const body = schema.parse(await request.json());
-    const organization = await prisma.organization.findUnique({ where: { id: body.organizationId }, select: { id: true, site: { select: { published: true } } } });
-    if (!organization?.site?.published) return NextResponse.json({ error: 'Association introuvable' }, { status: 404 });
+    const organization = await prisma.organization.findUnique({
+      where: { id: body.organizationId },
+      select: { id: true, planStatus: true, trialEndsAt: true, site: { select: { published: true } } },
+    });
+    if (!organization?.site?.published || !canShowPublicSite(organization)) return NextResponse.json({ error: 'Association introuvable' }, { status: 404 });
     const result = await prisma.$transaction(async (tx) => {
       const existing = await tx.donor.findFirst({ where: { organizationId: body.organizationId, email: { equals: body.email, mode: 'insensitive' } } });
       const donorData = { firstName: body.firstName, lastName: body.lastName, email: body.email, address: body.address || null, postalCode: body.postalCode || null, city: body.city || null, notes: body.birthDate ? `Date de naissance : ${body.birthDate}` : undefined };

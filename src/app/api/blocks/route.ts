@@ -26,6 +26,7 @@ export async function POST(req: Request) {
       Object.assign(content, {
         locale: profile.language === 'en' ? 'en' : 'fr', cardEnabled: !!profile.donationCardEnabled,
         stripeUrl: profile.donationStripeUrl || '', helloAssoUrl: profile.donationHelloAssoUrl || '',
+        helloAssoEnabled: profile.donationHelloAssoEnabled ?? !!profile.donationHelloAssoUrl,
         transferEnabled: !!profile.donationTransferEnabled, iban: profile.donationIban || '', bic: profile.donationBic || '',
         accountHolder: profile.donationAccountHolder || '', bankName: profile.donationBankName || '',
         chequeEnabled: !!profile.donationChequeEnabled, chequePayable: profile.donationChequePayable || '', chequeAddress: profile.donationChequeAddress || '',

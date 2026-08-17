@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import { authOptions } from './auth';
 import { prisma } from './prisma';
 import { permissionsForMembership, type Permission, type SystemRole } from './permissions';
+export { planAccess } from './plan';
 
 export async function getCurrentUser() {
   const session = await getServerSession(authOptions);
@@ -50,14 +51,3 @@ export async function requirePermission(permission: Permission): Promise<OrgCont
   return ctx;
 }
 
-// Trial / subscription access state for an organization.
-export function planAccess(org: { planStatus: string; trialEndsAt: Date | null } | null) {
-  if (!org) return { hasAccess: false, isTrial: false, daysLeft: 0, expired: true };
-  if (org.planStatus === 'ACTIVE') return { hasAccess: true, isTrial: false, daysLeft: 0, expired: false };
-  if (org.planStatus === 'TRIAL' && org.trialEndsAt) {
-    const ms = new Date(org.trialEndsAt).getTime() - Date.now();
-    const daysLeft = Math.max(0, Math.ceil(ms / 86400000));
-    return { hasAccess: ms > 0, isTrial: true, daysLeft, expired: ms <= 0 };
-  }
-  return { hasAccess: false, isTrial: org.planStatus === 'TRIAL', daysLeft: 0, expired: true };
-}

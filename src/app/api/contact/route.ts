@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { rateLimit, rateLimitExceeded } from '@/lib/rate-limit';
+import { canShowPublicSite } from '@/lib/plan';
 
 const schema = z.object({
   organizationId: z.string().min(1),
@@ -18,8 +19,11 @@ export async function POST(req: Request) {
   const parsed = schema.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: 'Veuillez vérifier les champs du formulaire.' }, { status: 400 });
   const { website: _honeypot, ...data } = parsed.data;
-  const organization = await prisma.organization.findUnique({ where: { id: data.organizationId }, select: { id: true, site: { select: { published: true } } } });
-  if (!organization?.site?.published) return NextResponse.json({ error: 'Site indisponible.' }, { status: 404 });
+  const organization = await prisma.organization.findUnique({
+    where: { id: data.organizationId },
+    select: { id: true, planStatus: true, trialEndsAt: true, site: { select: { published: true } } },
+  });
+  if (!organization?.site?.published || !canShowPublicSite(organization)) return NextResponse.json({ error: 'Site indisponible.' }, { status: 404 });
   await prisma.contactMessage.create({ data });
   return NextResponse.json({ ok: true });
 }

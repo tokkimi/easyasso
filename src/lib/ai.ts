@@ -1,5 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk';
-import { getTemplate, TEMPLATES, type BuiltTemplate } from './templates';
+import { getTemplate, TEMPLATES, templateImage, type BuiltTemplate } from './templates';
 import { pickTemplateId, type GenerateInput } from './generate';
 import { defaultStyleFor } from './blocks';
 
@@ -10,8 +10,6 @@ const MODEL = process.env.ANTHROPIC_MODEL || 'claude-sonnet-5';
 export function aiEnabled() {
   return !!process.env.ANTHROPIC_API_KEY;
 }
-
-const IMG = (seed: string, w = 1400, h = 800) => `https://picsum.photos/seed/${seed}/${w}/${h}`;
 
 type Section =
   | { type: 'banner'; title: string; subtitle?: string }
@@ -95,7 +93,7 @@ function sectionsToBlocks(sections: Section[], photos: string[], seed: string, i
   for (const s of sections) {
     switch (s.type) {
       case 'banner':
-        blocks.push({ type: 'banner', content: { image: nextPhoto(IMG(seed + '-hero', 1600, 720)), title: s.title, subtitle: s.subtitle || '', overlay: 45, height: 460, button: { text: 'Faire un don', href: '/don', color: '#ffffff', variant: 'solid', align: 'center' } } });
+        blocks.push({ type: 'banner', content: { image: nextPhoto(templateImage(seed, 0, 1600, 720)), title: s.title, subtitle: s.subtitle || '', overlay: 45, height: 460, button: { text: 'Faire un don', href: '/don', color: '#ffffff', variant: 'solid', align: 'center' } } });
         break;
       case 'heading':
         blocks.push({ type: 'heading', content: { text: s.text } });
@@ -104,7 +102,7 @@ function sectionsToBlocks(sections: Section[], photos: string[], seed: string, i
         blocks.push({ type: 'text', content: { text: s.text } });
         break;
       case 'textimage':
-        blocks.push({ type: 'textimage', content: { title: s.title || '', text: s.text, image: nextPhoto(IMG(seed + '-' + blocks.length, 900, 700)), imageSide: s.imageSide || 'right' } });
+        blocks.push({ type: 'textimage', content: { title: s.title || '', text: s.text, image: nextPhoto(templateImage(seed, blocks.length + 1, 900, 700)), imageSide: s.imageSide || 'right' } });
         break;
       case 'cards':
         blocks.push({ type: 'cards', content: { columns: Math.min(3, Math.max(2, (s.items || []).length)) || 3, items: (s.items || []).slice(0, 4).map((it) => ({ icon: it.icon || 'Heart', title: it.title, text: it.text })) } });
@@ -113,7 +111,7 @@ function sectionsToBlocks(sections: Section[], photos: string[], seed: string, i
         blocks.push({ type: 'cta', content: { title: s.title, text: s.text || '', button: { text: s.buttonText || 'Faire un don', href: '/don', color: '#1b5df5', variant: 'solid', align: 'center' } }, style: { paddingY: 44 } });
         break;
       case 'gallery':
-        blocks.push({ type: 'gallery', content: { columns: 3, images: Array.from({ length: 6 }, (_, i) => nextPhoto(IMG(seed + '-g' + i, 600, 600))) } });
+        blocks.push({ type: 'gallery', content: { columns: 3, images: Array.from({ length: 6 }, (_, i) => nextPhoto(templateImage(seed, i, 600, 600))) } });
         break;
     }
   }
@@ -155,6 +153,25 @@ export async function aiGenerateSite(input: GenerateInput): Promise<BuiltTemplat
     return { title: p.title || `Page ${i + 1}`, slug: isHome ? 'accueil' : slug, isHome, showInNav: true, blocks: sectionsToBlocks(p.sections || [], photos, seed, isHome) };
   });
   if (!homeAssigned && t.pages[0]) t.pages[0].isHome = true;
+
+  // Contact details are authoritative user data, not copywriting. Inject them
+  // after the AI response so the model can never omit, alter or hallucinate
+  // the email/city supplied in the questionnaire.
+  let contact = t.pages.find((p) => p.slug === 'contact' || /contact/i.test(p.title));
+  if (!contact) {
+    contact = { title: 'Contact', slug: 'contact', isHome: false, showInNav: true, blocks: [] };
+    t.pages.push(contact);
+  }
+  const contactLines = [
+    input.email ? `Email : ${input.email.trim()}` : '',
+    input.city ? `Nous sommes basés à ${input.city.trim()}.` : '',
+    'Une question, une proposition de partenariat ou l’envie de nous rejoindre ? Contactez-nous : notre équipe vous répondra avec plaisir.',
+  ].filter(Boolean).join('\n\n');
+  contact.blocks.unshift(
+    { type: 'heading', order: 0, content: { text: 'Parlons de votre engagement' }, style: defaultStyleFor('heading') },
+    { type: 'text', order: 1, content: { text: contactLines }, style: defaultStyleFor('text') },
+  );
+  contact.blocks.forEach((block: any, order: number) => { block.order = order; });
 
   return t;
 }

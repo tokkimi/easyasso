@@ -48,7 +48,7 @@ Génère un site neuf comprenant : Accueil, Notre histoire, Nos actions, Notre i
 
 INTERDICTIONS ABSOLUES (c'est ici que se jouent les mauvais textes) :
 1. NE PARLE JAMAIS DU SITE NI DES PAGES. Bannis toute phrase du genre « le site présente… », « cette page permet de comprendre… », « chaque page aide les visiteurs à… », « l'association présente sa cause de manière claire/accessible », « cette première lecture donne aux visiteurs une vision précise ». Tu n'écris pas la notice d'un site : tu écris directement le contenu. Parle de la CAUSE et des ACTIONS, jamais de la manière dont le site les présente.
-2. AUCUNE MISE EN CONTEXTE STATISTIQUE OU DOCUMENTAIRE. Interdiction totale de citer des rapports, études, organismes ou repères « connus » (GIEC, IPBES, OMS, conventions internationales, etc.), même s'ils te semblent pertinents, ainsi que toute statistique, tout « constat social » général ou tout contexte historique inventé. N'utilise QUE les faits fournis dans le questionnaire. Aucun chiffre, date, lieu, partenaire, email ou résultat qui ne serait pas explicitement donné.
+2. NE FABRIQUE JAMAIS un fait faux. Tu peux — et tu dois — mobiliser tes connaissances générales fiables (statistiques largement établies, repères historiques, cadres légaux, institutions et rapports reconnus), mais tu n'inventes jamais un chiffre précis, une date, un nom de rapport, une source ou un partenaire dont tu n'es pas sûr. En cas de doute sur un chiffre exact, donne un ordre de grandeur ou un constat qualitatif fiable (« une large part de… », « des centaines de milliers de personnes ») plutôt qu'un faux chiffre précis. Ne présente JAMAIS une statistique générale du secteur comme un résultat de CETTE association : les chiffres et résultats propres à l'association ne viennent que du questionnaire (de même pour adresse, email, partenaire, date).
 3. NE PLANTE JAMAIS le nom de l'association comme sujet brut d'une phrase bancale (ex : « Hello it's me agit avec les habitants »). Emploie le nom naturellement, ou remplace-le par « nous » / « notre association ».
 4. NE RÉPÈTE JAMAIS deux fois le même titre, ni le même paragraphe d'une section ou d'une page à l'autre.
 
@@ -60,12 +60,19 @@ TRAITEMENT DES RÉPONSES DU QUESTIONNAIRE :
 - Si le projet touche l'identité, l'expression de genre ou les personnes LGBT+, écris avec respect, précision et naturel.
 - Interdiction des formulations vides : « nous faisons tout notre possible », « nous mettons tout en œuvre », « actions concrètes » sans dire lesquelles, « une cause importante » sans contenu.
 
+CONTEXTE, STATISTIQUES ET RÉFÉRENCES — déballe ta science, mais intelligemment :
+- Enrichis les textes avec du VRAI contexte qui éclaire la cause : ampleur du problème, chiffres marquants du secteur, repères historiques, évolution des mentalités, cadre légal, rôle des associations. C'est ce qui rend le propos crédible et donne envie d'agir.
+- Choisis des repères adaptés à la cause : GIEC / IPBES (climat, biodiversité), OMS ou Santé publique France (santé), Convention internationale des droits de l'enfant de 1989 (enfance), Restos du Cœur / aide alimentaire (précarité), histoire des luttes LGBTQIA+ (droits et discriminations), etc. Ne cite un repère que s'il éclaire vraiment le projet.
+- Intègre-les NATURELLEMENT dans les phrases, jamais en liste ni en bibliographie. Une attribution légère suffit (« selon le GIEC… », « d'après l'OMS… », « les études de référence estiment que… »).
+- Mieux vaut une ou deux données fortes et exactes qu'un empilement de chiffres. Le contexte doit servir le message, pas le noyer.
+- Ne confonds pas le contexte du secteur (autorisé, connaissances générales fiables) avec les résultats de l'association (uniquement ceux du questionnaire).
+
 RÈGLES DE RÉDACTION :
-- Chaque page comporte 3 à 6 sections utiles, chacune avec un rôle éditorial différent (présentation, méthode, action, impact, engagement, contact). Deux blocs ne disent jamais la même chose avec les mêmes mots.
-- Écris des textes concrets et humains. Longueur ADAPTÉE à la matière fournie : si l'association donne peu d'informations, fais des paragraphes courts et précis (2 à 4 phrases) — NE COMBLE JAMAIS le vide avec du contexte générique ou du remplissage. Développe seulement quand tu as de la vraie matière à raconter.
-- L'accueil dit qui nous sommes, ce que nous faisons concrètement et comment aider — directement, sans méta-discours.
-- La page actions transforme les informations fournies en actions concrètes et nommées.
-- La page impact décrit ce que change notre action, sans inventer de chiffres.
+- Chaque page comporte 3 à 6 sections utiles, chacune avec un rôle éditorial différent (présentation, contexte, méthode, action, impact, engagement, contact). Deux blocs ne disent jamais la même chose avec les mêmes mots.
+- Écris des textes concrets, riches et humains, nourris du contexte ci-dessus. Développe avec de la vraie matière (faits, contexte fiable, actions précises) — jamais avec des phrases creuses ou du remplissage. Si l'association donne peu d'informations propres, appuie-toi sur le contexte fiable de la cause plutôt que de tourner à vide.
+- L'accueil dit qui nous sommes, pourquoi la cause compte (contexte à l'appui), ce que nous faisons concrètement et comment aider — directement, sans méta-discours.
+- La page actions transforme les informations fournies en actions concrètes et nommées, replacées dans leur contexte.
+- La page impact décrit ce que change notre action ; les chiffres de résultat propres à l'association viennent du questionnaire, mais tu peux rappeler l'enjeu global.
 - Le ton est chaleureux, direct, crédible et immédiatement publiable.`;
 
 async function callClaude(prompt: string): Promise<AiSite | null> {
@@ -113,7 +120,7 @@ function buildPrompt(input: GenerateInput): string {
 
 Important : les informations ci-dessous peuvent être courtes, mal orthographiées ou incomplètes. Tu dois les comprendre, les reformuler et les transformer en vrais textes de site. Ne recopie pas bêtement les mots du questionnaire dans des phrases toutes faites.
 
-Reste STRICTEMENT dans le périmètre de ces informations : parle de cette association, de sa cause et de ses actions telles qu'elles sont décrites ici. N'ajoute aucun contexte historique ou social, aucune statistique, aucune étude et aucune référence extérieure, même s'ils te semblent pertinents. Si une information manque, écris moins plutôt que de combler avec du contexte générique.
+Appuie-toi sur ces informations pour parler de CETTE association, de sa cause et de ses actions, puis enrichis-les avec du contexte fiable : ampleur du problème, statistiques marquantes, repères historiques, cadre légal, références connues — intégrés naturellement et seulement s'ils éclairent la cause. Ne fabrique jamais un chiffre précis faux et ne prête jamais à l'association un résultat qui n'est pas dans le questionnaire.
 
 Crée le site complet de cette association :
 

@@ -9,7 +9,7 @@ const PRICE = process.env.NEXT_PUBLIC_PRICE_EUR || '250';
 export default function RegisterPage() {
   const router = useRouter();
   const [form, setForm] = useState({
-    name: '', assoName: '', email: '', password: '', language: 'fr' as 'fr' | 'en', startMode: '' as '' | 'trial' | 'pay',
+    name: '', assoName: '', email: '', password: '', language: 'fr' as 'fr' | 'en',
     phone: '', city: '', legalName: '', registrationNumber: '', legalAddress: '', publicationDirector: '',
   });
   const [error, setError] = useState('');
@@ -30,23 +30,11 @@ export default function RegisterPage() {
   async function submit(event: React.FormEvent) {
     event.preventDefault(); setError(''); setLoading(true);
     try {
-      if (!form.startMode) {
-        throw new Error(en ? 'Choose either the 3-day free trial or secure payment before continuing.' : 'Choisissez l’essai gratuit de 3 jours ou le paiement sécurisé avant de continuer.');
-      }
       const response = await fetch('/api/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || (en ? 'Unable to create the account.' : 'Impossible de créer le compte.'));
       const login = await signIn('credentials', { redirect: false, email: form.email, password: form.password });
       if (login?.error) throw new Error(en ? 'Unable to log in after registration.' : 'Connexion impossible après l’inscription.');
-      if (form.startMode === 'pay') {
-        const checkout = await fetch('/api/checkout', { method: 'POST' });
-        const checkoutData = await checkout.json().catch(() => ({}));
-        if (!checkout.ok || !checkoutData.url) {
-          throw new Error(checkoutData.error || (en ? 'Secure payment is currently unavailable. Your account was created, but the subscription is NOT active and nothing was charged.' : 'Le paiement sécurisé est momentanément indisponible. Votre compte a été créé, mais l’abonnement n’est PAS actif et rien n’a été débité.'));
-        }
-        window.location.href = checkoutData.url;
-        return;
-      }
       router.push('/dashboard/generate?welcome=1');
     } catch (exception: any) { setError(exception.message); }
     finally { setLoading(false); }
@@ -81,26 +69,14 @@ export default function RegisterPage() {
                 <div><label className="label">{en ? 'Publication director *' : 'Directeur/directrice de publication *'}</label><input className="input" required value={form.publicationDirector} onChange={(e) => setForm({ ...form, publicationDirector: e.target.value })} placeholder={form.name || (en ? 'Usually the president or owner' : 'Souvent le/la président(e)')} /></div>
               </div>
             </div>
-            <div>
-              <p className="label">{en ? 'Required: choose how to start' : 'Obligatoire : choisissez comment commencer'}</p>
-              <p className="mb-2 rounded-xl bg-amber-50 px-3 py-2 text-xs font-medium text-amber-800">
-                {en ? 'A free trial is not a paid subscription. EasyAsso becomes active only after confirmed payment.' : 'Un essai gratuit n’est pas un abonnement payé. EasyAsso devient actif uniquement après paiement confirmé.'}
+            <div className="rounded-2xl border border-green-200 bg-green-50 p-4">
+              <p className="font-bold text-green-950">{en ? 'Your 3-day free trial starts automatically' : 'Votre essai gratuit de 3 jours démarre automatiquement'}</p>
+              <p className="mt-1 text-sm leading-6 text-green-800">
+                {en ? `No card is requested at registration. You can create and test your website first, then pay €${PRICE} later from your dashboard if you want to keep EasyAsso.` : `Aucune carte bancaire n’est demandée à l’inscription. Vous créez et testez votre site d’abord, puis vous paierez ${PRICE} € plus tard depuis votre tableau de bord si vous voulez garder EasyAsso.`}
               </p>
-              <div className="grid gap-2">
-                <label className={`cursor-pointer rounded-xl border p-3 ${form.startMode === 'trial' ? 'border-brand-500 bg-brand-50' : 'border-gray-200 bg-white'}`}>
-                  <input type="radio" className="mr-2" checked={form.startMode === 'trial'} onChange={() => setForm({ ...form, startMode: 'trial' })} />
-                  <span className="font-semibold text-gray-900">{en ? 'Start my 3-day free trial' : 'Commencer mon essai gratuit de 3 jours'}</span>
-                  <span className="mt-1 block text-xs text-gray-500">{en ? 'No card required. You can pay later from your dashboard.' : 'Sans carte bancaire. Vous pourrez payer ensuite depuis le tableau de bord.'}</span>
-                </label>
-                <label className={`cursor-pointer rounded-xl border p-3 ${form.startMode === 'pay' ? 'border-brand-500 bg-brand-50' : 'border-gray-200 bg-white'}`}>
-                  <input type="radio" className="mr-2" checked={form.startMode === 'pay'} onChange={() => setForm({ ...form, startMode: 'pay' })} />
-                  <span className="font-semibold text-gray-900">{en ? `Pay €${PRICE} now` : `Payer ${PRICE} € maintenant`}</span>
-                  <span className="mt-1 block text-xs text-gray-500">{en ? 'You will be sent to the secure payment page before activation.' : 'Vous serez envoyé vers la page de paiement sécurisé avant activation.'}</span>
-                </label>
-              </div>
             </div>
             {error && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
-            <button className="btn btn-primary w-full py-3" disabled={loading || !form.startMode}>{loading ? (form.startMode === 'pay' ? (en ? 'Opening secure payment…' : 'Ouverture du paiement sécurisé…') : (en ? 'Creating trial…' : 'Création de l’essai…')) : form.startMode === 'pay' ? (en ? `Create account and pay €${PRICE}` : `Créer le compte et payer ${PRICE} €`) : form.startMode === 'trial' ? (en ? 'Start my 3-day free trial' : 'Commencer mon essai de 3 jours') : (en ? 'Choose an option to continue' : 'Choisissez une option pour continuer')}</button>
+            <button className="btn btn-primary w-full py-3" disabled={loading}>{loading ? (en ? 'Creating your trial…' : 'Création de votre essai…') : (en ? 'Create my account and start the free trial' : 'Créer mon compte et démarrer l’essai gratuit')}</button>
           </form>
         </div>
         <p className="mt-4 text-center text-sm text-gray-500">{en ? 'Already have an account?' : 'Déjà un compte ?'} <Link href="/login" className="font-semibold text-brand-600">{en ? 'Log in' : 'Se connecter'}</Link></p>

@@ -14,9 +14,9 @@ const features = [
 
 const steps = [
   { n: '1', title: 'Créez votre compte', text: 'Renseignez le nom de votre association.' },
-  { n: '2', title: `Réglez ${PRICE} €`, text: 'Paiement unique et sécurisé. Accès immédiat.' },
+  { n: '2', title: 'Testez 3 jours gratuitement', text: 'Aucune carte bancaire à l’inscription.' },
   { n: '3', title: 'Votre site est en ligne', text: 'Une adresse est générée automatiquement pour vous.' },
-  { n: '4', title: 'Personnalisez tout', text: 'Puis reliez votre propre nom de domaine.' },
+  { n: '4', title: `Gardez EasyAsso pour ${PRICE} €`, text: 'Paiement unique ensuite, depuis votre tableau de bord.' },
 ];
 
 const magicTools = [
@@ -172,7 +172,12 @@ export default function LandingPage() {
       </section>
 
       <footer className="border-t border-gray-100 py-8 text-center text-sm text-gray-500">
-        © {new Date().getFullYear()} Easy Asso · Créé pour les associations
+        <div>© {new Date().getFullYear()} Easy Asso · Une Digitale · Créé pour les associations</div>
+        <nav className="mt-3 flex flex-wrap justify-center gap-4">
+          <Link href="/cgv" className="hover:text-brand-700">CGV</Link>
+          <Link href="/mentions-legales" className="hover:text-brand-700">Mentions légales</Link>
+          <Link href="/mentions-legales#donnees-personnelles" className="hover:text-brand-700">Confidentialité</Link>
+        </nav>
       </footer>
     </div>
   );

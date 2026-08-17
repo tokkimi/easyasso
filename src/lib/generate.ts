@@ -58,8 +58,21 @@ function ensureSentence(value = '') {
   return /[.!?…]$/.test(v) ? v : `${v}.`;
 }
 
+// A field typed in ALL CAPS ("CAMPAGNES SUR LES RESEAUX SOCIAUX") reads as
+// shouting when pasted into prose. Bring it back to a normal sentence case,
+// leaving short acronyms (LGBT, SPA…) untouched.
+function deShout(value = '') {
+  const words = clean(value).split(' ');
+  const deshouted = words.map((w) => {
+    const letters = w.replace(/[^A-Za-zÀ-ÿ]/g, '');
+    if (letters.length > 3 && letters === letters.toUpperCase()) return w.toLowerCase();
+    return w;
+  }).join(' ');
+  return deshouted ? deshouted.charAt(0).toUpperCase() + deshouted.slice(1) : deshouted;
+}
+
 function polishUserText(value = '') {
-  return ensureSentence(clean(value)
+  return ensureSentence(deShout(clean(value))
     .replace(/\bLGBTQIA\+?\b/gi, 'LGBTQIA+')
     .replace(/\bLGBTQ\+?\b/gi, 'LGBTQ+')
     .replace(/\bLGBT\+?\b/gi, 'LGBT+')
@@ -88,7 +101,7 @@ const CAUSES: CauseProfile[] = [
     id: 'identity',
     audienceFr: 'les personnes LGBT+, les jeunes, les familles et toutes celles et ceux qui veulent vivre leur identité ou leur expression de genre librement',
     audienceEn: 'LGBTQ+ people, young people, families and anyone who wants to live their identity or gender expression freely',
-    missionFr: 'Le projet défend une idée simple : chacun doit pouvoir choisir son apparence, ses vêtements et sa manière d’être sans subir de jugement, de moquerie ou d’exclusion. L’association veut créer un cadre rassurant où les personnes concernées peuvent être écoutées, orientées et soutenues avec respect.',
+    missionFr: 'Nous défendons une idée simple : chacun doit pouvoir choisir son apparence, ses vêtements et sa manière d’être sans subir de jugement, de moquerie ou d’exclusion. Nous créons un cadre rassurant où les personnes concernées sont écoutées, orientées et soutenues avec respect.',
     missionEn: 'The project is built on a simple idea: everyone should be able to choose how they look, dress and express themselves without judgement, mockery or exclusion. The association creates a safe setting where people can be listened to, guided and supported with respect.',
     actionFr: 'Les actions peuvent prendre la forme d’ateliers de sensibilisation, de temps d’échange, de ressources pédagogiques, d’accompagnement individuel et de campagnes de visibilité. L’objectif est d’aider chacun à mieux comprendre ces sujets et à construire des environnements plus accueillants.',
     actionEn: 'Activities may include awareness workshops, discussion groups, educational resources, individual support and visibility campaigns. The goal is to help people understand these issues better and build more welcoming environments.',
@@ -109,7 +122,7 @@ const CAUSES: CauseProfile[] = [
     id: 'community',
     audienceFr: 'les habitants, bénévoles, adhérents et partenaires du territoire',
     audienceEn: 'local residents, volunteers, members and community partners',
-    missionFr: 'Le projet part d’un besoin de proximité : renforcer les liens, repérer les difficultés et proposer des réponses simples, humaines et utiles au quotidien. L’association agit comme un point d’appui local, capable de rassembler les bonnes volontés autour d’actions concrètes.',
+    missionFr: 'Nous partons d’un besoin de proximité : renforcer les liens, repérer les difficultés et proposer des réponses simples, humaines et utiles au quotidien. Nous sommes un point d’appui local, qui rassemble les bonnes volontés autour d’actions concrètes.',
     missionEn: 'The project starts from a local need: strengthening relationships, identifying difficulties and offering simple, human and useful answers in everyday life. The association acts as a local anchor that brings goodwill together around concrete action.',
     actionFr: 'Les actions s’organisent autour de rencontres, d’entraide, d’ateliers, d’initiatives solidaires et de moments collectifs. Chaque proposition est pensée pour être facile à rejoindre, utile sur le terrain et adaptée aux besoins réellement exprimés.',
     actionEn: 'Activities are built around meetings, mutual aid, workshops, solidarity initiatives and collective moments. Each project is designed to be easy to join, useful on the ground and adapted to real needs.',
@@ -199,40 +212,33 @@ function composeCopy(input: GenerateInput) {
       : `Créée en ${input.year}${input.city ? ` à ${input.city}` : ''}, ${name} s’est construite autour d’une utilité claire et d’un engagement de terrain.`)
     : '';
   const audienceSentence = language === 'en'
-    ? `The association works primarily with ${audience}. It does not simply name a cause: it turns it into support, information and visible action.`
-    : `L’association accompagne en priorité ${audience}. Elle ne se contente pas de nommer une cause : elle la transforme en soutien, en information et en actions visibles.`;
+    ? `We work first and foremost alongside ${audience}, with concrete support and action on the ground.`
+    : `Nous agissons en priorité auprès de ${audience}, avec un soutien et des actions concrètes sur le terrain.`;
   const valuesSentence = language === 'en'
-    ? `Its approach is based on listening, clarity and practical action. Each initiative is designed to be understandable, accessible and useful over time, with attention paid to the people involved as well as to volunteers, members and partners.`
-    : `Sa démarche repose sur l’écoute, la clarté et l’action concrète. Chaque initiative est pensée pour être compréhensible, accessible et utile dans la durée, avec une attention portée aux personnes concernées comme aux bénévoles, adhérents et partenaires.`;
+    ? `Every action is shaped with and for the people concerned, and with the volunteers, members and partners who make it possible.`
+    : `Chaque action est construite avec et pour les personnes concernées, ainsi qu’avec les bénévoles, adhérents et partenaires qui la rendent possible.`;
   const aboutText = para([yearSentence, mission, audienceSentence, valuesSentence]) ||
     (language === 'en' ? `${name} is a committed association with a clear mission and practical values.` : `${name} est une association engagée, avec une mission claire et des valeurs concrètes.`);
 
   const actionIntro = functioning || (language === 'en' ? cause.actionEn : cause.actionFr);
   const actionPrograms = actions
     ? (language === 'en'
-      ? `In practical terms, the association develops actions that answer real situations: ${actions} These activities are prepared with care, adjusted to feedback from the field and designed to remain easy to understand for people who want to take part.`
-      : `Concrètement, l’association développe des actions qui répondent à des situations réelles : ${actions} Ces activités sont préparées avec soin, ajustées grâce aux retours du terrain et pensées pour rester simples à comprendre pour les personnes qui veulent participer.`)
+      ? `In concrete terms, here is what we do: ${actions}`
+      : `Concrètement, voici ce que nous faisons : ${actions}`)
     : (language === 'en' ? cause.actionEn : cause.actionFr);
   const audienceAction = language === 'en'
-    ? `The priority is to build a respectful response for ${audience}. Beyond immediate help, the aim is to strengthen confidence, autonomy and the ability to act.`
-    : `La priorité est de construire une réponse respectueuse pour ${audience}. Au-delà de l’aide immédiate, l’objectif est de renforcer la confiance, l’autonomie et la capacité d’agir.`;
+    ? `Beyond immediate help, we work to strengthen the confidence, autonomy and ability to act of ${audience}.`
+    : `Au-delà de l’aide immédiate, nous cherchons à renforcer la confiance, l’autonomie et la capacité d’agir de ${audience}.`;
   const actionText = para([
     actionIntro,
     actionPrograms,
     audienceAction,
     language === 'en'
-      ? 'This organisation helps coordinate goodwill and transform each contribution into useful, visible action. Joining the association means taking part in a collective project where every skill, every idea and every hour given can make a difference.'
-      : 'Cette organisation permet de coordonner les bonnes volontés et de transformer chaque contribution en action utile et visible. Rejoindre l’association, c’est participer à un projet collectif dans lequel chaque compétence, chaque idée et chaque heure donnée peuvent faire une différence.',
+      ? 'Every skill, every idea and every hour given helps us go further.'
+      : 'Chaque compétence, chaque idée et chaque heure donnée nous permettent d’aller plus loin.',
   ]);
 
-  const goodToKnowText = goodToKnow
-    ? para([
-      goodToKnow,
-      language === 'en'
-        ? 'These details help visitors understand how to take part, who to contact and what to expect before joining, donating or proposing a partnership.'
-        : 'Ces informations permettent aux visiteurs de comprendre comment participer, qui contacter et à quoi s’attendre avant d’adhérer, de donner ou de proposer un partenariat.',
-    ])
-    : '';
+  const goodToKnowText = goodToKnow ? para([goodToKnow]) : '';
 
   const contactText = para([
     input.email ? `Vous pouvez nous écrire à ${input.email}.` : '',

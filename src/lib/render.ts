@@ -11,6 +11,34 @@ export function themeStyle(theme: any): React.CSSProperties {
   };
 }
 
+// Mix a hex colour toward a target (white/black) by weight (0..1).
+export function mixHex(hex: string, target: string, weight: number): string {
+  const p = (h: string) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
+  const clean = (h: string) => (h || '#000000').replace(/[^#0-9a-fA-F]/g, '').padEnd(7, '0');
+  const [r1, g1, b1] = p(clean(hex));
+  const [r2, g2, b2] = p(clean(target));
+  const m = (a: number, b: number) => Math.round(a + (b - a) * weight).toString(16).padStart(2, '0');
+  return `#${m(r1, r2)}${m(g1, g2)}${m(b1, b2)}`;
+}
+
+// A <style> body that makes the "brand" Tailwind utilities follow the theme
+// primary colour on a public tenant page (safe: each public page is its own doc).
+export function brandCss(primary?: string): string {
+  const c = primary || '#1b5df5';
+  const tint = mixHex(c, '#ffffff', 0.88);
+  const dark = mixHex(c, '#000000', 0.12);
+  return `
+:root{--brand:${c};}
+.text-brand-600,.text-brand-700{color:${c} !important;}
+.bg-brand-600{background-color:${c} !important;}
+.hover\\:bg-brand-600:hover,.hover\\:bg-brand-700:hover{background-color:${dark} !important;}
+.bg-brand-50{background-color:${tint} !important;}
+.text-brand-100,.text-brand-200{color:${tint} !important;}
+.ring-brand-100{--tw-ring-color:${tint} !important;}
+.border-brand-400,.hover\\:border-brand-400:hover{border-color:${c} !important;}
+`;
+}
+
 export function alignClass(a?: Align): string {
   return a === 'left' ? 'text-left' : a === 'right' ? 'text-right' : 'text-center';
 }

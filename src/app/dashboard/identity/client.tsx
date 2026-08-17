@@ -16,14 +16,11 @@ export function IdentityClient({ theme: t0, header: h0, footer: f0 }: { theme: a
   function persist(nextTheme: any, nextLogo: string) {
     clearTimeout(timer.current);
     timer.current = setTimeout(async () => {
-      await fetch('/api/site', {
-        method: 'PATCH',
+      // apply-theme also recolours every button on the site to the new primary
+      await fetch('/api/site/apply-theme', {
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          theme: nextTheme,
-          header: { ...h0, logoUrl: nextLogo || undefined, cta: { ...(h0.cta || {}), color: nextTheme.primary } },
-          footer: { ...f0, logoUrl: nextLogo || undefined },
-        }),
+        body: JSON.stringify({ theme: nextTheme, logoUrl: nextLogo || undefined }),
       });
       setSaved(true);
       setTimeout(() => setSaved(false), 1500);

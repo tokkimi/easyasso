@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation';
 import { getTemplate } from '@/lib/templates';
 import { PublicBlock } from '@/components/site/PublicBlock';
 import { PublicHeader, PublicFooter } from '@/components/site/PublicChrome';
-import { themeStyle } from '@/lib/render';
+import { themeStyle, brandCss } from '@/lib/render';
 import { googleFontsHref } from '@/lib/fonts';
 
 export const dynamic = 'force-static';
@@ -20,6 +20,7 @@ export default async function TemplatePreview({ params }: { params: Promise<{ id
   return (
     <div className="flex min-h-screen flex-col" style={themeStyle(t.theme)}>
       {fontHref && <link rel="stylesheet" href={fontHref} />}
+      <style dangerouslySetInnerHTML={{ __html: brandCss((t.theme as any).primary) }} />
       <PublicHeader header={t.header as any} nav={nav} basePath="#" />
       <main className="flex-1 py-8">
         {home.blocks.map((b: any, i: number) => (

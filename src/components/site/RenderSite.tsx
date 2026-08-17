@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { DEFAULT_HEADER, DEFAULT_FOOTER, type HeaderConfig, type FooterConfig } from '@/lib/blocks';
 import { PublicBlock } from './PublicBlock';
 import { PublicHeader, PublicFooter } from './PublicChrome';
-import { themeStyle } from '@/lib/render';
+import { themeStyle, brandCss } from '@/lib/render';
 import { googleFontsHref } from '@/lib/fonts';
 
 type SiteWithPages = NonNullable<Awaited<ReturnType<typeof loadSiteBySubdomain>>>;
@@ -35,6 +35,7 @@ export function RenderSite({ site, basePath, slug }: { site: SiteWithPages; base
     return (
       <div className="min-h-screen" style={themeStyle(theme)}>
         {fontHref && <link rel="stylesheet" href={fontHref} />}
+        <style dangerouslySetInnerHTML={{ __html: brandCss(theme.primary) }} />
         <PublicHeader header={header} nav={nav} basePath={basePath} />
         <main className="mx-auto max-w-3xl px-4 py-12">
           <h1 className="text-3xl font-extrabold">{isCgv ? 'Conditions générales' : 'Mentions légales'}</h1>

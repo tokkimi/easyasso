@@ -62,12 +62,15 @@ function composeCopy(input: GenerateInput) {
   const yearSentence = input.year ? `Créée en ${input.year}, ${name} agit chaque jour au service de sa cause.` : '';
   const beneSentence = input.beneficiaries ? `Nous agissons en particulier en faveur de ${input.beneficiaries}.` : '';
 
-  const aboutText = para([yearSentence, mission, beneSentence]) ||
+  const valuesSentence = `Notre démarche repose sur l’écoute, la proximité et une action concrète, pensée avec les personnes concernées. Nous voulons inscrire chaque initiative dans la durée, mesurer son utilité et créer des liens solides entre bénéficiaires, bénévoles, adhérents et partenaires.`;
+  const aboutText = para([yearSentence, mission, beneSentence, valuesSentence]) ||
     `${name} est une association engagée. Présentez ici votre mission et vos valeurs.`;
 
   const actionText = para([
     input.functioning || mission,
-    input.actions ? `Concrètement, nos actions comprennent : ${input.actions}.` : '',
+    input.actions ? `Sur le terrain, nous déployons plusieurs formes d’action complémentaires : ${input.actions}. Chaque intervention est préparée en fonction des besoins observés, organisée avec nos équipes puis améliorée grâce aux retours des participants.` : '',
+    input.beneficiaries ? `Notre priorité est d’apporter une réponse accessible et respectueuse à ${input.beneficiaries}. Au-delà de l’aide immédiate, nous cherchons à renforcer l’autonomie, la confiance et la capacité d’agir de chacun.` : '',
+    `Cette organisation nous permet de rester disponibles, de coordonner les bonnes volontés et de transformer les contributions reçues en actions visibles. Rejoindre l’association, c’est participer à un projet collectif dans lequel chaque compétence et chaque heure donnée peuvent faire une différence.`,
   ]) || 'Décrivez ici la manière dont votre association agit sur le terrain.';
 
   const goodToKnowText = (input.goodToKnow || '').trim();

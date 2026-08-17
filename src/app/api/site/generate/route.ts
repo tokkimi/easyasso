@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { requireApiPermission, handleApiError } from '@/lib/api';
 import { PERMISSIONS } from '@/lib/permissions';
 import { prisma } from '@/lib/prisma';
@@ -94,7 +95,7 @@ export async function POST(req: Request) {
     await applyTemplateToSite(site.id, generated, name);
     const profile = previousProfile;
     const legal = legalDocuments({ ...profile, email: input.email || profile.email, language: input.language }, name);
-    await prisma.site.update({
+    const updatedSite = await prisma.site.update({
       where: { id: site.id },
       data: {
         name,
@@ -103,6 +104,10 @@ export async function POST(req: Request) {
       },
     });
     await prisma.organization.update({ where: { id: ctx.org.id }, data: { profile: { ...profile, language: input.language, slogan: requestedSlogan, generateCgv: generateLegal, year: input.year || profile.year || '', mission: input.mission || profile.mission || '', functioning: input.functioning || profile.functioning || '', actions: input.actions || profile.actions || '', beneficiaries: input.beneficiaries || profile.beneficiaries || '', goodToKnow: input.goodToKnow || profile.goodToKnow || '', city: input.city || profile.city || '', email: input.email || profile.email || '', category: input.category || profile.category || '', donationCardEnabled: donation.cardEnabled, donationStripeUrl: donation.stripeUrl, donationHelloAssoUrl: donation.helloAssoUrl, donationTransferEnabled: donation.transferEnabled, donationIban: donation.iban, donationBic: donation.bic, donationAccountHolder: donation.accountHolder, donationBankName: donation.bankName, donationChequeEnabled: donation.chequeEnabled, donationChequePayable: donation.chequePayable, donationChequeAddress: donation.chequeAddress } } });
-    return NextResponse.json({ ok: true });
+    revalidatePath('/dashboard/editor');
+    revalidatePath('/dashboard/generate');
+    revalidatePath(`/s/${site.subdomain}`);
+    for (const page of generated.pages) revalidatePath(`/s/${site.subdomain}/${page.slug}`);
+    return NextResponse.json({ ok: true, siteVersion: updatedSite.updatedAt.toISOString() });
   } catch (e) { return handleApiError(e); }
 }

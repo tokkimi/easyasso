@@ -7,7 +7,7 @@ const schema = z.object({
   firstName: z.string().trim().min(1).max(100), lastName: z.string().trim().min(1).max(100),
   email: z.string().email().max(200), birthDate: z.string().max(20).optional().default(''),
   address: z.string().max(300).optional().default(''), postalCode: z.string().max(30).optional().default(''),
-  city: z.string().max(100).optional().default(''), method: z.enum(['STRIPE', 'HELLOASSO']),
+  city: z.string().max(100).optional().default(''), method: z.enum(['STRIPE', 'HELLOASSO', 'CHECK', 'TRANSFER', 'OTHER']).default('OTHER'),
   website: z.string().max(0).optional().default(''),
 });
 

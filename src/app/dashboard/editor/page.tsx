@@ -15,6 +15,7 @@ export default async function EditorPage() {
 
   return (
     <EditorClient
+      key={site.updatedAt.toISOString()}
       site={JSON.parse(JSON.stringify(site))}
       canEdit={ctx.permissions.has(PERMISSIONS.SITE_EDIT)}
       canPublish={ctx.permissions.has(PERMISSIONS.SITE_PUBLISH)}

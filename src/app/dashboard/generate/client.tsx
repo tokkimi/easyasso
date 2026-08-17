@@ -1,6 +1,5 @@
 'use client';
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { Sparkles, Loader2, Wand2, Plus } from 'lucide-react';
 import { PageHeader } from '@/components/ui';
 import { ImageInput, Field } from '../editor/controls';
@@ -24,14 +23,13 @@ function compressForGeneration(value: string, maxDimension: number, quality: num
   });
 }
 
-export function GenerateClient({ orgName, profile, categories, welcome }: { orgName: string; profile: any; categories: { id: string; name: string }[]; welcome: boolean }) {
-  const router = useRouter();
+export function GenerateClient({ orgName, profile, categories, welcome, initialLogo = '' }: { orgName: string; profile: any; categories: { id: string; name: string }[]; welcome: boolean; initialLogo?: string }) {
   const [f, setF] = useState({
     name: orgName || '', year: profile.year || '', mission: profile.mission || '', functioning: profile.functioning || '', actions: profile.actions || '',
     language: profile.language || 'fr', beneficiaries: profile.beneficiaries || '', goodToKnow: profile.goodToKnow || '', slogan: profile.slogan || '', generateCgv: profile.generateCgv ?? true, news: '', city: profile.city || '', email: profile.email || '', category: profile.category || '',
     donationCardEnabled: profile.donationCardEnabled ?? false, donationStripeUrl: profile.donationStripeUrl || '', donationHelloAssoUrl: profile.donationHelloAssoUrl || '', donationTransferEnabled: profile.donationTransferEnabled ?? false, donationIban: profile.donationIban || '', donationBic: profile.donationBic || '', donationAccountHolder: profile.donationAccountHolder || '', donationBankName: profile.donationBankName || '', donationChequeEnabled: profile.donationChequeEnabled ?? false, donationChequePayable: profile.donationChequePayable || '', donationChequeAddress: profile.donationChequeAddress || '',
   });
-  const [logo, setLogo] = useState('');
+  const [logo, setLogo] = useState(initialLogo);
   const [photos, setPhotos] = useState<string[]>(['']);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -58,14 +56,15 @@ export function GenerateClient({ orgName, profile, categories, welcome }: { orgN
     let res = await request({ ...basePayload, photos: safePhotos });
     // Absolute safety net for platform request-size limits: the site and its
     // copy must still be generated. Images can then be added in the editor.
-    if (res.status === 413) res = await request({ ...f, name: f.name.trim(), photos: [] });
+    if (res.status === 413) res = await request({ ...f, name: f.name.trim(), logoUrl: compressedLogo, photos: [] });
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
       setError(data.error || `La génération a échoué (${res.status}). Votre ancien site a été conservé. Réessayez.`);
       setBusy(false);
       return;
     }
-    router.push('/dashboard/editor');
+    const data = await res.json().catch(() => ({}));
+    window.location.assign(`/dashboard/editor?generated=${encodeURIComponent(data.siteVersion || Date.now())}`);
   }
 
   return (
@@ -90,6 +89,12 @@ export function GenerateClient({ orgName, profile, categories, welcome }: { orgN
             <Field label="Nom de l’association"><input className="input" value={f.name} onChange={(e) => set('name', e.target.value)} placeholder="Les Amis du Quartier" /></Field>
           </div>
           <Field label="Année de création"><input className="input" value={f.year} onChange={(e) => set('year', e.target.value)} placeholder="2015" /></Field>
+        </div>
+
+        <div className="rounded-2xl border border-brand-100 bg-brand-50/60 p-4">
+          <p className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-700">Logo de l’association</p>
+          <p className="mb-3 text-sm text-gray-600">Il sera automatiquement utilisé dans l’en-tête et le pied de page du nouveau site généré.</p>
+          <ImageInput value={logo} onChange={setLogo} />
         </div>
 
         <Field label="À propos / votre mission ★">
@@ -148,11 +153,6 @@ export function GenerateClient({ orgName, profile, categories, welcome }: { orgN
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Ville"><input className="input" value={f.city} onChange={(e) => set('city', e.target.value)} placeholder="Lyon" /></Field>
           <Field label="Email de contact"><input className="input" value={f.email} onChange={(e) => set('email', e.target.value)} placeholder="contact@asso.fr" /></Field>
-        </div>
-
-        <div>
-          <p className="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-500">Logo (optionnel)</p>
-          <ImageInput value={logo} onChange={setLogo} />
         </div>
 
         <div>

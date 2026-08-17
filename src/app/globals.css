@@ -11,6 +11,17 @@ html, body {
   margin: 0;
 }
 
+html { -webkit-text-size-adjust: 100%; }
+
+button, a, input, select, textarea { touch-action: manipulation; }
+
+.touch-target { min-width: 44px; min-height: 44px; }
+
+@media (pointer: coarse) {
+  .btn { min-height: 44px; }
+  .input { min-height: 44px; font-size: 16px; }
+}
+
 body {
   @apply bg-gray-50 text-gray-900 antialiased;
 }

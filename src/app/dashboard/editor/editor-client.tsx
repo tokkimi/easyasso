@@ -4,7 +4,7 @@ import {
   Plus, Trash2, ArrowUp, ArrowDown, Monitor, Smartphone, Eye, Home, GripVertical,
   Type, Heading, Image as ImageIcon, Video, MousePointerClick, Share2, Columns, MoveVertical, Code,
   PanelTop, PanelBottom, Palette, Files, ChevronLeft, Check,
-  GalleryThumbnails, PanelsTopLeft, GalleryHorizontalEnd, Images, LayoutGrid, Megaphone,
+  GalleryThumbnails, PanelsTopLeft, GalleryHorizontalEnd, Images, LayoutGrid, Megaphone, SlidersHorizontal, X,
 } from 'lucide-react';
 import { BLOCK_LIBRARY, type BlockType, type ButtonConfig } from '@/lib/blocks';
 import { PublicBlock } from '@/components/site/PublicBlock';
@@ -41,6 +41,7 @@ export function EditorClient({ site: initial, canEdit, canPublish, siteUrl }: { 
   const [published, setPublished] = useState(initial.published);
   const [saving, setSaving] = useState<string>('');
   const [showPalette, setShowPalette] = useState(false);
+  const [mobileInspector, setMobileInspector] = useState(false);
 
   const active = pages.find((p) => p.id === activeId);
   const block = active?.blocks.find((b) => b.id === selectedBlock) || null;
@@ -141,9 +142,9 @@ export function EditorClient({ site: initial, canEdit, canPublish, siteUrl }: { 
     <div className="fixed inset-0 z-30 flex flex-col bg-gray-100 lg:left-64">
       {fontHref && <link rel="stylesheet" href={fontHref} />}
       {/* Top bar */}
-      <div className="flex items-center justify-between gap-2 border-b border-gray-200 bg-white px-3 py-2">
-        <a href="/dashboard" className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-900">
-          <ChevronLeft className="h-4 w-4" /> Tableau de bord
+      <div className="flex items-center justify-between gap-2 border-b border-gray-200 bg-white px-2 py-2 sm:px-3">
+        <a href="/dashboard" className="touch-target flex shrink-0 items-center gap-1 text-sm text-gray-500 hover:text-gray-900">
+          <ChevronLeft className="h-4 w-4" /> <span className="hidden sm:inline">Tableau de bord</span>
         </a>
         <div className="flex items-center gap-2">
           {saving && <span className="flex items-center gap-1 text-xs text-green-600"><Check className="h-3 w-3" />{saving}</span>}
@@ -158,6 +159,21 @@ export function EditorClient({ site: initial, canEdit, canPublish, siteUrl }: { 
             </button>
           )}
         </div>
+      </div>
+
+      {/* Phone controls: pages and the three parts of the site stay reachable without a computer. */}
+      <div className="flex gap-2 overflow-x-auto border-b border-gray-200 bg-white p-2 md:hidden">
+        <select
+          aria-label="Page à modifier"
+          value={activeId}
+          onChange={(e) => { setActiveId(e.target.value); setSelectedBlock(null); setTab('blocks'); }}
+          className="input min-w-[150px] flex-1"
+        >
+          {pages.map((p) => <option key={p.id} value={p.id}>{p.isHome ? '⌂ ' : ''}{p.title}</option>)}
+        </select>
+        {canEdit && <button onClick={addPage} className="touch-target shrink-0 rounded-lg border border-gray-200 bg-white px-3 text-brand-700" aria-label="Ajouter une page"><Plus className="h-5 w-5" /></button>}
+        <button onClick={() => { setTab('header'); setSelectedBlock(null); setMobileInspector(true); }} className="touch-target shrink-0 rounded-lg border border-gray-200 bg-white px-3" aria-label="Modifier l’en-tête"><PanelTop className="h-5 w-5" /></button>
+        <button onClick={() => { setTab('footer'); setSelectedBlock(null); setMobileInspector(true); }} className="touch-target shrink-0 rounded-lg border border-gray-200 bg-white px-3" aria-label="Modifier le pied de page"><PanelBottom className="h-5 w-5" /></button>
       </div>
 
       <div className="flex flex-1 overflow-hidden">
@@ -197,11 +213,11 @@ export function EditorClient({ site: initial, canEdit, canPublish, siteUrl }: { 
         </aside>
 
         {/* Center: canvas */}
-        <div className="flex-1 overflow-y-auto bg-gray-100 p-4">
+        <div className="flex-1 overflow-y-auto bg-gray-100 p-1.5 sm:p-4">
           <div className="mx-auto overflow-hidden rounded-xl shadow-sm ring-1 ring-gray-200 transition-all" style={{ maxWidth: width, ...themeStyle(initial.theme) }}>
             {/* Live header preview (click to edit) */}
             <div
-              onClick={() => { setTab('header'); setSelectedBlock(null); }}
+              onClick={() => { setTab('header'); setSelectedBlock(null); setMobileInspector(true); }}
               className={`cursor-pointer ${tab === 'header' ? 'ring-2 ring-brand-500' : 'hover:ring-1 hover:ring-brand-200'}`}
             >
               <div className="pointer-events-none">
@@ -217,7 +233,7 @@ export function EditorClient({ site: initial, canEdit, canPublish, siteUrl }: { 
             {active?.blocks.map((b, i) => (
               <div
                 key={b.id}
-                onClick={() => canEdit && (setSelectedBlock(b.id), setTab('blocks'))}
+                onClick={() => { if (canEdit) { setSelectedBlock(b.id); setTab('blocks'); setMobileInspector(true); } }}
                 className={`group relative cursor-pointer ${selectedBlock === b.id ? 'ring-2 ring-brand-500' : 'hover:ring-1 hover:ring-brand-200'}`}
               >
                 <PublicBlock type={b.type} content={b.content} style={b.style} />
@@ -237,7 +253,7 @@ export function EditorClient({ site: initial, canEdit, canPublish, siteUrl }: { 
             )}
             {/* Live footer preview (click to edit) */}
             <div
-              onClick={() => { setTab('footer'); setSelectedBlock(null); }}
+              onClick={() => { setTab('footer'); setSelectedBlock(null); setMobileInspector(true); }}
               className={`cursor-pointer ${tab === 'footer' ? 'ring-2 ring-brand-500' : 'hover:ring-1 hover:ring-brand-200'}`}
             >
               <div className="pointer-events-none">
@@ -265,6 +281,25 @@ export function EditorClient({ site: initial, canEdit, canPublish, siteUrl }: { 
           </aside>
         )}
       </div>
+
+      {/* Touch inspector: a scrollable bottom sheet replaces the desktop side panel. */}
+      {canEdit && mobileInspector && (
+        <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true" aria-label="Options de modification">
+          <button className="absolute inset-0 bg-black/35" onClick={() => setMobileInspector(false)} aria-label="Fermer les options" />
+          <aside className="absolute inset-x-0 bottom-0 max-h-[72dvh] overflow-y-auto rounded-t-2xl bg-white p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] shadow-2xl">
+            <div className="sticky top-0 z-10 mb-4 flex items-center justify-between border-b border-gray-100 bg-white pb-3">
+              <span className="flex items-center gap-2 font-bold text-gray-900"><SlidersHorizontal className="h-5 w-5 text-brand-600" /> Modifier</span>
+              <button onClick={() => setMobileInspector(false)} className="touch-target grid place-items-center rounded-lg bg-gray-100" aria-label="Fermer"><X className="h-5 w-5" /></button>
+            </div>
+            {tab === 'blocks' && block && <BlockInspector block={block} onContent={(c) => updateContent(block.id, c)} onStyle={(s) => updateStyle(block.id, s)} onDelete={() => { deleteBlock(block.id); setMobileInspector(false); }} />}
+            {tab === 'blocks' && !block && (
+              <div className="text-sm text-gray-600"><p>Sélectionnez une partie de la page ou ajoutez un bloc.</p><button onClick={() => { setMobileInspector(false); setShowPalette(true); }} className="btn btn-primary mt-4 w-full"><Plus className="h-4 w-4" /> Ajouter un bloc</button></div>
+            )}
+            {tab === 'header' && <HeaderEditor value={header} onChange={(h) => { setHeader(h); saveSite({ header: h }); }} />}
+            {tab === 'footer' && <FooterEditor value={footer} onChange={(f) => { setFooter(f); saveSite({ footer: f }); }} />}
+          </aside>
+        </div>
+      )}
 
       {/* Block palette modal */}
       {showPalette && (

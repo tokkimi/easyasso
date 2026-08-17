@@ -76,14 +76,14 @@ export function ImageInput({ value, onChange, label }: { value?: string; onChang
 
 export function ColorGrid({ value, onChange }: { value?: string; onChange: (c: string) => void }) {
   return (
-    <div className="grid grid-cols-9 gap-1.5">
+    <div className="grid grid-cols-7 gap-1.5 sm:grid-cols-9">
       {COLOR_PALETTE.map((c) => (
         <button
           key={c}
           type="button"
           onClick={() => onChange(c)}
           title={c}
-          className={`h-6 w-6 rounded-md ring-offset-1 transition ${value === c ? 'ring-2 ring-brand-600' : 'ring-1 ring-black/10'}`}
+          className={`h-9 w-9 rounded-md ring-offset-1 transition sm:h-6 sm:w-6 ${value === c ? 'ring-2 ring-brand-600' : 'ring-1 ring-black/10'}`}
           style={{ background: c }}
         />
       ))}
@@ -104,7 +104,7 @@ export function AlignPicker({ value, onChange }: { value?: Align; onChange: (a: 
           key={v}
           type="button"
           onClick={() => onChange(v)}
-          className={`grid h-8 w-8 place-items-center rounded-md ${value === v ? 'bg-brand-600 text-white' : 'text-gray-500 hover:bg-gray-100'}`}
+          className={`grid h-11 w-11 place-items-center rounded-md sm:h-8 sm:w-8 ${value === v ? 'bg-brand-600 text-white' : 'text-gray-500 hover:bg-gray-100'}`}
         >
           <Icon className="h-4 w-4" />
         </button>
@@ -124,7 +124,7 @@ export function Field({ label, children }: { label: string; children: React.Reac
 
 export function Toggle({ checked, onChange, label }: { checked: boolean; onChange: (v: boolean) => void; label: string }) {
   return (
-    <label className="flex cursor-pointer items-center justify-between gap-3 py-1">
+    <label className="flex min-h-11 cursor-pointer items-center justify-between gap-3 py-1">
       <span className="text-sm text-gray-700">{label}</span>
       <button
         type="button"

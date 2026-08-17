@@ -36,10 +36,8 @@ export function Sidebar({
   const content = (
     <div className="flex h-full flex-col">
       <div className="border-b border-gray-100 px-5 py-4">
-        <div className="flex items-center gap-2 font-extrabold text-brand-700">
-          <span className="grid h-7 w-7 place-items-center rounded-lg bg-brand-600 text-sm text-white">E</span>
-          Easy Asso
-        </div>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/easyasso-logo.png" alt="EasyAsso" className="h-14 w-auto" />
         <p className="mt-2 truncate text-sm font-medium text-gray-900">{orgName}</p>
       </div>
 
@@ -82,8 +80,9 @@ export function Sidebar({
     <>
       {/* Mobile top bar */}
       <div className="flex items-center justify-between border-b border-gray-100 bg-white px-4 py-3 lg:hidden">
-        <span className="font-extrabold text-brand-700">Easy Asso</span>
-        <button onClick={() => setOpen(true)}><Menu className="h-6 w-6 text-gray-700" /></button>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/easyasso-logo.png" alt="EasyAsso" className="h-12 w-auto" />
+        <button onClick={() => setOpen(true)} className="touch-target rounded-lg" aria-label="Ouvrir le menu"><Menu className="h-6 w-6 text-gray-700" /></button>
       </div>
 
       {/* Desktop sidebar */}
@@ -94,7 +93,7 @@ export function Sidebar({
         <div className="fixed inset-0 z-50 lg:hidden">
           <div className="absolute inset-0 bg-black/40" onClick={() => setOpen(false)} />
           <aside className="absolute inset-y-0 left-0 w-72 bg-white">
-            <button onClick={() => setOpen(false)} className="absolute right-3 top-3 text-gray-400"><X className="h-6 w-6" /></button>
+            <button onClick={() => setOpen(false)} className="touch-target absolute right-3 top-3 rounded-lg text-gray-500" aria-label="Fermer le menu"><X className="h-6 w-6" /></button>
             {content}
           </aside>
         </div>

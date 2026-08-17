@@ -24,10 +24,10 @@ export default function LandingPage() {
     <div className="min-h-screen bg-white">
       {/* Nav */}
       <header className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
-        <div className="flex items-center gap-2 text-xl font-extrabold tracking-tight text-brand-700">
-          <span className="grid h-8 w-8 place-items-center rounded-lg bg-brand-600 text-white">E</span>
-          Easy Asso
-        </div>
+        <Link href="/" aria-label="EasyAsso — accueil" className="shrink-0">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/easyasso-logo.png" alt="EasyAsso" className="h-14 w-auto sm:h-16" />
+        </Link>
         <nav className="flex items-center gap-3">
           <Link href="/login" className="btn btn-ghost">Connexion</Link>
           <Link href="/register" className="btn btn-primary">Créer mon site</Link>

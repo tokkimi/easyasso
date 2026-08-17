@@ -13,6 +13,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   if (!access.hasAccess) redirect('/onboarding'); // trial expired or unpaid → paywall
 
   const site = await prisma.site.findUnique({ where: { organizationId: org.id } });
+  const unreadMessages = await prisma.contactMessage.count({ where: { organizationId: org.id, readAt: null, archivedAt: null } });
   const siteUrl = site ? siteUrlFor(site.subdomain, site.customDomain, site.domainVerified) : '#';
 
   return (
@@ -23,6 +24,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
         permissions={Array.from(ctx.permissions)}
         siteUrl={siteUrl}
         published={site?.published ?? false}
+        unreadMessages={unreadMessages}
       />
       <main className="flex-1 lg:ml-64">
         {access.isTrial && (

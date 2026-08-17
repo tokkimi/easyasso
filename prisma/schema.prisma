@@ -95,6 +95,7 @@ model Organization {
   transactions  Transaction[]
   subscribers   NewsletterSubscriber[]
   events        SiteEvent[]
+  contactMessages ContactMessage[]
   roles         Role[]
 }
 
@@ -317,4 +318,20 @@ model SiteEvent {
   createdAt      DateTime @default(now())
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   @@index([organizationId, createdAt])
+}
+
+model ContactMessage {
+  id             String   @id @default(cuid())
+  organizationId String
+  name           String
+  email          String
+  phone          String?
+  subject        String?
+  message        String
+  readAt         DateTime?
+  archivedAt     DateTime?
+  createdAt      DateTime @default(now())
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  @@index([organizationId, createdAt])
+  @@index([organizationId, readAt])
 }

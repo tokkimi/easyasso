@@ -59,7 +59,7 @@ export function RenderSite({ site, basePath, slug }: { site: SiteWithPages; base
         {page.blocks.length === 0 ? (
           <p className="py-20 text-center text-gray-400">Cette page est vide.</p>
         ) : (
-          page.blocks.map((b) => <PublicBlock key={b.id} type={b.type} content={b.content as any} style={b.style as any} basePath={basePath} />)
+          page.blocks.map((b) => <PublicBlock key={b.id} type={b.type} content={b.content as any} style={b.style as any} basePath={basePath} organizationId={site.organizationId} />)
         )}
       </main>
       <PublicFooter footer={footer} orgId={site.organizationId} basePath={basePath} nav={nav} />

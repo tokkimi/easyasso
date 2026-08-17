@@ -15,6 +15,7 @@ const schema = z.object({
   goodToKnow: z.string().max(6000).optional().default(''),
   city: z.string().max(200).optional().default(''),
   email: z.string().email().or(z.literal('')).optional().default(''),
+  phone: z.string().max(60).optional().default(''),
   legalName: z.string().max(300).optional().default(''),
   registrationNumber: z.string().max(120).optional().default(''),
   legalAddress: z.string().max(500).optional().default(''),

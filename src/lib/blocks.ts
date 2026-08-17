@@ -36,7 +36,8 @@ export type BlockType =
   | 'gallery'
   | 'slideshow'
   | 'cards'
-  | 'cta';
+  | 'cta'
+  | 'contact';
 
 export interface BlockStyle {
   align?: Align;
@@ -60,6 +61,7 @@ export const BLOCK_LIBRARY: {
   { type: 'slideshow', label: 'Diaporama', icon: 'Images', description: 'Photos qui défilent', group: 'layouts' },
   { type: 'cards', label: 'Cartes / colonnes', icon: 'LayoutGrid', description: '2 à 4 blocs illustrés', group: 'layouts' },
   { type: 'cta', label: 'Appel au don', icon: 'Megaphone', description: 'Bandeau avec bouton d’action', group: 'layouts' },
+  { type: 'contact', label: 'Contact complet', icon: 'Mail', description: 'Coordonnées + formulaire prêt à recevoir des messages', group: 'layouts' },
   // Basic building blocks
   { type: 'heading', label: 'Titre', icon: 'Heading', description: 'Un grand titre', group: 'basics' },
   { type: 'text', label: 'Texte', icon: 'Type', description: 'Un paragraphe', group: 'basics' },
@@ -142,6 +144,8 @@ export function defaultContentFor(type: BlockType): Record<string, unknown> {
         text: 'Chaque contribution nous permet d’agir concrètement. Merci de votre générosité.',
         button: { text: 'Je fais un don', href: '/don', color: '#1b5df5', variant: 'solid', align: 'center' } as ButtonConfig,
       };
+    case 'contact':
+      return { title: 'Contactez-nous', intro: 'Une question, une proposition ou envie de nous rejoindre ? Écrivez-nous.', email: '', phone: '', address: '', buttonText: 'Envoyer le message', successText: 'Merci, votre message a bien été envoyé.' };
     default:
       return {};
   }
@@ -161,6 +165,7 @@ export function defaultStyleFor(type: BlockType): BlockStyle {
     case 'cards':
       return { paddingY: 28 };
     case 'cta':
+    case 'contact':
       return { paddingY: 40, background: '#f1f5ff' };
     default:
       return { align: 'center', paddingY: 16 };

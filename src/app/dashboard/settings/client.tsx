@@ -13,7 +13,7 @@ export function SettingsClient({ org, site, freeUrl, rootDomain, canDomain, cate
   const [verifying, setVerifying] = useState(false);
   const [savingDomain, setSavingDomain] = useState(false);
   const [domainChoice, setDomainChoice] = useState<'connect' | 'buy' | null>(site.customDomain ? 'connect' : null);
-  const [profile, setProfile] = useState({ language: 'fr', year: '', category: '', mission: '', functioning: '', actions: '', beneficiaries: '', goodToKnow: '', city: '', email: '', legalName: '', registrationNumber: '', legalAddress: '', publicationDirector: '', facebook: '', instagram: '', linkedin: '', youtube: '', ...(org.profile || {}) });
+  const [profile, setProfile] = useState({ language: 'fr', year: '', category: '', mission: '', functioning: '', actions: '', beneficiaries: '', goodToKnow: '', city: '', email: '', phone: '', legalName: '', registrationNumber: '', legalAddress: '', publicationDirector: '', facebook: '', instagram: '', linkedin: '', youtube: '', ...(org.profile || {}) });
 
   async function saveName() {
     await fetch('/api/site', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name }) });
@@ -81,6 +81,7 @@ export function SettingsClient({ org, site, freeUrl, rootDomain, canDomain, cate
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
           <div><label className="label">Ville / territoire</label><input className="input" value={profile.city} onChange={(e) => setProfileField('city', e.target.value)} /></div>
           <div><label className="label">E-mail public</label><input type="email" className="input" value={profile.email} onChange={(e) => setProfileField('email', e.target.value)} placeholder="contact@association.fr" /></div>
+          <div><label className="label">Téléphone public</label><input className="input" value={profile.phone} onChange={(e) => setProfileField('phone', e.target.value)} placeholder="01 23 45 67 89" /></div>
         </div>
         <div className="mt-6 border-t border-gray-100 pt-5">
           <h3 className="font-bold text-gray-900">Réseaux sociaux</h3>

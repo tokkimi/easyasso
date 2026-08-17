@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import { signOut } from 'next-auth/react';
 import {
   LayoutDashboard, Files, HandCoins, Users, Megaphone, Calculator, BarChart3,
-  Settings, LogOut, ExternalLink, Menu, X, UserCog, Palette, LayoutTemplate, Sparkles, Fingerprint,
+  Settings, LogOut, ExternalLink, Menu, X, UserCog, Palette, LayoutTemplate, Sparkles, Fingerprint, Mail,
 } from 'lucide-react';
 import { PERMISSIONS } from '@/lib/permissions';
 
@@ -13,6 +13,7 @@ const NAV = [
   { href: '/dashboard', label: 'Tableau de bord', icon: LayoutDashboard, perm: null },
   { href: '/dashboard/generate', label: 'Générateur magique', icon: Sparkles, perm: PERMISSIONS.SITE_EDIT },
   { href: '/dashboard/editor', label: 'Éditeur du site', icon: Palette, perm: PERMISSIONS.SITE_VIEW },
+  { href: '/dashboard/messages', label: 'Messagerie', icon: Mail, perm: PERMISSIONS.SITE_VIEW, notification: true },
   { href: '/dashboard/identity', label: 'Identité (logo, couleurs)', icon: Fingerprint, perm: PERMISSIONS.SITE_EDIT },
   { href: '/dashboard/themes', label: 'Modèles de site', icon: LayoutTemplate, perm: PERMISSIONS.SITE_EDIT },
   { href: '/dashboard/donations', label: 'Dons', icon: HandCoins, perm: PERMISSIONS.DONATIONS_VIEW },
@@ -25,9 +26,9 @@ const NAV = [
 ];
 
 export function Sidebar({
-  orgName, userName, permissions, siteUrl, published,
+  orgName, userName, permissions, siteUrl, published, unreadMessages,
 }: {
-  orgName: string; userName: string; permissions: string[]; siteUrl: string; published: boolean;
+  orgName: string; userName: string; permissions: string[]; siteUrl: string; published: boolean; unreadMessages: number;
 }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
@@ -54,6 +55,7 @@ export function Sidebar({
               }`}
             >
               <n.icon className="h-5 w-5" /> {n.label}
+              {'notification' in n && n.notification && unreadMessages > 0 && <span className="ml-auto grid min-h-5 min-w-5 place-items-center rounded-full bg-red-500 px-1 text-[11px] font-bold text-white">{unreadMessages > 99 ? '99+' : unreadMessages}</span>}
             </Link>
           );
         })}

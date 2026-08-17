@@ -5,13 +5,14 @@ import {
 import type { BlockStyle, ButtonConfig, SocialConfig } from '@/lib/blocks';
 import { alignClass, justifyClass, blockWrapperStyle, videoEmbed } from '@/lib/render';
 import { Slideshow } from './Slideshow';
+import { ContactForm } from './ContactForm';
 
 const CARD_ICONS: Record<string, any> = {
   Heart, Users, HandHeart, HandCoins, Star, Gift, Leaf, Home, BookOpen, Shield, Sparkles, Handshake,
 };
 
 // Blocks that break out of the narrow text column
-const WIDE = new Set(['textimage', 'gallery', 'cards']);
+const WIDE = new Set(['textimage', 'gallery', 'cards', 'contact']);
 const FULL = new Set(['banner', 'slideshow', 'cta']);
 
 function Btn({ b, basePath = '' }: { b: ButtonConfig; basePath?: string }) {
@@ -27,8 +28,8 @@ function Btn({ b, basePath = '' }: { b: ButtonConfig; basePath?: string }) {
   );
 }
 
-export function PublicBlock({ type, content, style, basePath = '' }: { type: string; content: any; style: BlockStyle; basePath?: string }) {
-  const inner = renderInner(type, content, style, basePath);
+export function PublicBlock({ type, content, style, basePath = '', organizationId }: { type: string; content: any; style: BlockStyle; basePath?: string; organizationId?: string }) {
+  const inner = renderInner(type, content, style, basePath, organizationId);
   if (FULL.has(type)) {
     return <div style={blockWrapperStyle({ ...style, background: type === 'cta' ? style.background : undefined })} className="w-full">{inner}</div>;
   }
@@ -40,7 +41,7 @@ export function PublicBlock({ type, content, style, basePath = '' }: { type: str
   );
 }
 
-function renderInner(type: string, content: any, style: BlockStyle, basePath: string) {
+function renderInner(type: string, content: any, style: BlockStyle, basePath: string, organizationId?: string) {
   switch (type) {
     case 'heading':
       return <h2 style={{ color: style.color, fontSize: style.fontSize ? `${style.fontSize}px` : undefined }} className="font-extrabold leading-tight">{content.text}</h2>;
@@ -172,6 +173,8 @@ function renderInner(type: string, content: any, style: BlockStyle, basePath: st
           {content.button?.text && <div className="mt-5"><Btn b={content.button} basePath={basePath} /></div>}
         </div>
       );
+    case 'contact':
+      return <ContactForm organizationId={organizationId} content={content} />;
     default:
       return null;
   }

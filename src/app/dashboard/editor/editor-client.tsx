@@ -4,7 +4,7 @@ import {
   Plus, Trash2, ArrowUp, ArrowDown, Monitor, Smartphone, Eye, Home, GripVertical,
   Type, Heading, Image as ImageIcon, Video, MousePointerClick, Share2, Columns, MoveVertical, Code,
   PanelTop, PanelBottom, Palette, Files, ChevronLeft, Check,
-  GalleryThumbnails, PanelsTopLeft, GalleryHorizontalEnd, Images, LayoutGrid, Megaphone, SlidersHorizontal, X,
+  GalleryThumbnails, PanelsTopLeft, GalleryHorizontalEnd, Images, LayoutGrid, Megaphone, SlidersHorizontal, X, Mail,
 } from 'lucide-react';
 import { BLOCK_LIBRARY, type BlockType, type ButtonConfig } from '@/lib/blocks';
 import { PublicBlock } from '@/components/site/PublicBlock';
@@ -15,7 +15,7 @@ import { ColorGrid, AlignPicker, Field, Toggle, ImageInput } from './controls';
 
 const ICONS: Record<string, any> = {
   Heading, Type, Image: ImageIcon, Video, MousePointerClick, Share2, Columns, MoveVertical, Code,
-  GalleryThumbnails, PanelsTopLeft, GalleryHorizontalEnd, Images, LayoutGrid, Megaphone,
+  GalleryThumbnails, PanelsTopLeft, GalleryHorizontalEnd, Images, LayoutGrid, Megaphone, Mail,
 };
 
 const CARD_ICON_CHOICES = ['Heart', 'Users', 'HandHeart', 'HandCoins', 'Star', 'Gift', 'Leaf', 'Home', 'BookOpen', 'Shield', 'Sparkles', 'Handshake'];
@@ -178,42 +178,47 @@ export function EditorClient({ site: initial, canEdit, canPublish, siteUrl }: { 
 
       <div className="flex flex-1 overflow-hidden">
         {/* Left: pages */}
-        <aside className="hidden w-56 shrink-0 overflow-y-auto border-r border-gray-200 bg-white p-3 md:block">
-          <div className="mb-2 flex items-center justify-between">
-            <span className="flex items-center gap-1 text-xs font-bold uppercase tracking-wide text-gray-400"><Files className="h-3.5 w-3.5" /> Pages</span>
-            {canEdit && <button onClick={addPage} className="text-brand-600 hover:text-brand-700"><Plus className="h-4 w-4" /></button>}
+        <aside className="hidden w-64 shrink-0 overflow-y-auto border-r border-gray-200 bg-white p-4 md:block">
+          <div className="mb-4">
+            <span className="flex items-center gap-2 font-extrabold text-gray-900"><Files className="h-5 w-5 text-brand-600" /> Les pages du site</span>
+            <p className="mt-1 text-xs leading-5 text-gray-500">Choisissez une page ci-dessous, puis cliquez directement sur son contenu pour le modifier.</p>
+            {canEdit && <button onClick={addPage} className="btn btn-primary mt-3 w-full"><Plus className="h-4 w-4" /> Nouvelle page</button>}
           </div>
-          <ul className="space-y-1">
+          <ul className="space-y-2">
             {pages.map((p) => (
               <li key={p.id}>
                 <button
                   onClick={() => { setActiveId(p.id); setSelectedBlock(null); setTab('blocks'); }}
-                  className={`group flex w-full items-center gap-1.5 rounded-lg px-2 py-1.5 text-left text-sm ${activeId === p.id ? 'bg-brand-50 text-brand-700' : 'text-gray-700 hover:bg-gray-100'}`}
+                  className={`group flex min-h-11 w-full items-center gap-2 rounded-xl border px-3 py-2 text-left text-sm font-semibold ${activeId === p.id && tab === 'blocks' ? 'border-brand-300 bg-brand-50 text-brand-700 shadow-sm' : 'border-transparent text-gray-700 hover:border-gray-200 hover:bg-gray-50'}`}
                 >
                   {p.isHome && <Home className="h-3.5 w-3.5 shrink-0" />}
-                  <span className="flex-1 truncate">{p.title}</span>
+                  <span className="flex-1 truncate">{p.title}</span>{activeId === p.id && tab === 'blocks' && <Check className="h-4 w-4 text-brand-600" />}
                 </button>
                 {activeId === p.id && canEdit && (
-                  <div className="mt-1 flex flex-wrap gap-2 px-2 text-[11px] text-gray-400">
-                    <button onClick={() => renamePage(p.id)} className="hover:text-gray-700">Renommer</button>
-                    {!p.isHome && <button onClick={() => setHome(p.id)} className="hover:text-gray-700">Accueil</button>}
-                    {!p.isHome && <button onClick={() => deletePage(p.id)} className="hover:text-red-600">Suppr.</button>}
-                    <label className="flex items-center gap-1"><input type="checkbox" checked={p.showInNav} onChange={(e) => toggleNav(p.id, e.target.checked)} /> menu</label>
+                  <div className="mt-2 grid grid-cols-2 gap-1 rounded-xl bg-gray-50 p-2 text-xs">
+                    <button onClick={() => renamePage(p.id)} className="rounded-lg bg-white px-2 py-2 text-gray-700 ring-1 ring-gray-200">Renommer</button>
+                    {!p.isHome && <button onClick={() => setHome(p.id)} className="rounded-lg bg-white px-2 py-2 text-gray-700 ring-1 ring-gray-200">Définir accueil</button>}
+                    {!p.isHome && <button onClick={() => deletePage(p.id)} className="rounded-lg bg-white px-2 py-2 text-red-600 ring-1 ring-gray-200">Supprimer</button>}
+                    <label className="flex items-center justify-center gap-2 rounded-lg bg-white px-2 py-2 text-gray-700 ring-1 ring-gray-200"><input type="checkbox" checked={p.showInNav} onChange={(e) => toggleNav(p.id, e.target.checked)} /> Dans le menu</label>
                   </div>
                 )}
               </li>
             ))}
           </ul>
 
-          <div className="mt-5 space-y-1 border-t border-gray-100 pt-4">
-            <span className="mb-1 block text-xs font-bold uppercase tracking-wide text-gray-400">Site</span>
-            <button onClick={() => { setTab('header'); setSelectedBlock(null); }} className={`flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-sm ${tab === 'header' ? 'bg-brand-50 text-brand-700' : 'text-gray-700 hover:bg-gray-100'}`}><PanelTop className="h-4 w-4" /> En-tête</button>
-            <button onClick={() => { setTab('footer'); setSelectedBlock(null); }} className={`flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-sm ${tab === 'footer' ? 'bg-brand-50 text-brand-700' : 'text-gray-700 hover:bg-gray-100'}`}><PanelBottom className="h-4 w-4" /> Pied de page</button>
+          <div className="mt-6 space-y-2 border-t border-gray-200 pt-5">
+            <span className="mb-2 block font-extrabold text-gray-900">Éléments communs</span>
+            <button onClick={() => { setTab('header'); setSelectedBlock(null); }} className={`flex min-h-11 w-full items-center gap-3 rounded-xl border px-3 py-2 text-sm font-semibold ${tab === 'header' ? 'border-brand-300 bg-brand-50 text-brand-700' : 'border-gray-200 text-gray-700 hover:bg-gray-50'}`}><PanelTop className="h-5 w-5" /> En-tête du site</button>
+            <button onClick={() => { setTab('footer'); setSelectedBlock(null); }} className={`flex min-h-11 w-full items-center gap-3 rounded-xl border px-3 py-2 text-sm font-semibold ${tab === 'footer' ? 'border-brand-300 bg-brand-50 text-brand-700' : 'border-gray-200 text-gray-700 hover:bg-gray-50'}`}><PanelBottom className="h-5 w-5" /> Pied de page</button>
           </div>
         </aside>
 
         {/* Center: canvas */}
         <div className="flex-1 overflow-y-auto bg-gray-100 p-1.5 sm:p-4">
+          <div className="mx-auto mb-3 flex max-w-[900px] flex-wrap items-center justify-between gap-2 rounded-xl bg-white px-4 py-3 shadow-sm ring-1 ring-gray-200">
+            <div><p className="text-xs font-bold uppercase tracking-wide text-brand-600">Vous modifiez</p><p className="font-extrabold text-gray-900">{tab === 'header' ? 'L’en-tête du site' : tab === 'footer' ? 'Le pied de page' : `La page « ${active?.title || ''} »`}</p></div>
+            <p className="text-xs text-gray-500">Touchez ou cliquez sur un élément pour ouvrir ses réglages.</p>
+          </div>
           <div className="mx-auto overflow-hidden rounded-xl shadow-sm ring-1 ring-gray-200 transition-all" style={{ maxWidth: width, ...themeStyle(initial.theme) }}>
             {/* Live header preview (click to edit) */}
             <div
@@ -236,7 +241,7 @@ export function EditorClient({ site: initial, canEdit, canPublish, siteUrl }: { 
                 onClick={() => { if (canEdit) { setSelectedBlock(b.id); setTab('blocks'); setMobileInspector(true); } }}
                 className={`group relative cursor-pointer ${selectedBlock === b.id ? 'ring-2 ring-brand-500' : 'hover:ring-1 hover:ring-brand-200'}`}
               >
-                <PublicBlock type={b.type} content={b.content} style={b.style} />
+                <PublicBlock type={b.type} content={b.content} style={b.style} organizationId={(initial as any).organizationId} />
                 {canEdit && selectedBlock === b.id && (
                   <div className="absolute right-2 top-2 flex gap-1 rounded-lg bg-gray-900/90 p-1 text-white">
                     <button onClick={(e) => { e.stopPropagation(); moveBlock(b.id, -1); }} disabled={i === 0} className="rounded p-1 hover:bg-white/20 disabled:opacity-30"><ArrowUp className="h-3.5 w-3.5" /></button>
@@ -378,6 +383,17 @@ function BlockInspector({ block, onContent, onStyle, onDelete }: { block: Block;
       {block.type === 'button' && <ButtonEditor value={c.button} onChange={(b) => onContent({ ...c, button: b })} />}
 
       {block.type === 'social' && <SocialEditor value={c.social} onChange={(soc) => onContent({ ...c, social: soc })} />}
+
+      {block.type === 'contact' && (
+        <>
+          <Field label="Titre"><input className="input" value={c.title || ''} onChange={(e) => onContent({ ...c, title: e.target.value })} /></Field>
+          <Field label="Introduction"><textarea className="input min-h-20" value={c.intro || ''} onChange={(e) => onContent({ ...c, intro: e.target.value })} /></Field>
+          <Field label="E-mail de l’association"><input className="input" type="email" value={c.email || ''} onChange={(e) => onContent({ ...c, email: e.target.value })} /></Field>
+          <Field label="Téléphone"><input className="input" value={c.phone || ''} onChange={(e) => onContent({ ...c, phone: e.target.value })} /></Field>
+          <Field label="Adresse"><textarea className="input min-h-20" value={c.address || ''} onChange={(e) => onContent({ ...c, address: e.target.value })} /></Field>
+          <Field label="Texte du bouton"><input className="input" value={c.buttonText || ''} onChange={(e) => onContent({ ...c, buttonText: e.target.value })} /></Field>
+        </>
+      )}
 
       {block.type === 'columns' && (
         <>

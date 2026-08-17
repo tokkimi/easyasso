@@ -9,7 +9,7 @@ import {
 import { BLOCK_LIBRARY, type BlockType, type ButtonConfig } from '@/lib/blocks';
 import { PublicBlock } from '@/components/site/PublicBlock';
 import { PublicHeader, PublicFooter } from '@/components/site/PublicChrome';
-import { themeStyle } from '@/lib/render';
+import { themeStyle, brandCss } from '@/lib/render';
 import { googleFontsHref } from '@/lib/fonts';
 import { ColorGrid, AlignPicker, Field, Toggle, ImageInput } from './controls';
 
@@ -141,6 +141,7 @@ export function EditorClient({ site: initial, canEdit, canPublish, siteUrl }: { 
   return (
     <div className="fixed inset-0 z-30 flex flex-col bg-gray-100 lg:left-64">
       {fontHref && <link rel="stylesheet" href={fontHref} />}
+      <style dangerouslySetInnerHTML={{ __html: brandCss((initial.theme as any)?.primary) }} />
       {/* Top bar */}
       <div className="flex items-center justify-between gap-2 border-b border-gray-200 bg-white px-2 py-2 sm:px-3">
         <a href="/dashboard" className="touch-target flex shrink-0 items-center gap-1 text-sm text-gray-500 hover:text-gray-900">

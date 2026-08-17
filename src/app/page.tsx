@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Check, MousePointerClick, Palette, HandCoins, Users, BarChart3, Globe } from 'lucide-react';
+import { Check, MousePointerClick, Palette, HandCoins, Users, BarChart3, Globe, Sparkles, WandSparkles, FileText, RefreshCw } from 'lucide-react';
 
 const PRICE = process.env.NEXT_PUBLIC_PRICE_EUR || '250';
 
@@ -51,6 +51,54 @@ export default function LandingPage() {
           <Link href="/login" className="btn btn-ghost px-6 py-3 text-base">J’ai déjà un compte</Link>
         </div>
         <p className="mt-3 text-sm text-gray-500">Paiement unique · Site illimité · Sans engagement</p>
+      </section>
+
+      {/* Magic builder */}
+      <section className="overflow-hidden border-y border-indigo-100 bg-gradient-to-b from-indigo-50/70 to-white py-20">
+        <div className="mx-auto max-w-6xl px-6">
+          <div className="mx-auto max-w-3xl text-center">
+            <span className="badge bg-indigo-100 text-indigo-700"><Sparkles className="mr-1 h-3.5 w-3.5" /> Découvrez l’outil magique</span>
+            <h2 className="mt-5 text-3xl font-extrabold tracking-tight text-gray-900 md:text-5xl">Votre association racontée avec justesse, votre site créé en quelques minutes</h2>
+            <p className="mt-5 text-lg leading-8 text-gray-600">Renseignez votre cause, votre histoire, vos actions et vos coordonnées. L’outil magique transforme ces informations en un véritable site complet, structuré et différent pour chaque association.</p>
+          </div>
+
+          <div className="mt-12 grid items-center gap-10 lg:grid-cols-[0.9fr_1.1fr]">
+            <div className="space-y-4">
+              {[
+                ['1. Parlez-nous de votre association', 'Un questionnaire simple, prérempli avec les informations déjà enregistrées dans vos réglages.'],
+                ['2. Laissez la magie opérer', 'L’outil rédige des textes développés, choisit une structure adaptée à votre cause et compose toutes les pages.'],
+                ['3. Gardez le contrôle', 'Tout est immédiatement modifiable dans l’éditeur visuel : textes, images, couleurs, boutons, pages, menu et pied de page.'],
+              ].map(([title, text], index) => (
+                <div key={title} className="flex gap-4 rounded-2xl border border-indigo-100 bg-white p-5 shadow-sm">
+                  <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-indigo-600 text-white">{index === 0 ? <FileText className="h-5 w-5" /> : index === 1 ? <WandSparkles className="h-5 w-5" /> : <MousePointerClick className="h-5 w-5" />}</div>
+                  <div><h3 className="font-bold text-gray-900">{title}</h3><p className="mt-1 text-sm leading-6 text-gray-600">{text}</p></div>
+                </div>
+              ))}
+            </div>
+
+            <div className="relative rounded-3xl border border-indigo-200 bg-white p-3 shadow-2xl shadow-indigo-200/60">
+              <div className="rounded-2xl bg-gray-950 p-5 text-white">
+                <div className="flex items-center justify-between border-b border-white/10 pb-4">
+                  <div className="flex items-center gap-2 font-bold"><Sparkles className="h-5 w-5 text-violet-300" /> Générateur magique</div>
+                  <span className="rounded-full bg-green-400/15 px-3 py-1 text-xs font-semibold text-green-300">Aucune page générique copiée-collée</span>
+                </div>
+                <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                  <div className="rounded-xl bg-white/10 p-4"><p className="text-xs uppercase tracking-wider text-violet-200">Cause</p><p className="mt-1 font-semibold">Protection animale</p></div>
+                  <div className="rounded-xl bg-white/10 p-4"><p className="text-xs uppercase tracking-wider text-violet-200">Création</p><p className="mt-1 font-semibold">2018 · Nantes</p></div>
+                  <div className="rounded-xl bg-white/10 p-4 sm:col-span-2"><p className="text-xs uppercase tracking-wider text-violet-200">Mission</p><p className="mt-1 text-sm leading-6 text-gray-200">Recueillir, soigner et replacer les animaux abandonnés tout en sensibilisant les familles à une adoption responsable.</p></div>
+                </div>
+                <div className="mt-4 rounded-xl bg-gradient-to-r from-violet-500 to-indigo-500 p-4">
+                  <div className="flex items-center gap-3"><WandSparkles className="h-6 w-6" /><div><p className="font-bold">7 pages et 31 sections prêtes</p><p className="text-sm text-indigo-100">Textes approfondis · navigation · appels à l’action · contact</p></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-10 grid gap-6 rounded-3xl border border-gray-200 bg-white p-7 shadow-sm md:grid-cols-[1fr_auto] md:items-center">
+            <div className="flex gap-4"><RefreshCw className="mt-1 h-6 w-6 shrink-0 text-brand-600" /><div><h3 className="text-lg font-bold text-gray-900">Un nouveau départ à chaque génération</h3><p className="mt-1 text-sm leading-6 text-gray-600">Lorsque vous recommencez, l’ancien site est entièrement remplacé. Aucun ancien texte, logo ou bloc ne vient polluer la nouvelle création.</p></div></div>
+            <Link href="/register" className="btn btn-primary px-6 py-3">Essayer l’outil magique <Sparkles className="h-4 w-4" /></Link>
+          </div>
+        </div>
       </section>
 
       {/* Steps */}

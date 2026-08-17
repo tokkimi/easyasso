@@ -28,7 +28,7 @@ export function GenerateClient({ orgName, profile, categories, welcome }: { orgN
   const router = useRouter();
   const [f, setF] = useState({
     name: orgName || '', year: profile.year || '', mission: profile.mission || '', functioning: profile.functioning || '', actions: profile.actions || '',
-    beneficiaries: profile.beneficiaries || '', goodToKnow: profile.goodToKnow || '', city: profile.city || '', email: profile.email || '', category: profile.category || '',
+    beneficiaries: profile.beneficiaries || '', goodToKnow: profile.goodToKnow || '', news: '', city: profile.city || '', email: profile.email || '', category: profile.category || '',
   });
   const [logo, setLogo] = useState('');
   const [photos, setPhotos] = useState<string[]>(['']);
@@ -100,6 +100,12 @@ export function GenerateClient({ orgName, profile, categories, welcome }: { orgN
         <Field label="Comment fonctionne votre association ?">
           <textarea className="input min-h-[90px]" value={f.functioning} onChange={(e) => set('functioning', e.target.value)}
             placeholder="Bénévoles, adhérents, organisation, fréquence des actions, financement…" />
+        </Field>
+
+        <Field label="Actualités à publier (optionnel)">
+          <textarea className="input min-h-[90px]" value={f.news} onChange={(e) => set('news', e.target.value)}
+            placeholder="Un événement, une collecte, un nouveau projet… Laissez vide si vous ne voulez pas de page Actualités." />
+          <p className="mt-1 text-xs text-gray-400">La page Actualités sera créée uniquement si vous ajoutez du contenu ici.</p>
         </Field>
 
         <Field label="Vos actions / activités concrètes">

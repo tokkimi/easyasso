@@ -13,7 +13,7 @@ export function SettingsClient({ org, site, freeUrl, rootDomain, canDomain, cate
   const [verifying, setVerifying] = useState(false);
   const [savingDomain, setSavingDomain] = useState(false);
   const [domainChoice, setDomainChoice] = useState<'connect' | 'buy' | null>(site.customDomain ? 'connect' : null);
-  const [profile, setProfile] = useState({ year: '', category: '', mission: '', functioning: '', actions: '', beneficiaries: '', goodToKnow: '', city: '', email: '', ...(org.profile || {}) });
+  const [profile, setProfile] = useState({ year: '', category: '', mission: '', functioning: '', actions: '', beneficiaries: '', goodToKnow: '', city: '', email: '', legalName: '', registrationNumber: '', legalAddress: '', publicationDirector: '', facebook: '', instagram: '', linkedin: '', youtube: '', ...(org.profile || {}) });
 
   async function saveName() {
     await fetch('/api/site', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name }) });
@@ -75,6 +75,25 @@ export function SettingsClient({ org, site, freeUrl, rootDomain, canDomain, cate
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
           <div><label className="label">Ville / territoire</label><input className="input" value={profile.city} onChange={(e) => setProfileField('city', e.target.value)} /></div>
           <div><label className="label">E-mail public</label><input type="email" className="input" value={profile.email} onChange={(e) => setProfileField('email', e.target.value)} placeholder="contact@association.fr" /></div>
+        </div>
+        <div className="mt-6 border-t border-gray-100 pt-5">
+          <h3 className="font-bold text-gray-900">Réseaux sociaux</h3>
+          <p className="mb-3 text-sm text-gray-500">Ajoutez uniquement les comptes officiels de l’association.</p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {(['facebook', 'instagram', 'linkedin', 'youtube'] as const).map((network) => (
+              <div key={network}><label className="label capitalize">{network}</label><input className="input" type="url" value={profile[network]} onChange={(e) => setProfileField(network, e.target.value)} placeholder={`https://${network}.com/...`} /></div>
+            ))}
+          </div>
+        </div>
+        <div className="mt-6 border-t border-gray-100 pt-5">
+          <h3 className="font-bold text-gray-900">Informations légales</h3>
+          <p className="mb-3 text-sm text-gray-500">Elles servent à générer automatiquement les mentions légales et les conditions d’utilisation.</p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div><label className="label">Nom légal complet</label><input className="input" value={profile.legalName} onChange={(e) => setProfileField('legalName', e.target.value)} /></div>
+            <div><label className="label">Numéro RNA / SIREN / enregistrement</label><input className="input" value={profile.registrationNumber} onChange={(e) => setProfileField('registrationNumber', e.target.value)} /></div>
+            <div className="sm:col-span-2"><label className="label">Adresse du siège social</label><input className="input" value={profile.legalAddress} onChange={(e) => setProfileField('legalAddress', e.target.value)} /></div>
+            <div className="sm:col-span-2"><label className="label">Responsable de publication</label><input className="input" value={profile.publicationDirector} onChange={(e) => setProfileField('publicationDirector', e.target.value)} /></div>
+          </div>
         </div>
         <button onClick={saveProfile} className="btn btn-primary mt-5"><Save className="h-4 w-4" /> Enregistrer la fiche</button>
       </div>

@@ -15,7 +15,7 @@ export default async function OnboardingPage() {
   const access = planAccess(org);
 
   const site = await (await import('@/lib/prisma')).prisma.site.findUnique({ where: { organizationId: org.id } });
-  const url = site ? siteUrlFor(site.subdomain, site.customDomain) : '';
+  const url = site ? siteUrlFor(site.subdomain, site.customDomain, site.domainVerified) : '';
 
   return (
     <div className="grid min-h-screen place-items-center bg-gray-50 px-4 py-10">

@@ -13,7 +13,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   if (!access.hasAccess) redirect('/onboarding'); // trial expired or unpaid → paywall
 
   const site = await prisma.site.findUnique({ where: { organizationId: org.id } });
-  const siteUrl = site ? siteUrlFor(site.subdomain, site.customDomain) : '#';
+  const siteUrl = site ? siteUrlFor(site.subdomain, site.customDomain, site.domainVerified) : '#';
 
   return (
     <div className="min-h-screen bg-gray-50 lg:flex">

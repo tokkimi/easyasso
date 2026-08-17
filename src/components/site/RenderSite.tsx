@@ -16,7 +16,7 @@ export async function loadSiteBySubdomain(subdomain: string) {
 }
 export async function loadSiteByDomain(domain: string) {
   return prisma.site.findFirst({
-    where: { customDomain: domain },
+    where: { customDomain: domain, domainVerified: true },
     include: { pages: { orderBy: { order: 'asc' }, include: { blocks: { orderBy: { order: 'asc' } } } } },
   });
 }

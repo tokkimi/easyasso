@@ -93,6 +93,7 @@ function buildPrompt(input: GenerateInput): string {
     input.actions ? `Actions / activités : ${input.actions}` : '',
     input.beneficiaries ? `Public aidé : ${input.beneficiaries}` : '',
     input.goodToKnow ? `Choses à savoir : ${input.goodToKnow}` : '',
+    input.news ? `Actualités à publier : ${input.news}` : 'Aucune actualité fournie : ne pas créer de page Actualités.',
     input.city ? `Ville : ${input.city}` : '',
     input.email ? `Email de contact : ${input.email}` : '',
   ].filter(Boolean);
@@ -158,7 +159,8 @@ export async function aiGenerateSite(input: GenerateInput): Promise<BuiltTemplat
   let homeAssigned = false;
   const usedSlugs = new Set<string>();
 
-  t.pages = ai.pages.slice(0, 8).map((p, i) => {
+  const aiPages = ai.pages.filter((p) => input.news?.trim() || !/actualit/i.test(`${p.slug} ${p.title}`));
+  t.pages = aiPages.slice(0, 8).map((p, i) => {
     let slug = slugify(p.slug || p.title || `page-${i}`);
     while (usedSlugs.has(slug)) slug = `${slug}-${i}`;
     usedSlugs.add(slug);

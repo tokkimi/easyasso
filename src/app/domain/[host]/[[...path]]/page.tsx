@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic';
 
 export async function generateMetadata({ params }: { params: Promise<{ host: string }> }): Promise<Metadata> {
   const { host } = await params;
-  const site = await prisma.site.findFirst({ where: { customDomain: decodeURIComponent(host) } });
+  const site = await prisma.site.findFirst({ where: { customDomain: decodeURIComponent(host), domainVerified: true } });
   return { title: site?.name || 'Easy Asso' };
 }
 

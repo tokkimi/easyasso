@@ -47,6 +47,7 @@ export interface GenerateInput {
   goodToKnow?: string;    // choses à savoir
   beneficiaries?: string; // public aidé
   actions?: string;       // actions concrètes / activités
+  news?: string;
   city?: string;
   email?: string;
   category?: string;
@@ -106,6 +107,9 @@ export function buildGeneratedSite(input: GenerateInput): BuiltTemplate {
   t.footer.logoText = copy.name;
   t.footer.logoUrl = input.logoUrl || undefined;
   if (copy.footerText) t.footer.text = copy.footerText;
+  if (!input.news?.trim()) {
+    t.pages = t.pages.filter((page) => page.slug !== 'actualites' && !/actualit/i.test(page.title));
+  }
 
   for (const page of t.pages) {
     for (const block of page.blocks) {

@@ -37,8 +37,10 @@ export function rootDomain(): string {
   return process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'localhost:3000';
 }
 
-export function siteUrlFor(subdomain: string, customDomain?: string | null): string {
-  if (customDomain) return `https://${customDomain}`;
+export function siteUrlFor(subdomain: string, customDomain?: string | null, domainVerified = false): string {
+  // Never send an owner or visitor to an unverified domain: DNS and SSL may
+  // still point elsewhere. The permanent EasyAsso address remains available.
+  if (customDomain && domainVerified) return `https://${customDomain}`;
   const root = rootDomain();
   const protocol = root.includes('localhost') ? 'http' : 'https';
   // Path-based routing keeps it working on Vercel without wildcard DNS setup

@@ -27,6 +27,7 @@ export async function POST(req: Request) {
       goodToKnow: b.goodToKnow || undefined,
       beneficiaries: b.beneficiaries || undefined,
       actions: b.actions || undefined,
+      news: b.news || undefined,
       city: b.city || undefined,
       email: b.email || undefined,
       category: b.category || undefined,
@@ -40,7 +41,24 @@ export async function POST(req: Request) {
 
     const site = await prisma.site.findUniqueOrThrow({ where: { organizationId: ctx.org.id } });
     await applyTemplateToSite(site.id, generated, name);
-    await prisma.site.update({ where: { id: site.id }, data: { name, published: true } });
+    const profile = (ctx.org.profile as Record<string, string>) || {};
+    const legalName = profile.legalName || name;
+    const legalDetails = [
+      `Éditeur du site : ${legalName}`,
+      profile.registrationNumber ? `Numéro d’enregistrement : ${profile.registrationNumber}` : '',
+      profile.legalAddress ? `Siège social : ${profile.legalAddress}` : '',
+      input.email ? `Contact : ${input.email}` : '',
+      profile.publicationDirector ? `Responsable de publication : ${profile.publicationDirector}` : '',
+    ].filter(Boolean).join('\n\n');
+    const cgvContent = `Conditions générales d’utilisation du site de ${legalName}\n\nLe présent site informe le public sur les activités de l’association et permet, le cas échéant, d’effectuer des dons ou de prendre contact avec elle. Les informations communiquées doivent être utilisées de manière loyale.\n\nLes dons et paiements sont confirmés lors de leur validation par le prestataire de paiement. Un don définitivement encaissé ne constitue pas l’achat d’un produit ou service. Pour toute demande, utilisez les coordonnées publiées sur le site.\n\nLes textes, images et signes distinctifs restent la propriété de leurs titulaires. Toute reproduction non autorisée est interdite.\n\n${legalDetails}`;
+    await prisma.site.update({
+      where: { id: site.id },
+      data: {
+        name,
+        published: true,
+        footer: { ...(generated.footer as any), showCgv: true, showMentions: true, cgvContent, mentionsContent: legalDetails },
+      },
+    });
     return NextResponse.json({ ok: true });
   } catch (e) { return handleApiError(e); }
 }

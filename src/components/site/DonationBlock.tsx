@@ -31,7 +31,7 @@ export function DonationBlock({ content, organizationId }: { content: any; organ
     if (paymentUrl) window.location.assign(paymentUrl);
   }
 
-  return <div className="donation-block mx-auto max-w-3xl rounded-3xl bg-white p-5 text-left shadow-lg ring-1 ring-gray-200 md:p-9">
+  return <div className="donation-block mx-auto max-w-3xl text-left">
     <div className="text-center"><h2 className="text-3xl font-extrabold text-gray-900">{content.title || (en ? 'Support our causes' : 'Soutenir nos causes')}</h2><p className="mt-3 text-gray-600">{content.intro || (en ? 'Your donation directly supports all our work.' : 'Votre don soutient directement l’ensemble de nos actions.')}</p></div>
 
     <form onSubmit={submit} className="mt-8 space-y-5">

@@ -14,6 +14,7 @@ export default async function SettingsPage() {
   return (
     <SettingsClient
       org={{ name: org.name, planStatus: org.planStatus, paidAt: org.paidAt ? String(org.paidAt) : null, profile: org.profile }}
+      user={{ name: ctx.user.name || '', email: ctx.user.email, emailVerified: ctx.user.emailVerified ? String(ctx.user.emailVerified) : null }}
       site={{ name: site.name, subdomain: site.subdomain, customDomain: site.customDomain, domainVerified: site.domainVerified, published: site.published }}
       freeUrl={siteUrlFor(site.subdomain, null)}
       rootDomain={rootDomain()}

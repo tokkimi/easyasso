@@ -8,6 +8,9 @@ import { NewsletterForm } from './NewsletterForm';
 interface NavItem { title: string; slug: string; isHome: boolean }
 const SOCIAL_LABELS = new Set(['facebook', 'instagram', 'linkedin', 'youtube', 'tiktok', 'x']);
 const isSocialColumn = (column: FooterConfig['columns'][number]) => column.links.length > 0 && column.links.every((link) => SOCIAL_LABELS.has(link.label.toLowerCase()));
+const logoFrameClass = 'inline-flex max-w-[220px] items-center rounded-xl bg-white/90 p-1.5 shadow-sm ring-1 ring-black/5 sm:max-w-[280px]';
+const headerLogoClass = 'max-h-12 w-auto max-w-full object-contain';
+const footerLogoClass = 'max-h-16 w-auto max-w-full object-contain';
 
 function SocialMark({ label }: { label: string }) {
   const key = label.toLowerCase();
@@ -32,12 +35,14 @@ export function PublicHeader({
       className={`public-header-shell ${header.sticky ? 'sticky top-0 z-40' : ''} border-b border-black/5 backdrop-blur`}
     >
       <div className="relative mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-3">
-        <Link href={basePath || '/'} className="min-w-0 flex-1 truncate text-lg font-extrabold">
+        <Link href={basePath || '/'} className="flex min-w-0 flex-1 items-center text-lg font-extrabold">
           {header.logoUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={header.logoUrl} alt={header.logoText} className="h-8 w-auto" />
+            <span className={logoFrameClass}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={header.logoUrl} alt={header.logoText} className={headerLogoClass} />
+            </span>
           ) : (
-            header.logoText
+            <span className="truncate">{header.logoText}</span>
           )}
         </Link>
         <div className="public-header-desktop items-center gap-4">
@@ -83,8 +88,10 @@ export function PublicFooter({
         <div>
           <div className="text-lg font-extrabold">
             {footer.logoUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={footer.logoUrl} alt={footer.logoText} className="h-8 w-auto" />
+              <span className={logoFrameClass}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={footer.logoUrl} alt={footer.logoText} className={footerLogoClass} />
+              </span>
             ) : footer.logoText}
           </div>
           <p className="mt-3 text-sm opacity-80">{footer.text}</p>

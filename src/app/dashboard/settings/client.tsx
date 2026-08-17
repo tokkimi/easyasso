@@ -1,19 +1,21 @@
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Globe, Check, Copy, CreditCard, ExternalLink, Building2, Save, ShoppingCart, Link2, ShieldCheck } from 'lucide-react';
+import { Globe, Check, Copy, CreditCard, ExternalLink, Building2, Save, ShoppingCart, Link2, ShieldCheck, UserRound, Lock, Power } from 'lucide-react';
 import { PageHeader } from '@/components/ui';
 import { formatDate } from '@/lib/utils';
 
-export function SettingsClient({ org, site, freeUrl, rootDomain, canDomain, categories }: any) {
+export function SettingsClient({ org, user, site, freeUrl, rootDomain, canDomain, categories }: any) {
   const router = useRouter();
   const [name, setName] = useState(site.name);
+  const [published, setPublished] = useState(!!site.published);
   const [domain, setDomain] = useState(site.customDomain || '');
   const [msg, setMsg] = useState('');
   const [verifying, setVerifying] = useState(false);
   const [savingDomain, setSavingDomain] = useState(false);
   const [domainChoice, setDomainChoice] = useState<'connect' | 'buy' | null>(site.customDomain ? 'connect' : null);
   const [profile, setProfile] = useState({ language: 'fr', year: '', category: '', mission: '', functioning: '', actions: '', beneficiaries: '', goodToKnow: '', slogan: '', generateCgv: true, city: '', email: '', phone: '', legalName: '', registrationNumber: '', legalAddress: '', publicationDirector: '', facebook: '', instagram: '', linkedin: '', youtube: '', tiktok: '', twitter: '', ...(org.profile || {}) });
+  const [account, setAccount] = useState({ name: user.name || '', email: user.email || '', currentPassword: '', newPassword: '' });
 
   async function saveName() {
     await fetch('/api/site', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name }) });
@@ -49,6 +51,24 @@ export function SettingsClient({ org, site, freeUrl, rootDomain, canDomain, cate
     }
     setTimeout(() => setMsg(''), 3500);
   }
+  async function saveAccount() {
+    const res = await fetch('/api/account', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(account) });
+    const data = await res.json().catch(() => ({}));
+    setMsg(res.ok ? 'Compte mis à jour.' : (data.error || 'Impossible de mettre à jour le compte.'));
+    if (res.ok) {
+      setAccount((current) => ({ ...current, currentPassword: '', newPassword: '' }));
+      router.refresh();
+    }
+    setTimeout(() => setMsg(''), 3500);
+  }
+  async function togglePublished(value: boolean) {
+    setPublished(value);
+    const res = await fetch('/api/site', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ published: value }) });
+    setMsg(res.ok ? (value ? 'Votre site est en ligne.' : 'Votre site est hors ligne.') : 'Impossible de changer la mise en ligne.');
+    if (!res.ok) setPublished(!value);
+    router.refresh();
+    setTimeout(() => setMsg(''), 3000);
+  }
 
   return (
     <div className="max-w-3xl">
@@ -63,6 +83,19 @@ export function SettingsClient({ org, site, freeUrl, rootDomain, canDomain, cate
           <input className="input" value={name} onChange={(e) => setName(e.target.value)} />
           <button onClick={saveName} className="btn btn-primary shrink-0">Enregistrer</button>
         </div>
+      </div>
+
+      <div className="card mb-6">
+        <h2 className="mb-1 flex items-center gap-2 font-bold text-gray-900"><UserRound className="h-5 w-5" /> Mon compte</h2>
+        <p className="mb-5 text-sm text-gray-500">Modifiez l’email de connexion ou le mot de passe du compte.</p>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div><label className="label">Votre nom</label><input className="input" value={account.name} onChange={(e) => setAccount((current) => ({ ...current, name: e.target.value }))} /></div>
+          <div><label className="label">Email de connexion</label><input type="email" className="input" value={account.email} onChange={(e) => setAccount((current) => ({ ...current, email: e.target.value }))} /></div>
+          <div><label className="label">Mot de passe actuel</label><input type="password" className="input" value={account.currentPassword} onChange={(e) => setAccount((current) => ({ ...current, currentPassword: e.target.value }))} placeholder="Obligatoire pour changer email/mot de passe" /></div>
+          <div><label className="label">Nouveau mot de passe</label><input type="password" className="input" value={account.newPassword} onChange={(e) => setAccount((current) => ({ ...current, newPassword: e.target.value }))} placeholder="6 caractères minimum" /></div>
+        </div>
+        {!user.emailVerified && <p className="mt-3 rounded-xl bg-amber-50 p-3 text-sm text-amber-800">Email non vérifié : si vous changez d’email, un nouveau lien de vérification sera envoyé.</p>}
+        <button onClick={saveAccount} className="btn btn-primary mt-5"><Lock className="h-4 w-4" /> Enregistrer mon compte</button>
       </div>
 
       <div className="card mb-6">
@@ -178,7 +211,7 @@ export function SettingsClient({ org, site, freeUrl, rootDomain, canDomain, cate
       </div>
 
       {/* Billing */}
-      <div className="card">
+      <div className="card mb-6">
         <h2 className="mb-1 flex items-center gap-2 font-bold text-gray-900"><CreditCard className="h-5 w-5" /> Abonnement</h2>
         <div className="mt-2 flex items-center justify-between">
           <div>
@@ -189,6 +222,18 @@ export function SettingsClient({ org, site, freeUrl, rootDomain, canDomain, cate
           </div>
           <span className="text-sm text-gray-500">Paiement unique — accès à vie</span>
         </div>
+      </div>
+
+      <div className="card border-2 border-gray-200">
+        <h2 className="mb-1 flex items-center gap-2 font-bold text-gray-900"><Power className="h-5 w-5" /> Mise en ligne du site</h2>
+        <p className="mb-4 text-sm text-gray-500">Dernier réglage : vous pouvez cacher le site au public sans supprimer votre contenu.</p>
+        <label className="flex cursor-pointer items-center justify-between gap-4 rounded-2xl bg-gray-50 p-4">
+          <span>
+            <strong className="block text-gray-900">{published ? 'Site actuellement en ligne' : 'Site actuellement hors ligne'}</strong>
+            <span className="text-sm text-gray-500">{published ? 'Les visiteurs peuvent voir le site.' : 'Les visiteurs ne voient pas le site pour le moment.'}</span>
+          </span>
+          <input type="checkbox" className="h-6 w-6" checked={published} onChange={(e) => togglePublished(e.target.checked)} />
+        </label>
       </div>
     </div>
   );

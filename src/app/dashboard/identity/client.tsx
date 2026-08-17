@@ -43,7 +43,7 @@ export function IdentityClient({ theme: t0, header: h0, footer: f0 }: { theme: a
           <div className="card">
             <h2 className="mb-3 font-bold text-gray-900">Logo</h2>
             <p className="mb-3 text-sm text-gray-500">Importez le logo de votre association. Il s’applique automatiquement à l’en-tête et au pied de page.</p>
-            <ImageInput value={logo} onChange={setL} />
+            <ImageInput value={logo} onChange={setL} kind="logo" />
           </div>
 
           <div className="card">
@@ -76,7 +76,7 @@ export function IdentityClient({ theme: t0, header: h0, footer: f0 }: { theme: a
           <div className="overflow-hidden rounded-2xl ring-1 ring-gray-200" style={{ background: theme.background, color: theme.text, fontFamily: fontStack }}>
             <div className="flex items-center justify-between border-b border-black/5 px-4 py-3">
               <div className="flex items-center gap-2 font-extrabold">
-                {logo ? <img src={logo} alt="" className="h-7 w-auto" /> : <span>Votre association</span>}
+                {logo ? <img src={logo} alt="" className="max-h-12 max-w-44 rounded-lg bg-white/90 p-1 object-contain shadow-sm ring-1 ring-black/5" /> : <span>Votre association</span>}
               </div>
               <span className="rounded-lg px-3 py-1.5 text-sm font-semibold text-white" style={{ background: theme.primary }}>Faire un don</span>
             </div>

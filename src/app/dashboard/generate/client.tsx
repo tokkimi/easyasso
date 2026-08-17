@@ -23,6 +23,26 @@ function compressForGeneration(value: string, maxDimension: number, quality: num
   });
 }
 
+function prepareLogoForGeneration(value: string): Promise<string> {
+  if (!value.startsWith('data:image/')) return Promise.resolve(value);
+  if (value.startsWith('data:image/png') && value.length < 1_800_000) return Promise.resolve(value);
+  return new Promise((resolve) => {
+    const image = new Image();
+    image.onload = () => {
+      const ratio = Math.min(1, 1400 / Math.max(image.width, image.height));
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.max(1, Math.round(image.width * ratio));
+      canvas.height = Math.max(1, Math.round(image.height * ratio));
+      const context = canvas.getContext('2d');
+      if (!context) return resolve(value);
+      context.drawImage(image, 0, 0, canvas.width, canvas.height);
+      resolve(canvas.toDataURL(value.startsWith('data:image/jpeg') ? 'image/jpeg' : 'image/png', 0.95));
+    };
+    image.onerror = () => resolve(value);
+    image.src = value;
+  });
+}
+
 export function GenerateClient({ orgName, profile, categories, welcome, initialLogo = '' }: { orgName: string; profile: any; categories: { id: string; name: string }[]; welcome: boolean; initialLogo?: string }) {
   const [f, setF] = useState({
     name: orgName || '', year: profile.year || '', mission: profile.mission || '', functioning: profile.functioning || '', actions: profile.actions || '',
@@ -38,7 +58,7 @@ export function GenerateClient({ orgName, profile, categories, welcome, initialL
   async function generate() {
     if (!f.mission.trim()) return;
     setBusy(true); setError('');
-    const compressedLogo = logo ? await compressForGeneration(logo, 600, 0.72) : undefined;
+    const compressedLogo = logo ? await prepareLogoForGeneration(logo) : undefined;
     const compressedPhotos = await Promise.all(photos.filter(Boolean).map((photo) => compressForGeneration(photo, 900, 0.68)));
     const basePayload = { ...f, name: f.name.trim(), logoUrl: compressedLogo };
     // Keep the request safely below the hosting limit. URL-based photos do
@@ -94,7 +114,7 @@ export function GenerateClient({ orgName, profile, categories, welcome, initialL
         <div className="rounded-2xl border border-brand-100 bg-brand-50/60 p-4">
           <p className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-700">Logo de l’association</p>
           <p className="mb-3 text-sm text-gray-600">Il sera automatiquement utilisé dans l’en-tête et le pied de page du nouveau site généré.</p>
-          <ImageInput value={logo} onChange={setLogo} />
+          <ImageInput value={logo} onChange={setLogo} kind="logo" />
         </div>
 
         <Field label="À propos / votre mission ★">

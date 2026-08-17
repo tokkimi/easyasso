@@ -585,7 +585,7 @@ function HeaderEditor({ value, onChange }: { value: any; onChange: (v: any) => v
     <div className="space-y-4">
       <h3 className="font-bold text-gray-900">En-tête</h3>
       <Field label="Texte du logo"><input className="input" value={h.logoText || ''} onChange={(e) => set({ logoText: e.target.value })} /></Field>
-      <ImageInput label="Logo (image, optionnel)" value={h.logoUrl} onChange={(logoUrl) => set({ logoUrl })} />
+      <ImageInput label="Logo (image, optionnel)" value={h.logoUrl} onChange={(logoUrl) => set({ logoUrl })} kind="logo" />
       <Toggle checked={h.showNav ?? true} onChange={(v) => set({ showNav: v })} label="Afficher le menu" />
       <Toggle checked={h.sticky ?? true} onChange={(v) => set({ sticky: v })} label="En-tête fixe au défilement" />
       <Field label="Couleur de fond"><ColorGrid value={h.background} onChange={(c) => set({ background: c })} /></Field>
@@ -610,7 +610,7 @@ function FooterEditor({ value, onChange }: { value: any; onChange: (v: any) => v
         <div className="mt-3"><Field label="Couleur du texte"><ColorGrid value={f.textColor} onChange={(c) => set({ textColor: c })} /></Field></div>
       </div>
       <Field label="Texte du logo"><input className="input" value={f.logoText || ''} onChange={(e) => set({ logoText: e.target.value })} /></Field>
-      <ImageInput label="Logo (image)" value={f.logoUrl} onChange={(logoUrl) => set({ logoUrl })} />
+      <ImageInput label="Logo (image)" value={f.logoUrl} onChange={(logoUrl) => set({ logoUrl })} kind="logo" />
       <Field label="Texte de présentation"><textarea className="input min-h-[70px]" value={f.text || ''} onChange={(e) => set({ text: e.target.value })} /></Field>
       <Field label="Texte “tous droits réservés”"><input className="input" value={f.allRightsText || ''} onChange={(e) => set({ allRightsText: e.target.value })} /></Field>
       <div className="border-t border-gray-100 pt-3">

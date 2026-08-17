@@ -5,7 +5,8 @@ import { COLOR_PALETTE } from '@/lib/colors';
 import type { Align } from '@/lib/blocks';
 
 // Downscale an uploaded image in the browser to a data URL (no external storage needed).
-function fileToDataUrl(file: File, maxDim = 1400): Promise<string> {
+// Logos must keep transparency and sharp edges; photos can be compressed more.
+function fileToDataUrl(file: File, maxDim = 1400, kind: 'image' | 'logo' = 'image'): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => {
@@ -23,6 +24,10 @@ function fileToDataUrl(file: File, maxDim = 1400): Promise<string> {
         const ctx = canvas.getContext('2d');
         if (!ctx) return reject(new Error('canvas'));
         ctx.drawImage(img, 0, 0, width, height);
+        if (kind === 'logo') {
+          resolve(canvas.toDataURL(file.type === 'image/jpeg' ? 'image/jpeg' : 'image/png', 0.95));
+          return;
+        }
         const type = file.type === 'image/png' ? 'image/png' : 'image/jpeg';
         resolve(canvas.toDataURL(type, 0.85));
       };
@@ -34,7 +39,7 @@ function fileToDataUrl(file: File, maxDim = 1400): Promise<string> {
   });
 }
 
-export function ImageInput({ value, onChange, label }: { value?: string; onChange: (url: string) => void; label?: string }) {
+export function ImageInput({ value, onChange, label, kind = 'image' }: { value?: string; onChange: (url: string) => void; label?: string; kind?: 'image' | 'logo' }) {
   const fileRef = useRef<HTMLInputElement>(null);
   const [mode, setMode] = useState<'upload' | 'url'>('upload');
   const [loading, setLoading] = useState(false);
@@ -43,16 +48,16 @@ export function ImageInput({ value, onChange, label }: { value?: string; onChang
     const f = e.target.files?.[0];
     if (!f) return;
     setLoading(true);
-    try { onChange(await fileToDataUrl(f)); } finally { setLoading(false); }
+    try { onChange(await fileToDataUrl(f, kind === 'logo' ? 2200 : 1400, kind)); } finally { setLoading(false); }
   }
 
   return (
     <div>
       {label && <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-500">{label}</label>}
       {value ? (
-        <div className="relative mb-2 overflow-hidden rounded-lg border border-gray-200">
+        <div className={`relative mb-2 overflow-hidden rounded-lg border border-gray-200 ${kind === 'logo' ? 'bg-[linear-gradient(45deg,#f3f4f6_25%,transparent_25%),linear-gradient(-45deg,#f3f4f6_25%,transparent_25%),linear-gradient(45deg,transparent_75%,#f3f4f6_75%),linear-gradient(-45deg,transparent_75%,#f3f4f6_75%)] bg-[length:16px_16px] bg-[position:0_0,0_8px,8px_-8px,-8px_0]' : ''}`}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={value} alt="" className="max-h-32 w-full object-cover" />
+          <img src={value} alt="" className={kind === 'logo' ? 'mx-auto max-h-40 w-full object-contain p-4' : 'max-h-32 w-full object-cover'} />
           <button type="button" onClick={() => onChange('')} className="absolute right-1 top-1 rounded-full bg-black/60 p-1 text-white hover:bg-black" aria-label="Retirer"><X className="h-3.5 w-3.5" /></button>
         </div>
       ) : null}

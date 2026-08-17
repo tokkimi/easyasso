@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { PERMISSIONS } from '@/lib/permissions';
 import { siteUrlFor, rootDomain } from '@/lib/utils';
 import { SettingsClient } from './client';
+import { TEMPLATES } from '@/lib/templates';
 
 export const dynamic = 'force-dynamic';
 
@@ -12,11 +13,12 @@ export default async function SettingsPage() {
   const site = await prisma.site.findUniqueOrThrow({ where: { organizationId: org.id } });
   return (
     <SettingsClient
-      org={{ name: org.name, planStatus: org.planStatus, paidAt: org.paidAt ? String(org.paidAt) : null }}
+      org={{ name: org.name, planStatus: org.planStatus, paidAt: org.paidAt ? String(org.paidAt) : null, profile: org.profile }}
       site={{ name: site.name, subdomain: site.subdomain, customDomain: site.customDomain, domainVerified: site.domainVerified, published: site.published }}
       freeUrl={siteUrlFor(site.subdomain, null)}
       rootDomain={rootDomain()}
       canDomain={ctx.permissions.has(PERMISSIONS.SITE_DOMAIN)}
+      categories={TEMPLATES.map((template) => ({ id: template.id, name: template.name }))}
     />
   );
 }

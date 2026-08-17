@@ -5,25 +5,32 @@ import { Sparkles, Loader2, Wand2, Plus } from 'lucide-react';
 import { PageHeader } from '@/components/ui';
 import { ImageInput, Field } from '../editor/controls';
 
-export function GenerateClient({ orgName, categories, welcome }: { orgName: string; categories: { id: string; name: string }[]; welcome: boolean }) {
+export function GenerateClient({ orgName, profile, categories, welcome }: { orgName: string; profile: any; categories: { id: string; name: string }[]; welcome: boolean }) {
   const router = useRouter();
   const [f, setF] = useState({
-    name: orgName || '', year: '', mission: '', functioning: '', actions: '',
-    beneficiaries: '', goodToKnow: '', city: '', email: '', category: '',
+    name: orgName || '', year: profile.year || '', mission: profile.mission || '', functioning: profile.functioning || '', actions: profile.actions || '',
+    beneficiaries: profile.beneficiaries || '', goodToKnow: profile.goodToKnow || '', city: profile.city || '', email: profile.email || '', category: profile.category || '',
   });
   const [logo, setLogo] = useState('');
   const [photos, setPhotos] = useState<string[]>(['']);
   const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
   const set = (k: string, v: string) => setF((s) => ({ ...s, [k]: v }));
 
   async function generate() {
     if (!f.mission.trim()) return;
-    setBusy(true);
-    await fetch('/api/site/generate', {
+    setBusy(true); setError('');
+    const res = await fetch('/api/site/generate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ ...f, name: f.name.trim(), logoUrl: logo || undefined, photos: photos.filter(Boolean) }),
     });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      setError(data.error || 'La génération a échoué. Votre ancien site a été conservé. Réessayez.');
+      setBusy(false);
+      return;
+    }
     router.push('/dashboard/editor');
   }
 
@@ -42,6 +49,8 @@ export function GenerateClient({ orgName, categories, welcome }: { orgName: stri
       )}
 
       <div className="card space-y-5">
+        {error && <div className="rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</div>}
+        {Object.values(profile || {}).some(Boolean) && <div className="rounded-lg bg-green-50 p-3 text-sm text-green-800">Les informations enregistrées dans Réglages ont été préremplies. Vous pouvez les adapter pour cette génération.</div>}
         <div className="grid gap-4 sm:grid-cols-3">
           <div className="sm:col-span-2">
             <Field label="Nom de l’association"><input className="input" value={f.name} onChange={(e) => set('name', e.target.value)} placeholder="Les Amis du Quartier" /></Field>

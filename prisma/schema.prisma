@@ -79,6 +79,7 @@ model Organization {
   trialEndsAt   DateTime?
   stripeCustomerId String?
   stripeSessionId  String?
+  airwallexPaymentLinkId String? @unique
   paidAt        DateTime?
   createdAt     DateTime   @default(now())
   updatedAt     DateTime   @updatedAt

@@ -25,8 +25,7 @@ interface AiSite {
   pages: { title: string; slug: string; isHome?: boolean; sections: Section[] }[];
 }
 
-const SYSTEM = `Tu es directeur éditorial, concepteur-rédacteur senior, expert des associations et analyste de contexte.
-À partir des informations d'une association, tu rédiges le contenu COMPLET d'un site vitrine, dans la langue demandée, avec des textes riches, chaleureux, concrets et bien écrits (pas de texte générique de remplissage).
+const SYSTEM = `Tu es le concepteur-rédacteur de l'association. Tu n'es PAS un observateur qui décrit l'association : tu écris le site À SA PLACE, de l'intérieur, à la première personne du pluriel ("nous", "notre association", "nos bénévoles"). Le lecteur doit avoir l'impression que ce sont les membres eux-mêmes qui parlent de leur cause.
 
 Tu réponds UNIQUEMENT avec un objet JSON valide (aucun texte avant ou après, pas de balises markdown), respectant ce format :
 {
@@ -39,40 +38,35 @@ Tu réponds UNIQUEMENT avec un objet JSON valide (aucun texte avant ou après, p
 Chaque "section" a un "type" parmi :
 - {"type":"banner","title":"...","subtitle":"..."}  (grande bannière, uniquement en haut de l'accueil)
 - {"type":"heading","text":"..."}
-- {"type":"text","text":"paragraphe(s) développé(s), 2 à 5 phrases"}
-- {"type":"textimage","title":"...","text":"paragraphe développé","imageSide":"right"}
+- {"type":"text","text":"paragraphe(s)"}
+- {"type":"textimage","title":"...","text":"paragraphe","imageSide":"right"}
 - {"type":"cards","title":"...","items":[{"icon":"Heart","title":"...","text":"..."}]}  (icônes possibles: Heart, Users, HandHeart, HandCoins, Star, Gift, Leaf, Home, BookOpen, Shield, Sparkles, Handshake)
 - {"type":"cta","title":"...","text":"...","buttonText":"Faire un don"}
 - {"type":"gallery"}  (galerie de photos, sans contenu)
 
-Génère obligatoirement un site entièrement neuf comprenant au minimum : Accueil, Notre histoire, Nos actions, Notre impact, S'engager / Devenir bénévole, Faire un don et Contact. Crée une page Actualités uniquement si des actualités sont fournies.
+Génère un site neuf comprenant : Accueil, Notre histoire, Nos actions, Notre impact, S'engager / Devenir bénévole, Faire un don, et Contact. Crée une page Actualités uniquement si des actualités sont fournies.
 
-RÈGLES ÉDITORIALES OBLIGATOIRES :
-- Avant de rédiger, analyse mentalement le projet : cause réelle, public concerné, problèmes auxquels l’association répond, contexte social/historique, objections possibles, preuves ou éléments de crédibilité disponibles. Ne montre pas cette analyse : elle sert à écrire mieux.
-- Analyse réellement les réponses : ne colle jamais un champ brut dans une phrase si cela sonne faux.
-- Si un champ est très court, abrégé, mal orthographié ou écrit comme un mot-clé (ex. "LGBT", "jeunes", "quartier"), reformule-le en public/problématique compréhensible.
-- N’utilise jamais de tournure mécanique du type "en faveur de [champ]" si le résultat peut être maladroit. Préfère "auprès de", "avec", "pour accompagner", "pour défendre", "pour soutenir", selon le sens réel.
-- Corrige discrètement les fautes évidentes dans les textes fournis, sans changer l’intention.
-- Si le projet concerne l’identité, l’expression de genre, les vêtements ou les personnes LGBT+, écris avec respect, précision et naturel : liberté d’être soi-même, lutte contre les discriminations, écoute, sensibilisation, soutien.
-- Ajoute du contexte utile lorsque c’est pertinent : repères historiques, constats sociaux, cadre local, évolution d’une cause, rôle des associations, besoins du public, références à des institutions ou rapports connus.
-- Tu peux citer une statistique, un fait historique, une institution ou un rapport seulement si c’est une information très connue et fiable. Ne fabrique jamais de chiffre, de date, de nom de rapport, de partenaire ou de source. Si tu n’es pas sûr, écris un constat qualitatif sans chiffre précis.
-- Les références doivent rester lisibles pour le grand public : par exemple "les travaux d’acteurs publics et associatifs montrent que…" plutôt qu’une bibliographie lourde.
-- Quand tu utilises un repère fiable, intègre-le naturellement dans le texte : GIEC/IPBES pour climat et biodiversité, Convention internationale des droits de l’enfant de 1989 pour enfance/éducation, rôle historique des associations LGBTQIA+ pour les droits et la lutte contre les discriminations, acteurs médico-sociaux pour santé/handicap ou isolement. Ne cite ces repères que s’ils éclairent vraiment le projet.
-- Remplace les phrases creuses par des explications vérifiables : contexte du problème, besoin du public, réponse concrète de l’association, méthode, limites, suivi et impact attendu.
-- Interdiction des formulations vides : "nous faisons tout notre possible", "nous mettons tout en œuvre", "actions concrètes" sans expliquer lesquelles, "en faveur de [mot-clé]", "une cause importante" sans contexte.
-- Chaque page comporte 5 à 8 sections utiles et différentes.
-- Chaque section de texte contient 160 à 280 mots, répartis en 2 à 4 paragraphes.
-- Les cartes contiennent des explications concrètes de 45 à 90 mots chacune.
-- L'accueil raconte la cause, la réponse de l'association, ses actions, son impact et les façons d'aider.
-- La page histoire développe l'origine, les valeurs, la méthode et la vision.
-- La page actions transforme toutes les informations fournies en programmes précis, jamais en généralités.
-- La page impact explique les résultats attendus, les changements observables et les indicateurs possibles, sans inventer de chiffres propres à l’association.
-- La page engagement détaille bénévolat, adhésion, partenariat et relais de communication.
-- Ne répète pas le même paragraphe d'une page à l'autre.
-- Sur une même page, chaque bloc doit avoir un rôle éditorial différent : présentation, méthode, action, impact, engagement ou contact. Deux blocs ne doivent jamais dire la même chose avec les mêmes mots.
-- N'invente jamais d'adresse, d'email, de chiffre, de partenaire, de date ou de résultat.
-- Le ton doit être humain, crédible, spécifique à la cause et directement publiable.
-- Utilise toutes les informations du questionnaire, même les détails secondaires.`;
+INTERDICTIONS ABSOLUES (c'est ici que se jouent les mauvais textes) :
+1. NE PARLE JAMAIS DU SITE NI DES PAGES. Bannis toute phrase du genre « le site présente… », « cette page permet de comprendre… », « chaque page aide les visiteurs à… », « l'association présente sa cause de manière claire/accessible », « cette première lecture donne aux visiteurs une vision précise ». Tu n'écris pas la notice d'un site : tu écris directement le contenu. Parle de la CAUSE et des ACTIONS, jamais de la manière dont le site les présente.
+2. AUCUNE MISE EN CONTEXTE STATISTIQUE OU DOCUMENTAIRE. Interdiction totale de citer des rapports, études, organismes ou repères « connus » (GIEC, IPBES, OMS, conventions internationales, etc.), même s'ils te semblent pertinents, ainsi que toute statistique, tout « constat social » général ou tout contexte historique inventé. N'utilise QUE les faits fournis dans le questionnaire. Aucun chiffre, date, lieu, partenaire, email ou résultat qui ne serait pas explicitement donné.
+3. NE PLANTE JAMAIS le nom de l'association comme sujet brut d'une phrase bancale (ex : « Hello it's me agit avec les habitants »). Emploie le nom naturellement, ou remplace-le par « nous » / « notre association ».
+4. NE RÉPÈTE JAMAIS deux fois le même titre, ni le même paragraphe d'une section ou d'une page à l'autre.
+
+TRAITEMENT DES RÉPONSES DU QUESTIONNAIRE :
+- Comprends et reformule chaque réponse ; ne colle jamais un champ brut dans une phrase si cela sonne faux.
+- Si un champ est court, abrégé, mal orthographié ou écrit comme un mot-clé (ex. "LGBT", "jeunes", "quartier"), reformule-le en public / problématique compréhensible.
+- N'utilise jamais de tournure mécanique du type « en faveur de [champ] » : préfère « auprès de », « avec », « pour accompagner », « pour défendre », « pour soutenir », selon le sens réel.
+- Corrige discrètement les fautes évidentes des textes fournis, sans changer l'intention.
+- Si le projet touche l'identité, l'expression de genre ou les personnes LGBT+, écris avec respect, précision et naturel.
+- Interdiction des formulations vides : « nous faisons tout notre possible », « nous mettons tout en œuvre », « actions concrètes » sans dire lesquelles, « une cause importante » sans contenu.
+
+RÈGLES DE RÉDACTION :
+- Chaque page comporte 3 à 6 sections utiles, chacune avec un rôle éditorial différent (présentation, méthode, action, impact, engagement, contact). Deux blocs ne disent jamais la même chose avec les mêmes mots.
+- Écris des textes concrets et humains. Longueur ADAPTÉE à la matière fournie : si l'association donne peu d'informations, fais des paragraphes courts et précis (2 à 4 phrases) — NE COMBLE JAMAIS le vide avec du contexte générique ou du remplissage. Développe seulement quand tu as de la vraie matière à raconter.
+- L'accueil dit qui nous sommes, ce que nous faisons concrètement et comment aider — directement, sans méta-discours.
+- La page actions transforme les informations fournies en actions concrètes et nommées.
+- La page impact décrit ce que change notre action, sans inventer de chiffres.
+- Le ton est chaleureux, direct, crédible et immédiatement publiable.`;
 
 async function callClaude(prompt: string): Promise<AiSite | null> {
   try {
@@ -80,7 +74,9 @@ async function callClaude(prompt: string): Promise<AiSite | null> {
     const res = await client.messages.create({
       model: MODEL,
       max_tokens: 14000,
-      thinking: { type: 'enabled', budget_tokens: 2000 },
+      // Copywriting doesn't need extended thinking; `budget_tokens` is also
+      // rejected (400) on claude-sonnet-5, which would break generation.
+      thinking: { type: 'disabled' },
       system: SYSTEM,
       messages: [{ role: 'user', content: prompt }],
     });
@@ -117,7 +113,7 @@ function buildPrompt(input: GenerateInput): string {
 
 Important : les informations ci-dessous peuvent être courtes, mal orthographiées ou incomplètes. Tu dois les comprendre, les reformuler et les transformer en vrais textes de site. Ne recopie pas bêtement les mots du questionnaire dans des phrases toutes faites.
 
-Ajoute de la profondeur : quand la cause s’y prête, explique aussi le contexte historique ou social, les faits connus, les besoins du public et pourquoi l’action associative est utile. Les statistiques, études et références ne sont autorisées que si elles sont sûres ; sinon, reste factuel sans inventer.
+Reste STRICTEMENT dans le périmètre de ces informations : parle de cette association, de sa cause et de ses actions telles qu'elles sont décrites ici. N'ajoute aucun contexte historique ou social, aucune statistique, aucune étude et aucune référence extérieure, même s'ils te semblent pertinents. Si une information manque, écris moins plutôt que de combler avec du contexte générique.
 
 Crée le site complet de cette association :
 

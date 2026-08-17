@@ -6,6 +6,8 @@ import type { HeaderConfig, FooterConfig, ButtonConfig } from '@/lib/blocks';
 import { NewsletterForm } from './NewsletterForm';
 
 interface NavItem { title: string; slug: string; isHome: boolean }
+const SOCIAL_LABELS = new Set(['facebook', 'instagram', 'linkedin', 'youtube', 'tiktok', 'x']);
+const isSocialColumn = (column: FooterConfig['columns'][number]) => column.links.length > 0 && column.links.every((link) => SOCIAL_LABELS.has(link.label.toLowerCase()));
 
 function SocialMark({ label }: { label: string }) {
   const key = label.toLowerCase();
@@ -91,11 +93,11 @@ export function PublicFooter({
         {footer.columns?.map((col, i) => (
           <div key={i}>
             <p className="text-sm font-bold uppercase tracking-wide opacity-90">{col.title}</p>
-            <ul className={`mt-3 text-sm opacity-80 ${col.title === 'Réseaux sociaux' ? 'flex flex-wrap gap-2' : 'space-y-2'}`}>
+            <ul className={`mt-3 text-sm opacity-80 ${isSocialColumn(col) ? 'flex flex-wrap gap-2' : 'space-y-2'}`}>
               {col.links.map((l, j) => (
                 <li key={j}>
-                  <a href={l.href.startsWith('/') ? `${basePath}${l.href}` : l.href} target={col.title === 'Réseaux sociaux' ? '_blank' : undefined} rel={col.title === 'Réseaux sociaux' ? 'noreferrer' : undefined} title={l.label} aria-label={l.label} className={col.title === 'Réseaux sociaux' ? 'grid h-11 w-11 place-items-center rounded-xl border border-current/20 transition hover:bg-white/10 hover:opacity-100' : 'hover:opacity-100'}>
-                    {col.title === 'Réseaux sociaux' ? <SocialMark label={l.label} /> : l.label}
+                  <a href={l.href.startsWith('/') ? `${basePath}${l.href}` : l.href} target={isSocialColumn(col) ? '_blank' : undefined} rel={isSocialColumn(col) ? 'noreferrer' : undefined} title={l.label} aria-label={l.label} className={isSocialColumn(col) ? 'grid h-11 w-11 place-items-center rounded-xl border border-current/20 transition hover:bg-white/10 hover:opacity-100' : 'hover:opacity-100'}>
+                    {isSocialColumn(col) ? <SocialMark label={l.label} /> : l.label}
                   </a>
                 </li>
               ))}

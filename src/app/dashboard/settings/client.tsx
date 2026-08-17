@@ -13,7 +13,7 @@ export function SettingsClient({ org, site, freeUrl, rootDomain, canDomain, cate
   const [verifying, setVerifying] = useState(false);
   const [savingDomain, setSavingDomain] = useState(false);
   const [domainChoice, setDomainChoice] = useState<'connect' | 'buy' | null>(site.customDomain ? 'connect' : null);
-  const [profile, setProfile] = useState({ language: 'fr', year: '', category: '', mission: '', functioning: '', actions: '', beneficiaries: '', goodToKnow: '', city: '', email: '', phone: '', legalName: '', registrationNumber: '', legalAddress: '', publicationDirector: '', facebook: '', instagram: '', linkedin: '', youtube: '', tiktok: '', twitter: '', ...(org.profile || {}) });
+  const [profile, setProfile] = useState({ language: 'fr', year: '', category: '', mission: '', functioning: '', actions: '', beneficiaries: '', goodToKnow: '', slogan: '', generateCgv: true, city: '', email: '', phone: '', legalName: '', registrationNumber: '', legalAddress: '', publicationDirector: '', facebook: '', instagram: '', linkedin: '', youtube: '', tiktok: '', twitter: '', ...(org.profile || {}) });
 
   async function saveName() {
     await fetch('/api/site', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name }) });
@@ -37,7 +37,7 @@ export function SettingsClient({ org, site, freeUrl, rootDomain, canDomain, cate
     router.refresh(); setTimeout(() => setMsg(''), 3000);
   }
   const copy = (t: string) => navigator.clipboard.writeText(t);
-  const setProfileField = (key: string, value: string) => setProfile((current: any) => ({ ...current, [key]: value }));
+  const setProfileField = (key: string, value: any) => setProfile((current: any) => ({ ...current, [key]: value }));
   async function saveProfile() {
     const res = await fetch('/api/organization/profile', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(profile) });
     setMsg(res.ok ? 'Fiche de l’association enregistrée. Le générateur sera automatiquement prérempli.' : 'Impossible d’enregistrer ces informations.');
@@ -74,6 +74,7 @@ export function SettingsClient({ org, site, freeUrl, rootDomain, canDomain, cate
           <div className="sm:col-span-2"><label className="label">Cause / type d’association</label><select className="input" value={profile.category} onChange={(e) => setProfileField('category', e.target.value)}><option value="">Choisir une cause</option>{categories.map((category: any) => <option key={category.id} value={category.id}>{category.name}</option>)}</select></div>
         </div>
         <div className="mt-4"><label className="label">Mission et raison d’être</label><textarea className="input min-h-[110px]" value={profile.mission} onChange={(e) => setProfileField('mission', e.target.value)} placeholder="Pourquoi l’association existe, son histoire, ses valeurs et ce qu’elle veut changer." /></div>
+        <div className="mt-4"><label className="label">Slogan court affiché dans le footer</label><input className="input" maxLength={180} value={profile.slogan} onChange={(e) => setProfileField('slogan', e.target.value)} placeholder="Ex. Ensemble, faisons grandir demain." /><p className="mt-1 text-xs text-gray-500">Une phrase courte, différente de la description de votre cause.</p></div>
         <div className="mt-4"><label className="label">Fonctionnement</label><textarea className="input min-h-[90px]" value={profile.functioning} onChange={(e) => setProfileField('functioning', e.target.value)} placeholder="Équipe, bénévoles, adhérents, financement, fréquence et zone d’intervention." /></div>
         <div className="mt-4"><label className="label">Actions concrètes</label><textarea className="input min-h-[90px]" value={profile.actions} onChange={(e) => setProfileField('actions', e.target.value)} placeholder="Programmes, activités, permanences et événements." /></div>
         <div className="mt-4"><label className="label">Public accompagné</label><textarea className="input min-h-[70px]" value={profile.beneficiaries} onChange={(e) => setProfileField('beneficiaries', e.target.value)} placeholder="Qui bénéficie des actions et quels sont ses besoins ?" /></div>
@@ -101,6 +102,7 @@ export function SettingsClient({ org, site, freeUrl, rootDomain, canDomain, cate
             <div className="sm:col-span-2"><label className="label">Adresse du siège social</label><input className="input" value={profile.legalAddress} onChange={(e) => setProfileField('legalAddress', e.target.value)} /></div>
             <div className="sm:col-span-2"><label className="label">Responsable de publication</label><input className="input" value={profile.publicationDirector} onChange={(e) => setProfileField('publicationDirector', e.target.value)} /></div>
           </div>
+          <label className="mt-4 flex cursor-pointer items-start gap-3 rounded-xl bg-brand-50 p-4"><input type="checkbox" className="mt-1 h-5 w-5" checked={profile.generateCgv} onChange={(e) => setProfileField('generateCgv', e.target.checked)} /><span><strong className="block text-gray-900">Je veux générer mes CGV / conditions d’utilisation</strong><span className="text-sm text-gray-600">EasyAsso crée un document détaillé à partir des informations légales ci-dessus. Vous pourrez ensuite le modifier.</span></span></label>
         </div>
         <button onClick={saveProfile} className="btn btn-primary mt-5"><Save className="h-4 w-4" /> Enregistrer la fiche</button>
       </div>

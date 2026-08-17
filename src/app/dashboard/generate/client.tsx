@@ -28,7 +28,7 @@ export function GenerateClient({ orgName, profile, categories, welcome }: { orgN
   const router = useRouter();
   const [f, setF] = useState({
     name: orgName || '', year: profile.year || '', mission: profile.mission || '', functioning: profile.functioning || '', actions: profile.actions || '',
-    language: profile.language || 'fr', beneficiaries: profile.beneficiaries || '', goodToKnow: profile.goodToKnow || '', news: '', city: profile.city || '', email: profile.email || '', category: profile.category || '',
+    language: profile.language || 'fr', beneficiaries: profile.beneficiaries || '', goodToKnow: profile.goodToKnow || '', slogan: profile.slogan || '', generateCgv: profile.generateCgv ?? true, news: '', city: profile.city || '', email: profile.email || '', category: profile.category || '',
   });
   const [logo, setLogo] = useState('');
   const [photos, setPhotos] = useState<string[]>(['']);
@@ -102,6 +102,10 @@ export function GenerateClient({ orgName, profile, categories, welcome }: { orgN
             placeholder="Bénévoles, adhérents, organisation, fréquence des actions, financement…" />
         </Field>
 
+        <Field label="Slogan court pour le pied de page">
+          <input className="input" maxLength={180} value={f.slogan} onChange={(e) => set('slogan', e.target.value)} placeholder="Ex. Ensemble, faisons grandir demain." />
+        </Field>
+
         <Field label="Actualités à publier (optionnel)">
           <textarea className="input min-h-[90px]" value={f.news} onChange={(e) => set('news', e.target.value)}
             placeholder="Un événement, une collecte, un nouveau projet… Laissez vide si vous ne voulez pas de page Actualités." />
@@ -127,6 +131,8 @@ export function GenerateClient({ orgName, profile, categories, welcome }: { orgN
           <textarea className="input min-h-[70px]" value={f.goodToKnow} onChange={(e) => set('goodToKnow', e.target.value)}
             placeholder="Ex : reçus fiscaux, horaires, adhésion, comment devenir bénévole, partenaires…" />
         </Field>
+
+        <label className="flex cursor-pointer items-start gap-3 rounded-xl bg-brand-50 p-4"><input type="checkbox" className="mt-1 h-5 w-5" checked={f.generateCgv} onChange={(e) => setF((current) => ({ ...current, generateCgv: e.target.checked }))} /><span><strong className="block text-gray-900">Je veux générer mes CGV / conditions d’utilisation</strong><span className="text-sm text-gray-600">Un document détaillé et modifiable sera créé avec les informations légales enregistrées dans Réglages.</span></span></label>
 
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Ville"><input className="input" value={f.city} onChange={(e) => set('city', e.target.value)} placeholder="Lyon" /></Field>

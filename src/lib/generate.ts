@@ -42,6 +42,8 @@ function fillPhotos(photos: string[], fallback: string[], n: number): string[] {
 export interface GenerateInput {
   name: string;
   language?: 'fr' | 'en';
+  slogan?: string;
+  generateCgv?: boolean;
   year?: string;
   mission?: string;       // à propos / mission principale
   functioning?: string;   // comment l'association fonctionne
@@ -107,7 +109,7 @@ export function buildGeneratedSite(input: GenerateInput): BuiltTemplate {
   t.header.logoUrl = input.logoUrl || undefined;
   t.footer.logoText = copy.name;
   t.footer.logoUrl = input.logoUrl || undefined;
-  if (copy.footerText) t.footer.text = copy.footerText;
+  t.footer.text = input.slogan?.trim() || (input.language === 'en' ? 'Together, we make a difference.' : 'Ensemble, faisons la différence.');
   if (!input.news?.trim()) {
     t.pages = t.pages.filter((page) => !/actualit|news/i.test(`${page.slug} ${page.title}`));
   }
@@ -164,7 +166,7 @@ export function buildGeneratedSite(input: GenerateInput): BuiltTemplate {
     const mission = input.mission || `${copy.name} brings people together around a meaningful cause.`;
     t.header.logoText = copy.name;
     t.footer.logoText = copy.name;
-    t.footer.text = mission;
+    t.footer.text = input.slogan?.trim() || 'Together, we make a difference.';
     t.pages = [
       { title: 'Home', slug: 'home', isHome: true, showInNav: true, blocks: [
         block('banner', { image: photos[0] || '', title: copy.name, subtitle: mission, overlay: 45, height: 460, button: { text: 'Support us', href: '/get-involved', color: '#ffffff', variant: 'solid', align: 'center' } }),

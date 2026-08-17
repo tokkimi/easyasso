@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { requireApiPermission, handleApiError } from '@/lib/api';
 import { PERMISSIONS } from '@/lib/permissions';
 import { prisma } from '@/lib/prisma';
+import { legalDocuments } from '@/lib/legal';
 
 const schema = z.object({
   language: z.enum(['fr', 'en']).optional().default('fr'),
@@ -13,6 +14,8 @@ const schema = z.object({
   actions: z.string().max(6000).optional().default(''),
   beneficiaries: z.string().max(2000).optional().default(''),
   goodToKnow: z.string().max(6000).optional().default(''),
+  slogan: z.string().max(180).optional().default(''),
+  generateCgv: z.boolean().optional().default(true),
   city: z.string().max(200).optional().default(''),
   email: z.string().email().or(z.literal('')).optional().default(''),
   phone: z.string().max(60).optional().default(''),
@@ -45,14 +48,7 @@ export async function PATCH(req: Request) {
     const site = await prisma.site.findUnique({ where: { organizationId: ctx.org.id } });
     if (site) {
       const footer = (site.footer as any) || {};
-      const legalName = parsed.data.legalName || org.name;
-      const legalDetails = [
-        `Éditeur du site : ${legalName}`,
-        parsed.data.registrationNumber ? `Numéro d’enregistrement : ${parsed.data.registrationNumber}` : '',
-        parsed.data.legalAddress ? `Siège social : ${parsed.data.legalAddress}` : '',
-        parsed.data.email ? `Contact : ${parsed.data.email}` : '',
-        parsed.data.publicationDirector ? `Responsable de publication : ${parsed.data.publicationDirector}` : '',
-      ].filter(Boolean).join('\n\n');
+      const legal = legalDocuments(parsed.data, org.name);
       const socialLinks = [
         ['Facebook', parsed.data.facebook], ['Instagram', parsed.data.instagram],
         ['LinkedIn', parsed.data.linkedin], ['YouTube', parsed.data.youtube],
@@ -61,10 +57,11 @@ export async function PATCH(req: Request) {
       const baseColumns = (footer.columns || []).filter((column: any) => column.title !== 'Réseaux sociaux');
       await prisma.site.update({ where: { id: site.id }, data: { footer: {
         ...footer,
-        showCgv: true,
+        text: parsed.data.slogan || footer.text || '',
+        showCgv: parsed.data.generateCgv,
         showMentions: true,
-        mentionsContent: legalDetails,
-        cgvContent: `Conditions générales d’utilisation du site de ${legalName}\n\nCe site présente les activités de l’association et permet, le cas échéant, de la contacter ou de lui adresser un don. Les paiements sont confirmés par le prestataire de paiement. Un don ne constitue pas l’achat d’un produit ou service.\n\nLes contenus restent la propriété de leurs titulaires. Toute reproduction non autorisée est interdite.\n\n${legalDetails}`,
+        mentionsContent: legal.details,
+        cgvContent: parsed.data.generateCgv ? legal.cgv : footer.cgvContent,
         columns: socialLinks.length ? [...baseColumns, { title: 'Réseaux sociaux', links: socialLinks }] : baseColumns,
       } } });
     }

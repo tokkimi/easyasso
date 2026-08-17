@@ -94,6 +94,7 @@ function buildPrompt(input: GenerateInput): string {
     input.beneficiaries ? `Public aidé : ${input.beneficiaries}` : '',
     input.goodToKnow ? `Choses à savoir : ${input.goodToKnow}` : '',
     input.news ? `Actualités à publier : ${input.news}` : 'Aucune actualité fournie : ne pas créer de page Actualités.',
+    input.slogan ? `Slogan exact à afficher dans le pied de page : ${input.slogan}` : '',
     input.city ? `Ville : ${input.city}` : '',
     input.email ? `Email de contact : ${input.email}` : '',
   ].filter(Boolean);
@@ -156,7 +157,7 @@ export async function aiGenerateSite(input: GenerateInput): Promise<BuiltTemplat
   t.header.logoUrl = input.logoUrl || undefined;
   t.footer.logoText = name;
   t.footer.logoUrl = input.logoUrl || undefined;
-  if (ai.tagline) t.footer.text = ai.tagline;
+  t.footer.text = input.slogan?.trim() || ai.tagline || (input.language === 'en' ? 'Together, we make a difference.' : 'Ensemble, faisons la différence.');
 
   const slugify = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40) || 'page';
   let homeAssigned = false;

@@ -36,7 +36,7 @@ export function PublicBlock({ type, content, style, basePath = '', organizationI
   }
   const maxW = WIDE.has(type) ? 'max-w-5xl' : 'max-w-3xl';
   return (
-    <div style={blockWrapperStyle(style)} className={`mx-auto w-full ${maxW} px-4 ${alignClass(style.align)}`}>
+    <div style={blockWrapperStyle(style)} className={`public-block-shell mx-auto w-full ${maxW} px-4 ${alignClass(style.align)}`}>
       {inner}
     </div>
   );
@@ -86,9 +86,9 @@ function renderInner(type: string, content: any, style: BlockStyle, basePath: st
     }
     case 'columns':
       return (
-        <div className={`grid gap-6 ${(content.columns?.length || 2) >= 3 ? 'md:grid-cols-3' : 'md:grid-cols-2'}`}>
+        <div className={`public-responsive-columns ${(content.columns?.length || 2) >= 3 ? 'public-grid-3' : 'public-grid-2'}`}>
           {(content.columns || []).map((c: string, i: number) => (
-            <p key={i} className="whitespace-pre-wrap text-left leading-relaxed text-gray-600">{c}</p>
+            <p key={i} className="public-scroll-item whitespace-pre-wrap text-left leading-relaxed text-gray-600">{c}</p>
           ))}
         </div>
       );
@@ -137,12 +137,12 @@ function renderInner(type: string, content: any, style: BlockStyle, basePath: st
     }
     case 'gallery': {
       const cols = content.columns || 3;
-      const gridCls = cols === 4 ? 'grid-cols-2 md:grid-cols-4' : cols === 2 ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-2 md:grid-cols-3';
+      const gridCls = cols === 4 ? 'public-grid-4' : cols === 2 ? 'public-grid-2' : 'public-grid-3';
       return (
-        <div className={`grid gap-3 ${gridCls}`}>
+        <div className={`public-responsive-gallery ${gridCls}`}>
           {(content.images || []).map((src: string, i: number) => (
             // eslint-disable-next-line @next/next/no-img-element
-            <img key={i} src={src} alt="" className="aspect-square w-full rounded-xl object-cover" />
+            <img key={i} src={src} alt="" className="public-scroll-item aspect-square rounded-xl object-cover" />
           ))}
         </div>
       );
@@ -151,13 +151,13 @@ function renderInner(type: string, content: any, style: BlockStyle, basePath: st
       return <Slideshow slides={content.slides || []} interval={content.interval || 4} />;
     case 'cards': {
       const cols = content.columns || 3;
-      const gridCls = cols === 4 ? 'md:grid-cols-4' : cols === 2 ? 'md:grid-cols-2' : 'md:grid-cols-3';
+      const gridCls = cols === 4 ? 'public-grid-4' : cols === 2 ? 'public-grid-2' : 'public-grid-3';
       return (
-        <div className={`grid gap-5 ${gridCls}`}>
+        <div className={`public-responsive-cards ${gridCls}`}>
           {(content.items || []).map((it: any, i: number) => {
             const Icon = CARD_ICONS[it.icon] || Heart;
             return (
-              <div key={i} className="rounded-2xl bg-white p-6 text-left shadow-sm ring-1 ring-gray-100">
+              <div key={i} className="public-scroll-item rounded-2xl bg-white p-6 text-left shadow-sm ring-1 ring-gray-100">
                 <div className="grid h-11 w-11 place-items-center rounded-xl bg-brand-50 text-brand-600"><Icon className="h-6 w-6" /></div>
                 {it.title && <h4 className="mt-4 font-bold text-gray-900">{it.title}</h4>}
                 {it.text && <p className="mt-1 text-sm leading-relaxed text-gray-600">{it.text}</p>}

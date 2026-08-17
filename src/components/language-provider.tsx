@@ -16,6 +16,8 @@ const translations: Record<string, string> = {
   'Statistiques': 'Analytics', 'Équipe & rôles': 'Team & roles', 'Réglages': 'Settings', 'Voir mon site': 'View my website',
   'en ligne': 'live', 'brouillon': 'draft', 'Enregistrer': 'Save', 'Annuler': 'Cancel', 'Supprimer': 'Delete',
   'Modifier': 'Edit', 'Ajouter': 'Add', 'Créer': 'Create', 'Fermer': 'Close', 'Continuer': 'Continue',
+  'Accepter': 'Accept', 'Refuser': 'Reject', 'Cookies et confidentialité': 'Cookies and privacy',
+  'EasyAsso utilise des cookies nécessaires au fonctionnement du site et, si vous l’acceptez, des cookies de mesure pour améliorer l’expérience.': 'EasyAsso uses cookies that are necessary for the website to work and, if you accept them, analytics cookies to improve the experience.',
   'Retour': 'Back', 'Suivant': 'Next', 'Rechercher': 'Search', 'Exporter': 'Export', 'Aucun résultat': 'No results',
   'Chargement…': 'Loading…', 'Vérification…': 'Checking…', 'Publié': 'Published', 'Non publié': 'Unpublished',
   'Accueil': 'Home', 'Pages': 'Pages', 'Titre': 'Title', 'Texte': 'Text', 'Image': 'Image', 'Vidéo': 'Video',

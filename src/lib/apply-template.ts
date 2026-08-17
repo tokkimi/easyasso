@@ -8,15 +8,17 @@ export async function applyTemplateToSite(siteId: string, template: BuiltTemplat
   const prevHeader = (site.header as any) || {};
   const prevFooter = (site.footer as any) || {};
 
+  // Prefer a logo supplied by the template (e.g. the magic generator), else
+  // keep the association's existing logo.
   const header = {
     ...template.header,
-    logoText: prevHeader.logoText || orgName,
-    logoUrl: prevHeader.logoUrl || undefined,
+    logoText: orgName,
+    logoUrl: template.header.logoUrl || prevHeader.logoUrl || undefined,
   };
   const footer = {
     ...template.footer,
-    logoText: prevFooter.logoText || orgName,
-    logoUrl: prevFooter.logoUrl || undefined,
+    logoText: orgName,
+    logoUrl: template.footer.logoUrl || prevFooter.logoUrl || undefined,
     allRightsText: `© ${new Date().getFullYear()} ${orgName}. Tous droits réservés.`,
   };
 

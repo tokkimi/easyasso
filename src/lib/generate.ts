@@ -1,10 +1,11 @@
 import { TEMPLATES, getTemplate, type BuiltTemplate } from './templates';
+import { defaultStyleFor } from './blocks';
 
 // Keyword signals to auto-pick the closest template from a free description.
 const KEYWORDS: Record<string, string[]> = {
   'solidarite-alimentaire': ['alimentaire', 'repas', 'faim', 'nourriture', 'banque', 'épicerie', 'maraude', 'distribution', 'précarité', 'sans-abri'],
   'enfance-education': ['enfant', 'enfance', 'école', 'scolaire', 'éducation', 'jeunesse', 'orphelin', 'parrainage', 'jeunes'],
-  'protection-animale': ['animal', 'animaux', 'chien', 'chat', 'refuge', 'adoption', 'spa', 'faune', 'maltraitance animale'],
+  'protection-animale': ['animal', 'animaux', 'chien', 'chat', 'refuge', 'adoption', 'spa', 'faune', 'maltraitance'],
   'environnement': ['environnement', 'climat', 'nature', 'planète', 'écologie', 'arbre', 'forêt', 'biodiversité', 'océan', 'déchet', 'pollution'],
   'sante-handicap': ['santé', 'maladie', 'handicap', 'médical', 'recherche', 'patient', 'hôpital', 'soin', 'cancer', 'autisme'],
   'culture-patrimoine': ['culture', 'patrimoine', 'art', 'musée', 'festival', 'musique', 'théâtre', 'histoire', 'spectacle', 'exposition'],
@@ -14,24 +15,25 @@ const KEYWORDS: Record<string, string[]> = {
   'aines': ['âgé', 'aîné', 'senior', 'personnes âgées', 'isolement', 'ehpad', 'retraité', 'solitude', 'vieillesse'],
 };
 
-export function pickTemplateId(description: string, category?: string): string {
+export function pickTemplateId(text: string, category?: string): string {
   if (category && getTemplate(category)) return category;
-  const text = (description || '').toLowerCase();
+  const t = (text || '').toLowerCase();
   let best = 'solidarite-locale';
   let bestScore = 0;
   for (const [id, words] of Object.entries(KEYWORDS)) {
-    const score = words.reduce((s, w) => (text.includes(w) ? s + 1 : s), 0);
+    const score = words.reduce((s, w) => (t.includes(w) ? s + 1 : s), 0);
     if (score > bestScore) { bestScore = score; best = id; }
   }
   return best;
 }
 
 function firstSentence(text: string): string {
-  const s = (text || '').trim().split(/(?<=[.!?])\s/)[0];
+  const s = (text || '').trim().split(/(?<=[.!?])\s/)[0] || '';
   return s.length > 160 ? s.slice(0, 157) + '…' : s;
 }
-
-// Fill an array of n slots from available photos (repeat if fewer than n).
+function para(parts: (string | undefined)[]): string {
+  return parts.map((p) => (p || '').trim()).filter(Boolean).join('\n\n');
+}
 function fillPhotos(photos: string[], fallback: string[], n: number): string[] {
   if (!photos.length) return fallback.slice(0, n);
   return Array.from({ length: n }, (_, i) => photos[i % photos.length]);
@@ -39,52 +41,101 @@ function fillPhotos(photos: string[], fallback: string[], n: number): string[] {
 
 export interface GenerateInput {
   name: string;
-  description: string;
+  year?: string;
+  mission?: string;       // à propos / mission principale
+  functioning?: string;   // comment l'association fonctionne
+  goodToKnow?: string;    // choses à savoir
+  beneficiaries?: string; // public aidé
+  actions?: string;       // actions concrètes / activités
+  city?: string;
+  email?: string;
   category?: string;
   logoUrl?: string;
   photos?: string[];
+  description?: string;   // legacy free text
 }
 
-// Produce a fully customized template from a free description + assets.
+// Build developed, multi-paragraph copy from the questionnaire answers.
+function composeCopy(input: GenerateInput) {
+  const name = input.name?.trim() || 'notre association';
+  const mission = (input.mission || input.description || '').trim();
+  const yearSentence = input.year ? `Créée en ${input.year}, ${name} agit chaque jour au service de sa cause.` : '';
+  const beneSentence = input.beneficiaries ? `Nous agissons en particulier en faveur de ${input.beneficiaries}.` : '';
+
+  const aboutText = para([yearSentence, mission, beneSentence]) ||
+    `${name} est une association engagée. Présentez ici votre mission et vos valeurs.`;
+
+  const actionText = para([
+    input.functioning || mission,
+    input.actions ? `Concrètement, nos actions comprennent : ${input.actions}.` : '',
+  ]) || 'Décrivez ici la manière dont votre association agit sur le terrain.';
+
+  const goodToKnowText = (input.goodToKnow || '').trim();
+
+  const contactText = para([
+    input.email ? `Vous pouvez nous écrire à ${input.email}.` : '',
+    input.city ? `Nous sommes basés à ${input.city}.` : '',
+    'N’hésitez pas à nous contacter et à nous suivre sur les réseaux sociaux.',
+  ]);
+
+  const heroSubtitle = firstSentence(mission) || input.beneficiaries || '';
+  const footerText = firstSentence(mission) || '';
+
+  return { name, aboutText, actionText, goodToKnowText, contactText, heroSubtitle, footerText };
+}
+
+function reindex(pages: any[]) {
+  for (const p of pages) p.blocks.forEach((b: any, i: number) => { b.order = i; });
+}
+
+// Produce a fully customized template from the questionnaire + assets.
 export function buildGeneratedSite(input: GenerateInput): BuiltTemplate {
-  const id = pickTemplateId(input.description, input.category);
+  const detectText = [input.mission, input.functioning, input.goodToKnow, input.beneficiaries, input.actions, input.description].filter(Boolean).join(' ');
+  const id = pickTemplateId(detectText, input.category);
   const base = getTemplate(id) || TEMPLATES[0];
   const t: BuiltTemplate = JSON.parse(JSON.stringify(base));
-  const name = input.name?.trim() || 'Votre association';
+  const copy = composeCopy(input);
   const photos = (input.photos || []).filter(Boolean);
-  const desc = input.description?.trim();
-  const subtitle = desc ? firstSentence(desc) : t.pages[0].blocks[0]?.content?.subtitle;
 
-  t.name = name;
-  t.header.logoText = name;
+  t.name = copy.name;
+  t.header.logoText = copy.name;
   t.header.logoUrl = input.logoUrl || undefined;
-  t.footer.logoText = name;
+  t.footer.logoText = copy.name;
   t.footer.logoUrl = input.logoUrl || undefined;
-  if (desc) t.footer.text = firstSentence(desc);
+  if (copy.footerText) t.footer.text = copy.footerText;
 
   for (const page of t.pages) {
     for (const block of page.blocks) {
       const c: any = block.content;
       switch (block.type) {
         case 'banner':
-          if (page.isHome) { c.title = name; if (subtitle) c.subtitle = subtitle; }
+          if (page.isHome) { c.title = copy.name; if (copy.heroSubtitle) c.subtitle = copy.heroSubtitle; }
           if (photos[0]) c.image = photos[0];
           break;
         case 'textimage':
-          if (desc) c.text = desc;
+          c.text = copy.aboutText;
           if (photos.length) c.image = photos[1 % photos.length] || photos[0];
           break;
         case 'gallery':
           if (photos.length) c.images = fillPhotos(photos, c.images || [], (c.images?.length) || 6);
           break;
         case 'slideshow':
-          if (photos.length) c.slides = fillPhotos(photos, [], Math.max(3, Math.min(photos.length, 5))).map((img, i) => ({ image: img, caption: (c.slides?.[i]?.caption) || '' }));
+          if (photos.length) c.slides = fillPhotos(photos, [], Math.max(3, Math.min(photos.length, 5))).map((img, i) => ({ image: img, caption: c.slides?.[i]?.caption || '' }));
           break;
         case 'text':
-          if (desc && page.slug === 'notre-action') c.text = desc;
+          if (page.slug === 'notre-action') c.text = copy.actionText;
+          if (page.slug === 'contact') c.text = copy.contactText;
           break;
       }
     }
+
+    // Add a developed "Bon à savoir" section on the action page
+    if (page.slug === 'notre-action' && copy.goodToKnowText) {
+      page.blocks.push({ type: 'heading', order: 0, content: { text: 'Bon à savoir' }, style: defaultStyleFor('heading') });
+      page.blocks.push({ type: 'text', order: 0, content: { text: copy.goodToKnowText }, style: defaultStyleFor('text') });
+    }
   }
+
+  reindex(t.pages);
   return t;
 }

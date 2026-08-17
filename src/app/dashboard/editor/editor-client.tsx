@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { BLOCK_LIBRARY, type BlockType, type ButtonConfig } from '@/lib/blocks';
 import { PublicBlock } from '@/components/site/PublicBlock';
+import { PublicHeader, PublicFooter } from '@/components/site/PublicChrome';
 import { themeStyle } from '@/lib/render';
 import { googleFontsHref } from '@/lib/fonts';
 import { ColorGrid, AlignPicker, Field, Toggle, ImageInput } from './controls';
@@ -198,6 +199,15 @@ export function EditorClient({ site: initial, canEdit, canPublish, siteUrl }: { 
         {/* Center: canvas */}
         <div className="flex-1 overflow-y-auto bg-gray-100 p-4">
           <div className="mx-auto overflow-hidden rounded-xl shadow-sm ring-1 ring-gray-200 transition-all" style={{ maxWidth: width, ...themeStyle(initial.theme) }}>
+            {/* Live header preview (click to edit) */}
+            <div
+              onClick={() => { setTab('header'); setSelectedBlock(null); }}
+              className={`cursor-pointer ${tab === 'header' ? 'ring-2 ring-brand-500' : 'hover:ring-1 hover:ring-brand-200'}`}
+            >
+              <div className="pointer-events-none">
+                <PublicHeader header={header as any} nav={pages.filter((p) => p.showInNav).map((p) => ({ title: p.title, slug: p.slug, isHome: p.isHome }))} basePath="#" />
+              </div>
+            </div>
             {active?.blocks.length === 0 && (
               <div className="py-16 text-center text-gray-400">
                 <p>Page vide.</p>
@@ -225,6 +235,15 @@ export function EditorClient({ site: initial, canEdit, canPublish, siteUrl }: { 
                 <button onClick={() => setShowPalette(true)} className="btn btn-ghost mx-auto text-sm"><Plus className="h-4 w-4" /> Ajouter un bloc</button>
               </div>
             )}
+            {/* Live footer preview (click to edit) */}
+            <div
+              onClick={() => { setTab('footer'); setSelectedBlock(null); }}
+              className={`cursor-pointer ${tab === 'footer' ? 'ring-2 ring-brand-500' : 'hover:ring-1 hover:ring-brand-200'}`}
+            >
+              <div className="pointer-events-none">
+                <PublicFooter footer={footer as any} orgId={(initial as any).organizationId || 'preview'} basePath="#" nav={pages.filter((p) => p.showInNav).map((p) => ({ title: p.title, slug: p.slug, isHome: p.isHome }))} />
+              </div>
+            </div>
           </div>
         </div>
 

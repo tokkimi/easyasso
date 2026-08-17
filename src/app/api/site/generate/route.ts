@@ -19,7 +19,14 @@ export async function POST(req: Request) {
     const site = await prisma.site.findUniqueOrThrow({ where: { organizationId: ctx.org.id } });
     const generated = buildGeneratedSite({
       name,
-      description: b.description || '',
+      year: b.year || undefined,
+      mission: b.mission || b.description || undefined,
+      functioning: b.functioning || undefined,
+      goodToKnow: b.goodToKnow || undefined,
+      beneficiaries: b.beneficiaries || undefined,
+      actions: b.actions || undefined,
+      city: b.city || undefined,
+      email: b.email || undefined,
       category: b.category || undefined,
       logoUrl: b.logoUrl || undefined,
       photos: Array.isArray(b.photos) ? b.photos.slice(0, 8) : [],

@@ -25,8 +25,8 @@ interface AiSite {
   pages: { title: string; slug: string; isHome?: boolean; sections: Section[] }[];
 }
 
-const SYSTEM = `Tu es directeur éditorial, concepteur-rédacteur senior et expert des associations françaises.
-À partir des informations d'une association, tu rédiges le contenu COMPLET d'un site vitrine, en français, avec des textes riches, chaleureux, concrets et bien écrits (pas de texte générique de remplissage).
+const SYSTEM = `Tu es directeur éditorial, concepteur-rédacteur senior et expert des associations.
+À partir des informations d'une association, tu rédiges le contenu COMPLET d'un site vitrine, dans la langue demandée, avec des textes riches, chaleureux, concrets et bien écrits (pas de texte générique de remplissage).
 
 Tu réponds UNIQUEMENT avec un objet JSON valide (aucun texte avant ou après, pas de balises markdown), respectant ce format :
 {
@@ -45,9 +45,14 @@ Chaque "section" a un "type" parmi :
 - {"type":"cta","title":"...","text":"...","buttonText":"Faire un don"}
 - {"type":"gallery"}  (galerie de photos, sans contenu)
 
-Génère obligatoirement un site entièrement neuf comprenant au minimum : Accueil, Notre histoire, Nos actions, Notre impact, S'engager / Devenir bénévole, Faire un don, Actualités et Contact.
+Génère obligatoirement un site entièrement neuf comprenant au minimum : Accueil, Notre histoire, Nos actions, Notre impact, S'engager / Devenir bénévole, Faire un don et Contact. Crée une page Actualités uniquement si des actualités sont fournies.
 
 RÈGLES ÉDITORIALES OBLIGATOIRES :
+- Analyse réellement les réponses : ne colle jamais un champ brut dans une phrase si cela sonne faux.
+- Si un champ est très court, abrégé, mal orthographié ou écrit comme un mot-clé (ex. "LGBT", "jeunes", "quartier"), reformule-le en public/problématique compréhensible.
+- N’utilise jamais de tournure mécanique du type "en faveur de [champ]" si le résultat peut être maladroit. Préfère "auprès de", "avec", "pour accompagner", "pour défendre", "pour soutenir", selon le sens réel.
+- Corrige discrètement les fautes évidentes dans les textes fournis, sans changer l’intention.
+- Si le projet concerne l’identité, l’expression de genre, les vêtements ou les personnes LGBT+, écris avec respect, précision et naturel : liberté d’être soi-même, lutte contre les discriminations, écoute, sensibilisation, soutien.
 - Chaque page comporte 4 à 7 sections utiles et différentes.
 - Chaque section de texte contient 120 à 220 mots, répartis en 2 à 4 paragraphes.
 - Les cartes contiennent des explications concrètes de 35 à 70 mots chacune.
@@ -101,18 +106,29 @@ function buildPrompt(input: GenerateInput): string {
   const languageInstruction = input.language === 'en'
     ? 'Write the ENTIRE generated website in natural, professional English. Every title, paragraph, button and navigation label must be in English.'
     : 'Rédige l’intégralité du site en français naturel et professionnel.';
-  return `${languageInstruction}\n\nCrée le site complet de cette association :\n\n${lines.join('\n')}`;
+  return `${languageInstruction}
+
+Important : les informations ci-dessous peuvent être courtes, mal orthographiées ou incomplètes. Tu dois les comprendre, les reformuler et les transformer en vrais textes de site. Ne recopie pas bêtement les mots du questionnaire dans des phrases toutes faites.
+
+Crée le site complet de cette association :
+
+${lines.join('\n')}`;
 }
 
 // Convert AI sections into our block model, injecting the association's photos.
-function sectionsToBlocks(sections: Section[], photos: string[], seed: string, isHome: boolean) {
+function sectionsToBlocks(sections: Section[], photos: string[], seed: string, isHome: boolean, language: 'fr' | 'en') {
   let photoIdx = 0;
-  const nextPhoto = (fallback: string) => (photos.length ? photos[photoIdx++ % photos.length] : fallback);
+  let fallbackIdx = 20;
+  const donateLabel = language === 'en' ? 'Donate' : 'Faire un don';
+  const nextPhoto = (w: number, h: number) => {
+    if (photoIdx < photos.length) return photos[photoIdx++];
+    return templateImage(seed, fallbackIdx++, w, h);
+  };
   const blocks: any[] = [];
   for (const s of sections) {
     switch (s.type) {
       case 'banner':
-        blocks.push({ type: 'banner', content: { image: nextPhoto(templateImage(seed, 0, 1600, 720)), title: s.title, subtitle: s.subtitle || '', overlay: 45, height: 460, button: { text: 'Faire un don', href: '/don', color: '#ffffff', variant: 'solid', align: 'center' } } });
+        blocks.push({ type: 'banner', content: { image: nextPhoto(1600, 720), title: s.title, subtitle: s.subtitle || '', overlay: 45, height: 460, button: { text: donateLabel, href: '/don', color: '#ffffff', variant: 'solid', align: 'center' } } });
         break;
       case 'heading':
         blocks.push({ type: 'heading', content: { text: s.text } });
@@ -121,16 +137,16 @@ function sectionsToBlocks(sections: Section[], photos: string[], seed: string, i
         blocks.push({ type: 'text', content: { text: s.text } });
         break;
       case 'textimage':
-        blocks.push({ type: 'textimage', content: { title: s.title || '', text: s.text, image: nextPhoto(templateImage(seed, blocks.length + 1, 900, 700)), imageSide: s.imageSide || 'right' } });
+        blocks.push({ type: 'textimage', content: { title: s.title || '', text: s.text, image: nextPhoto(900, 700), imageSide: s.imageSide || 'right' } });
         break;
       case 'cards':
         blocks.push({ type: 'cards', content: { columns: Math.min(3, Math.max(2, (s.items || []).length)) || 3, items: (s.items || []).slice(0, 4).map((it) => ({ icon: it.icon || 'Heart', title: it.title, text: it.text })) } });
         break;
       case 'cta':
-        blocks.push({ type: 'cta', content: { title: s.title, text: s.text || '', button: { text: s.buttonText || 'Faire un don', href: '/don', color: '#1b5df5', variant: 'solid', align: 'center' } }, style: { paddingY: 44 } });
+        blocks.push({ type: 'cta', content: { title: s.title, text: s.text || '', button: { text: s.buttonText || donateLabel, href: '/don', color: '#1b5df5', variant: 'solid', align: 'center' } }, style: { paddingY: 44 } });
         break;
       case 'gallery':
-        blocks.push({ type: 'gallery', content: { columns: 3, images: Array.from({ length: 6 }, (_, i) => nextPhoto(templateImage(seed, i, 600, 600))) } });
+        blocks.push({ type: 'gallery', content: { columns: 3, images: Array.from({ length: 6 }, () => nextPhoto(600, 600)) } });
         break;
     }
   }
@@ -151,7 +167,9 @@ export async function aiGenerateSite(input: GenerateInput): Promise<BuiltTemplat
   const name = input.name?.trim() || 'Votre association';
   const photos = (input.photos || []).filter(Boolean);
   const seed = baseId;
+  const language = input.language === 'en' ? 'en' : 'fr';
 
+  t.id = `${base.id}-ai-generated`;
   t.name = name;
   t.header.logoText = name;
   t.header.logoUrl = input.logoUrl || undefined;
@@ -170,7 +188,7 @@ export async function aiGenerateSite(input: GenerateInput): Promise<BuiltTemplat
     usedSlugs.add(slug);
     const isHome = !homeAssigned && (p.isHome || i === 0);
     if (isHome) homeAssigned = true;
-    return { title: p.title || `Page ${i + 1}`, slug: isHome ? 'accueil' : slug, isHome, showInNav: true, blocks: sectionsToBlocks(p.sections || [], photos, seed, isHome) };
+    return { title: p.title || `Page ${i + 1}`, slug: isHome ? 'accueil' : slug, isHome, showInNav: true, blocks: sectionsToBlocks(p.sections || [], photos, seed, isHome, language) };
   });
   if (!homeAssigned && t.pages[0]) t.pages[0].isHome = true;
 
@@ -183,12 +201,14 @@ export async function aiGenerateSite(input: GenerateInput): Promise<BuiltTemplat
     t.pages.push(contact);
   }
   const contactLines = [
-    input.email ? `Email : ${input.email.trim()}` : '',
-    input.city ? `Nous sommes basés à ${input.city.trim()}.` : '',
-    'Une question, une proposition de partenariat ou l’envie de nous rejoindre ? Contactez-nous : notre équipe vous répondra avec plaisir.',
+    input.email ? `Email${language === 'en' ? '' : ' '} : ${input.email.trim()}` : '',
+    input.city ? (language === 'en' ? `We are based in ${input.city.trim()}.` : `Nous sommes basés à ${input.city.trim()}.`) : '',
+    language === 'en'
+      ? 'A question, a partnership idea or ready to get involved? Contact us: our team will be happy to reply.'
+      : 'Une question, une proposition de partenariat ou l’envie de nous rejoindre ? Contactez-nous : notre équipe vous répondra avec plaisir.',
   ].filter(Boolean).join('\n\n');
   contact.blocks.unshift(
-    { type: 'heading', order: 0, content: { text: 'Parlons de votre engagement' }, style: defaultStyleFor('heading') },
+    { type: 'heading', order: 0, content: { text: language === 'en' ? 'Let’s talk about your involvement' : 'Parlons de votre engagement' }, style: defaultStyleFor('heading') },
     { type: 'text', order: 1, content: { text: contactLines }, style: defaultStyleFor('text') },
   );
   contact.blocks.forEach((block: any, order: number) => { block.order = order; });

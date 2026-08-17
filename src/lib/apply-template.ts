@@ -54,6 +54,7 @@ function leetchiContent(profile: TemplateProfile, language: 'fr' | 'en') {
 
 function personalizeTemplate(template: BuiltTemplate, orgName: string, profile: TemplateProfile = {}) {
   const next = cloneTemplate(template);
+  const isGeneratedSite = String(next.id || '').includes('generated');
   const language = profile.language === 'en' ? 'en' : 'fr';
   const mission = String(profile.mission || '').trim();
   const functioning = String(profile.functioning || '').trim();
@@ -96,6 +97,8 @@ function personalizeTemplate(template: BuiltTemplate, orgName: string, profile: 
 
   for (const page of next.pages) {
     for (const block of page.blocks || []) {
+      if (isGeneratedSite && !['social'].includes(block.type)) continue;
+
       if (block.type === 'banner') {
         if (page.isHome) {
           block.content.title = orgName;

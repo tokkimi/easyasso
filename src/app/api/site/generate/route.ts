@@ -106,19 +106,60 @@ export async function POST(req: Request) {
       }
     }
 
-    const site = await prisma.site.findUniqueOrThrow({ where: { organizationId: ctx.org.id } });
-    await applyTemplateToSite(site.id, generated, name, previousProfile);
     const profile = previousProfile;
-    const legal = legalDocuments({ ...profile, email: input.email || profile.email, language: input.language }, name);
+    const generationProfile = {
+      ...profile,
+      language: input.language,
+      slogan: requestedSlogan,
+      generateCgv: generateLegal,
+      year: input.year || profile.year || '',
+      mission: input.mission || profile.mission || '',
+      functioning: input.functioning || profile.functioning || '',
+      actions: input.actions || profile.actions || '',
+      beneficiaries: input.beneficiaries || profile.beneficiaries || '',
+      goodToKnow: input.goodToKnow || profile.goodToKnow || '',
+      city: input.city || profile.city || '',
+      email: input.email || profile.email || '',
+      category: input.category || profile.category || '',
+      donationCardEnabled: donation.cardEnabled,
+      donationStripeUrl: donation.stripeUrl,
+      donationHelloAssoEnabled: donation.helloAssoEnabled,
+      donationHelloAssoUrl: donation.helloAssoUrl,
+      donationTransferEnabled: donation.transferEnabled,
+      donationIban: donation.iban,
+      donationBic: donation.bic,
+      donationAccountHolder: donation.accountHolder,
+      donationBankName: donation.bankName,
+      donationChequeEnabled: donation.chequeEnabled,
+      donationChequePayable: donation.chequePayable,
+      donationChequeAddress: donation.chequeAddress,
+      leetchiEnabled: b.leetchiEnabled ?? profile.leetchiEnabled ?? !!leetchi.url,
+      leetchiUrl: leetchi.url,
+      leetchiEmbedUrl: leetchi.embedUrl,
+      leetchiEmbedCode: leetchi.embedCode,
+      leetchiCollectedEuros: leetchi.collectedEuros,
+      leetchiGoalEuros: leetchi.goalEuros,
+    };
+    const site = await prisma.site.findUniqueOrThrow({ where: { organizationId: ctx.org.id } });
+    await applyTemplateToSite(site.id, generated, name, generationProfile);
+    const legal = legalDocuments(generationProfile, name);
     const updatedSite = await prisma.site.update({
       where: { id: site.id },
       data: {
         name,
         published: true,
-        footer: { ...(generated.footer as any), text: requestedSlogan || (input.language === 'en' ? 'Together, we make a difference.' : 'Ensemble, faisons la différence.'), showCgv: generateLegal, showMentions: generateLegal, cgvContent: generateLegal ? legal.cgv : '', mentionsContent: generateLegal ? legal.details : '' },
+        footer: {
+          ...(generated.footer as any),
+          text: requestedSlogan || (input.language === 'en' ? 'Together, we make a difference.' : 'Ensemble, faisons la différence.'),
+          allRightsText: input.language === 'en' ? `© ${new Date().getFullYear()} ${name}. All rights reserved.` : `© ${new Date().getFullYear()} ${name}. Tous droits réservés.`,
+          showCgv: generateLegal,
+          showMentions: generateLegal,
+          cgvContent: generateLegal ? legal.cgv : '',
+          mentionsContent: generateLegal ? legal.details : '',
+        },
       },
     });
-    await prisma.organization.update({ where: { id: ctx.org.id }, data: { profile: { ...profile, language: input.language, slogan: requestedSlogan, generateCgv: generateLegal, year: input.year || profile.year || '', mission: input.mission || profile.mission || '', functioning: input.functioning || profile.functioning || '', actions: input.actions || profile.actions || '', beneficiaries: input.beneficiaries || profile.beneficiaries || '', goodToKnow: input.goodToKnow || profile.goodToKnow || '', city: input.city || profile.city || '', email: input.email || profile.email || '', category: input.category || profile.category || '', donationCardEnabled: donation.cardEnabled, donationStripeUrl: donation.stripeUrl, donationHelloAssoEnabled: donation.helloAssoEnabled, donationHelloAssoUrl: donation.helloAssoUrl, donationTransferEnabled: donation.transferEnabled, donationIban: donation.iban, donationBic: donation.bic, donationAccountHolder: donation.accountHolder, donationBankName: donation.bankName, donationChequeEnabled: donation.chequeEnabled, donationChequePayable: donation.chequePayable, donationChequeAddress: donation.chequeAddress, leetchiEnabled: b.leetchiEnabled ?? profile.leetchiEnabled ?? !!leetchi.url, leetchiUrl: leetchi.url, leetchiEmbedUrl: leetchi.embedUrl, leetchiEmbedCode: leetchi.embedCode, leetchiCollectedEuros: leetchi.collectedEuros, leetchiGoalEuros: leetchi.goalEuros } } });
+    await prisma.organization.update({ where: { id: ctx.org.id }, data: { profile: generationProfile } });
     revalidatePath('/dashboard/editor');
     revalidatePath('/dashboard/generate');
     revalidatePath(`/s/${site.subdomain}`);

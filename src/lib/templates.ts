@@ -5,6 +5,29 @@ import { defaultStyleFor, type BlockType } from './blocks';
 
 const IMG = (seed: string, w = 1400, h = 800) => `https://picsum.photos/seed/${seed}/${w}/${h}`;
 
+// Curated, cause-specific photography. Each template keeps one coherent visual
+// universe instead of relying on random Picsum images (which could show shoes
+// for an education association, for example).
+const TEMPLATE_PHOTOS: Record<string, string[]> = {
+  'solidarite-alimentaire': ['1547592180-85f173990554', '1593113598332-cd288d649433', '1488459716781-31db52582fe9'],
+  'enfance-education': ['1509062522246-3755977927d7', '1497486751825-1233686d5d80', '1542810634-71277d95dcbb'],
+  'protection-animale': ['1450778869180-41d0601e046e', '1444212477490-ca407925329e', '1517849845537-4d257902454a'],
+  environnement: ['1441974231531-c6227db76b6e', '1472396961693-142e6e269027', '1500530855697-b586d89ba3ee'],
+  'sante-handicap': ['1576091160399-112ba8d25d1d', '1584515933487-779824d29309', '1576765608622-067973a79f53'],
+  'culture-patrimoine': ['1564399579883-451a5d44ec08', '1500534314209-a25ddb2bd429', '1482160549825-59d1b23cb208'],
+  'club-sportif': ['1461896836934-ffe607ba8211', '1517466787929-bc90951d0974', '1526232761682-d26e03ac148e'],
+  humanitaire: ['1488521787991-ed7bbaae773c', '1469571486292-0ba58a3f068b', '1532629345422-7515f3d16bb6'],
+  'solidarite-locale': ['1529156069898-49953e39b3ac', '1511632765486-a01980e01a18', '1531206715517-5c0ba140b2b8'],
+  aines: ['1544005313-94ddf0286df2', '1581579438747-1dc8d17bbce4', '1551836022-d5d88e9218df'],
+};
+
+export function templateImage(id: string, slot = 0, w = 1400, h = 800) {
+  const photos = TEMPLATE_PHOTOS[id];
+  if (!photos?.length) return IMG(`${id}-${slot}`, w, h);
+  const photo = photos[slot % photos.length];
+  return `https://images.unsplash.com/photo-${photo}?auto=format&fit=crop&w=${w}&h=${h}&q=85`;
+}
+
 interface Card { icon: string; title: string; text: string }
 
 interface TemplateDef {
@@ -187,15 +210,36 @@ export interface BuiltTemplate {
   pages: { title: string; slug: string; isHome: boolean; showInNav: boolean; blocks: any[] }[];
 }
 
-function build(d: TemplateDef): BuiltTemplate {
+function build(d: TemplateDef, layout: number): BuiltTemplate {
   const donateBtn = { text: 'Faire un don', href: '/don', color: d.primary, variant: 'solid', align: 'center' };
+  const image = (slot: number, w = 1400, h = 800) => templateImage(d.id, slot, w, h);
+  const hero = { type: 'banner' as const, content: { image: image(0, 1600, 760), title: d.heroTitle, subtitle: d.heroSubtitle, overlay: layout % 3 === 0 ? 58 : 42, height: layout % 2 ? 560 : 480, button: { text: 'Faire un don', href: '/don', color: '#ffffff', variant: 'solid', align: layout % 2 ? 'left' : 'center' } }, style: { paddingY: 0, align: layout % 2 ? 'left' : 'center' } };
+  const intro = { type: 'textimage' as const, content: { title: d.introTitle, text: d.introText, image: image(1, 900, 700), imageSide: layout % 2 ? 'left' : 'right', button: { text: 'Découvrir', href: '/notre-action', color: d.primary, variant: 'outline', align: 'left' } }, style: { paddingY: layout % 3 === 0 ? 52 : 28, background: layout % 4 === 0 ? d.ctaBg : '#ffffff' } };
+  const cardBlock = { type: 'cards' as const, content: { columns: layout % 4 === 3 ? 2 : 3, items: d.cards }, style: { paddingY: layout % 2 ? 48 : 28, background: layout % 3 === 1 ? d.ctaBg : '#ffffff' } };
+  const gallery = { type: 'gallery' as const, content: { columns: layout % 3 === 0 ? 2 : 3, images: Array.from({ length: layout % 3 === 0 ? 4 : 6 }, (_, i) => image(i, 700, 700)) }, style: { paddingY: 28 } };
+  const callout = { type: 'cta' as const, content: { title: 'Votre don a un impact réel', text: d.donText, button: donateBtn }, style: { background: d.ctaBg, paddingY: layout % 2 ? 64 : 44 } };
+  // Ten genuinely different rhythms: editorial, immersive, mosaic, campaign,
+  // community… The blocks, image balance, spacing and alignment vary, not only
+  // the palette.
+  const arrangements = [
+    [hero, intro, cardBlock, gallery, callout],
+    [hero, cardBlock, intro, callout],
+    [intro, hero, gallery, cardBlock, callout],
+    [hero, gallery, intro, cardBlock, callout],
+    [hero, intro, callout, cardBlock],
+    [cardBlock, hero, intro, gallery, callout],
+    [hero, intro, gallery, callout],
+    [intro, cardBlock, hero, callout],
+    [hero, callout, intro, gallery, cardBlock],
+    [hero, cardBlock, gallery, intro, callout],
+  ];
   return {
     id: d.id,
     name: d.name,
     category: d.category,
     tagline: d.tagline,
-    preview: IMG(d.seed + '-cover', 800, 500),
-    theme: { primary: d.primary, secondary: d.footerBg, background: '#ffffff', text: '#1f2937', font: 'sans' },
+    preview: image(0, 800, 500),
+    theme: { primary: d.primary, secondary: d.footerBg, background: layout % 4 === 2 ? '#fffcf7' : '#ffffff', text: '#1f2937', font: ['sans','serif','rounded','sans','serif','rounded','sans','serif','rounded','sans'][layout] },
     header: {
       logoText: 'Votre association', showNav: true, sticky: true,
       background: d.headerBg, textColor: d.headerText,
@@ -217,27 +261,21 @@ function build(d: TemplateDef): BuiltTemplate {
     pages: [
       {
         title: 'Accueil', slug: 'accueil', isHome: true, showInNav: true,
-        blocks: blocks([
-          { type: 'banner', content: { image: IMG(d.seed + '-hero', 1600, 720), title: d.heroTitle, subtitle: d.heroSubtitle, overlay: 45, height: 480, button: { text: 'Faire un don', href: '/don', color: '#ffffff', variant: 'solid', align: 'center' } } },
-          { type: 'textimage', content: { title: d.introTitle, text: d.introText, image: IMG(d.seed + '-intro', 900, 700), imageSide: 'right', button: { text: 'Découvrir', href: '/notre-action', color: d.primary, variant: 'outline', align: 'left' } } },
-          { type: 'cards', content: { columns: 3, items: d.cards } },
-          { type: 'gallery', content: { columns: 3, images: [IMG(d.seed + '-1', 600, 600), IMG(d.seed + '-2', 600, 600), IMG(d.seed + '-3', 600, 600), IMG(d.seed + '-4', 600, 600), IMG(d.seed + '-5', 600, 600), IMG(d.seed + '-6', 600, 600)] } },
-          { type: 'cta', content: { title: 'Votre don a un impact réel', text: d.donText, button: donateBtn }, style: { background: d.ctaBg, paddingY: 44 } },
-        ]),
+        blocks: blocks(arrangements[layout]),
       },
       {
         title: 'Notre action', slug: 'notre-action', isHome: false, showInNav: true,
         blocks: blocks([
           { type: 'heading', content: { text: 'Notre action' } },
           { type: 'text', content: { text: d.introText } },
-          { type: 'slideshow', content: { interval: 4, slides: [{ image: IMG(d.seed + '-a', 1400, 640), caption: 'Sur le terrain' }, { image: IMG(d.seed + '-b', 1400, 640), caption: 'Grâce à vous' }, { image: IMG(d.seed + '-c', 1400, 640), caption: 'Une équipe engagée' }] } },
+          { type: 'slideshow', content: { interval: 4, slides: [{ image: image(0, 1400, 640), caption: 'Sur le terrain' }, { image: image(1, 1400, 640), caption: 'Grâce à vous' }, { image: image(2, 1400, 640), caption: 'Une équipe engagée' }] } },
           { type: 'cards', content: { columns: 3, items: d.cards } },
         ]),
       },
       {
         title: 'Faire un don', slug: 'don', isHome: false, showInNav: true,
         blocks: blocks([
-          { type: 'banner', content: { image: IMG(d.seed + '-don', 1600, 500), title: 'Soutenez notre association', subtitle: d.donText, overlay: 50, height: 380, button: { text: 'Je donne maintenant', href: '#don', color: '#ffffff', variant: 'solid', align: 'center' } } },
+          { type: 'banner', content: { image: image(2, 1600, 500), title: 'Soutenez notre association', subtitle: d.donText, overlay: 50, height: 380, button: { text: 'Je donne maintenant', href: '#don', color: '#ffffff', variant: 'solid', align: 'center' } } },
           { type: 'text', content: { text: 'Vous pouvez faire un don en ligne, par chèque ou par virement. Collez ici votre lien HelloAsso ou votre formulaire de don.' } },
           { type: 'html', content: { html: '<!-- Collez ici le code d’intégration HelloAsso, ou un bouton vers votre page de don -->' } },
           { type: 'cta', content: { title: 'Merci de votre générosité', text: d.donText, button: { text: 'Faire un don', href: '#', color: d.primary, variant: 'solid', align: 'center' } }, style: { background: d.ctaBg, paddingY: 44 } },

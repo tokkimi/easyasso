@@ -576,6 +576,12 @@ function FooterEditor({ value, onChange }: { value: any; onChange: (v: any) => v
   return (
     <div className="space-y-4">
       <h3 className="font-bold text-gray-900">Pied de page</h3>
+      <div className="rounded-xl border-2 border-brand-200 bg-brand-50 p-3">
+        <p className="mb-2 font-bold text-gray-900">Couleurs du pied de page</p>
+        <Field label="Couleur de fond"><ColorGrid value={f.background} onChange={(c) => set({ background: c })} /></Field>
+        <label className="mt-3 flex items-center justify-between gap-3 text-sm font-medium text-gray-700">Choisir une autre couleur<input type="color" value={f.background || '#111827'} onChange={(e) => set({ background: e.target.value })} className="h-11 w-16 cursor-pointer rounded-lg border border-gray-300 bg-white p-1" /></label>
+        <div className="mt-3"><Field label="Couleur du texte"><ColorGrid value={f.textColor} onChange={(c) => set({ textColor: c })} /></Field></div>
+      </div>
       <Field label="Texte du logo"><input className="input" value={f.logoText || ''} onChange={(e) => set({ logoText: e.target.value })} /></Field>
       <ImageInput label="Logo (image)" value={f.logoUrl} onChange={(logoUrl) => set({ logoUrl })} />
       <Field label="Texte de présentation"><textarea className="input min-h-[70px]" value={f.text || ''} onChange={(e) => set({ text: e.target.value })} /></Field>
@@ -590,8 +596,6 @@ function FooterEditor({ value, onChange }: { value: any; onChange: (v: any) => v
         <Toggle checked={f.showMentions ?? true} onChange={(v) => set({ showMentions: v })} label="Afficher mentions légales" />
         {f.showMentions && <Field label="Contenu mentions légales"><textarea className="input min-h-[70px]" value={f.mentionsContent || ''} onChange={(e) => set({ mentionsContent: e.target.value })} /></Field>}
       </div>
-      <Field label="Couleur de fond"><ColorGrid value={f.background} onChange={(c) => set({ background: c })} /></Field>
-      <Field label="Couleur du texte"><ColorGrid value={f.textColor} onChange={(c) => set({ textColor: c })} /></Field>
     </div>
   );
 }

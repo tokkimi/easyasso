@@ -8,7 +8,7 @@ import { airwallexClientEnvironment, airwallexConfigured, createAirwallexPayment
 function paymentProviderMessage(raw: string) {
   const value = raw.toLowerCase();
   if (value.includes('insufficient permission') || value.includes('configuration_error')) {
-    return 'Le paiement EasyAsso est branché, mais la clé API Airwallex n’a pas les permissions nécessaires pour créer une page de paiement. Dans Airwallex, activez les droits Payment Acceptance / Payment Links / Payment Intents sur la clé API, ou créez une nouvelle clé avec ces droits. Aucun débit n’a été effectué.';
+    return 'Le paiement EasyAsso est branché, mais Airwallex refuse la création de la page de paiement. Le compte Airwallex doit avoir le produit Payments activé et autorisé pour accepter les cartes en ligne. Aucun abonnement n’est activé et aucun débit n’a été effectué.';
   }
   return `Airwallex refuse la création du paiement : ${raw}. Aucun débit n’a été effectué.`;
 }

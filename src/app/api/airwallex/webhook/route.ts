@@ -22,12 +22,15 @@ export async function POST(req: Request) {
     const payment = event.data?.object || event.data || {};
     const organizationId = payment.metadata?.organizationId;
     const paymentLinkId = payment.payment_link_id || payment.payment_link?.id;
+    const paymentIntentId = payment.id;
     const org = organizationId
       ? await prisma.organization.findUnique({ where: { id: organizationId } })
       : paymentLinkId
         ? await prisma.organization.findUnique({ where: { airwallexPaymentLinkId: paymentLinkId } })
+        : paymentIntentId
+          ? await prisma.organization.findUnique({ where: { airwallexPaymentLinkId: paymentIntentId } })
         : null;
-    const correctLink = org && (!paymentLinkId || paymentLinkId === org.airwallexPaymentLinkId);
+    const correctLink = org && (!paymentLinkId || paymentLinkId === org.airwallexPaymentLinkId || paymentIntentId === org.airwallexPaymentLinkId);
     const correctAmount = Number(payment.amount) === PRICE_EUR && payment.currency === 'EUR';
     if (org && correctLink && correctAmount && org.planStatus !== 'ACTIVE') await activateOrganization(org.id, `airwallex:${payment.id}`);
   }

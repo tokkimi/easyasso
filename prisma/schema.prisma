@@ -256,6 +256,9 @@ model Donation {
   status         String   @default("COMPLETED") // PENDING | COMPLETED | REFUNDED | FAILED
   isRecurring    Boolean  @default(false)
   message        String?
+  receivedAt      DateTime?
+  receivedReference String?
+  proofDocuments Json     @default("[]")
   stripePaymentId String?
   receiptNumber  String?
   receiptIssued  Boolean  @default(false)

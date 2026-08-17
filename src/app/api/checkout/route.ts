@@ -3,7 +3,7 @@ import { requireOrg } from '@/lib/session';
 import { stripe, isDemoMode, PRICE_EUR } from '@/lib/stripe';
 import { activateOrganization } from '@/lib/activation';
 import { prisma } from '@/lib/prisma';
-import { airwallexConfigured, createAirwallexPaymentLink } from '@/lib/airwallex';
+import { airwallexClientEnvironment, airwallexConfigured, createAirwallexPaymentIntent, createAirwallexPaymentLink } from '@/lib/airwallex';
 
 export async function POST() {
   const ctx = await requireOrg();
@@ -20,18 +20,47 @@ export async function POST() {
     return NextResponse.json({ url: '/onboarding/success?demo=1' });
   }
 
+  let airwallexError = '';
   if (airwallexConfigured) {
-    const payment = await createAirwallexPaymentLink({ organizationId: org.id, organizationName: org.name, amount: PRICE_EUR });
-    await prisma.organization.update({
-      where: { id: org.id },
-      data: { planStatus: 'PENDING_PAYMENT', airwallexPaymentLinkId: payment.id },
-    });
-    return NextResponse.json({ url: payment.url });
+    try {
+      const payment = await createAirwallexPaymentLink({ organizationId: org.id, organizationName: org.name, amount: PRICE_EUR });
+      await prisma.organization.update({
+        where: { id: org.id },
+        data: { planStatus: 'PENDING_PAYMENT', airwallexPaymentLinkId: payment.id },
+      });
+      return NextResponse.json({ url: payment.url });
+    } catch (error: any) {
+      airwallexError = error?.message || 'Payment Link Airwallex indisponible';
+      console.error('Airwallex payment link failed; trying hosted checkout fallback', airwallexError);
+      try {
+        const intent = await createAirwallexPaymentIntent({
+          organizationId: org.id,
+          organizationName: org.name,
+          amount: PRICE_EUR,
+          email: ctx.user.email,
+          returnUrl: `${appUrl}/onboarding/success`,
+        });
+        await prisma.organization.update({
+          where: { id: org.id },
+          data: { planStatus: 'PENDING_PAYMENT', airwallexPaymentLinkId: intent.id },
+        });
+        const params = new URLSearchParams({
+          intent_id: intent.id,
+          client_secret: intent.clientSecret,
+          currency: intent.currency,
+          env: airwallexClientEnvironment,
+        });
+        return NextResponse.json({ url: `/checkout/airwallex?${params.toString()}` });
+      } catch (fallbackError: any) {
+        airwallexError = fallbackError?.message || airwallexError;
+        console.error('Airwallex hosted checkout failed', airwallexError);
+      }
+    }
   }
 
   if (!stripe) {
     return NextResponse.json(
-      { error: 'Le paiement sécurisé est momentanément indisponible. Aucun débit n’a été effectué.' },
+      { error: airwallexError ? `Airwallex refuse la création du paiement : ${airwallexError}. Aucun débit n’a été effectué.` : 'Le paiement sécurisé est momentanément indisponible. Aucun débit n’a été effectué.' },
       { status: 503 }
     );
   }

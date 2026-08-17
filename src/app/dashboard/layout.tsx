@@ -4,6 +4,7 @@ import { Clock } from 'lucide-react';
 import { requireOrg, planAccess } from '@/lib/session';
 import { prisma } from '@/lib/prisma';
 import { siteUrlFor } from '@/lib/utils';
+import { isPlatformAdmin } from '@/lib/platform-admin';
 import { Sidebar } from './sidebar';
 import { EmailVerificationBanner } from './email-verification-banner';
 
@@ -16,6 +17,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const site = await prisma.site.findUnique({ where: { organizationId: org.id } });
   const unreadMessages = await prisma.contactMessage.count({ where: { organizationId: org.id, readAt: null, archivedAt: null } });
   const siteUrl = site ? siteUrlFor(site.subdomain, site.customDomain, site.domainVerified) : '#';
+  const platformAdmin = isPlatformAdmin(ctx.user);
 
   return (
     <div className="min-h-screen bg-gray-50 lg:flex">
@@ -38,6 +40,11 @@ export default async function DashboardLayout({ children }: { children: React.Re
           </div>
         )}
         {!ctx.user.emailVerified && <EmailVerificationBanner />}
+        {platformAdmin && (
+          <div className="border-b border-brand-100 bg-brand-50 px-4 py-2 text-center text-sm font-semibold text-brand-800">
+            Vous êtes admin EasyAsso · <Link href="/admin" className="underline">ouvrir l’administration globale</Link>
+          </div>
+        )}
         <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:px-8">{children}</div>
       </main>
     </div>

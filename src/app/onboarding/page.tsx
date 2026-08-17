@@ -4,6 +4,7 @@ import { requireOrg, planAccess } from '@/lib/session';
 import { isDemoMode } from '@/lib/stripe';
 import { siteUrlFor } from '@/lib/utils';
 import { PayButton } from './pay-button';
+import { ManualTransferButton } from './manual-transfer-button';
 import { Check } from 'lucide-react';
 
 const PRICE = process.env.NEXT_PUBLIC_PRICE_EUR || '250';
@@ -48,6 +49,7 @@ export default async function OnboardingPage() {
           <div className="mt-8">
             <PayButton price={PRICE} demo={isDemoMode} />
           </div>
+          <ManualTransferButton price={PRICE} />
           {isDemoMode && (
             <p className="mt-3 text-xs text-amber-600">
               Mode démonstration actif : le paiement est simulé (Stripe non configuré).

@@ -10,8 +10,9 @@ import { legalDocuments } from '@/lib/legal';
 import { defaultStyleFor } from '@/lib/blocks';
 import { removeGeneratedCopyDuplicates } from '@/lib/copy-quality';
 
-// AI copywriting can take 20-40s; allow up to 60s.
-export const maxDuration = 60;
+// Rich AI copywriting of a full multi-page site can take a few minutes.
+// Requires the Vercel Pro plan (Hobby caps maxDuration at 60s).
+export const maxDuration = 300;
 
 export async function POST(req: Request) {
   try {

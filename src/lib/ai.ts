@@ -138,13 +138,13 @@ function parseAiSite(text: string): AiSite | null {
   return null;
 }
 
-// The route runs under a 60s serverless limit. Rich, multi-page generation can
-// exceed that; if the platform kills the function mid-request we lose
-// everything. So we stream, accumulate text as it arrives, and self-abort a few
-// seconds before the limit — then salvage the pages that already completed.
-// Because the prompt emits pages in priority order (Accueil, Nos actions…), the
-// important pages survive even when the tail is cut.
-const GENERATION_DEADLINE_MS = 50000;
+// The route runs under the serverless function limit (300s on Vercel Pro). Rich
+// multi-page generation can be long; if the platform kills the function mid-
+// request we lose everything. So we stream, accumulate text as it arrives, and
+// self-abort a few seconds before the limit — then salvage the pages that
+// already completed. Because the prompt emits pages in priority order (Accueil,
+// Nos actions…), the important pages survive even when the tail is cut.
+const GENERATION_DEADLINE_MS = 280000;
 
 async function callClaude(prompt: string): Promise<AiSite | null> {
   const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
@@ -153,7 +153,7 @@ async function callClaude(prompt: string): Promise<AiSite | null> {
   try {
     const stream = client.messages.stream({
       model: MODEL,
-      max_tokens: 16000,
+      max_tokens: 24000,
       thinking: { type: 'disabled' },
       system: SYSTEM,
       messages: [{ role: 'user', content: prompt }],

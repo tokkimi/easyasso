@@ -25,7 +25,7 @@ interface AiSite {
   pages: { title: string; slug: string; isHome?: boolean; sections: Section[] }[];
 }
 
-const SYSTEM = `Tu es un expert en communication associative et en création de sites web pour associations françaises.
+const SYSTEM = `Tu es directeur éditorial, concepteur-rédacteur senior et expert des associations françaises.
 À partir des informations d'une association, tu rédiges le contenu COMPLET d'un site vitrine, en français, avec des textes riches, chaleureux, concrets et bien écrits (pas de texte générique de remplissage).
 
 Tu réponds UNIQUEMENT avec un objet JSON valide (aucun texte avant ou après, pas de balises markdown), respectant ce format :
@@ -45,14 +45,28 @@ Chaque "section" a un "type" parmi :
 - {"type":"cta","title":"...","text":"...","buttonText":"Faire un don"}
 - {"type":"gallery"}  (galerie de photos, sans contenu)
 
-Génère TOUTES les pages utiles à une association : Accueil, À propos / Notre histoire, Nos actions, Faire un don, Actualités, et Contact. Adapte les titres à la cause. Développe vraiment les textes (histoire, mission, fonctionnement, impact, comment aider).`;
+Génère obligatoirement un site entièrement neuf comprenant au minimum : Accueil, Notre histoire, Nos actions, Notre impact, S'engager / Devenir bénévole, Faire un don, Actualités et Contact.
+
+RÈGLES ÉDITORIALES OBLIGATOIRES :
+- Chaque page comporte 4 à 7 sections utiles et différentes.
+- Chaque section de texte contient 120 à 220 mots, répartis en 2 à 4 paragraphes.
+- Les cartes contiennent des explications concrètes de 35 à 70 mots chacune.
+- L'accueil raconte la cause, la réponse de l'association, ses actions, son impact et les façons d'aider.
+- La page histoire développe l'origine, les valeurs, la méthode et la vision.
+- La page actions transforme toutes les informations fournies en programmes précis, jamais en généralités.
+- La page impact explique les résultats attendus sans inventer de chiffres absents des réponses.
+- La page engagement détaille bénévolat, adhésion, partenariat et relais de communication.
+- Ne répète pas le même paragraphe d'une page à l'autre.
+- N'invente jamais d'adresse, d'email, de chiffre, de partenaire, de date ou de résultat.
+- Le ton doit être humain, crédible, spécifique à la cause et directement publiable.
+- Utilise toutes les informations du questionnaire, même les détails secondaires.`;
 
 async function callClaude(prompt: string): Promise<AiSite | null> {
   try {
     const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
     const res = await client.messages.create({
       model: MODEL,
-      max_tokens: 8000,
+      max_tokens: 14000,
       // Copywriting doesn't need thinking; disable for speed/latency.
       thinking: { type: 'disabled' },
       system: SYSTEM,

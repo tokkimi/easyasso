@@ -29,6 +29,9 @@ export default async function OnboardingPage() {
             Un <strong>paiement unique de {PRICE} €</strong> — pas d’abonnement. Votre site est <strong>hébergé à vie</strong>,
             avec tous les outils (dons, CRM, comptabilité…).
           </p>
+          <p className="mt-3 rounded-xl bg-amber-50 px-4 py-3 text-sm font-medium text-amber-800">
+            Tant que le paiement n’est pas confirmé par la page sécurisée, l’abonnement reste en attente : aucun accès “à vie” n’est validé automatiquement.
+          </p>
 
           <div className="mt-6 rounded-xl bg-gray-50 p-4 text-left">
             <p className="text-sm font-medium text-gray-500">Votre adresse générée automatiquement</p>

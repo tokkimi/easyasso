@@ -9,7 +9,7 @@ const PRICE = process.env.NEXT_PUBLIC_PRICE_EUR || '250';
 export default function RegisterPage() {
   const router = useRouter();
   const [form, setForm] = useState({
-    name: '', assoName: '', email: '', password: '', language: 'fr' as 'fr' | 'en', startMode: 'trial' as 'trial' | 'pay',
+    name: '', assoName: '', email: '', password: '', language: 'fr' as 'fr' | 'en', startMode: '' as '' | 'trial' | 'pay',
     phone: '', city: '', legalName: '', registrationNumber: '', legalAddress: '', publicationDirector: '',
   });
   const [error, setError] = useState('');
@@ -30,6 +30,9 @@ export default function RegisterPage() {
   async function submit(event: React.FormEvent) {
     event.preventDefault(); setError(''); setLoading(true);
     try {
+      if (!form.startMode) {
+        throw new Error(en ? 'Choose either the 3-day free trial or secure payment before continuing.' : 'Choisissez l’essai gratuit de 3 jours ou le paiement sécurisé avant de continuer.');
+      }
       const response = await fetch('/api/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || (en ? 'Unable to create the account.' : 'Impossible de créer le compte.'));
@@ -38,7 +41,9 @@ export default function RegisterPage() {
       if (form.startMode === 'pay') {
         const checkout = await fetch('/api/checkout', { method: 'POST' });
         const checkoutData = await checkout.json().catch(() => ({}));
-        if (!checkout.ok || !checkoutData.url) throw new Error(checkoutData.error || (en ? 'Secure payment is currently unavailable. Your account was created, but nothing was charged.' : 'Le paiement sécurisé est momentanément indisponible. Votre compte a été créé, mais rien n’a été débité.'));
+        if (!checkout.ok || !checkoutData.url) {
+          throw new Error(checkoutData.error || (en ? 'Secure payment is currently unavailable. Your account was created, but the subscription is NOT active and nothing was charged.' : 'Le paiement sécurisé est momentanément indisponible. Votre compte a été créé, mais l’abonnement n’est PAS actif et rien n’a été débité.'));
+        }
         window.location.href = checkoutData.url;
         return;
       }
@@ -63,21 +68,24 @@ export default function RegisterPage() {
             <div><label className="label">{en ? 'Password' : 'Mot de passe'}</label><input className="input" type="password" required minLength={6} value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} placeholder={en ? '6 characters minimum' : '6 caractères minimum'} /></div>
             <div><label className="label">{en ? 'Workspace language' : 'Langue de votre espace'}</label><select className="input" value={form.language} onChange={(e) => changeLanguage(e.target.value as 'fr' | 'en')}><option value="fr">Français</option><option value="en">English</option></select></div>
             <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
-              <h2 className="font-bold text-gray-900">{en ? 'Association contact and legal details' : 'Coordonnées et infos légales de l’association'}</h2>
-              <p className="mt-1 text-xs text-gray-500">{en ? 'These details will prefill Settings, legal notices and generated pages.' : 'Ces infos rempliront automatiquement Réglages, mentions légales et pages générées.'}</p>
+              <h2 className="font-bold text-gray-900">{en ? 'Required association details' : 'Coordonnées obligatoires de l’association'}</h2>
+              <p className="mt-1 text-xs text-gray-500">{en ? 'Required now: they prefill Settings, legal notices, contact pages and generated pages.' : 'Demandées dès l’inscription : elles remplissent automatiquement Réglages, mentions légales, contact et pages générées.'}</p>
               <div className="mt-4 space-y-3">
-                <div><label className="label">{en ? 'Legal association name' : 'Nom légal de l’association'}</label><input className="input" value={form.legalName} onChange={(e) => setForm({ ...form, legalName: e.target.value })} placeholder={form.assoName || (en ? 'Official registered name' : 'Nom officiel déclaré')} /></div>
-                <div><label className="label">{en ? 'Registration number' : 'Numéro d’enregistrement'}</label><input className="input" value={form.registrationNumber} onChange={(e) => setForm({ ...form, registrationNumber: e.target.value })} placeholder={en ? 'Registration / charity number' : 'RNA, SIREN, SIRET…'} /></div>
-                <div><label className="label">{en ? 'Legal address' : 'Adresse légale / siège'}</label><textarea className="input" value={form.legalAddress} onChange={(e) => setForm({ ...form, legalAddress: e.target.value })} placeholder={en ? 'Full registered address' : 'Adresse complète du siège'} /></div>
+                <div><label className="label">{en ? 'Legal association name *' : 'Nom légal de l’association *'}</label><input className="input" required value={form.legalName} onChange={(e) => setForm({ ...form, legalName: e.target.value })} placeholder={form.assoName || (en ? 'Official registered name' : 'Nom officiel déclaré')} /></div>
+                <div><label className="label">{en ? 'Registration number *' : 'Numéro d’enregistrement *'}</label><input className="input" required value={form.registrationNumber} onChange={(e) => setForm({ ...form, registrationNumber: e.target.value })} placeholder={en ? 'Registration / charity number' : 'RNA, SIREN, SIRET…'} /></div>
+                <div><label className="label">{en ? 'Legal address *' : 'Adresse légale / siège *'}</label><textarea className="input" required value={form.legalAddress} onChange={(e) => setForm({ ...form, legalAddress: e.target.value })} placeholder={en ? 'Full registered address' : 'Adresse complète du siège'} /></div>
                 <div className="grid gap-3 sm:grid-cols-2">
-                  <div><label className="label">{en ? 'Phone' : 'Téléphone'}</label><input className="input" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></div>
-                  <div><label className="label">{en ? 'City' : 'Ville'}</label><input className="input" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} /></div>
+                  <div><label className="label">{en ? 'Phone *' : 'Téléphone *'}</label><input className="input" required value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></div>
+                  <div><label className="label">{en ? 'City *' : 'Ville *'}</label><input className="input" required value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} /></div>
                 </div>
-                <div><label className="label">{en ? 'Publication director' : 'Directeur/directrice de publication'}</label><input className="input" value={form.publicationDirector} onChange={(e) => setForm({ ...form, publicationDirector: e.target.value })} placeholder={form.name || (en ? 'Usually the president or owner' : 'Souvent le/la président(e)')} /></div>
+                <div><label className="label">{en ? 'Publication director *' : 'Directeur/directrice de publication *'}</label><input className="input" required value={form.publicationDirector} onChange={(e) => setForm({ ...form, publicationDirector: e.target.value })} placeholder={form.name || (en ? 'Usually the president or owner' : 'Souvent le/la président(e)')} /></div>
               </div>
             </div>
             <div>
-              <p className="label">{en ? 'How do you want to start?' : 'Comment voulez-vous commencer ?'}</p>
+              <p className="label">{en ? 'Required: choose how to start' : 'Obligatoire : choisissez comment commencer'}</p>
+              <p className="mb-2 rounded-xl bg-amber-50 px-3 py-2 text-xs font-medium text-amber-800">
+                {en ? 'A free trial is not a paid subscription. EasyAsso becomes active only after confirmed payment.' : 'Un essai gratuit n’est pas un abonnement payé. EasyAsso devient actif uniquement après paiement confirmé.'}
+              </p>
               <div className="grid gap-2">
                 <label className={`cursor-pointer rounded-xl border p-3 ${form.startMode === 'trial' ? 'border-brand-500 bg-brand-50' : 'border-gray-200 bg-white'}`}>
                   <input type="radio" className="mr-2" checked={form.startMode === 'trial'} onChange={() => setForm({ ...form, startMode: 'trial' })} />
@@ -92,7 +100,7 @@ export default function RegisterPage() {
               </div>
             </div>
             {error && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
-            <button className="btn btn-primary w-full py-3" disabled={loading}>{loading ? (form.startMode === 'pay' ? (en ? 'Opening secure payment…' : 'Ouverture du paiement sécurisé…') : (en ? 'Creating…' : 'Création…')) : form.startMode === 'pay' ? (en ? `Create account and pay €${PRICE}` : `Créer le compte et payer ${PRICE} €`) : (en ? 'Continue' : 'Continuer')}</button>
+            <button className="btn btn-primary w-full py-3" disabled={loading || !form.startMode}>{loading ? (form.startMode === 'pay' ? (en ? 'Opening secure payment…' : 'Ouverture du paiement sécurisé…') : (en ? 'Creating trial…' : 'Création de l’essai…')) : form.startMode === 'pay' ? (en ? `Create account and pay €${PRICE}` : `Créer le compte et payer ${PRICE} €`) : form.startMode === 'trial' ? (en ? 'Start my 3-day free trial' : 'Commencer mon essai de 3 jours') : (en ? 'Choose an option to continue' : 'Choisissez une option pour continuer')}</button>
           </form>
         </div>
         <p className="mt-4 text-center text-sm text-gray-500">{en ? 'Already have an account?' : 'Déjà un compte ?'} <Link href="/login" className="font-semibold text-brand-600">{en ? 'Log in' : 'Se connecter'}</Link></p>

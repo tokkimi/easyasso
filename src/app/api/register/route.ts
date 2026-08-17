@@ -6,18 +6,18 @@ import { createOrganizationForUser } from '@/lib/bootstrap';
 import { sendVerificationEmail } from '@/lib/mail';
 
 const schema = z.object({
-  name: z.string().min(1),
-  assoName: z.string().min(1),
+  name: z.string().trim().min(1),
+  assoName: z.string().trim().min(1),
   email: z.string().email(),
   password: z.string().min(6),
   language: z.enum(['fr', 'en']).default('fr'),
-  startMode: z.enum(['trial', 'pay']).optional().default('trial'),
-  phone: z.string().optional().default(''),
-  city: z.string().optional().default(''),
-  legalName: z.string().optional().default(''),
-  registrationNumber: z.string().optional().default(''),
-  legalAddress: z.string().optional().default(''),
-  publicationDirector: z.string().optional().default(''),
+  startMode: z.enum(['trial', 'pay']),
+  phone: z.string().trim().min(1, 'Téléphone obligatoire'),
+  city: z.string().trim().min(1, 'Ville obligatoire'),
+  legalName: z.string().trim().min(1, 'Nom légal obligatoire'),
+  registrationNumber: z.string().trim().min(1, 'Numéro d’enregistrement obligatoire'),
+  legalAddress: z.string().trim().min(1, 'Adresse légale obligatoire'),
+  publicationDirector: z.string().trim().min(1, 'Directeur de publication obligatoire'),
 });
 
 export async function POST(req: Request) {

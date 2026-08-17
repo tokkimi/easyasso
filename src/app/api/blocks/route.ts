@@ -21,6 +21,17 @@ export async function POST(req: Request) {
       content.phone = profile.phone || '';
       content.address = profile.legalAddress || profile.city || '';
     }
+    if (type === 'donation') {
+      const profile = (ctx.org.profile as Record<string, any>) || {};
+      Object.assign(content, {
+        locale: profile.language === 'en' ? 'en' : 'fr', cardEnabled: !!profile.donationCardEnabled,
+        stripeUrl: profile.donationStripeUrl || '', helloAssoUrl: profile.donationHelloAssoUrl || '',
+        transferEnabled: !!profile.donationTransferEnabled, iban: profile.donationIban || '', bic: profile.donationBic || '',
+        accountHolder: profile.donationAccountHolder || '', bankName: profile.donationBankName || '',
+        chequeEnabled: !!profile.donationChequeEnabled, chequePayable: profile.donationChequePayable || '', chequeAddress: profile.donationChequeAddress || '',
+      });
+      if (profile.language === 'en') Object.assign(content, { title: 'Support our work', intro: 'Your generosity helps us continue our mission.' });
+    }
     const block = await prisma.block.create({
       data: {
         pageId,

@@ -4,7 +4,7 @@ import {
   Plus, Trash2, ArrowUp, ArrowDown, Monitor, Smartphone, Eye, Home, GripVertical,
   Type, Heading, Image as ImageIcon, Video, MousePointerClick, Share2, Columns, MoveVertical, Code,
   PanelTop, PanelBottom, Palette, Files, ChevronLeft, Check,
-  GalleryThumbnails, PanelsTopLeft, GalleryHorizontalEnd, Images, LayoutGrid, Megaphone, SlidersHorizontal, X, Mail,
+  GalleryThumbnails, PanelsTopLeft, GalleryHorizontalEnd, Images, LayoutGrid, Megaphone, SlidersHorizontal, X, Mail, HandCoins,
 } from 'lucide-react';
 import { BLOCK_LIBRARY, type BlockType, type ButtonConfig } from '@/lib/blocks';
 import { PublicBlock } from '@/components/site/PublicBlock';
@@ -15,7 +15,7 @@ import { ColorGrid, AlignPicker, Field, Toggle, ImageInput } from './controls';
 
 const ICONS: Record<string, any> = {
   Heading, Type, Image: ImageIcon, Video, MousePointerClick, Share2, Columns, MoveVertical, Code,
-  GalleryThumbnails, PanelsTopLeft, GalleryHorizontalEnd, Images, LayoutGrid, Megaphone, Mail,
+  GalleryThumbnails, PanelsTopLeft, GalleryHorizontalEnd, Images, LayoutGrid, Megaphone, Mail, HandCoins,
 };
 
 const CARD_ICON_CHOICES = ['Heart', 'Users', 'HandHeart', 'HandCoins', 'Star', 'Gift', 'Leaf', 'Home', 'BookOpen', 'Shield', 'Sparkles', 'Handshake'];
@@ -393,6 +393,19 @@ function BlockInspector({ block, onContent, onStyle, onDelete }: { block: Block;
           <Field label="Téléphone"><input className="input" value={c.phone || ''} onChange={(e) => onContent({ ...c, phone: e.target.value })} /></Field>
           <Field label="Adresse"><textarea className="input min-h-20" value={c.address || ''} onChange={(e) => onContent({ ...c, address: e.target.value })} /></Field>
           <Field label="Texte du bouton"><input className="input" value={c.buttonText || ''} onChange={(e) => onContent({ ...c, buttonText: e.target.value })} /></Field>
+        </>
+      )}
+
+      {block.type === 'donation' && (
+        <>
+          <Field label="Titre"><input className="input" value={c.title || ''} onChange={(e) => onContent({ ...c, title: e.target.value })} /></Field>
+          <Field label="Introduction"><textarea className="input min-h-20" value={c.intro || ''} onChange={(e) => onContent({ ...c, intro: e.target.value })} /></Field>
+          <Toggle label="Carte bancaire" checked={!!c.cardEnabled} onChange={(cardEnabled) => onContent({ ...c, cardEnabled })} />
+          {c.cardEnabled && <><Field label="Lien Stripe"><input className="input" type="url" value={c.stripeUrl || ''} onChange={(e) => onContent({ ...c, stripeUrl: e.target.value })} /></Field><Field label="Lien HelloAsso"><input className="input" type="url" value={c.helloAssoUrl || ''} onChange={(e) => onContent({ ...c, helloAssoUrl: e.target.value })} /></Field></>}
+          <Toggle label="Virement bancaire" checked={!!c.transferEnabled} onChange={(transferEnabled) => onContent({ ...c, transferEnabled })} />
+          {c.transferEnabled && <><Field label="IBAN"><input className="input font-mono" value={c.iban || ''} onChange={(e) => onContent({ ...c, iban: e.target.value })} /></Field><Field label="BIC / SWIFT"><input className="input font-mono" value={c.bic || ''} onChange={(e) => onContent({ ...c, bic: e.target.value })} /></Field><Field label="Titulaire du compte"><input className="input" value={c.accountHolder || ''} onChange={(e) => onContent({ ...c, accountHolder: e.target.value })} /></Field></>}
+          <Toggle label="Chèque" checked={!!c.chequeEnabled} onChange={(chequeEnabled) => onContent({ ...c, chequeEnabled })} />
+          {c.chequeEnabled && <><Field label="Ordre du chèque"><input className="input" value={c.chequePayable || ''} onChange={(e) => onContent({ ...c, chequePayable: e.target.value })} /></Field><Field label="Adresse d’envoi"><textarea className="input min-h-20" value={c.chequeAddress || ''} onChange={(e) => onContent({ ...c, chequeAddress: e.target.value })} /></Field></>}
         </>
       )}
 

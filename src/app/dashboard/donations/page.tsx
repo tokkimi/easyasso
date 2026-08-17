@@ -18,6 +18,7 @@ export default async function DonationsPage() {
       donations={JSON.parse(JSON.stringify(donations))}
       donors={JSON.parse(JSON.stringify(donors))}
       campaigns={JSON.parse(JSON.stringify(campaigns))}
+      profile={(ctx.organization!.profile as Record<string, unknown>) || {}}
       canEdit={ctx.permissions.has(PERMISSIONS.DONATIONS_EDIT)}
       canReceipt={ctx.permissions.has(PERMISSIONS.RECEIPTS_MANAGE)}
       canExport={ctx.permissions.has(PERMISSIONS.EXPORTS)}

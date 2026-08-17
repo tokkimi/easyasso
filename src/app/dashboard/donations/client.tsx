@@ -4,11 +4,12 @@ import { useRouter } from 'next/navigation';
 import { Plus, Download, FileText, Trash2, X } from 'lucide-react';
 import { PageHeader, Stat, EmptyState } from '@/components/ui';
 import { formatEuros, formatDate } from '@/lib/utils';
+import { DonationSettings } from './settings';
 
 const METHODS = ['CASH', 'CHECK', 'TRANSFER', 'STRIPE', 'HELLOASSO', 'OTHER'];
 const METHOD_LABELS: Record<string, string> = { CASH: 'Espèces', CHECK: 'Chèque', TRANSFER: 'Virement', STRIPE: 'Stripe', HELLOASSO: 'HelloAsso', OTHER: 'Autre' };
 
-export function DonationsClient({ donations, donors, campaigns, canEdit, canReceipt, canExport }: any) {
+export function DonationsClient({ donations, donors, campaigns, profile, canEdit, canReceipt, canExport }: any) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<any>({ amountEuros: '', donorId: '', campaignId: '', method: 'CASH', donatedAt: new Date().toISOString().slice(0, 10) });
@@ -43,8 +44,10 @@ export function DonationsClient({ donations, donors, campaigns, canEdit, canRece
         <Stat label="Reçus émis" value={String(donations.filter((d: any) => d.receiptIssued).length)} />
       </div>
 
+      <DonationSettings initial={profile} canEdit={canEdit} />
+
       {donations.length === 0 ? (
-        <EmptyState title="Aucun don pour le moment" text="Ajoutez un don manuellement, ou connectez Stripe / HelloAsso pour les recevoir automatiquement.">
+        <EmptyState title="Aucun don pour le moment" text="Les dons initiés depuis votre site et les dons ajoutés manuellement apparaîtront ici.">
           {canEdit && <button onClick={() => setOpen(true)} className="btn btn-primary"><Plus className="h-4 w-4" /> Ajouter un don</button>}
         </EmptyState>
       ) : (

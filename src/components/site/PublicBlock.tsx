@@ -6,13 +6,14 @@ import type { BlockStyle, ButtonConfig, SocialConfig } from '@/lib/blocks';
 import { alignClass, justifyClass, blockWrapperStyle, videoEmbed } from '@/lib/render';
 import { Slideshow } from './Slideshow';
 import { ContactForm } from './ContactForm';
+import { DonationBlock } from './DonationBlock';
 
 const CARD_ICONS: Record<string, any> = {
   Heart, Users, HandHeart, HandCoins, Star, Gift, Leaf, Home, BookOpen, Shield, Sparkles, Handshake,
 };
 
 // Blocks that break out of the narrow text column
-const WIDE = new Set(['textimage', 'gallery', 'cards', 'contact']);
+const WIDE = new Set(['textimage', 'gallery', 'cards', 'contact', 'donation']);
 const FULL = new Set(['banner', 'slideshow', 'cta']);
 
 function Btn({ b, basePath = '' }: { b: ButtonConfig; basePath?: string }) {
@@ -176,6 +177,8 @@ function renderInner(type: string, content: any, style: BlockStyle, basePath: st
       );
     case 'contact':
       return <ContactForm organizationId={organizationId} content={content} />;
+    case 'donation':
+      return <DonationBlock content={content} organizationId={organizationId} />;
     default:
       return null;
   }

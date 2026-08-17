@@ -44,7 +44,7 @@ export async function PATCH(req: Request) {
     const ctx = await requireApiPermission(PERMISSIONS.ORG_SETTINGS);
     const parsed = schema.safeParse(await req.json());
     if (!parsed.success) return NextResponse.json({ error: 'Informations invalides.' }, { status: 400 });
-    const org = await prisma.organization.update({ where: { id: ctx.org.id }, data: { profile: parsed.data }, select: { profile: true, name: true } });
+    const org = await prisma.organization.update({ where: { id: ctx.org.id }, data: { profile: { ...((ctx.org.profile as Record<string, unknown>) || {}), ...parsed.data } }, select: { profile: true, name: true } });
     const site = await prisma.site.findUnique({ where: { organizationId: ctx.org.id } });
     if (site) {
       const footer = (site.footer as any) || {};

@@ -29,6 +29,7 @@ export function GenerateClient({ orgName, profile, categories, welcome }: { orgN
   const [f, setF] = useState({
     name: orgName || '', year: profile.year || '', mission: profile.mission || '', functioning: profile.functioning || '', actions: profile.actions || '',
     language: profile.language || 'fr', beneficiaries: profile.beneficiaries || '', goodToKnow: profile.goodToKnow || '', slogan: profile.slogan || '', generateCgv: profile.generateCgv ?? true, news: '', city: profile.city || '', email: profile.email || '', category: profile.category || '',
+    donationCardEnabled: profile.donationCardEnabled ?? false, donationStripeUrl: profile.donationStripeUrl || '', donationHelloAssoUrl: profile.donationHelloAssoUrl || '', donationTransferEnabled: profile.donationTransferEnabled ?? false, donationIban: profile.donationIban || '', donationBic: profile.donationBic || '', donationAccountHolder: profile.donationAccountHolder || '', donationBankName: profile.donationBankName || '', donationChequeEnabled: profile.donationChequeEnabled ?? false, donationChequePayable: profile.donationChequePayable || '', donationChequeAddress: profile.donationChequeAddress || '',
   });
   const [logo, setLogo] = useState('');
   const [photos, setPhotos] = useState<string[]>(['']);
@@ -131,6 +132,16 @@ export function GenerateClient({ orgName, profile, categories, welcome }: { orgN
           <textarea className="input min-h-[70px]" value={f.goodToKnow} onChange={(e) => set('goodToKnow', e.target.value)}
             placeholder="Ex : reçus fiscaux, horaires, adhésion, comment devenir bénévole, partenaires…" />
         </Field>
+
+        <section className="space-y-4 rounded-2xl border border-gray-200 p-4">
+          <div><h3 className="font-extrabold text-gray-900">Comment souhaitez-vous recevoir les dons ?</h3><p className="text-sm text-gray-500">Ces choix créeront automatiquement le formulaire public « Faire un don ».</p></div>
+          <label className="flex items-center gap-3 font-semibold"><input type="checkbox" className="h-5 w-5" checked={f.donationCardEnabled} onChange={(e) => setF((s) => ({ ...s, donationCardEnabled: e.target.checked }))} /> Carte bancaire</label>
+          {f.donationCardEnabled && <div className="grid gap-3 sm:grid-cols-2"><Field label="Lien Stripe"><input className="input" type="url" value={f.donationStripeUrl} onChange={(e) => set('donationStripeUrl', e.target.value)} /></Field><Field label="Lien HelloAsso"><input className="input" type="url" value={f.donationHelloAssoUrl} onChange={(e) => set('donationHelloAssoUrl', e.target.value)} /></Field></div>}
+          <label className="flex items-center gap-3 font-semibold"><input type="checkbox" className="h-5 w-5" checked={f.donationTransferEnabled} onChange={(e) => setF((s) => ({ ...s, donationTransferEnabled: e.target.checked }))} /> Virement bancaire</label>
+          {f.donationTransferEnabled && <div className="grid gap-3 sm:grid-cols-2"><Field label="IBAN complet"><input className="input font-mono" value={f.donationIban} onChange={(e) => set('donationIban', e.target.value)} /></Field><Field label="BIC / SWIFT"><input className="input font-mono" value={f.donationBic} onChange={(e) => set('donationBic', e.target.value)} /></Field><Field label="Titulaire"><input className="input" value={f.donationAccountHolder} onChange={(e) => set('donationAccountHolder', e.target.value)} /></Field><Field label="Banque"><input className="input" value={f.donationBankName} onChange={(e) => set('donationBankName', e.target.value)} /></Field></div>}
+          <label className="flex items-center gap-3 font-semibold"><input type="checkbox" className="h-5 w-5" checked={f.donationChequeEnabled} onChange={(e) => setF((s) => ({ ...s, donationChequeEnabled: e.target.checked }))} /> Chèque</label>
+          {f.donationChequeEnabled && <div className="grid gap-3 sm:grid-cols-2"><Field label="Ordre du chèque"><input className="input" value={f.donationChequePayable} onChange={(e) => set('donationChequePayable', e.target.value)} /></Field><Field label="Adresse d’envoi"><textarea className="input" value={f.donationChequeAddress} onChange={(e) => set('donationChequeAddress', e.target.value)} /></Field></div>}
+        </section>
 
         <label className="flex cursor-pointer items-start gap-3 rounded-xl bg-brand-50 p-4"><input type="checkbox" className="mt-1 h-5 w-5" checked={f.generateCgv} onChange={(e) => setF((current) => ({ ...current, generateCgv: e.target.checked }))} /><span><strong className="block text-gray-900">Je veux générer mes CGV / conditions d’utilisation</strong><span className="text-sm text-gray-600">Un document détaillé et modifiable sera créé avec les informations légales enregistrées dans Réglages.</span></span></label>
 

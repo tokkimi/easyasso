@@ -37,7 +37,8 @@ export type BlockType =
   | 'slideshow'
   | 'cards'
   | 'cta'
-  | 'contact';
+  | 'contact'
+  | 'donation';
 
 export interface BlockStyle {
   align?: Align;
@@ -62,6 +63,7 @@ export const BLOCK_LIBRARY: {
   { type: 'cards', label: 'Cartes / colonnes', icon: 'LayoutGrid', description: '2 à 4 blocs illustrés', group: 'layouts' },
   { type: 'cta', label: 'Appel au don', icon: 'Megaphone', description: 'Bandeau avec bouton d’action', group: 'layouts' },
   { type: 'contact', label: 'Contact complet', icon: 'Mail', description: 'Coordonnées + formulaire prêt à recevoir des messages', group: 'layouts' },
+  { type: 'donation', label: 'Faire un don', icon: 'HandCoins', description: 'Carte, virement et chèque configurés pour vos visiteurs', group: 'layouts' },
   // Basic building blocks
   { type: 'heading', label: 'Titre', icon: 'Heading', description: 'Un grand titre', group: 'basics' },
   { type: 'text', label: 'Texte', icon: 'Type', description: 'Un paragraphe', group: 'basics' },
@@ -146,6 +148,8 @@ export function defaultContentFor(type: BlockType): Record<string, unknown> {
       };
     case 'contact':
       return { title: 'Contactez-nous', intro: 'Une question, une proposition ou envie de nous rejoindre ? Écrivez-nous.', email: '', phone: '', address: '', buttonText: 'Envoyer le message', successText: 'Merci, votre message a bien été envoyé.' };
+    case 'donation':
+      return { title: 'Soutenez notre action', intro: 'Votre générosité nous permet de poursuivre nos missions.', cardEnabled: false, stripeUrl: '', helloAssoUrl: '', transferEnabled: false, iban: '', bic: '', accountHolder: '', bankName: '', chequeEnabled: false, chequePayable: '', chequeAddress: '' };
     default:
       return {};
   }
@@ -166,6 +170,7 @@ export function defaultStyleFor(type: BlockType): BlockStyle {
       return { paddingY: 28 };
     case 'cta':
     case 'contact':
+    case 'donation':
       return { paddingY: 40, background: '#f1f5ff' };
     default:
       return { align: 'center', paddingY: 16 };

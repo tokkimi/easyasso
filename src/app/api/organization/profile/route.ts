@@ -55,13 +55,14 @@ export async function PATCH(req: Request) {
         ['TikTok', parsed.data.tiktok], ['X', parsed.data.twitter],
       ].filter((entry) => entry[1]).map(([label, href]) => ({ label, href }));
       const baseColumns = (footer.columns || []).filter((column: any) => column.title !== 'Réseaux sociaux');
+      const generateLegal = parsed.data.generateCgv !== false;
       await prisma.site.update({ where: { id: site.id }, data: { footer: {
         ...footer,
-        text: parsed.data.slogan || footer.text || '',
-        showCgv: parsed.data.generateCgv,
-        showMentions: true,
-        mentionsContent: legal.details,
-        cgvContent: parsed.data.generateCgv ? legal.cgv : footer.cgvContent,
+        text: parsed.data.slogan || (parsed.data.language === 'en' ? 'Together, we make a difference.' : 'Ensemble, faisons la différence.'),
+        showCgv: generateLegal,
+        showMentions: generateLegal,
+        mentionsContent: generateLegal ? legal.details : '',
+        cgvContent: generateLegal ? legal.cgv : '',
         columns: socialLinks.length ? [...baseColumns, { title: 'Réseaux sociaux', links: socialLinks }] : baseColumns,
       } } });
     }

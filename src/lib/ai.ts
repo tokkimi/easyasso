@@ -157,7 +157,7 @@ export async function aiGenerateSite(input: GenerateInput): Promise<BuiltTemplat
   t.header.logoUrl = input.logoUrl || undefined;
   t.footer.logoText = name;
   t.footer.logoUrl = input.logoUrl || undefined;
-  t.footer.text = input.slogan?.trim() || ai.tagline || (input.language === 'en' ? 'Together, we make a difference.' : 'Ensemble, faisons la différence.');
+  t.footer.text = input.slogan?.trim() || (input.language === 'en' ? 'Together, we make a difference.' : 'Ensemble, faisons la différence.');
 
   const slugify = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40) || 'page';
   let homeAssigned = false;

@@ -102,7 +102,7 @@ export function SettingsClient({ org, site, freeUrl, rootDomain, canDomain, cate
             <div className="sm:col-span-2"><label className="label">Adresse du siège social</label><input className="input" value={profile.legalAddress} onChange={(e) => setProfileField('legalAddress', e.target.value)} /></div>
             <div className="sm:col-span-2"><label className="label">Responsable de publication</label><input className="input" value={profile.publicationDirector} onChange={(e) => setProfileField('publicationDirector', e.target.value)} /></div>
           </div>
-          <label className="mt-4 flex cursor-pointer items-start gap-3 rounded-xl bg-brand-50 p-4"><input type="checkbox" className="mt-1 h-5 w-5" checked={profile.generateCgv} onChange={(e) => setProfileField('generateCgv', e.target.checked)} /><span><strong className="block text-gray-900">Je veux générer mes CGV / conditions d’utilisation</strong><span className="text-sm text-gray-600">EasyAsso crée un document détaillé à partir des informations légales ci-dessus. Vous pourrez ensuite le modifier.</span></span></label>
+          <label className="mt-4 flex cursor-pointer items-start gap-3 rounded-xl bg-brand-50 p-4"><input type="checkbox" className="mt-1 h-5 w-5" checked={profile.generateCgv} onChange={(e) => setProfileField('generateCgv', e.target.checked)} /><span><strong className="block text-gray-900">Générer mes CGV et mentions légales</strong><span className="text-sm text-gray-600">EasyAsso crée des documents détaillés à partir des informations légales ci-dessus. Vous pourrez ensuite les modifier.</span></span></label>
         </div>
         <button onClick={saveProfile} className="btn btn-primary mt-5"><Save className="h-4 w-4" /> Enregistrer la fiche</button>
       </div>

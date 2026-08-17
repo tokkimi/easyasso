@@ -314,9 +314,22 @@ export function EditorClient({ site: initial, canEdit, canPublish, siteUrl }: { 
             <h3 className="mb-1 font-bold text-gray-900">Ajouter un bloc</h3>
             <p className="mb-4 text-sm text-gray-500">Choisissez une mise en page prête à l’emploi, puis remplacez le texte et les photos.</p>
 
-            <p className="mb-2 text-xs font-bold uppercase tracking-wide text-brand-600">✨ Mises en page prêtes</p>
+            <p className="mb-2 text-xs font-bold uppercase tracking-wide text-brand-600">Essentiels</p>
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              {BLOCK_LIBRARY.filter((b) => b.type === 'donation' || b.type === 'contact').map((b) => {
+                const Icon = ICONS[b.icon] || Type;
+                return (
+                  <button key={b.type} onClick={() => addBlock(b.type)} className="flex items-start gap-3 rounded-xl border border-brand-200 bg-brand-50 p-3 text-left hover:border-brand-500 hover:bg-brand-100">
+                    <Icon className="mt-0.5 h-5 w-5 shrink-0 text-brand-700" />
+                    <span><span className="block text-sm font-extrabold text-gray-900">{b.label}</span><span className="block text-xs text-gray-600">{b.description}</span></span>
+                  </button>
+                );
+              })}
+            </div>
+
+            <p className="mb-2 mt-5 text-xs font-bold uppercase tracking-wide text-brand-600">Mises en page prêtes</p>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-              {BLOCK_LIBRARY.filter((b) => b.group === 'layouts').map((b) => {
+              {BLOCK_LIBRARY.filter((b) => b.group === 'layouts' && b.type !== 'donation' && b.type !== 'contact').map((b) => {
                 const Icon = ICONS[b.icon] || Type;
                 return (
                   <button key={b.type} onClick={() => addBlock(b.type)} className="flex flex-col items-start gap-1 rounded-xl border border-gray-200 p-3 text-left hover:border-brand-400 hover:bg-brand-50">

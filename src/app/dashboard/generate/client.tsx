@@ -107,6 +107,8 @@ export function GenerateClient({ orgName, profile, categories, welcome }: { orgN
           <input className="input" maxLength={180} value={f.slogan} onChange={(e) => set('slogan', e.target.value)} placeholder="Ex. Ensemble, faisons grandir demain." />
         </Field>
 
+        <label className="flex cursor-pointer items-start gap-3 rounded-xl bg-brand-50 p-4"><input type="checkbox" className="mt-1 h-5 w-5" checked={f.generateCgv} onChange={(e) => setF((current) => ({ ...current, generateCgv: e.target.checked }))} /><span><strong className="block text-gray-900">Générer mes CGV et mentions légales</strong><span className="text-sm text-gray-600">EasyAsso crée des documents détaillés et modifiables avec les informations légales enregistrées dans Réglages.</span></span></label>
+
         <Field label="Actualités à publier (optionnel)">
           <textarea className="input min-h-[90px]" value={f.news} onChange={(e) => set('news', e.target.value)}
             placeholder="Un événement, une collecte, un nouveau projet… Laissez vide si vous ne voulez pas de page Actualités." />
@@ -142,8 +144,6 @@ export function GenerateClient({ orgName, profile, categories, welcome }: { orgN
           <label className="flex items-center gap-3 font-semibold"><input type="checkbox" className="h-5 w-5" checked={f.donationChequeEnabled} onChange={(e) => setF((s) => ({ ...s, donationChequeEnabled: e.target.checked }))} /> Chèque</label>
           {f.donationChequeEnabled && <div className="grid gap-3 sm:grid-cols-2"><Field label="Ordre du chèque"><input className="input" value={f.donationChequePayable} onChange={(e) => set('donationChequePayable', e.target.value)} /></Field><Field label="Adresse d’envoi"><textarea className="input" value={f.donationChequeAddress} onChange={(e) => set('donationChequeAddress', e.target.value)} /></Field></div>}
         </section>
-
-        <label className="flex cursor-pointer items-start gap-3 rounded-xl bg-brand-50 p-4"><input type="checkbox" className="mt-1 h-5 w-5" checked={f.generateCgv} onChange={(e) => setF((current) => ({ ...current, generateCgv: e.target.checked }))} /><span><strong className="block text-gray-900">Je veux générer mes CGV / conditions d’utilisation</strong><span className="text-sm text-gray-600">Un document détaillé et modifiable sera créé avec les informations légales enregistrées dans Réglages.</span></span></label>
 
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Ville"><input className="input" value={f.city} onChange={(e) => set('city', e.target.value)} placeholder="Lyon" /></Field>

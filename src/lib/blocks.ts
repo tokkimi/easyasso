@@ -63,7 +63,7 @@ export const BLOCK_LIBRARY: {
   { type: 'cards', label: 'Cartes / colonnes', icon: 'LayoutGrid', description: '2 à 4 blocs illustrés', group: 'layouts' },
   { type: 'cta', label: 'Appel au don', icon: 'Megaphone', description: 'Bandeau avec bouton d’action', group: 'layouts' },
   { type: 'contact', label: 'Contact complet', icon: 'Mail', description: 'Coordonnées + formulaire prêt à recevoir des messages', group: 'layouts' },
-  { type: 'donation', label: 'Faire un don', icon: 'HandCoins', description: 'Carte, virement et chèque configurés pour vos visiteurs', group: 'layouts' },
+  { type: 'donation', label: 'Questionnaire de dons', icon: 'HandCoins', description: 'Montants, coordonnées donateur, carte, virement et chèque', group: 'layouts' },
   // Basic building blocks
   { type: 'heading', label: 'Titre', icon: 'Heading', description: 'Un grand titre', group: 'basics' },
   { type: 'text', label: 'Texte', icon: 'Type', description: 'Un paragraphe', group: 'basics' },

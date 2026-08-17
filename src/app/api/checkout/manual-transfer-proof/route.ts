@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { requireOrg } from '@/lib/session';
 import { prisma } from '@/lib/prisma';
+import { planAccess } from '@/lib/plan';
 
 const schema = z.object({
   note: z.string().trim().max(1000).optional().default(''),
@@ -27,7 +28,7 @@ export async function POST(req: Request) {
   await prisma.organization.update({
     where: { id: org.id },
     data: {
-      planStatus: org.planStatus === 'ACTIVE' ? 'ACTIVE' : 'PENDING_PAYMENT',
+      planStatus: org.planStatus === 'ACTIVE' ? 'ACTIVE' : planAccess(org).hasAccess ? org.planStatus : 'PENDING_PAYMENT',
       profile: {
         ...currentProfile,
         easyassoManualPayment: {

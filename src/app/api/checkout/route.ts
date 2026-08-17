@@ -3,6 +3,7 @@ import { requireOrg } from '@/lib/session';
 import { stripe, isDemoMode, PRICE_EUR } from '@/lib/stripe';
 import { activateOrganization } from '@/lib/activation';
 import { prisma } from '@/lib/prisma';
+import { planAccess } from '@/lib/plan';
 import { airwallexClientEnvironment, airwallexConfigured, createAirwallexPaymentIntent, createAirwallexPaymentLink } from '@/lib/airwallex';
 
 function paymentProviderMessage(raw: string) {
@@ -19,6 +20,7 @@ export async function POST() {
   if (org.planStatus === 'ACTIVE') {
     return NextResponse.json({ url: '/dashboard' });
   }
+  const nextUnpaidStatus = planAccess(org).hasAccess ? org.planStatus : 'PENDING_PAYMENT';
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 
@@ -34,7 +36,7 @@ export async function POST() {
       const payment = await createAirwallexPaymentLink({ organizationId: org.id, organizationName: org.name, amount: PRICE_EUR });
       await prisma.organization.update({
         where: { id: org.id },
-        data: { planStatus: 'PENDING_PAYMENT', airwallexPaymentLinkId: payment.id },
+        data: { planStatus: nextUnpaidStatus, airwallexPaymentLinkId: payment.id },
       });
       return NextResponse.json({ url: payment.url });
     } catch (error: any) {
@@ -50,7 +52,7 @@ export async function POST() {
         });
         await prisma.organization.update({
           where: { id: org.id },
-          data: { planStatus: 'PENDING_PAYMENT', airwallexPaymentLinkId: intent.id },
+          data: { planStatus: nextUnpaidStatus, airwallexPaymentLinkId: intent.id },
         });
         const params = new URLSearchParams({
           intent_id: intent.id,
@@ -76,7 +78,7 @@ export async function POST() {
     );
   }
 
-  await prisma.organization.update({ where: { id: org.id }, data: { planStatus: 'PENDING_PAYMENT' } });
+  await prisma.organization.update({ where: { id: org.id }, data: { planStatus: nextUnpaidStatus } });
 
   const session = await stripe.checkout.sessions.create({
     mode: 'payment',

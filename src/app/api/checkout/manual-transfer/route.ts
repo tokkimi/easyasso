@@ -3,6 +3,7 @@ import { requireOrg } from '@/lib/session';
 import { prisma } from '@/lib/prisma';
 import { PRICE_EUR } from '@/lib/stripe';
 import { platformBankDetails } from '@/lib/platform-admin';
+import { planAccess } from '@/lib/plan';
 
 function paymentReference(org: { id: string; slug: string }, existing?: string) {
   const cleanId = org.id.toUpperCase().replace(/[^A-Z0-9]/g, '');
@@ -20,11 +21,12 @@ export async function POST() {
   const currentManual = (currentProfile.easyassoManualPayment || {}) as Record<string, any>;
   const reference = paymentReference(org, currentManual.reference);
   const requestedAt = currentManual.requestedAt || new Date().toISOString();
+  const nextUnpaidStatus = planAccess(org).hasAccess ? org.planStatus : 'PENDING_PAYMENT';
 
   await prisma.organization.update({
     where: { id: org.id },
     data: {
-      planStatus: 'PENDING_PAYMENT',
+      planStatus: nextUnpaidStatus,
       profile: {
         ...currentProfile,
         easyassoManualPayment: {

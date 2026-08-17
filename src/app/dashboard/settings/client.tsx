@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Globe, Check, Copy, CreditCard, ExternalLink, Building2, Save } from 'lucide-react';
+import { Globe, Check, Copy, CreditCard, ExternalLink, Building2, Save, ShoppingCart, Link2, ShieldCheck } from 'lucide-react';
 import { PageHeader } from '@/components/ui';
 import { formatDate } from '@/lib/utils';
 
@@ -11,6 +11,8 @@ export function SettingsClient({ org, site, freeUrl, rootDomain, canDomain, cate
   const [domain, setDomain] = useState(site.customDomain || '');
   const [msg, setMsg] = useState('');
   const [verifying, setVerifying] = useState(false);
+  const [savingDomain, setSavingDomain] = useState(false);
+  const [domainChoice, setDomainChoice] = useState<'connect' | 'buy' | null>(site.customDomain ? 'connect' : null);
   const [profile, setProfile] = useState({ year: '', category: '', mission: '', functioning: '', actions: '', beneficiaries: '', goodToKnow: '', city: '', email: '', ...(org.profile || {}) });
 
   async function saveName() {
@@ -18,15 +20,20 @@ export function SettingsClient({ org, site, freeUrl, rootDomain, canDomain, cate
     setMsg('Nom enregistré'); router.refresh(); setTimeout(() => setMsg(''), 1500);
   }
   async function saveDomain() {
-    await fetch('/api/site', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ customDomain: domain }) });
-    setMsg('Domaine enregistré — configurez le DNS puis vérifiez.'); router.refresh(); setTimeout(() => setMsg(''), 3000);
+    setSavingDomain(true);
+    const res = await fetch('/api/site', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ customDomain: domain }) });
+    const data = await res.json();
+    setSavingDomain(false);
+    setMsg(res.ok ? 'Le domaine de votre association a bien été ajouté. Suivez maintenant les étapes ci-dessous.' : (data.error || 'Impossible d’ajouter ce domaine.'));
+    if (res.ok) router.refresh();
+    setTimeout(() => setMsg(''), 5000);
   }
   async function verify() {
     setVerifying(true);
     const res = await fetch('/api/site/verify-domain', { method: 'POST' });
     const data = await res.json();
     setVerifying(false);
-    setMsg(data.verified ? 'Domaine vérifié ✓' : 'Domaine pas encore joignable. Vérifiez votre DNS.');
+    setMsg(data.verified ? 'Votre domaine est prêt !' : (data.error || 'Le branchement n’est pas encore terminé. Réessayez dans quelques minutes.'));
     router.refresh(); setTimeout(() => setMsg(''), 3000);
   }
   const copy = (t: string) => navigator.clipboard.writeText(t);
@@ -85,33 +92,57 @@ export function SettingsClient({ org, site, freeUrl, rootDomain, canDomain, cate
 
       {/* Custom domain */}
       <div className="card mb-6">
-        <h2 className="mb-1 font-bold text-gray-900">Nom de domaine personnalisé</h2>
-        <p className="text-sm text-gray-500">Reliez votre propre domaine (ex. <span className="font-mono">mon-asso.fr</span>) en toute autonomie.</p>
+        <h2 className="mb-1 flex items-center gap-2 font-bold text-gray-900"><ShieldCheck className="h-5 w-5" /> Adresse personnalisée de l’association</h2>
+        <p className="text-sm text-gray-500">Cela change uniquement l’adresse du site de l’association. L’adresse principale EasyAsso reste toujours protégée.</p>
         {!canDomain ? (
           <p className="mt-3 text-sm text-amber-600">Vous n’avez pas la permission de gérer le domaine.</p>
         ) : (
           <>
-            <div className="mt-3 flex gap-2">
-              <input className="input" placeholder="mon-asso.fr" value={domain} onChange={(e) => setDomain(e.target.value)} />
-              <button onClick={saveDomain} className="btn btn-primary shrink-0">Relier</button>
+            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              <button type="button" onClick={() => setDomainChoice('connect')} className={`rounded-xl border p-4 text-left transition ${domainChoice === 'connect' ? 'border-brand-500 bg-brand-50' : 'border-gray-200 hover:border-gray-300'}`}>
+                <Link2 className="mb-2 h-5 w-5 text-brand-600" />
+                <span className="block font-semibold text-gray-900">J’ai déjà une adresse</span>
+                <span className="mt-1 block text-sm text-gray-500">Par exemple mon-association.fr</span>
+              </button>
+              <button type="button" onClick={() => setDomainChoice('buy')} className={`rounded-xl border p-4 text-left transition ${domainChoice === 'buy' ? 'border-brand-500 bg-brand-50' : 'border-gray-200 hover:border-gray-300'}`}>
+                <ShoppingCart className="mb-2 h-5 w-5 text-brand-600" />
+                <span className="block font-semibold text-gray-900">Je veux acheter une adresse</span>
+                <span className="mt-1 block text-sm text-gray-500">Nous vous guidons, sans abonnement d’hébergement inutile</span>
+              </button>
             </div>
+            {domainChoice === 'buy' && (
+              <div className="mt-4 rounded-xl bg-blue-50 p-4 text-sm text-blue-900">
+                <p className="font-semibold">1. Choisissez et achetez votre adresse</p>
+                <p className="mt-1 text-blue-800">Le domaine restera à votre nom. Une fois l’achat terminé, revenez ici et choisissez « J’ai déjà une adresse ».</p>
+                <a className="btn btn-primary mt-3 inline-flex text-sm" href="https://www.ovhcloud.com/fr/domains/domain-name-checker/" target="_blank" rel="noreferrer">Chercher une adresse disponible <ExternalLink className="h-4 w-4" /></a>
+              </div>
+            )}
+            {domainChoice === 'connect' && (
+              <div className="mt-4 rounded-xl border border-gray-200 p-4">
+                <label className="label">Quelle adresse appartient à l’association ?</label>
+                <div className="flex gap-2">
+                  <input className="input" placeholder="mon-association.fr" value={domain} onChange={(e) => setDomain(e.target.value)} />
+                  <button onClick={saveDomain} disabled={savingDomain || !domain.trim()} className="btn btn-primary shrink-0">{savingDomain ? 'Ajout…' : 'Continuer'}</button>
+                </div>
+                <p className="mt-2 text-xs text-gray-500">Ne saisissez pas easyasso.vercel.app : cette adresse est protégée automatiquement.</p>
+              </div>
+            )}
             {site.customDomain && (
               <div className="mt-4 rounded-xl border border-gray-200 p-4">
                 <div className="flex items-center justify-between">
                   <span className="font-mono text-sm">{site.customDomain}</span>
                   <span className={`badge ${site.domainVerified ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
-                    {site.domainVerified ? <><Check className="mr-1 h-3 w-3" /> Vérifié</> : 'En attente DNS'}
+                    {site.domainVerified ? <><Check className="mr-1 h-3 w-3" /> Prêt</> : 'Branchement à terminer'}
                   </span>
                 </div>
                 <div className="mt-3 text-sm text-gray-600">
-                  <p className="font-medium">Étapes (chez votre registrar) :</p>
-                  <ol className="mt-2 list-decimal space-y-1 pl-5">
-                    <li>Ajoutez un enregistrement <span className="font-mono">CNAME</span> : <span className="font-mono">www</span> → <span className="font-mono">{rootDomain}</span></li>
-                    <li>Pour le domaine racine, ajoutez un enregistrement <span className="font-mono">A</span> vers l’IP fournie par votre hébergeur (Vercel : <span className="font-mono">76.76.21.21</span>).</li>
-                    <li>Revenez ici et cliquez sur « Vérifier ».</li>
-                  </ol>
+                  {site.domainVerified ? (
+                    <p>Tout est terminé. Les visiteurs peuvent utiliser cette adresse pour voir le site de l’association.</p>
+                  ) : (
+                    <><p className="font-medium">Dernière étape</p><p className="mt-1">Ouvrez l’espace où cette adresse a été achetée, puis demandez à son assistance de la « diriger vers EasyAsso ». Si vous avez besoin des informations techniques, contactez le support EasyAsso : nous vous les fournirons selon votre fournisseur.</p></>
+                  )}
                 </div>
-                <button onClick={verify} disabled={verifying} className="btn btn-ghost mt-3 text-sm">{verifying ? 'Vérification…' : 'Vérifier le domaine'}</button>
+                {!site.domainVerified && <button onClick={verify} disabled={verifying} className="btn btn-ghost mt-3 text-sm">{verifying ? 'Vérification…' : 'Vérifier si tout est prêt'}</button>}
               </div>
             )}
           </>

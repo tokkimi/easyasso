@@ -13,7 +13,20 @@ export function middleware(req: NextRequest) {
     host.endsWith('.vercel.app') ||
     host === '127.0.0.1';
 
-  if (isRoot) return NextResponse.next();
+  if (isRoot) {
+    const language = req.cookies.get('easyasso-language')?.value;
+    if (language === 'en' && req.nextUrl.pathname === '/cgv') {
+      const url = req.nextUrl.clone();
+      url.pathname = '/en/terms';
+      return NextResponse.redirect(url);
+    }
+    if (language === 'en' && req.nextUrl.pathname === '/mentions-legales') {
+      const url = req.nextUrl.clone();
+      url.pathname = '/en/legal-notice';
+      return NextResponse.redirect(url);
+    }
+    return NextResponse.next();
+  }
 
   // Any other host is treated as a linked custom domain.
   const url = req.nextUrl.clone();

@@ -140,7 +140,10 @@ function translateText(value: string, locale: Locale) {
   const clean = value.trim();
   const table = locale === 'en' ? translations : reverse;
   let translated = table[clean];
-  if (!translated && clean.length > 8) {
+  // Partial matching is useful to translate French sentences containing a
+  // dynamic value. Never run it in reverse: "Continue" inside "Continuer"
+  // would otherwise become "Continuerr" after a DOM update.
+  if (!translated && locale === 'en' && clean.length > 8) {
     let partial = clean;
     for (const [source, target] of Object.entries(table)) {
       if (source.length >= 8 && partial.includes(source)) partial = partial.replaceAll(source, target);

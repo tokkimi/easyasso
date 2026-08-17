@@ -63,6 +63,9 @@ export async function PATCH(req: Request) {
         showMentions: generateLegal,
         mentionsContent: generateLegal ? legal.details : '',
         cgvContent: generateLegal ? legal.cgv : '',
+        allRightsText: parsed.data.language === 'en'
+          ? `© ${new Date().getFullYear()} ${org.name}. All rights reserved.`
+          : `© ${new Date().getFullYear()} ${org.name}. Tous droits réservés.`,
         columns: socialLinks.length ? [...baseColumns, { title: 'Réseaux sociaux', links: socialLinks }] : baseColumns,
       } } });
     }

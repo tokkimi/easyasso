@@ -107,7 +107,7 @@ export async function POST(req: Request) {
     }
 
     const site = await prisma.site.findUniqueOrThrow({ where: { organizationId: ctx.org.id } });
-    await applyTemplateToSite(site.id, generated, name);
+    await applyTemplateToSite(site.id, generated, name, previousProfile);
     const profile = previousProfile;
     const legal = legalDocuments({ ...profile, email: input.email || profile.email, language: input.language }, name);
     const updatedSite = await prisma.site.update({

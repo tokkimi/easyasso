@@ -12,7 +12,7 @@ export async function POST(req: Request) {
     const template = getTemplate(templateId);
     if (!template) return NextResponse.json({ error: 'Modèle introuvable' }, { status: 404 });
     const site = await prisma.site.findUniqueOrThrow({ where: { organizationId: ctx.org.id } });
-    await applyTemplateToSite(site.id, template, ctx.org.name);
+    await applyTemplateToSite(site.id, template, ctx.org.name, (ctx.org.profile as Record<string, unknown>) || {});
     return NextResponse.json({ ok: true });
   } catch (e) { return handleApiError(e); }
 }

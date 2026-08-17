@@ -34,7 +34,21 @@ export async function PATCH(req: Request) {
     if (body.header !== undefined) data.header = body.header;
     if (body.footer !== undefined) data.footer = body.footer;
     if (body.theme !== undefined) data.theme = body.theme;
-    if (body.name !== undefined) data.name = body.name;
+    if (body.name !== undefined) {
+      data.name = body.name;
+      if (body.header === undefined && body.footer === undefined) {
+        const current = await prisma.site.findUniqueOrThrow({ where: { organizationId: ctx.org.id }, select: { header: true, footer: true } });
+        const language = ((ctx.org.profile as any)?.language === 'en' ? 'en' : 'fr') as 'fr' | 'en';
+        data.header = { ...((current.header as any) || {}), logoText: body.name };
+        data.footer = {
+          ...((current.footer as any) || {}),
+          logoText: body.name,
+          allRightsText: language === 'en'
+            ? `© ${new Date().getFullYear()} ${body.name}. All rights reserved.`
+            : `© ${new Date().getFullYear()} ${body.name}. Tous droits réservés.`,
+        };
+      }
+    }
     if (body.published !== undefined) data.published = !!body.published;
     const site = await prisma.site.update({ where: { organizationId: ctx.org.id }, data });
     return NextResponse.json(site);

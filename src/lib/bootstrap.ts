@@ -75,7 +75,7 @@ export async function createOrganizationForUser(userId: string, assoName: string
 
   // Populate the site with the first ready-made template so it looks great
   // from the start. The association can switch template anytime.
-  await applyTemplateToSite(org.site!.id, TEMPLATES[0], assoName);
+  await applyTemplateToSite(org.site!.id, TEMPLATES[0], assoName, { ...profile, language });
 
   return org;
 }

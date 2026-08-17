@@ -9,5 +9,5 @@ export default async function GeneratePage({ searchParams }: { searchParams: Pro
   const ctx = await requirePermission(PERMISSIONS.SITE_EDIT);
   const { welcome } = await searchParams;
   const categories = TEMPLATES.map((t) => ({ id: t.id, name: t.name }));
-  return <GenerateClient orgName={ctx.organization!.name} categories={categories} welcome={!!welcome} />;
+  return <GenerateClient orgName={ctx.organization!.name} profile={(ctx.organization!.profile as any) || {}} categories={categories} welcome={!!welcome} />;
 }

@@ -8,6 +8,7 @@ import { aiGenerateSite } from '@/lib/ai';
 import { applyTemplateToSite } from '@/lib/apply-template';
 import { legalDocuments } from '@/lib/legal';
 import { defaultStyleFor } from '@/lib/blocks';
+import { removeGeneratedCopyDuplicates } from '@/lib/copy-quality';
 
 // AI copywriting can take 20-40s; allow up to 60s.
 export const maxDuration = 60;
@@ -105,6 +106,7 @@ export async function POST(req: Request) {
         if (block.content?.button) block.content.button = fixDonationButton(block.content.button);
       }
     }
+    removeGeneratedCopyDuplicates(generated, input.language);
 
     const profile = previousProfile;
     const generationProfile = {

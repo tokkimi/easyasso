@@ -62,6 +62,7 @@ RÈGLES ÉDITORIALES OBLIGATOIRES :
 - La page impact explique les résultats attendus sans inventer de chiffres absents des réponses.
 - La page engagement détaille bénévolat, adhésion, partenariat et relais de communication.
 - Ne répète pas le même paragraphe d'une page à l'autre.
+- Sur une même page, chaque bloc doit avoir un rôle éditorial différent : présentation, méthode, action, impact, engagement ou contact. Deux blocs ne doivent jamais dire la même chose avec les mêmes mots.
 - N'invente jamais d'adresse, d'email, de chiffre, de partenaire, de date ou de résultat.
 - Le ton doit être humain, crédible, spécifique à la cause et directement publiable.
 - Utilise toutes les informations du questionnaire, même les détails secondaires.`;

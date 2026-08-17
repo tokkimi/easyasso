@@ -5,6 +5,7 @@ import { requireOrg, planAccess } from '@/lib/session';
 import { prisma } from '@/lib/prisma';
 import { siteUrlFor } from '@/lib/utils';
 import { Sidebar } from './sidebar';
+import { EmailVerificationBanner } from './email-verification-banner';
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const ctx = await requireOrg();
@@ -36,6 +37,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
             <Link href="/onboarding" className="ml-1 rounded-md bg-white px-3 py-1 text-xs font-bold text-amber-700 hover:bg-amber-50">Payer 250 € (à vie)</Link>
           </div>
         )}
+        {!ctx.user.emailVerified && <EmailVerificationBanner />}
         <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:px-8">{children}</div>
       </main>
     </div>

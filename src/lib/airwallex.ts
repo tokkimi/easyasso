@@ -20,6 +20,13 @@ async function accessToken() {
   return data.token as string;
 }
 
+function airwallexError(data: any, fallback: string) {
+  const message = String(data?.message || fallback);
+  const code = data?.code ? ` [${data.code}]` : '';
+  const trace = data?.trace_id ? ` Trace Airwallex: ${data.trace_id}.` : '';
+  return new Error(`${message}${code}.${trace}`);
+}
+
 export async function createAirwallexPaymentLink(input: { organizationId: string; organizationName: string; amount: number }) {
   const token = await accessToken();
   const response = await fetch(`${AIRWALLEX_API}/pa/payment_links/create`, {
@@ -38,7 +45,7 @@ export async function createAirwallexPaymentLink(input: { organizationId: string
     cache: 'no-store',
   });
   const data = await response.json().catch(() => ({}));
-  if (!response.ok || !data.id || !data.url) throw new Error(data.message || 'Création du paiement Airwallex impossible');
+  if (!response.ok || !data.id || !data.url) throw airwallexError(data, 'Création du paiement Airwallex impossible');
   return { id: data.id as string, url: data.url as string };
 }
 
@@ -61,8 +68,7 @@ export async function createAirwallexPaymentIntent(input: { organizationId: stri
   });
   const data = await response.json().catch(() => ({}));
   if (!response.ok || !data.id || !data.client_secret) {
-    const detail = data.trace_id ? `${data.message || 'Création du paiement Airwallex impossible'} (trace ${data.trace_id})` : data.message;
-    throw new Error(detail || 'Création du paiement Airwallex impossible');
+    throw airwallexError(data, 'Création du paiement Airwallex impossible');
   }
   return { id: data.id as string, clientSecret: data.client_secret as string, currency: 'EUR' };
 }

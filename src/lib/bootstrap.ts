@@ -8,7 +8,7 @@ import { applyTemplateToSite } from './apply-template';
 
 // Creates an organization + default site + starter pages for a user, and makes
 // the user the OWNER. Returns the created organization.
-export async function createOrganizationForUser(userId: string, assoName: string, language: 'fr' | 'en' = 'fr', paymentRequired = false) {
+export async function createOrganizationForUser(userId: string, assoName: string, language: 'fr' | 'en' = 'fr', paymentRequired = false, profile: Record<string, unknown> = {}) {
   const baseSlug = assoName
     .toLowerCase()
     .normalize('NFD')
@@ -36,7 +36,7 @@ export async function createOrganizationForUser(userId: string, assoName: string
       slug,
       planStatus: paymentRequired ? 'PENDING_PAYMENT' : 'TRIAL',
       trialEndsAt: paymentRequired ? null : new Date(Date.now() + 3 * 24 * 60 * 60 * 1000), // 3-day free trial
-      profile: { language },
+      profile: { ...profile, language },
       memberships: { create: { userId, systemRole: 'OWNER' } },
       site: {
         create: {

@@ -8,7 +8,10 @@ const PRICE = process.env.NEXT_PUBLIC_PRICE_EUR || '250';
 
 export default function RegisterPage() {
   const router = useRouter();
-  const [form, setForm] = useState({ name: '', assoName: '', email: '', password: '', language: 'fr' as 'fr' | 'en', startMode: 'trial' as 'trial' | 'pay' });
+  const [form, setForm] = useState({
+    name: '', assoName: '', email: '', password: '', language: 'fr' as 'fr' | 'en', startMode: 'trial' as 'trial' | 'pay',
+    phone: '', city: '', legalName: '', registrationNumber: '', legalAddress: '', publicationDirector: '',
+  });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const en = form.language === 'en';
@@ -59,6 +62,20 @@ export default function RegisterPage() {
             <div><label className="label">Email</label><input className="input" type="email" required value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder={en ? 'you@association.org' : 'vous@asso.fr'} /></div>
             <div><label className="label">{en ? 'Password' : 'Mot de passe'}</label><input className="input" type="password" required minLength={6} value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} placeholder={en ? '6 characters minimum' : '6 caractères minimum'} /></div>
             <div><label className="label">{en ? 'Workspace language' : 'Langue de votre espace'}</label><select className="input" value={form.language} onChange={(e) => changeLanguage(e.target.value as 'fr' | 'en')}><option value="fr">Français</option><option value="en">English</option></select></div>
+            <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
+              <h2 className="font-bold text-gray-900">{en ? 'Association contact and legal details' : 'Coordonnées et infos légales de l’association'}</h2>
+              <p className="mt-1 text-xs text-gray-500">{en ? 'These details will prefill Settings, legal notices and generated pages.' : 'Ces infos rempliront automatiquement Réglages, mentions légales et pages générées.'}</p>
+              <div className="mt-4 space-y-3">
+                <div><label className="label">{en ? 'Legal association name' : 'Nom légal de l’association'}</label><input className="input" value={form.legalName} onChange={(e) => setForm({ ...form, legalName: e.target.value })} placeholder={form.assoName || (en ? 'Official registered name' : 'Nom officiel déclaré')} /></div>
+                <div><label className="label">{en ? 'Registration number' : 'Numéro d’enregistrement'}</label><input className="input" value={form.registrationNumber} onChange={(e) => setForm({ ...form, registrationNumber: e.target.value })} placeholder={en ? 'Registration / charity number' : 'RNA, SIREN, SIRET…'} /></div>
+                <div><label className="label">{en ? 'Legal address' : 'Adresse légale / siège'}</label><textarea className="input" value={form.legalAddress} onChange={(e) => setForm({ ...form, legalAddress: e.target.value })} placeholder={en ? 'Full registered address' : 'Adresse complète du siège'} /></div>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div><label className="label">{en ? 'Phone' : 'Téléphone'}</label><input className="input" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></div>
+                  <div><label className="label">{en ? 'City' : 'Ville'}</label><input className="input" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} /></div>
+                </div>
+                <div><label className="label">{en ? 'Publication director' : 'Directeur/directrice de publication'}</label><input className="input" value={form.publicationDirector} onChange={(e) => setForm({ ...form, publicationDirector: e.target.value })} placeholder={form.name || (en ? 'Usually the president or owner' : 'Souvent le/la président(e)')} /></div>
+              </div>
+            </div>
             <div>
               <p className="label">{en ? 'How do you want to start?' : 'Comment voulez-vous commencer ?'}</p>
               <div className="grid gap-2">

@@ -42,6 +42,7 @@ function LoginForm() {
             {error && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
             <button className="btn btn-primary w-full py-3" disabled={loading}>{loading ? '…' : 'Se connecter'}</button>
           </form>
+          <Link href="/forgot-password" className="mt-4 block text-center text-sm font-semibold text-brand-600">Mot de passe oublié ?</Link>
         </div>
         <p className="mt-4 text-center text-sm text-gray-500">
           Pas encore de compte ? <Link href="/register" className="font-semibold text-brand-600">Créer mon site</Link>

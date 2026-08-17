@@ -5,6 +5,14 @@ import { activateOrganization } from '@/lib/activation';
 import { prisma } from '@/lib/prisma';
 import { airwallexClientEnvironment, airwallexConfigured, createAirwallexPaymentIntent, createAirwallexPaymentLink } from '@/lib/airwallex';
 
+function paymentProviderMessage(raw: string) {
+  const value = raw.toLowerCase();
+  if (value.includes('insufficient permission') || value.includes('configuration_error')) {
+    return 'Le paiement EasyAsso est branché, mais la clé API Airwallex n’a pas les permissions nécessaires pour créer une page de paiement. Dans Airwallex, activez les droits Payment Acceptance / Payment Links / Payment Intents sur la clé API, ou créez une nouvelle clé avec ces droits. Aucun débit n’a été effectué.';
+  }
+  return `Airwallex refuse la création du paiement : ${raw}. Aucun débit n’a été effectué.`;
+}
+
 export async function POST() {
   const ctx = await requireOrg();
   const org = ctx.organization!;
@@ -60,7 +68,10 @@ export async function POST() {
 
   if (!stripe) {
     return NextResponse.json(
-      { error: airwallexError ? `Airwallex refuse la création du paiement : ${airwallexError}. Aucun débit n’a été effectué.` : 'Le paiement sécurisé est momentanément indisponible. Aucun débit n’a été effectué.' },
+      {
+        error: airwallexError ? paymentProviderMessage(airwallexError) : 'Le paiement sécurisé est momentanément indisponible. Aucun débit n’a été effectué.',
+        code: airwallexError ? 'PAYMENT_PROVIDER_PERMISSION' : 'PAYMENT_PROVIDER_MISSING',
+      },
       { status: 503 }
     );
   }

@@ -1,11 +1,22 @@
 'use client';
 import { useState } from 'react';
 import Link from 'next/link';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, Facebook, Instagram, Linkedin, Youtube, Music2 } from 'lucide-react';
 import type { HeaderConfig, FooterConfig, ButtonConfig } from '@/lib/blocks';
 import { NewsletterForm } from './NewsletterForm';
 
 interface NavItem { title: string; slug: string; isHome: boolean }
+
+function SocialMark({ label }: { label: string }) {
+  const key = label.toLowerCase();
+  if (key === 'facebook') return <Facebook className="h-6 w-6" />;
+  if (key === 'instagram') return <Instagram className="h-6 w-6" />;
+  if (key === 'linkedin') return <Linkedin className="h-6 w-6" />;
+  if (key === 'youtube') return <Youtube className="h-6 w-6" />;
+  if (key === 'tiktok') return <Music2 className="h-6 w-6" />;
+  if (key === 'x') return <span className="text-xl font-black leading-none">𝕏</span>;
+  return null;
+}
 
 export function PublicHeader({
   header, nav, basePath,
@@ -80,10 +91,12 @@ export function PublicFooter({
         {footer.columns?.map((col, i) => (
           <div key={i}>
             <p className="text-sm font-bold uppercase tracking-wide opacity-90">{col.title}</p>
-            <ul className="mt-3 space-y-2 text-sm opacity-80">
+            <ul className={`mt-3 text-sm opacity-80 ${col.title === 'Réseaux sociaux' ? 'flex flex-wrap gap-2' : 'space-y-2'}`}>
               {col.links.map((l, j) => (
                 <li key={j}>
-                  <a href={l.href.startsWith('/') ? `${basePath}${l.href}` : l.href} className="hover:opacity-100">{l.label}</a>
+                  <a href={l.href.startsWith('/') ? `${basePath}${l.href}` : l.href} target={col.title === 'Réseaux sociaux' ? '_blank' : undefined} rel={col.title === 'Réseaux sociaux' ? 'noreferrer' : undefined} title={l.label} aria-label={l.label} className={col.title === 'Réseaux sociaux' ? 'grid h-11 w-11 place-items-center rounded-xl border border-current/20 transition hover:bg-white/10 hover:opacity-100' : 'hover:opacity-100'}>
+                    {col.title === 'Réseaux sociaux' ? <SocialMark label={l.label} /> : l.label}
+                  </a>
                 </li>
               ))}
             </ul>

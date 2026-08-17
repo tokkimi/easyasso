@@ -1,5 +1,5 @@
 import {
-  Facebook, Instagram, Twitter, Youtube, Linkedin,
+  Facebook, Instagram, Twitter, Youtube, Linkedin, Music2,
   Heart, Users, HandHeart, HandCoins, Star, Gift, Leaf, Home, BookOpen, Shield, Sparkles, Handshake,
 } from 'lucide-react';
 import type { BlockStyle, ButtonConfig, SocialConfig } from '@/lib/blocks';
@@ -73,6 +73,7 @@ function renderInner(type: string, content: any, style: BlockStyle, basePath: st
         { k: 'twitter', url: s.twitter, Icon: Twitter },
         { k: 'youtube', url: s.youtube, Icon: Youtube },
         { k: 'linkedin', url: s.linkedin, Icon: Linkedin },
+        { k: 'tiktok', url: s.tiktok, Icon: Music2 },
       ].filter((i) => i.url);
       return (
         <div className={`flex gap-4 ${justifyClass(s.align)}`}>

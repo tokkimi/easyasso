@@ -24,6 +24,8 @@ const schema = z.object({
   instagram: z.string().url().or(z.literal('')).optional().default(''),
   linkedin: z.string().url().or(z.literal('')).optional().default(''),
   youtube: z.string().url().or(z.literal('')).optional().default(''),
+  tiktok: z.string().url().or(z.literal('')).optional().default(''),
+  twitter: z.string().url().or(z.literal('')).optional().default(''),
 });
 
 export async function GET() {
@@ -54,6 +56,7 @@ export async function PATCH(req: Request) {
       const socialLinks = [
         ['Facebook', parsed.data.facebook], ['Instagram', parsed.data.instagram],
         ['LinkedIn', parsed.data.linkedin], ['YouTube', parsed.data.youtube],
+        ['TikTok', parsed.data.tiktok], ['X', parsed.data.twitter],
       ].filter((entry) => entry[1]).map(([label, href]) => ({ label, href }));
       const baseColumns = (footer.columns || []).filter((column: any) => column.title !== 'Réseaux sociaux');
       await prisma.site.update({ where: { id: site.id }, data: { footer: {

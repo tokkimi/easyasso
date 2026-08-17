@@ -13,7 +13,7 @@ export function SettingsClient({ org, site, freeUrl, rootDomain, canDomain, cate
   const [verifying, setVerifying] = useState(false);
   const [savingDomain, setSavingDomain] = useState(false);
   const [domainChoice, setDomainChoice] = useState<'connect' | 'buy' | null>(site.customDomain ? 'connect' : null);
-  const [profile, setProfile] = useState({ language: 'fr', year: '', category: '', mission: '', functioning: '', actions: '', beneficiaries: '', goodToKnow: '', city: '', email: '', phone: '', legalName: '', registrationNumber: '', legalAddress: '', publicationDirector: '', facebook: '', instagram: '', linkedin: '', youtube: '', ...(org.profile || {}) });
+  const [profile, setProfile] = useState({ language: 'fr', year: '', category: '', mission: '', functioning: '', actions: '', beneficiaries: '', goodToKnow: '', city: '', email: '', phone: '', legalName: '', registrationNumber: '', legalAddress: '', publicationDirector: '', facebook: '', instagram: '', linkedin: '', youtube: '', tiktok: '', twitter: '', ...(org.profile || {}) });
 
   async function saveName() {
     await fetch('/api/site', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name }) });
@@ -87,8 +87,8 @@ export function SettingsClient({ org, site, freeUrl, rootDomain, canDomain, cate
           <h3 className="font-bold text-gray-900">Réseaux sociaux</h3>
           <p className="mb-3 text-sm text-gray-500">Ajoutez uniquement les comptes officiels de l’association.</p>
           <div className="grid gap-3 sm:grid-cols-2">
-            {(['facebook', 'instagram', 'linkedin', 'youtube'] as const).map((network) => (
-              <div key={network}><label className="label capitalize">{network}</label><input className="input" type="url" value={profile[network]} onChange={(e) => setProfileField(network, e.target.value)} placeholder={`https://${network}.com/...`} /></div>
+            {(['facebook', 'instagram', 'linkedin', 'youtube', 'tiktok', 'twitter'] as const).map((network) => (
+              <div key={network}><label className="label capitalize">{network === 'twitter' ? 'X (Twitter)' : network}</label><input className="input" type="url" value={profile[network]} onChange={(e) => setProfileField(network, e.target.value)} placeholder={network === 'twitter' ? 'https://x.com/...' : `https://${network}.com/...`} /></div>
             ))}
           </div>
         </div>

@@ -541,11 +541,11 @@ function ButtonEditor({ value, onChange }: { value?: ButtonConfig; onChange: (b:
 function SocialEditor({ value, onChange }: { value?: any; onChange: (s: any) => void }) {
   const s = value || { align: 'center' };
   const set = (patch: any) => onChange({ ...s, ...patch });
-  const nets = ['facebook', 'instagram', 'twitter', 'youtube', 'linkedin'];
+  const nets = ['facebook', 'instagram', 'twitter', 'youtube', 'linkedin', 'tiktok'];
   return (
     <div className="space-y-3">
       {nets.map((n) => (
-        <Field key={n} label={n}><input className="input" placeholder={`https://${n}.com/…`} value={s[n] || ''} onChange={(e) => set({ [n]: e.target.value })} /></Field>
+        <Field key={n} label={n === 'twitter' ? 'X (Twitter)' : n}><input className="input" placeholder={n === 'twitter' ? 'https://x.com/…' : `https://${n}.com/…`} value={s[n] || ''} onChange={(e) => set({ [n]: e.target.value })} /></Field>
       ))}
       <Field label="Alignement"><AlignPicker value={s.align} onChange={(a) => set({ align: a })} /></Field>
     </div>

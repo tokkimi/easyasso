@@ -136,6 +136,15 @@ export function buildGeneratedSite(input: GenerateInput): BuiltTemplate {
     }
   }
 
+  // Same guarantee for the deterministic fallback: never lose submitted
+  // contact data, even when a template changes its internal block order.
+  const contact = t.pages.find((p) => p.slug === 'contact');
+  if (contact && (input.email || input.city)) {
+    const exact = [input.email ? `Email : ${input.email.trim()}` : '', input.city ? `Adresse : ${input.city.trim()}` : ''].filter(Boolean).join('\n\n');
+    const text = contact.blocks.find((b: any) => b.type === 'text');
+    if (text) text.content.text = `${exact}\n\n${copy.contactText}`;
+  }
+
   reindex(t.pages);
   return t;
 }

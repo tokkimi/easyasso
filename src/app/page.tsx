@@ -1,12 +1,12 @@
 import Link from 'next/link';
-import { Check, MousePointerClick, Palette, HandCoins, Users, BarChart3, Globe, Sparkles, WandSparkles, FileText, RefreshCw, ExternalLink } from 'lucide-react';
+import { Check, MousePointerClick, Palette, HandCoins, Users, BarChart3, Globe, Sparkles, WandSparkles, FileText, RefreshCw, ExternalLink, Gift } from 'lucide-react';
 
 const PRICE = process.env.NEXT_PUBLIC_PRICE_EUR || '250';
 
 const features = [
   { icon: MousePointerClick, title: 'Éditeur visuel bloc par bloc', text: 'Cliquez, écrivez, glissez. Ce que vous voyez est ce que vos visiteurs verront.' },
   { icon: Palette, title: '50 couleurs & boutons sur mesure', text: 'Titres, textes, images, vidéos, réseaux sociaux, alignements et boutons configurables.' },
-  { icon: HandCoins, title: 'Dons, reçus & campagnes', text: 'Collectez via Stripe, virement, chèque ou connectez HelloAsso en un clic. Reçus fiscaux et classement des donateurs.' },
+  { icon: HandCoins, title: 'Dons, reçus & campagnes', text: 'Collectez via Stripe, virement, chèque, HelloAsso en un clic ou cagnotte Leetchi. Reçus fiscaux et classement des donateurs.' },
   { icon: Users, title: 'CRM & équipe', text: 'Base de donateurs, rôles et permissions détaillés pour vos bénévoles.' },
   { icon: BarChart3, title: 'Comptabilité complète', text: 'Recettes, dépenses, catégories, exports comptables et statistiques.' },
   { icon: Globe, title: 'Votre nom de domaine', text: 'Un sous-domaine offert immédiatement, votre domaine personnalisé en quelques clics.' },
@@ -23,6 +23,7 @@ const magicTools = [
   { icon: FileText, title: 'CGV et mentions légales générées', text: 'EasyAsso prépare des documents détaillés à partir des informations légales de l’association, puis vous pouvez les modifier.' },
   { icon: HandCoins, title: 'Questionnaire de dons prêt à l’emploi', text: 'Montants proposés, don libre, coordonnées donateur, carte, HelloAsso, virement ou chèque : tout est déjà structuré.' },
   { icon: ExternalLink, title: 'HelloAsso connecté en un clic', text: 'Collez simplement votre lien HelloAsso : EasyAsso l’ajoute automatiquement au formulaire de dons de votre site.' },
+  { icon: Gift, title: 'Cagnotte Leetchi intégrée', text: 'Ajoutez votre lien Leetchi pour afficher une cagnotte avec jauge et bouton de participation directement sur le site.' },
   { icon: Globe, title: 'Site et espace en français ou en anglais', text: 'La langue choisie à l’inscription ou dans les réglages est respectée dans le générateur, le profil et les pages créées.' },
   { icon: Users, title: 'Contact, messages et données utiles', text: 'Les vraies coordonnées, le formulaire de contact, les messages reçus et les informations donateurs remontent dans le tableau de bord.' },
 ];
@@ -162,7 +163,7 @@ export default function LandingPage() {
           <div className="mt-4 text-6xl font-extrabold">{PRICE} €</div>
           <p className="mt-1 text-brand-100">paiement unique — pas d’abonnement caché</p>
           <ul className="mx-auto mt-6 max-w-md space-y-2 text-left">
-            {['Éditeur visuel complet', 'Sous-domaine offert + domaine perso', 'Dons, reçus & campagnes', 'CRM donateurs & équipe', 'Comptabilité & statistiques', 'Support Stripe & HelloAsso'].map((i) => (
+            {['Éditeur visuel complet', 'Sous-domaine offert + domaine perso', 'Dons, reçus & campagnes', 'CRM donateurs & équipe', 'Comptabilité & statistiques', 'Support Stripe, HelloAsso & Leetchi'].map((i) => (
               <li key={i} className="flex items-center gap-2"><Check className="h-5 w-5 text-brand-200" /> {i}</li>
             ))}
           </ul>

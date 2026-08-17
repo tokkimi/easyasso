@@ -7,13 +7,14 @@ import { alignClass, justifyClass, blockWrapperStyle, safePublicUrl, videoEmbed 
 import { Slideshow } from './Slideshow';
 import { ContactForm } from './ContactForm';
 import { DonationBlock } from './DonationBlock';
+import { LeetchiBlock } from './LeetchiBlock';
 
 const CARD_ICONS: Record<string, any> = {
   Heart, Users, HandHeart, HandCoins, Star, Gift, Leaf, Home, BookOpen, Shield, Sparkles, Handshake,
 };
 
 // Blocks that break out of the narrow text column
-const WIDE = new Set(['textimage', 'gallery', 'cards', 'contact', 'donation']);
+const WIDE = new Set(['textimage', 'gallery', 'cards', 'contact', 'donation', 'leetchi']);
 const FULL = new Set(['banner', 'slideshow', 'cta']);
 
 function Btn({ b, basePath = '' }: { b: ButtonConfig; basePath?: string }) {
@@ -186,6 +187,8 @@ function renderInner(type: string, content: any, style: BlockStyle, basePath: st
       return <ContactForm organizationId={organizationId} content={content} />;
     case 'donation':
       return <DonationBlock content={content} organizationId={organizationId} />;
+    case 'leetchi':
+      return <LeetchiBlock content={content} />;
     default:
       return null;
   }

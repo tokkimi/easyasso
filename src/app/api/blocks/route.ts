@@ -33,6 +33,21 @@ export async function POST(req: Request) {
       });
       if (profile.language === 'en') Object.assign(content, { title: 'Support our work', intro: 'Your generosity helps us continue our mission.' });
     }
+    if (type === 'leetchi') {
+      const profile = (ctx.org.profile as Record<string, any>) || {};
+      const english = profile.language === 'en';
+      Object.assign(content, {
+        locale: english ? 'en' : 'fr',
+        title: english ? 'Our Leetchi money pot' : 'Notre cagnotte Leetchi',
+        intro: english ? 'Follow the campaign progress and contribute securely on Leetchi.' : 'Suivez l’avancement de la collecte et participez en toute sécurité sur Leetchi.',
+        url: profile.leetchiUrl || '',
+        embedUrl: profile.leetchiEmbedUrl || '',
+        embedCode: profile.leetchiEmbedCode || '',
+        collectedEuros: profile.leetchiCollectedEuros || '',
+        goalEuros: profile.leetchiGoalEuros || '',
+        buttonText: english ? 'Contribute on Leetchi' : 'Participer à la cagnotte',
+      });
+    }
     const block = await prisma.block.create({
       data: {
         pageId,

@@ -38,7 +38,8 @@ export type BlockType =
   | 'cards'
   | 'cta'
   | 'contact'
-  | 'donation';
+  | 'donation'
+  | 'leetchi';
 
 export interface BlockStyle {
   align?: Align;
@@ -64,6 +65,7 @@ export const BLOCK_LIBRARY: {
   { type: 'cta', label: 'Appel au don', icon: 'Megaphone', description: 'Bandeau avec bouton d’action', group: 'layouts' },
   { type: 'contact', label: 'Contact complet', icon: 'Mail', description: 'Coordonnées + formulaire prêt à recevoir des messages', group: 'layouts' },
   { type: 'donation', label: 'Questionnaire de dons', icon: 'HandCoins', description: 'Montants, coordonnées donateur, Stripe, HelloAsso, virement et chèque', group: 'layouts' },
+  { type: 'leetchi', label: 'Cagnotte Leetchi', icon: 'ExternalLink', description: 'Jauge de cagnotte + bouton pour participer', group: 'layouts' },
   // Basic building blocks
   { type: 'heading', label: 'Titre', icon: 'Heading', description: 'Un grand titre', group: 'basics' },
   { type: 'text', label: 'Texte', icon: 'Type', description: 'Un paragraphe', group: 'basics' },
@@ -149,7 +151,9 @@ export function defaultContentFor(type: BlockType): Record<string, unknown> {
     case 'contact':
       return { title: 'Contactez-nous', intro: 'Une question, une proposition ou envie de nous rejoindre ? Écrivez-nous.', email: '', phone: '', address: '', buttonText: 'Envoyer le message', successText: 'Merci, votre message a bien été envoyé.' };
     case 'donation':
-      return { title: 'Soutenez notre action', intro: 'Votre générosité nous permet de poursuivre nos missions.', cardEnabled: false, stripeUrl: '', helloAssoUrl: '', transferEnabled: false, iban: '', bic: '', accountHolder: '', bankName: '', chequeEnabled: false, chequePayable: '', chequeAddress: '' };
+      return { title: 'Soutenez notre action', intro: 'Votre générosité nous permet de poursuivre nos missions.', cardEnabled: false, stripeUrl: '', helloAssoEnabled: false, helloAssoUrl: '', transferEnabled: false, iban: '', bic: '', accountHolder: '', bankName: '', chequeEnabled: false, chequePayable: '', chequeAddress: '' };
+    case 'leetchi':
+      return { title: 'Notre cagnotte Leetchi', intro: 'Suivez l’avancement de la collecte et participez en quelques clics.', url: '', embedUrl: '', embedCode: '', collectedEuros: '', goalEuros: '', buttonText: 'Participer à la cagnotte' };
     default:
       return {};
   }
@@ -171,6 +175,7 @@ export function defaultStyleFor(type: BlockType): BlockStyle {
     case 'cta':
     case 'contact':
     case 'donation':
+    case 'leetchi':
       return { paddingY: 40, background: '#f1f5ff' };
     default:
       return { align: 'center', paddingY: 16 };

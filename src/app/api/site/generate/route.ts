@@ -59,6 +59,17 @@ export async function POST(req: Request) {
       chequeEnabled: b.donationChequeEnabled ?? previousProfile.donationChequeEnabled ?? false,
       chequePayable: b.donationChequePayable ?? previousProfile.donationChequePayable ?? '', chequeAddress: b.donationChequeAddress ?? previousProfile.donationChequeAddress ?? '',
     };
+    const leetchi = {
+      locale: input.language,
+      title: input.language === 'en' ? 'Our Leetchi money pot' : 'Notre cagnotte Leetchi',
+      intro: input.language === 'en' ? 'Follow the campaign progress and contribute securely on Leetchi.' : 'Suivez l’avancement de la collecte et participez en toute sécurité sur Leetchi.',
+      url: b.leetchiUrl ?? previousProfile.leetchiUrl ?? '',
+      embedUrl: b.leetchiEmbedUrl ?? previousProfile.leetchiEmbedUrl ?? '',
+      embedCode: b.leetchiEmbedCode ?? previousProfile.leetchiEmbedCode ?? '',
+      collectedEuros: b.leetchiCollectedEuros ?? previousProfile.leetchiCollectedEuros ?? '',
+      goalEuros: b.leetchiGoalEuros ?? previousProfile.leetchiGoalEuros ?? '',
+      buttonText: input.language === 'en' ? 'Contribute on Leetchi' : 'Participer à la cagnotte',
+    };
     const isDonationText = (value = '') => /\bfaire[-\s]*un[-\s]*don\b|\bdon\b|donat|soutenir|support|donate/i.test(value);
     let donationPage = generated.pages.find((page: any) => isDonationText(`${page.slug} ${page.title}`));
     if (!donationPage) {
@@ -84,6 +95,9 @@ export async function POST(req: Request) {
     if (donationPage) {
       donationPage.blocks = donationPage.blocks.filter((block: any) => block.type !== 'html' && !(block.type === 'text' && /collez ici|stripe|helloasso|configur/i.test(block.content?.text || '')));
       donationPage.blocks.push({ type: 'donation', order: donationPage.blocks.length, content: donation, style: defaultStyleFor('donation') });
+      if ((b.leetchiEnabled ?? previousProfile.leetchiEnabled ?? !!leetchi.url) && leetchi.url) {
+        donationPage.blocks.push({ type: 'leetchi', order: donationPage.blocks.length, content: leetchi, style: defaultStyleFor('leetchi') });
+      }
       donationPage.blocks.forEach((block: any, order: number) => { block.order = order; });
     }
     for (const page of generated.pages) {
@@ -104,7 +118,7 @@ export async function POST(req: Request) {
         footer: { ...(generated.footer as any), text: requestedSlogan || (input.language === 'en' ? 'Together, we make a difference.' : 'Ensemble, faisons la différence.'), showCgv: generateLegal, showMentions: generateLegal, cgvContent: generateLegal ? legal.cgv : '', mentionsContent: generateLegal ? legal.details : '' },
       },
     });
-    await prisma.organization.update({ where: { id: ctx.org.id }, data: { profile: { ...profile, language: input.language, slogan: requestedSlogan, generateCgv: generateLegal, year: input.year || profile.year || '', mission: input.mission || profile.mission || '', functioning: input.functioning || profile.functioning || '', actions: input.actions || profile.actions || '', beneficiaries: input.beneficiaries || profile.beneficiaries || '', goodToKnow: input.goodToKnow || profile.goodToKnow || '', city: input.city || profile.city || '', email: input.email || profile.email || '', category: input.category || profile.category || '', donationCardEnabled: donation.cardEnabled, donationStripeUrl: donation.stripeUrl, donationHelloAssoEnabled: donation.helloAssoEnabled, donationHelloAssoUrl: donation.helloAssoUrl, donationTransferEnabled: donation.transferEnabled, donationIban: donation.iban, donationBic: donation.bic, donationAccountHolder: donation.accountHolder, donationBankName: donation.bankName, donationChequeEnabled: donation.chequeEnabled, donationChequePayable: donation.chequePayable, donationChequeAddress: donation.chequeAddress } } });
+    await prisma.organization.update({ where: { id: ctx.org.id }, data: { profile: { ...profile, language: input.language, slogan: requestedSlogan, generateCgv: generateLegal, year: input.year || profile.year || '', mission: input.mission || profile.mission || '', functioning: input.functioning || profile.functioning || '', actions: input.actions || profile.actions || '', beneficiaries: input.beneficiaries || profile.beneficiaries || '', goodToKnow: input.goodToKnow || profile.goodToKnow || '', city: input.city || profile.city || '', email: input.email || profile.email || '', category: input.category || profile.category || '', donationCardEnabled: donation.cardEnabled, donationStripeUrl: donation.stripeUrl, donationHelloAssoEnabled: donation.helloAssoEnabled, donationHelloAssoUrl: donation.helloAssoUrl, donationTransferEnabled: donation.transferEnabled, donationIban: donation.iban, donationBic: donation.bic, donationAccountHolder: donation.accountHolder, donationBankName: donation.bankName, donationChequeEnabled: donation.chequeEnabled, donationChequePayable: donation.chequePayable, donationChequeAddress: donation.chequeAddress, leetchiEnabled: b.leetchiEnabled ?? profile.leetchiEnabled ?? !!leetchi.url, leetchiUrl: leetchi.url, leetchiEmbedUrl: leetchi.embedUrl, leetchiEmbedCode: leetchi.embedCode, leetchiCollectedEuros: leetchi.collectedEuros, leetchiGoalEuros: leetchi.goalEuros } } });
     revalidatePath('/dashboard/editor');
     revalidatePath('/dashboard/generate');
     revalidatePath(`/s/${site.subdomain}`);

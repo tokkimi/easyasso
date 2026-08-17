@@ -3,7 +3,7 @@ import {
   Heart, Users, HandHeart, HandCoins, Star, Gift, Leaf, Home, BookOpen, Shield, Sparkles, Handshake,
 } from 'lucide-react';
 import type { BlockStyle, ButtonConfig, SocialConfig } from '@/lib/blocks';
-import { alignClass, justifyClass, blockWrapperStyle, videoEmbed } from '@/lib/render';
+import { alignClass, justifyClass, blockWrapperStyle, safePublicUrl, videoEmbed } from '@/lib/render';
 import { Slideshow } from './Slideshow';
 import { ContactForm } from './ContactForm';
 import { DonationBlock } from './DonationBlock';
@@ -18,7 +18,7 @@ const FULL = new Set(['banner', 'slideshow', 'cta']);
 
 function Btn({ b, basePath = '' }: { b: ButtonConfig; basePath?: string }) {
   if (!b?.text) return null;
-  const href = b.href?.startsWith('/') ? `${basePath}${b.href}` : b.href || '#';
+  const href = b.href?.startsWith('/') ? `${basePath}${b.href}` : safePublicUrl(b.href) || '#';
   const style = b.variant === 'solid'
     ? { background: b.color, color: b.color.toLowerCase() === '#ffffff' ? '#111827' : '#fff', border: `2px solid ${b.color}` }
     : { background: 'transparent', color: b.color, border: `2px solid ${b.color}` };
@@ -52,12 +52,12 @@ function renderInner(type: string, content: any, style: BlockStyle, basePath: st
       return content.url ? (
         <figure>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={content.url} alt={content.alt || ''} className="mx-auto max-h-[520px] w-auto rounded-xl" />
+          <img src={safePublicUrl(content.url, { allowDataImage: true })} alt={content.alt || ''} className="mx-auto max-h-[520px] w-auto rounded-xl" />
           {content.caption && <figcaption className="mt-2 text-sm text-gray-500">{content.caption}</figcaption>}
         </figure>
       ) : null;
     case 'video': {
-      const src = videoEmbed(content.url);
+      const src = safePublicUrl(videoEmbed(content.url));
       return src ? (
         <div className="relative mx-auto aspect-video w-full overflow-hidden rounded-xl">
           <iframe src={src} className="absolute inset-0 h-full w-full" allowFullScreen title="video" />
@@ -79,7 +79,7 @@ function renderInner(type: string, content: any, style: BlockStyle, basePath: st
       return (
         <div className={`flex gap-4 ${justifyClass(s.align)}`}>
           {items.map(({ k, url, Icon }) => (
-            <a key={k} href={url!} target="_blank" rel="noreferrer" className="text-gray-600 transition hover:text-brand-600"><Icon className="h-6 w-6" /></a>
+            <a key={k} href={safePublicUrl(url) || '#'} target="_blank" rel="noreferrer" className="text-gray-600 transition hover:text-brand-600"><Icon className="h-6 w-6" /></a>
           ))}
         </div>
       );
@@ -95,7 +95,14 @@ function renderInner(type: string, content: any, style: BlockStyle, basePath: st
     case 'spacer':
       return <div style={{ height: content.height || 40 }} />;
     case 'html':
-      return <div dangerouslySetInnerHTML={{ __html: content.html || '' }} />;
+      return (
+        <iframe
+          title="Intégration externe"
+          srcDoc={content.html || ''}
+          sandbox="allow-forms allow-popups allow-popups-to-escape-sandbox allow-scripts"
+          className="min-h-[420px] w-full rounded-xl border-0 bg-transparent"
+        />
+      );
 
     // ---- Rich layouts ----
     case 'banner': {
@@ -105,7 +112,7 @@ function renderInner(type: string, content: any, style: BlockStyle, basePath: st
         <div className="relative flex w-full items-center justify-center overflow-hidden" style={{ height: h }}>
           {content.image && (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={content.image} alt="" className="absolute inset-0 h-full w-full object-cover" />
+            <img src={safePublicUrl(content.image, { allowDataImage: true })} alt="" className="absolute inset-0 h-full w-full object-cover" />
           )}
           <div className="absolute inset-0" style={{ background: `rgba(0,0,0,${overlay})` }} />
           <div className="relative mx-auto max-w-3xl px-6 text-center text-white">
@@ -120,7 +127,7 @@ function renderInner(type: string, content: any, style: BlockStyle, basePath: st
       const right = (content.imageSide || 'right') === 'right';
       const img = content.image ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={content.image} alt="" className="h-full max-h-[420px] w-full rounded-2xl object-cover" />
+        <img src={safePublicUrl(content.image, { allowDataImage: true })} alt="" className="h-full max-h-[420px] w-full rounded-2xl object-cover" />
       ) : null;
       const txt = (
         <div className="flex flex-col justify-center text-left">
@@ -142,7 +149,7 @@ function renderInner(type: string, content: any, style: BlockStyle, basePath: st
         <div className={`public-responsive-gallery ${gridCls}`}>
           {(content.images || []).map((src: string, i: number) => (
             // eslint-disable-next-line @next/next/no-img-element
-            <img key={i} src={src} alt="" className="public-scroll-item aspect-square rounded-xl object-cover" />
+            <img key={i} src={safePublicUrl(src, { allowDataImage: true })} alt="" className="public-scroll-item aspect-square rounded-xl object-cover" />
           ))}
         </div>
       );

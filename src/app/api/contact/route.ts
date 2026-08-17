@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
+import { rateLimit, rateLimitExceeded } from '@/lib/rate-limit';
 
 const schema = z.object({
   organizationId: z.string().min(1),
@@ -13,6 +14,7 @@ const schema = z.object({
 });
 
 export async function POST(req: Request) {
+  if (!rateLimit(req, 'contact', 20, 15 * 60 * 1000).ok) return rateLimitExceeded();
   const parsed = schema.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: 'Veuillez vérifier les champs du formulaire.' }, { status: 400 });
   const { website: _honeypot, ...data } = parsed.data;

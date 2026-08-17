@@ -4,6 +4,7 @@ import bcrypt from 'bcryptjs';
 import { prisma } from '@/lib/prisma';
 import { createOrganizationForUser } from '@/lib/bootstrap';
 import { sendVerificationEmail } from '@/lib/mail';
+import { rateLimit, rateLimitExceeded } from '@/lib/rate-limit';
 
 const schema = z.object({
   name: z.string().trim().min(1),
@@ -20,6 +21,7 @@ const schema = z.object({
 });
 
 export async function POST(req: Request) {
+  if (!rateLimit(req, 'register', 8, 60 * 60 * 1000).ok) return rateLimitExceeded();
   const body = await req.json().catch(() => null);
   const parsed = schema.safeParse(body);
   if (!parsed.success) {

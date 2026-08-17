@@ -1,8 +1,10 @@
 import { NextResponse } from 'next/server';
 import { sendPasswordResetEmail } from '@/lib/mail';
 import { prisma } from '@/lib/prisma';
+import { rateLimit, rateLimitExceeded } from '@/lib/rate-limit';
 
 export async function POST(req: Request) {
+  if (!rateLimit(req, 'forgot-password', 5, 15 * 60 * 1000).ok) return rateLimitExceeded();
   const body = await req.json().catch(() => ({}));
   const email = String(body.email || '').trim().toLowerCase();
   if (email) {

@@ -11,6 +11,25 @@ export function themeStyle(theme: any): React.CSSProperties {
   };
 }
 
+export function safeHexColor(value: unknown, fallback = '#1b5df5'): string {
+  const color = String(value || '').trim();
+  return /^#[0-9a-fA-F]{6}$/.test(color) ? color : fallback;
+}
+
+export function safePublicUrl(value: unknown, options: { allowRelative?: boolean; allowDataImage?: boolean } = {}): string {
+  const raw = String(value || '').trim();
+  if (!raw) return '';
+  if (options.allowRelative && raw.startsWith('/')) return raw;
+  if (options.allowDataImage && /^data:image\/(png|jpe?g|gif|webp|svg\+xml);base64,[a-z0-9+/=]+$/i.test(raw)) return raw;
+  try {
+    const parsed = new URL(raw);
+    if (['http:', 'https:', 'mailto:', 'tel:'].includes(parsed.protocol)) return parsed.toString();
+  } catch {
+    return '';
+  }
+  return '';
+}
+
 // Mix a hex colour toward a target (white/black) by weight (0..1).
 export function mixHex(hex: string, target: string, weight: number): string {
   const p = (h: string) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
@@ -24,7 +43,7 @@ export function mixHex(hex: string, target: string, weight: number): string {
 // A <style> body that makes the "brand" Tailwind utilities follow the theme
 // primary colour on a public tenant page (safe: each public page is its own doc).
 export function brandCss(primary?: string): string {
-  const c = primary || '#1b5df5';
+  const c = safeHexColor(primary);
   const tint = mixHex(c, '#ffffff', 0.88);
   const dark = mixHex(c, '#000000', 0.12);
   return `

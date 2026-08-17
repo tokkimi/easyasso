@@ -4,11 +4,17 @@ import { PrismaAdapter } from '@auth/prisma-adapter';
 import bcrypt from 'bcryptjs';
 import { prisma } from './prisma';
 
+const isHostedProduction = process.env.VERCEL_ENV === 'production';
+const authSecret = process.env.NEXTAUTH_SECRET || (isHostedProduction ? undefined : 'dev-secret-change-me');
+if (!authSecret) {
+  throw new Error('NEXTAUTH_SECRET doit être configuré en production.');
+}
+
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma) as any,
   session: { strategy: 'jwt' },
   pages: { signIn: '/login' },
-  secret: process.env.NEXTAUTH_SECRET || 'dev-secret-change-me',
+  secret: authSecret,
   providers: [
     CredentialsProvider({
       name: 'Email',

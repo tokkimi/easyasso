@@ -3,7 +3,7 @@ import { requireOrg } from '@/lib/session';
 import { orgOverview, monthlyDonations } from '@/lib/stats';
 import { formatEuros, formatDate } from '@/lib/utils';
 import { PageHeader, Stat, BarChart } from '@/components/ui';
-import { Trophy, ArrowRight } from 'lucide-react';
+import { Trophy, ArrowRight, Sparkles, Fingerprint, LayoutTemplate } from 'lucide-react';
 
 export default async function DashboardHome() {
   const ctx = await requireOrg();
@@ -16,6 +16,24 @@ export default async function DashboardHome() {
         title={`Bonjour ${ctx.user.name?.split(' ')[0] || ''} 👋`}
         subtitle="Voici la situation de votre association en un coup d’œil."
       />
+
+      {/* Magic generator hero */}
+      <Link href="/dashboard/generate" className="mb-6 flex flex-col items-start gap-4 rounded-2xl bg-gradient-to-br from-brand-600 to-brand-800 p-6 text-white sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-4">
+          <div className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-white/20"><Sparkles className="h-6 w-6" /></div>
+          <div>
+            <h2 className="text-lg font-bold">Créez votre site en un clic ✨</h2>
+            <p className="text-sm text-brand-100">Décrivez votre association, ajoutez logo et photos : le site se génère tout seul.</p>
+          </div>
+        </div>
+        <span className="btn bg-white px-5 text-brand-700 hover:bg-brand-50">Lancer le générateur</span>
+      </Link>
+
+      <div className="mb-6 grid gap-3 sm:grid-cols-3">
+        <Link href="/dashboard/identity" className="card flex items-center gap-3 hover:ring-brand-200"><Fingerprint className="h-5 w-5 text-brand-600" /><span className="text-sm font-semibold text-gray-800">Logo, polices & couleurs</span></Link>
+        <Link href="/dashboard/themes" className="card flex items-center gap-3 hover:ring-brand-200"><LayoutTemplate className="h-5 w-5 text-brand-600" /><span className="text-sm font-semibold text-gray-800">Choisir un modèle</span></Link>
+        <Link href="/dashboard/editor" className="card flex items-center gap-3 hover:ring-brand-200"><ArrowRight className="h-5 w-5 text-brand-600" /><span className="text-sm font-semibold text-gray-800">Éditer mon site</span></Link>
+      </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Stat label="Total des dons" value={formatEuros(o.totalDonationsCents)} hint={`${o.donationCount} don(s)`} accent="text-green-600" />

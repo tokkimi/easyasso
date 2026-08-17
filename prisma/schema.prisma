@@ -75,7 +75,8 @@ model Organization {
   id            String     @id @default(cuid())
   name          String
   slug          String     @unique
-  planStatus    PlanStatus @default(PENDING_PAYMENT)
+  planStatus    PlanStatus @default(TRIAL)
+  trialEndsAt   DateTime?
   stripeCustomerId String?
   stripeSessionId  String?
   paidAt        DateTime?

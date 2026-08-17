@@ -1,0 +1,31 @@
+import { NextResponse } from 'next/server';
+import { requireApiPermission, handleApiError } from '@/lib/api';
+import { PERMISSIONS } from '@/lib/permissions';
+import { prisma } from '@/lib/prisma';
+import { buildGeneratedSite } from '@/lib/generate';
+import { applyTemplateToSite } from '@/lib/apply-template';
+
+export async function POST(req: Request) {
+  try {
+    const ctx = await requireApiPermission(PERMISSIONS.SITE_EDIT);
+    const b = await req.json();
+    const name = (b.name || '').trim() || ctx.org.name;
+
+    // Optionally rename the organization/site to the provided name
+    if (b.name && b.name.trim() && b.name.trim() !== ctx.org.name) {
+      await prisma.organization.update({ where: { id: ctx.org.id }, data: { name: b.name.trim() } });
+    }
+
+    const site = await prisma.site.findUniqueOrThrow({ where: { organizationId: ctx.org.id } });
+    const generated = buildGeneratedSite({
+      name,
+      description: b.description || '',
+      category: b.category || undefined,
+      logoUrl: b.logoUrl || undefined,
+      photos: Array.isArray(b.photos) ? b.photos.slice(0, 8) : [],
+    });
+    await applyTemplateToSite(site.id, generated, name);
+    await prisma.site.update({ where: { id: site.id }, data: { name, published: true } });
+    return NextResponse.json({ ok: true });
+  } catch (e) { return handleApiError(e); }
+}

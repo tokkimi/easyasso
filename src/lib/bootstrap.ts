@@ -34,12 +34,14 @@ export async function createOrganizationForUser(userId: string, assoName: string
     data: {
       name: assoName,
       slug,
-      planStatus: 'PENDING_PAYMENT',
+      planStatus: 'TRIAL',
+      trialEndsAt: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000), // 3-day free trial
       memberships: { create: { userId, systemRole: 'OWNER' } },
       site: {
         create: {
           name: assoName,
           subdomain,
+          published: true, // live immediately during the trial
           theme: DEFAULT_THEME as any,
           header: { ...DEFAULT_HEADER, logoText: assoName } as any,
           footer: {

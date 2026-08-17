@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
-import { requireOrg } from '@/lib/session';
+import Link from 'next/link';
+import { requireOrg, planAccess } from '@/lib/session';
 import { isDemoMode } from '@/lib/stripe';
 import { siteUrlFor } from '@/lib/utils';
 import { PayButton } from './pay-button';
@@ -11,6 +12,7 @@ export default async function OnboardingPage() {
   const ctx = await requireOrg();
   const org = ctx.organization!;
   if (org.planStatus === 'ACTIVE') redirect('/dashboard');
+  const access = planAccess(org);
 
   const site = await (await import('@/lib/prisma')).prisma.site.findUnique({ where: { organizationId: org.id } });
   const url = site ? siteUrlFor(site.subdomain, site.customDomain) : '';
@@ -19,11 +21,13 @@ export default async function OnboardingPage() {
     <div className="grid min-h-screen place-items-center bg-gray-50 px-4 py-10">
       <div className="w-full max-w-lg">
         <div className="card text-center">
-          <span className="badge mx-auto bg-brand-50 text-brand-700">Étape 2 sur 2</span>
-          <h1 className="mt-3 text-2xl font-bold text-gray-900">Activez le site de {org.name}</h1>
+          <span className={`badge mx-auto ${access.expired ? 'bg-red-50 text-red-700' : 'bg-brand-50 text-brand-700'}`}>
+            {access.expired ? 'Essai terminé' : access.isTrial ? `Essai : ${access.daysLeft} jour(s) restant(s)` : 'Activation'}
+          </span>
+          <h1 className="mt-3 text-2xl font-bold text-gray-900">Hébergez le site de {org.name} à vie</h1>
           <p className="mt-2 text-gray-600">
-            Un paiement unique de <strong>{PRICE} €</strong> débloque votre site, votre adresse dédiée et
-            l’ensemble des outils (dons, CRM, comptabilité…).
+            Un <strong>paiement unique de {PRICE} €</strong> — pas d’abonnement. Votre site est <strong>hébergé à vie</strong>,
+            avec tous les outils (dons, CRM, comptabilité…).
           </p>
 
           <div className="mt-6 rounded-xl bg-gray-50 p-4 text-left">
@@ -45,6 +49,11 @@ export default async function OnboardingPage() {
             <p className="mt-3 text-xs text-amber-600">
               Mode démonstration actif : le paiement est simulé (Stripe non configuré).
             </p>
+          )}
+          {access.hasAccess && (
+            <Link href="/dashboard" className="mt-3 block text-sm text-gray-500 hover:text-gray-700">
+              Continuer mon essai gratuit ({access.daysLeft} jour{access.daysLeft > 1 ? 's' : ''})
+            </Link>
           )}
         </div>
       </div>

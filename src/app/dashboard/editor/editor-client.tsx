@@ -8,6 +8,8 @@ import {
 } from 'lucide-react';
 import { BLOCK_LIBRARY, type BlockType, type ButtonConfig } from '@/lib/blocks';
 import { PublicBlock } from '@/components/site/PublicBlock';
+import { themeStyle } from '@/lib/render';
+import { googleFontsHref } from '@/lib/fonts';
 import { ColorGrid, AlignPicker, Field, Toggle, ImageInput } from './controls';
 
 const ICONS: Record<string, any> = {
@@ -132,8 +134,11 @@ export function EditorClient({ site: initial, canEdit, canPublish, siteUrl }: { 
 
   const width = device === 'mobile' ? 390 : 900;
 
+  const fontHref = googleFontsHref((initial.theme as any)?.font);
+
   return (
     <div className="fixed inset-0 z-30 flex flex-col bg-gray-100 lg:left-64">
+      {fontHref && <link rel="stylesheet" href={fontHref} />}
       {/* Top bar */}
       <div className="flex items-center justify-between gap-2 border-b border-gray-200 bg-white px-3 py-2">
         <a href="/dashboard" className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-900">
@@ -192,7 +197,7 @@ export function EditorClient({ site: initial, canEdit, canPublish, siteUrl }: { 
 
         {/* Center: canvas */}
         <div className="flex-1 overflow-y-auto bg-gray-100 p-4">
-          <div className="mx-auto rounded-xl bg-white shadow-sm ring-1 ring-gray-200 transition-all" style={{ maxWidth: width }}>
+          <div className="mx-auto overflow-hidden rounded-xl shadow-sm ring-1 ring-gray-200 transition-all" style={{ maxWidth: width, ...themeStyle(initial.theme) }}>
             {active?.blocks.length === 0 && (
               <div className="py-16 text-center text-gray-400">
                 <p>Page vide.</p>

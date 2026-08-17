@@ -27,7 +27,8 @@ export default function RegisterPage() {
       // Auto sign-in then head to checkout
       const login = await signIn('credentials', { redirect: false, email: form.email, password: form.password });
       if (login?.error) throw new Error('Connexion impossible après inscription.');
-      router.push('/onboarding');
+      // Free 3-day trial starts immediately — straight to the magic generator.
+      router.push('/dashboard/generate?welcome=1');
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -43,7 +44,7 @@ export default function RegisterPage() {
         </Link>
         <div className="card">
           <h1 className="text-xl font-bold text-gray-900">Créer le site de votre association</h1>
-          <p className="mt-1 text-sm text-gray-500">Étape 1 sur 2 — votre compte. Le paiement de {PRICE} € vient ensuite.</p>
+          <p className="mt-1 text-sm text-gray-500">Essai gratuit de 3 jours — sans carte bancaire. Ensuite {PRICE} € une seule fois, votre site est hébergé à vie.</p>
           <form onSubmit={submit} className="mt-6 space-y-4">
             <div>
               <label className="label">Votre nom</label>

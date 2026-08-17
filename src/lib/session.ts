@@ -49,3 +49,15 @@ export async function requirePermission(permission: Permission): Promise<OrgCont
   if (!ctx.permissions.has(permission)) redirect('/dashboard?denied=1');
   return ctx;
 }
+
+// Trial / subscription access state for an organization.
+export function planAccess(org: { planStatus: string; trialEndsAt: Date | null } | null) {
+  if (!org) return { hasAccess: false, isTrial: false, daysLeft: 0, expired: true };
+  if (org.planStatus === 'ACTIVE') return { hasAccess: true, isTrial: false, daysLeft: 0, expired: false };
+  if (org.planStatus === 'TRIAL' && org.trialEndsAt) {
+    const ms = new Date(org.trialEndsAt).getTime() - Date.now();
+    const daysLeft = Math.max(0, Math.ceil(ms / 86400000));
+    return { hasAccess: ms > 0, isTrial: true, daysLeft, expired: ms <= 0 };
+  }
+  return { hasAccess: false, isTrial: org.planStatus === 'TRIAL', daysLeft: 0, expired: true };
+}

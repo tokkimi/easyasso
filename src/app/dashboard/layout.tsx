@@ -1,5 +1,7 @@
 import { redirect } from 'next/navigation';
-import { requireOrg } from '@/lib/session';
+import Link from 'next/link';
+import { Clock } from 'lucide-react';
+import { requireOrg, planAccess } from '@/lib/session';
 import { prisma } from '@/lib/prisma';
 import { siteUrlFor } from '@/lib/utils';
 import { Sidebar } from './sidebar';
@@ -7,7 +9,8 @@ import { Sidebar } from './sidebar';
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const ctx = await requireOrg();
   const org = ctx.organization!;
-  if (org.planStatus !== 'ACTIVE') redirect('/onboarding');
+  const access = planAccess(org);
+  if (!access.hasAccess) redirect('/onboarding'); // trial expired or unpaid → paywall
 
   const site = await prisma.site.findUnique({ where: { organizationId: org.id } });
   const siteUrl = site ? siteUrlFor(site.subdomain, site.customDomain) : '#';
@@ -22,6 +25,15 @@ export default async function DashboardLayout({ children }: { children: React.Re
         published={site?.published ?? false}
       />
       <main className="flex-1 lg:ml-64">
+        {access.isTrial && (
+          <div className="flex flex-wrap items-center justify-center gap-2 bg-amber-500 px-4 py-2 text-center text-sm font-medium text-white">
+            <Clock className="h-4 w-4" />
+            {access.daysLeft > 0
+              ? <>Période d’essai : <strong>{access.daysLeft} jour{access.daysLeft > 1 ? 's' : ''}</strong> restant{access.daysLeft > 1 ? 's' : ''}. Débloquez votre site à vie.</>
+              : <>Votre essai se termine aujourd’hui. Activez votre site pour ne pas perdre l’accès.</>}
+            <Link href="/onboarding" className="ml-1 rounded-md bg-white px-3 py-1 text-xs font-bold text-amber-700 hover:bg-amber-50">Payer 250 € (à vie)</Link>
+          </div>
+        )}
         <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:px-8">{children}</div>
       </main>
     </div>

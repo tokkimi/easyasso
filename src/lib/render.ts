@@ -1,4 +1,15 @@
 import type { Align, BlockStyle } from './blocks';
+import { fontById } from './fonts';
+
+// Whole-site theme → CSS applied on the site/editor root.
+export function themeStyle(theme: any): React.CSSProperties {
+  const t = theme || {};
+  return {
+    fontFamily: fontById(t.font).stack,
+    background: t.background || '#ffffff',
+    color: t.text || '#1f2937',
+  };
+}
 
 export function alignClass(a?: Align): string {
   return a === 'left' ? 'text-left' : a === 'right' ? 'text-right' : 'text-center';

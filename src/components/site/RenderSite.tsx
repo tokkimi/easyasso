@@ -3,6 +3,8 @@ import { prisma } from '@/lib/prisma';
 import { DEFAULT_HEADER, DEFAULT_FOOTER, type HeaderConfig, type FooterConfig } from '@/lib/blocks';
 import { PublicBlock } from './PublicBlock';
 import { PublicHeader, PublicFooter } from './PublicChrome';
+import { themeStyle } from '@/lib/render';
+import { googleFontsHref } from '@/lib/fonts';
 
 type SiteWithPages = NonNullable<Awaited<ReturnType<typeof loadSiteBySubdomain>>>;
 
@@ -25,11 +27,14 @@ export function RenderSite({ site, basePath, slug }: { site: SiteWithPages; base
   const header = { ...DEFAULT_HEADER, ...(site.header as any) } as HeaderConfig;
   const footer = { ...DEFAULT_FOOTER, ...(site.footer as any) } as FooterConfig;
   const nav = site.pages.filter((p) => p.showInNav).map((p) => ({ title: p.title, slug: p.slug, isHome: p.isHome }));
+  const theme = (site.theme as any) || {};
+  const fontHref = googleFontsHref(theme.font);
 
   if (slug === 'cgv' || slug === 'mentions-legales') {
     const isCgv = slug === 'cgv';
     return (
-      <div className="min-h-screen bg-white">
+      <div className="min-h-screen" style={themeStyle(theme)}>
+        {fontHref && <link rel="stylesheet" href={fontHref} />}
         <PublicHeader header={header} nav={nav} basePath={basePath} />
         <main className="mx-auto max-w-3xl px-4 py-12">
           <h1 className="text-3xl font-extrabold">{isCgv ? 'Conditions générales' : 'Mentions légales'}</h1>
@@ -46,7 +51,8 @@ export function RenderSite({ site, basePath, slug }: { site: SiteWithPages; base
   prisma.siteEvent.create({ data: { organizationId: site.organizationId, type: 'pageview', path: page.slug } }).catch(() => {});
 
   return (
-    <div className="flex min-h-screen flex-col bg-white">
+    <div className="flex min-h-screen flex-col" style={themeStyle(theme)}>
+      {fontHref && <link rel="stylesheet" href={fontHref} />}
       <PublicHeader header={header} nav={nav} basePath={basePath} />
       <main className="flex-1 py-8">
         {page.blocks.length === 0 ? (

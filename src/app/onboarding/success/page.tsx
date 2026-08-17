@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { requireOrg } from '@/lib/session';
 import { activateOrganization } from '@/lib/activation';
-import { stripe } from '@/lib/stripe';
+import { isDemoMode, PRICE_EUR, stripe } from '@/lib/stripe';
 import { CheckCircle2 } from 'lucide-react';
 
 export default async function SuccessPage({
@@ -16,11 +16,13 @@ export default async function SuccessPage({
 
   // Confirm the payment (fallback if webhook hasn't fired yet).
   if (org.planStatus !== 'ACTIVE') {
-    if (params.demo) {
+    if (params.demo && isDemoMode) {
       await activateOrganization(org.id);
     } else if (params.session_id && stripe) {
       const s = await stripe.checkout.sessions.retrieve(params.session_id);
-      if (s.payment_status === 'paid') await activateOrganization(org.id, s.id);
+      const correctOrg = s.client_reference_id === org.id || s.metadata?.organizationId === org.id;
+      const correctAmount = s.amount_total === PRICE_EUR * 100 && s.currency === 'eur';
+      if (s.payment_status === 'paid' && correctOrg && correctAmount) await activateOrganization(org.id, s.id);
     }
   }
 

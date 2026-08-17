@@ -130,7 +130,7 @@ function renderInner(type: string, content: any, style: BlockStyle, basePath: st
         </div>
       );
       return (
-        <div className="grid items-center gap-8 md:grid-cols-2">
+        <div className="public-textimage">
           {right ? <>{txt}{img}</> : <>{img}{txt}</>}
         </div>
       );

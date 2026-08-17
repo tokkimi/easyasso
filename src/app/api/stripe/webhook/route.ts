@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { stripe } from '@/lib/stripe';
+import { PRICE_EUR, stripe } from '@/lib/stripe';
 import { activateOrganization } from '@/lib/activation';
 
 export async function POST(req: Request) {
@@ -19,7 +19,8 @@ export async function POST(req: Request) {
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object as any;
     const orgId = session.metadata?.organizationId || session.client_reference_id;
-    if (orgId) await activateOrganization(orgId, session.id);
+    const correctAmount = session.amount_total === PRICE_EUR * 100 && session.currency === 'eur';
+    if (orgId && session.payment_status === 'paid' && correctAmount) await activateOrganization(orgId, session.id);
   }
 
   return NextResponse.json({ received: true });

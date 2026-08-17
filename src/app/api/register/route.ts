@@ -10,6 +10,7 @@ const schema = z.object({
   email: z.string().email(),
   password: z.string().min(6),
   language: z.enum(['fr', 'en']).default('fr'),
+  startMode: z.enum(['trial', 'pay']).optional().default('trial'),
 });
 
 export async function POST(req: Request) {
@@ -18,7 +19,7 @@ export async function POST(req: Request) {
   if (!parsed.success) {
     return NextResponse.json({ error: 'Champs invalides', details: parsed.error.flatten() }, { status: 400 });
   }
-  const { name, assoName, email, password, language } = parsed.data;
+  const { name, assoName, email, password, language, startMode } = parsed.data;
   const lower = email.toLowerCase();
 
   const existing = await prisma.user.findUnique({ where: { email: lower } });
@@ -28,7 +29,7 @@ export async function POST(req: Request) {
 
   const passwordHash = await bcrypt.hash(password, 10);
   const user = await prisma.user.create({ data: { name, email: lower, passwordHash } });
-  await createOrganizationForUser(user.id, assoName, language);
+  await createOrganizationForUser(user.id, assoName, language, startMode === 'pay');
 
   return NextResponse.json({ ok: true });
 }

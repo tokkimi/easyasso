@@ -19,6 +19,13 @@ const steps = [
   { n: '4', title: 'Personnalisez tout', text: 'Puis reliez votre propre nom de domaine.' },
 ];
 
+const magicTools = [
+  { icon: FileText, title: 'CGV et mentions légales générées', text: 'EasyAsso prépare des documents détaillés à partir des informations légales de l’association, puis vous pouvez les modifier.' },
+  { icon: HandCoins, title: 'Questionnaire de dons prêt à l’emploi', text: 'Montants proposés, don libre, coordonnées donateur, carte, virement ou chèque : tout est déjà structuré.' },
+  { icon: Globe, title: 'Site et espace en français ou en anglais', text: 'La langue choisie à l’inscription ou dans les réglages est respectée dans le générateur, le profil et les pages créées.' },
+  { icon: Users, title: 'Contact, messages et données utiles', text: 'Les vraies coordonnées, le formulaire de contact, les messages reçus et les informations donateurs remontent dans le tableau de bord.' },
+];
+
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-white">
@@ -98,6 +105,21 @@ export default function LandingPage() {
           <div className="mt-10 grid gap-6 rounded-3xl border border-gray-200 bg-white p-7 shadow-sm md:grid-cols-[1fr_auto] md:items-center">
             <div className="flex gap-4"><RefreshCw className="mt-1 h-6 w-6 shrink-0 text-brand-600" /><div><h3 className="text-lg font-bold text-gray-900">Un nouveau départ à chaque génération</h3><p className="mt-1 text-sm leading-6 text-gray-600">Lorsque vous recommencez, l’ancien site est entièrement remplacé. Aucun ancien texte, logo ou bloc ne vient polluer la nouvelle création.</p></div></div>
             <Link href="/register" className="btn btn-primary px-6 py-3">Essayer l’outil magique <Sparkles className="h-4 w-4" /></Link>
+          </div>
+
+          <div className="mt-8 rounded-3xl border border-indigo-100 bg-white p-7 shadow-sm">
+            <div className="max-w-2xl">
+              <h3 className="text-2xl font-extrabold text-gray-900">Il prépare aussi les parties compliquées</h3>
+              <p className="mt-2 text-sm leading-6 text-gray-600">Pas besoin de savoir rédiger une page légale, construire un appel au don ou organiser les informations du tableau de bord : l’outil magique pose les bases, vous ajustez ensuite si besoin.</p>
+            </div>
+            <div className="mt-6 grid gap-4 md:grid-cols-2">
+              {magicTools.map((tool) => (
+                <div key={tool.title} className="flex gap-4 rounded-2xl border border-gray-100 bg-gray-50 p-4">
+                  <tool.icon className="mt-1 h-5 w-5 shrink-0 text-brand-600" />
+                  <div><h4 className="font-bold text-gray-900">{tool.title}</h4><p className="mt-1 text-sm leading-6 text-gray-600">{tool.text}</p></div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>

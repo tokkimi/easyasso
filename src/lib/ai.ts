@@ -44,7 +44,7 @@ Chaque "section" a un "type" parmi :
 - {"type":"cta","title":"...","text":"...","buttonText":"Faire un don"}
 - {"type":"gallery"}  (galerie de photos, sans contenu)
 
-Génère un site neuf comprenant : Accueil, Notre histoire, Nos actions, Notre impact, S'engager / Devenir bénévole, Faire un don, et Contact. Crée une page Actualités uniquement si des actualités sont fournies.
+Génère un site neuf, dans CET ORDRE de pages (les premières sont les plus importantes et doivent être écrites en premier) : Accueil, Nos actions, Notre impact, Notre histoire, S'engager / Devenir bénévole, Faire un don, et Contact. Crée une page Actualités (à la fin) uniquement si des actualités sont fournies.
 
 INTERDICTIONS ABSOLUES (c'est ici que se jouent les mauvais textes) :
 1. NE PARLE JAMAIS DU SITE NI DES PAGES. Bannis toute phrase du genre « le site présente… », « cette page permet de comprendre… », « chaque page aide les visiteurs à… », « l'association présente sa cause de manière claire/accessible », « cette première lecture donne aux visiteurs une vision précise ». Tu n'écris pas la notice d'un site : tu écris directement le contenu. Parle de la CAUSE et des ACTIONS, jamais de la manière dont le site les présente.
@@ -69,15 +69,16 @@ CONTEXTE, STATISTIQUES ET RÉFÉRENCES — déballe ta science, mais intelligemm
 - Mieux vaut une ou deux données fortes et exactes qu'un empilement de chiffres. Le contexte doit servir le message, pas le noyer.
 - Ne confonds pas le contexte du secteur (autorisé, connaissances générales fiables) avec les résultats de l'association (uniquement ceux du questionnaire).
 
-RÈGLES DE RÉDACTION :
-- LA PAGE « NOS ACTIONS » EST LA PLUS IMPORTANTE : c'est elle qui explique en détail ce que fait l'association. Développe-la vraiment (4 à 6 sections), en décrivant chaque action concrètement : en quoi elle consiste, pour qui, comment elle se déroule, ce qu'elle permet. C'est le cœur du site.
-- Les autres pages sont plus concises (2 à 4 sections) : va à l'essentiel, sans remplissage.
-- Chaque page a un rôle éditorial différent (présentation, contexte, action, impact, engagement, contact). Deux blocs ne disent jamais la même chose avec les mêmes mots.
-- Écris des textes concrets, riches et humains, nourris du contexte ci-dessus. Développe avec de la vraie matière (faits, contexte fiable, actions précises) — jamais avec des phrases creuses ou du remplissage. Si l'association donne peu d'informations propres, appuie-toi sur le contexte fiable de la cause plutôt que de tourner à vide.
-- L'accueil dit qui nous sommes, pourquoi la cause compte (contexte à l'appui), ce que nous faisons concrètement et comment aider — directement, sans méta-discours.
-- La page actions transforme les informations fournies en actions concrètes et nommées, replacées dans leur contexte.
-- La page impact décrit ce que change notre action ; les chiffres de résultat propres à l'association viennent du questionnaire, mais tu peux rappeler l'enjeu global.
-- Le ton est chaleureux, direct, crédible et immédiatement publiable.`;
+RÈGLES DE RÉDACTION — DÉVELOPPE VRAIMENT (c'est essentiel) :
+- Le site doit être RICHE et DÉVELOPPÉ. Chaque page a 4 à 6 sections. Chaque section "text" ou "textimage" fait 120 à 220 mots (2 à 4 vrais paragraphes), pleins de fond : contexte, faits, explications, exemples. Ne rends jamais une section creuse ou expédiée.
+- POUR CHAQUE CAUSE ET CHAQUE ACTION, EXPLIQUE POURQUOI C'EST IMPORTANT. C'est la demande centrale : ne te contente pas de dire ce que vous faites, explique l'enjeu — quel problème, quelle ampleur (avec chiffres/contexte fiables du secteur), qui est touché et comment, ce qui se passe si personne n'agit, et ce que votre action change concrètement.
+- LA PAGE « NOS ACTIONS » EST LA PLUS IMPORTANTE et la plus détaillée (5 à 6 sections) : décris chaque action une par une — en quoi elle consiste, pour qui, comment elle se déroule, pourquoi elle compte, ce qu'elle permet. C'est le cœur du site.
+- Enchaîne les pages dans cet ordre de priorité (les premières sont écrites en premier) : Accueil, Nos actions, Notre impact, Notre histoire, S'engager, Faire un don, Contact.
+- Chaque page a un rôle éditorial différent (présentation, contexte, action, impact, histoire, engagement, contact). Deux blocs ne disent jamais la même chose avec les mêmes mots.
+- Nourris chaque page du contexte, des statistiques et des références de la section ci-dessus. « Développer » veut dire apporter de la matière réelle (contexte, faits, enjeux, exemples concrets) — jamais des phrases creuses, du méta-texte ni du nombrilisme.
+- L'accueil dit qui nous sommes, pourquoi la cause compte (contexte et chiffres à l'appui), ce que nous faisons concrètement et comment aider.
+- La page impact décrit ce que change notre action et rappelle l'enjeu global chiffré ; les résultats propres à l'association viennent du questionnaire, le contexte du secteur de tes connaissances fiables.
+- Le ton est chaleureux, direct, crédible, développé et immédiatement publiable.`;
 
 // Walk the "pages" array object by object, brace-matching and respecting
 // strings, so we can recover every COMPLETE page even if the response was cut
@@ -136,11 +137,18 @@ function parseAiSite(text: string): AiSite | null {
   return null;
 }
 
+// The route runs under a 60s serverless limit. Rich, multi-page generation can
+// exceed that; if the platform kills the function mid-request we lose
+// everything. So we stream, accumulate text as it arrives, and self-abort a few
+// seconds before the limit — then salvage the pages that already completed.
+// Because the prompt emits pages in priority order (Accueil, Nos actions…), the
+// important pages survive even when the tail is cut.
+const GENERATION_DEADLINE_MS = 50000;
+
 async function callClaude(prompt: string): Promise<AiSite | null> {
   const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-  // Stream so a long generation keeps the connection alive instead of tripping
-  // the request/idle timeout (the classic reason the call "fails" and the
-  // deterministic fallback takes over). Salvage partial JSON on top of that.
+  let buffer = '';
+  let timer: ReturnType<typeof setTimeout> | undefined;
   try {
     const stream = client.messages.stream({
       model: MODEL,
@@ -149,12 +157,26 @@ async function callClaude(prompt: string): Promise<AiSite | null> {
       system: SYSTEM,
       messages: [{ role: 'user', content: prompt }],
     });
-    const msg = await stream.finalMessage();
-    const text = msg.content.map((b) => (b.type === 'text' ? b.text : '')).join('').trim();
-    return parseAiSite(text);
+    stream.on('text', (delta) => { buffer += delta; });
+
+    const completed = stream.finalMessage().then(() => true).catch((e) => {
+      console.error('AI stream error:', e);
+      return false;
+    });
+    const deadline = new Promise<'deadline'>((resolve) => {
+      timer = setTimeout(() => resolve('deadline'), GENERATION_DEADLINE_MS);
+    });
+    const outcome = await Promise.race([completed, deadline]);
+    if (outcome === 'deadline') { try { stream.abort(); } catch { /* already settled */ } }
+
+    // `buffer` holds all text emitted so far — the whole response when the
+    // stream finished, or a valid prefix when we aborted at the deadline.
+    return parseAiSite(buffer.trim());
   } catch (e) {
     console.error('AI generation failed:', e);
-    return null;
+    return parseAiSite(buffer.trim()); // salvage anything we captured
+  } finally {
+    if (timer) clearTimeout(timer);
   }
 }
 

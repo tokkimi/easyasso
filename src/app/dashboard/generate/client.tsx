@@ -5,6 +5,25 @@ import { Sparkles, Loader2, Wand2, Plus } from 'lucide-react';
 import { PageHeader } from '@/components/ui';
 import { ImageInput, Field } from '../editor/controls';
 
+function compressForGeneration(value: string, maxDimension: number, quality: number): Promise<string> {
+  if (!value.startsWith('data:image/')) return Promise.resolve(value);
+  return new Promise((resolve) => {
+    const image = new Image();
+    image.onload = () => {
+      const ratio = Math.min(1, maxDimension / Math.max(image.width, image.height));
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.max(1, Math.round(image.width * ratio));
+      canvas.height = Math.max(1, Math.round(image.height * ratio));
+      const context = canvas.getContext('2d');
+      if (!context) return resolve(value);
+      context.drawImage(image, 0, 0, canvas.width, canvas.height);
+      resolve(canvas.toDataURL('image/jpeg', quality));
+    };
+    image.onerror = () => resolve(value);
+    image.src = value;
+  });
+}
+
 export function GenerateClient({ orgName, profile, categories, welcome }: { orgName: string; profile: any; categories: { id: string; name: string }[]; welcome: boolean }) {
   const router = useRouter();
   const [f, setF] = useState({
@@ -20,14 +39,28 @@ export function GenerateClient({ orgName, profile, categories, welcome }: { orgN
   async function generate() {
     if (!f.mission.trim()) return;
     setBusy(true); setError('');
-    const res = await fetch('/api/site/generate', {
+    const compressedLogo = logo ? await compressForGeneration(logo, 600, 0.72) : undefined;
+    const compressedPhotos = await Promise.all(photos.filter(Boolean).map((photo) => compressForGeneration(photo, 900, 0.68)));
+    const basePayload = { ...f, name: f.name.trim(), logoUrl: compressedLogo };
+    // Keep the request safely below the hosting limit. URL-based photos do
+    // not add meaningful payload weight and are always retained.
+    const safePhotos: string[] = [];
+    for (const photo of compressedPhotos) {
+      const candidate = JSON.stringify({ ...basePayload, photos: [...safePhotos, photo] });
+      if (candidate.length < 3_200_000) safePhotos.push(photo);
+    }
+    const request = (payload: any) => fetch('/api/site/generate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...f, name: f.name.trim(), logoUrl: logo || undefined, photos: photos.filter(Boolean) }),
+      body: JSON.stringify(payload),
     });
+    let res = await request({ ...basePayload, photos: safePhotos });
+    // Absolute safety net for platform request-size limits: the site and its
+    // copy must still be generated. Images can then be added in the editor.
+    if (res.status === 413) res = await request({ ...f, name: f.name.trim(), photos: [] });
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
-      setError(data.error || 'La génération a échoué. Votre ancien site a été conservé. Réessayez.');
+      setError(data.error || `La génération a échoué (${res.status}). Votre ancien site a été conservé. Réessayez.`);
       setBusy(false);
       return;
     }

@@ -29,7 +29,7 @@ function isDuplicate(a: string, b: string) {
   const na = normalizeCopy(a);
   const nb = normalizeCopy(b);
   if (na.length < 90 || nb.length < 90) return false;
-  return na === nb || similarity(a, b) >= 0.92;
+  return na === nb || similarity(a, b) >= 0.82;
 }
 
 function paragraphs(value = '') {

@@ -4,11 +4,12 @@ import { requireApiPermission, handleApiError } from '@/lib/api';
 import { PERMISSIONS } from '@/lib/permissions';
 import { prisma } from '@/lib/prisma';
 import { buildGeneratedSite, type GenerateInput } from '@/lib/generate';
-import { aiGenerateSite } from '@/lib/ai';
+import { aiEnabled, aiGenerateSite } from '@/lib/ai';
 import { applyTemplateToSite } from '@/lib/apply-template';
 import { legalDocuments } from '@/lib/legal';
 import { defaultStyleFor } from '@/lib/blocks';
 import { removeGeneratedCopyDuplicates } from '@/lib/copy-quality';
+import { enhanceGeneratedEditorialCopy } from '@/lib/editorial-depth';
 
 // AI copywriting can take 20-40s; allow up to 60s.
 export const maxDuration = 60;
@@ -47,7 +48,10 @@ export async function POST(req: Request) {
 
     // Try AI generation first (rich, all pages); fall back to the deterministic
     // builder if no API key or the model call fails.
-    const generated = (await aiGenerateSite(input)) || buildGeneratedSite(input);
+    const aiConfigured = aiEnabled();
+    const aiGenerated = await aiGenerateSite(input);
+    console.log('[magic-generator] generation_source', { organizationId: ctx.org.id, source: aiGenerated ? 'ai' : 'deterministic', aiConfigured });
+    const generated = aiGenerated || buildGeneratedSite(input);
     const donation = {
       locale: input.language, title: input.language === 'en' ? 'Support our causes' : 'Soutenir nos causes',
       intro: input.language === 'en' ? 'Your donation directly supports all our work.' : 'Votre don soutient directement l’ensemble de nos actions.',
@@ -106,6 +110,7 @@ export async function POST(req: Request) {
         if (block.content?.button) block.content.button = fixDonationButton(block.content.button);
       }
     }
+    enhanceGeneratedEditorialCopy(generated, input);
     removeGeneratedCopyDuplicates(generated, input.language);
 
     const profile = previousProfile;

@@ -57,6 +57,9 @@ RÈGLES ÉDITORIALES OBLIGATOIRES :
 - Ajoute du contexte utile lorsque c’est pertinent : repères historiques, constats sociaux, cadre local, évolution d’une cause, rôle des associations, besoins du public, références à des institutions ou rapports connus.
 - Tu peux citer une statistique, un fait historique, une institution ou un rapport seulement si c’est une information très connue et fiable. Ne fabrique jamais de chiffre, de date, de nom de rapport, de partenaire ou de source. Si tu n’es pas sûr, écris un constat qualitatif sans chiffre précis.
 - Les références doivent rester lisibles pour le grand public : par exemple "les travaux d’acteurs publics et associatifs montrent que…" plutôt qu’une bibliographie lourde.
+- Quand tu utilises un repère fiable, intègre-le naturellement dans le texte : GIEC/IPBES pour climat et biodiversité, Convention internationale des droits de l’enfant de 1989 pour enfance/éducation, rôle historique des associations LGBTQIA+ pour les droits et la lutte contre les discriminations, acteurs médico-sociaux pour santé/handicap ou isolement. Ne cite ces repères que s’ils éclairent vraiment le projet.
+- Remplace les phrases creuses par des explications vérifiables : contexte du problème, besoin du public, réponse concrète de l’association, méthode, limites, suivi et impact attendu.
+- Interdiction des formulations vides : "nous faisons tout notre possible", "nous mettons tout en œuvre", "actions concrètes" sans expliquer lesquelles, "en faveur de [mot-clé]", "une cause importante" sans contexte.
 - Chaque page comporte 5 à 8 sections utiles et différentes.
 - Chaque section de texte contient 160 à 280 mots, répartis en 2 à 4 paragraphes.
 - Les cartes contiennent des explications concrètes de 45 à 90 mots chacune.

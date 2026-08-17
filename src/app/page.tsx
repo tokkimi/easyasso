@@ -36,7 +36,7 @@ export default function LandingPage() {
 
       {/* Hero */}
       <section className="mx-auto max-w-6xl px-6 pb-16 pt-10 text-center">
-        <span className="badge bg-brand-50 text-brand-700">Pensé pour les associations, simple pour tous</span>
+        <div className="flex flex-wrap items-center justify-center gap-2"><span className="badge bg-brand-50 text-brand-700">Pensé pour les associations, simple pour tous</span><span className="badge bg-green-100 text-green-800">3 jours gratuits, sans carte bancaire</span></div>
         <h1 className="mx-auto mt-5 max-w-3xl text-4xl font-extrabold leading-tight tracking-tight text-gray-900 md:text-6xl">
           Le site de votre association,<br /> en ligne en <span className="text-brand-600">quelques minutes</span>.
         </h1>
@@ -46,11 +46,12 @@ export default function LandingPage() {
         </p>
         <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
           <Link href="/register" className="btn btn-primary px-6 py-3 text-base">
-            Commencer — {PRICE} € une seule fois
+            <span>Commencer —</span> {PRICE} <span>€ une seule fois</span>
           </Link>
           <Link href="/login" className="btn btn-ghost px-6 py-3 text-base">J’ai déjà un compte</Link>
         </div>
-        <p className="mt-3 text-sm text-gray-500">Paiement unique · Site illimité · Sans engagement</p>
+        <p className="mt-3 text-sm font-medium text-green-700">Testez tout gratuitement pendant 3 jours. Payez seulement si EasyAsso vous convient.</p>
+        <p className="mt-1 text-sm text-gray-500">Paiement unique · Site illimité · Sans engagement</p>
       </section>
 
       {/* Magic builder */}

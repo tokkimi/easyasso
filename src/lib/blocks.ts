@@ -176,7 +176,7 @@ export function defaultStyleFor(type: BlockType): BlockStyle {
     case 'contact':
     case 'donation':
     case 'leetchi':
-      return { paddingY: 40, background: '#f1f5ff' };
+      return { paddingY: 40 };
     default:
       return { align: 'center', paddingY: 16 };
   }

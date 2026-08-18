@@ -17,12 +17,20 @@ const CARD_ICONS: Record<string, any> = {
 const WIDE = new Set(['textimage', 'gallery', 'cards', 'contact', 'donation', 'leetchi']);
 const FULL = new Set(['banner', 'slideshow', 'cta']);
 
+// The old default button colour was a fixed blue; on a themed site it should
+// follow the site's brand colour instead.
+const LEGACY_BLUE = '#1b5df5';
+function themedColor(color: string) {
+  return color?.toLowerCase() === LEGACY_BLUE ? 'var(--brand)' : color;
+}
+
 function Btn({ b, basePath = '' }: { b: ButtonConfig; basePath?: string }) {
   if (!b?.text) return null;
   const href = b.href?.startsWith('/') ? `${basePath}${b.href}` : safePublicUrl(b.href) || '#';
+  const color = themedColor(b.color);
   const style = b.variant === 'solid'
-    ? { background: b.color, color: b.color.toLowerCase() === '#ffffff' ? '#111827' : '#fff', border: `2px solid ${b.color}` }
-    : { background: 'transparent', color: b.color, border: `2px solid ${b.color}` };
+    ? { background: color, color: b.color.toLowerCase() === '#ffffff' ? '#111827' : '#fff', border: `2px solid ${color}` }
+    : { background: 'transparent', color, border: `2px solid ${color}` };
   return (
     <div className={`flex ${justifyClass(b.align)}`}>
       <a href={href} style={style} className="inline-flex items-center rounded-lg px-6 py-3 text-sm font-semibold transition hover:opacity-90">{b.text}</a>
@@ -32,12 +40,15 @@ function Btn({ b, basePath = '' }: { b: ButtonConfig; basePath?: string }) {
 
 export function PublicBlock({ type, content, style, basePath = '', organizationId }: { type: string; content: any; style: BlockStyle; basePath?: string; organizationId?: string }) {
   const inner = renderInner(type, content, style, basePath, organizationId);
+  // Drop the old default sky-blue band (it also left white borders on the sides
+  // of width-constrained blocks).
+  const cleanBg = (bg?: string) => (bg && bg.toLowerCase() !== '#f1f5ff' ? bg : undefined);
   if (FULL.has(type)) {
-    return <div style={blockWrapperStyle({ ...style, background: type === 'cta' ? style.background : undefined })} className="w-full">{inner}</div>;
+    return <div style={blockWrapperStyle({ ...style, background: type === 'cta' ? cleanBg(style.background) : undefined })} className="w-full">{inner}</div>;
   }
   const maxW = WIDE.has(type) ? 'max-w-5xl' : 'max-w-3xl';
   return (
-    <div style={blockWrapperStyle(style)} className={`public-block-shell mx-auto w-full ${maxW} px-4 ${alignClass(style.align)}`}>
+    <div style={blockWrapperStyle({ ...style, background: cleanBg(style.background) })} className={`public-block-shell mx-auto w-full ${maxW} px-4 ${alignClass(style.align)}`}>
       {inner}
     </div>
   );

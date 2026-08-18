@@ -264,7 +264,9 @@ function sectionsToBlocks(sections: Section[], nextPhoto: (w?: number, h?: numbe
         blocks.push({ type: 'cta', content: { title: s.title, text: s.text || '', button: { text: s.buttonText || donateLabel, href: '/don', color: '#1b5df5', variant: 'solid', align: 'center' } }, style: { paddingY: 44 } });
         break;
       case 'gallery':
-        blocks.push({ type: 'gallery', content: { columns: 3, images: Array.from({ length: 6 }, () => nextPhoto(600, 600)) } });
+        // Keep the gallery small so it doesn't force repeats when the curated
+        // photo pool is limited (uploaded photos / Unsplash key add more).
+        blocks.push({ type: 'gallery', content: { columns: 3, images: Array.from({ length: 3 }, () => nextPhoto(600, 600)) } });
         break;
     }
   }

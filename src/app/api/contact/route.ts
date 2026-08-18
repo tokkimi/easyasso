@@ -6,7 +6,7 @@ import { canShowPublicSite } from '@/lib/plan';
 
 const schema = z.object({
   organizationId: z.string().min(1),
-  name: z.string().trim().min(2).max(150),
+  name: z.string().trim().min(1).max(150),
   email: z.string().trim().email().max(250),
   phone: z.string().trim().max(60).optional().default(''),
   subject: z.string().trim().max(200).optional().default(''),

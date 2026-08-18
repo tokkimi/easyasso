@@ -96,6 +96,7 @@ model Organization {
   subscribers   NewsletterSubscriber[]
   events        SiteEvent[]
   contactMessages ContactMessage[]
+  platformMessages PlatformMessage[]
   roles         Role[]
 }
 
@@ -320,6 +321,20 @@ model SiteEvent {
   referrer       String?
   createdAt      DateTime @default(now())
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  @@index([organizationId, createdAt])
+}
+
+// Two-way conversation between the EasyAsso platform team and an association.
+model PlatformMessage {
+  id             String   @id @default(cuid())
+  organizationId String
+  fromAdmin      Boolean  @default(false)
+  authorName     String
+  body           String
+  readByAdmin    DateTime?
+  readByOrg      DateTime?
+  createdAt      DateTime @default(now())
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   @@index([organizationId, createdAt])
 }
 

@@ -6,6 +6,10 @@ import { MessagesClient } from './client';
 export const dynamic = 'force-dynamic';
 export default async function MessagesPage() {
   const ctx = await requirePermission(PERMISSIONS.SITE_VIEW);
-  const messages = await prisma.contactMessage.findMany({ where: { organizationId: ctx.organization!.id, archivedAt: null }, orderBy: { createdAt: 'desc' } });
-  return <MessagesClient initial={JSON.parse(JSON.stringify(messages))} />;
+  const orgId = ctx.organization!.id;
+  const [messages, conversation] = await Promise.all([
+    prisma.contactMessage.findMany({ where: { organizationId: orgId, archivedAt: null }, orderBy: { createdAt: 'desc' } }),
+    prisma.platformMessage.findMany({ where: { organizationId: orgId }, orderBy: { createdAt: 'asc' }, take: 200 }),
+  ]);
+  return <MessagesClient initial={JSON.parse(JSON.stringify(messages))} conversation={JSON.parse(JSON.stringify(conversation))} />;
 }

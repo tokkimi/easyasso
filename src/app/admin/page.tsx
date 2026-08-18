@@ -17,6 +17,7 @@ export default async function AdminPage() {
           include: { user: true },
           take: 1,
         },
+        platformMessages: { orderBy: { createdAt: 'asc' }, take: 200 },
       },
     }),
     prisma.user.count(),
@@ -67,6 +68,8 @@ export default async function AdminPage() {
             proofNote: manual.proofNote || '',
             proofFile: manual.proofFile || null,
           },
+          thread: org.platformMessages.map((m) => ({ id: m.id, fromAdmin: m.fromAdmin, authorName: m.authorName, body: m.body, createdAt: m.createdAt.toISOString() })),
+          unreadFromOrg: org.platformMessages.filter((m) => !m.fromAdmin && !m.readByAdmin).length,
         };
       })}
     />

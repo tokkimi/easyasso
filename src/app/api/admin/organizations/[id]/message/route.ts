@@ -7,12 +7,12 @@ import { prisma } from '@/lib/prisma';
 const SENDER_NAME = 'Easy Asso Manager';
 
 const schema = z.object({
-  subject: z.string().trim().max(200).optional().default(''),
-  message: z.string().trim().min(1).max(8000),
+  body: z.string().trim().min(1).max(8000),
 });
 
+// Admin sends a message into the association's conversation.
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
-  const admin = await requirePlatformAdmin();
+  await requirePlatformAdmin();
   const { id } = await params;
   const parsed = schema.safeParse(await req.json().catch(() => ({})));
   if (!parsed.success) return NextResponse.json({ error: 'Message invalide.' }, { status: 400 });
@@ -20,15 +20,19 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   const org = await prisma.organization.findUnique({ where: { id }, select: { id: true } });
   if (!org) return NextResponse.json({ error: 'Organisation introuvable.' }, { status: 404 });
 
-  await prisma.contactMessage.create({
-    data: {
-      organizationId: id,
-      name: SENDER_NAME,
-      email: admin.email || 'manager@easyasso',
-      subject: parsed.data.subject || 'Message de l’équipe EasyAsso',
-      message: parsed.data.message,
-    },
+  const message = await prisma.platformMessage.create({
+    data: { organizationId: id, fromAdmin: true, authorName: SENDER_NAME, body: parsed.data.body, readByAdmin: new Date() },
   });
+  return NextResponse.json({ ok: true, message: JSON.parse(JSON.stringify(message)) });
+}
 
+// Admin marks the association's replies as read.
+export async function PATCH(_req: Request, { params }: { params: Promise<{ id: string }> }) {
+  await requirePlatformAdmin();
+  const { id } = await params;
+  await prisma.platformMessage.updateMany({
+    where: { organizationId: id, fromAdmin: false, readByAdmin: null },
+    data: { readByAdmin: new Date() },
+  });
   return NextResponse.json({ ok: true });
 }

@@ -40,7 +40,11 @@ type AdminOrg = {
     proofNote?: string;
     proofFile?: { name: string; type: string; dataUrl: string } | null;
   };
+  thread: ThreadMsg[];
+  unreadFromOrg: number;
 };
+
+type ThreadMsg = { id: string; fromAdmin: boolean; authorName: string; body: string; createdAt: string };
 
 type EditState = {
   name: string;
@@ -89,18 +93,24 @@ export function AdminClient({ organizations, stats }: { organizations: AdminOrg[
     updateLocal(org.id, data.organization);
   }
 
-  async function sendMessage(org: AdminOrg, subject: string, message: string) {
+  async function sendMessage(org: AdminOrg, body: string) {
     setBusy(`msg:${org.id}`);
     const res = await fetch(`/api/admin/organizations/${org.id}/message`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ subject, message }),
+      body: JSON.stringify({ body }),
     });
     const data = await res.json().catch(() => ({}));
     setBusy('');
     if (!res.ok) { alert(data.error || 'Envoi impossible.'); return false; }
-    alert(`Message envoyé à ${org.name}. Il apparaît dans sa messagerie (expéditeur : Easy Asso Manager).`);
+    if (data.message) updateLocal(org.id, { thread: [...org.thread, data.message] });
     return true;
+  }
+
+  async function markThreadRead(org: AdminOrg) {
+    if (!org.unreadFromOrg) return;
+    updateLocal(org.id, { unreadFromOrg: 0 });
+    await fetch(`/api/admin/organizations/${org.id}/message`, { method: 'PATCH' }).catch(() => {});
   }
 
   async function remove(org: AdminOrg) {
@@ -186,18 +196,18 @@ export function AdminClient({ organizations, stats }: { organizations: AdminOrg[
           </div>
         </section>
 
-        <OrgList title="Paiements à vérifier" empty="Aucun paiement en attente." items={pending} busy={busy} edits={edits} references={references} onReference={setReferences} onEdit={patchEdit} onSave={save} onActivate={activate} onRemove={remove} onMessage={sendMessage} />
+        <OrgList title="Paiements à vérifier" empty="Aucun paiement en attente." items={pending} busy={busy} edits={edits} references={references} onReference={setReferences} onEdit={patchEdit} onSave={save} onActivate={activate} onRemove={remove} onMessage={sendMessage} onMarkRead={markThreadRead} />
         <div className="mt-10">
-          <OrgList title="Associations actives" empty="Aucune association active." items={active} busy={busy} edits={edits} references={references} onReference={setReferences} onEdit={patchEdit} onSave={save} onActivate={activate} onRemove={remove} onMessage={sendMessage} />
+          <OrgList title="Associations actives" empty="Aucune association active." items={active} busy={busy} edits={edits} references={references} onReference={setReferences} onEdit={patchEdit} onSave={save} onActivate={activate} onRemove={remove} onMessage={sendMessage} onMarkRead={markThreadRead} />
         </div>
       </div>
     </div>
   );
 }
 
-function OrgList({ title, empty, items, busy, edits, references, onReference, onEdit, onSave, onActivate, onRemove, onMessage }: {
+function OrgList({ title, empty, items, busy, edits, references, onReference, onEdit, onSave, onActivate, onRemove, onMessage, onMarkRead }: {
   title: string; empty: string; items: AdminOrg[]; busy: string; edits: Record<string, EditState>; references: Record<string, string>;
-  onReference: Dispatch<SetStateAction<Record<string, string>>>; onEdit: (id: string, patch: Partial<EditState>) => void; onSave: (org: AdminOrg) => void; onActivate: (org: AdminOrg) => void; onRemove: (org: AdminOrg) => void; onMessage: (org: AdminOrg, subject: string, message: string) => Promise<boolean>;
+  onReference: Dispatch<SetStateAction<Record<string, string>>>; onEdit: (id: string, patch: Partial<EditState>) => void; onSave: (org: AdminOrg) => void; onActivate: (org: AdminOrg) => void; onRemove: (org: AdminOrg) => void; onMessage: (org: AdminOrg, body: string) => Promise<boolean>; onMarkRead: (org: AdminOrg) => void;
 }) {
   return (
     <section className="space-y-4">
@@ -216,24 +226,24 @@ function OrgList({ title, empty, items, busy, edits, references, onReference, on
           onActivate={() => onActivate(org)}
           onRemove={() => onRemove(org)}
           onMessage={onMessage}
+          onMarkRead={onMarkRead}
         />
       ))}
     </section>
   );
 }
 
-function OrgCard({ org, edit, busy, reference, onReference, onEdit, onSave, onActivate, onRemove, onMessage }: {
-  org: AdminOrg; edit: EditState; busy: string; reference: string; onReference: (value: string) => void; onEdit: (patch: Partial<EditState>) => void; onSave: () => void; onActivate: () => void; onRemove: () => void; onMessage: (org: AdminOrg, subject: string, message: string) => Promise<boolean>;
+function OrgCard({ org, edit, busy, reference, onReference, onEdit, onSave, onActivate, onRemove, onMessage, onMarkRead }: {
+  org: AdminOrg; edit: EditState; busy: string; reference: string; onReference: (value: string) => void; onEdit: (patch: Partial<EditState>) => void; onSave: () => void; onActivate: () => void; onRemove: () => void; onMessage: (org: AdminOrg, body: string) => Promise<boolean>; onMarkRead: (org: AdminOrg) => void;
 }) {
   const isActive = org.planStatus === 'ACTIVE';
   const hasProof = Boolean(org.manual?.proofSubmittedAt || org.manual?.proofFile || org.manual?.proofNote);
-  const [msgSubject, setMsgSubject] = useState('');
   const [msgBody, setMsgBody] = useState('');
   const sendingMessage = busy === `msg:${org.id}`;
   async function submitMessage() {
     if (!msgBody.trim()) return;
-    const ok = await onMessage(org, msgSubject.trim(), msgBody.trim());
-    if (ok) { setMsgSubject(''); setMsgBody(''); }
+    const ok = await onMessage(org, msgBody.trim());
+    if (ok) setMsgBody('');
   }
   return (
     <article className="card">
@@ -294,13 +304,26 @@ function OrgCard({ org, edit, busy, reference, onReference, onEdit, onSave, onAc
         </div>
       </details>
 
-      <details className="mt-4 rounded-2xl border border-brand-200 bg-brand-50 p-4">
-        <summary className="flex cursor-pointer items-center gap-2 font-bold text-gray-900"><MessageSquare className="h-4 w-4" /> Écrire à {org.ownerName || 'ce responsable'}</summary>
-        <p className="mt-2 text-xs text-gray-600">Le message arrive dans la messagerie de l’association (onglet « Messages »). L’expéditeur affiché sera <strong>Easy Asso Manager</strong>.</p>
-        <div className="mt-3 space-y-3">
-          <Field label="Objet (optionnel)"><input className="input" value={msgSubject} onChange={(event) => setMsgSubject(event.target.value)} placeholder="Ex : Bienvenue sur EasyAsso" /></Field>
-          <Field label="Message"><textarea className="input min-h-[110px]" value={msgBody} onChange={(event) => setMsgBody(event.target.value)} placeholder="Votre message à l’association…" /></Field>
-          <button onClick={submitMessage} disabled={sendingMessage || !msgBody.trim()} className="btn btn-primary disabled:opacity-50"><Send className="h-4 w-4" /> {sendingMessage ? 'Envoi…' : 'Envoyer le message'}</button>
+      <details className="mt-4 rounded-2xl border border-brand-200 bg-brand-50 p-4" onToggle={(e) => { if ((e.target as HTMLDetailsElement).open) onMarkRead(org); }}>
+        <summary className="flex cursor-pointer items-center gap-2 font-bold text-gray-900">
+          <MessageSquare className="h-4 w-4" /> Messagerie avec {org.ownerName || 'ce responsable'}
+          {org.unreadFromOrg > 0 && <span className="badge bg-red-100 text-red-700">{org.unreadFromOrg} nouveau{org.unreadFromOrg > 1 ? 'x' : ''}</span>}
+        </summary>
+        <p className="mt-2 text-xs text-gray-600">Conversation à double sens. L’association vous voit sous le nom <strong>Easy Asso Manager</strong> et ses réponses reviennent ici.</p>
+        <div className="mt-3 max-h-72 space-y-2 overflow-y-auto rounded-xl bg-white p-3 ring-1 ring-gray-100">
+          {org.thread.length === 0 && <p className="py-6 text-center text-sm text-gray-400">Aucun message pour l’instant.</p>}
+          {org.thread.map((m) => (
+            <div key={m.id} className={`flex ${m.fromAdmin ? 'justify-end' : 'justify-start'}`}>
+              <div className={`max-w-[80%] rounded-2xl px-4 py-2 text-sm ${m.fromAdmin ? 'bg-brand-600 text-white' : 'bg-gray-100 text-gray-800'}`}>
+                <p className="whitespace-pre-wrap leading-relaxed">{m.body}</p>
+                <p className={`mt-1 text-[11px] ${m.fromAdmin ? 'text-white/70' : 'text-gray-500'}`}>{m.authorName} · {formatDate(m.createdAt)}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="mt-3 flex items-end gap-2">
+          <textarea className="input min-h-[70px] flex-1" value={msgBody} onChange={(event) => setMsgBody(event.target.value)} placeholder="Votre message à l’association…" />
+          <button onClick={submitMessage} disabled={sendingMessage || !msgBody.trim()} className="btn btn-primary disabled:opacity-50"><Send className="h-4 w-4" /> {sendingMessage ? 'Envoi…' : 'Envoyer'}</button>
         </div>
       </details>
 

@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState, type Dispatch, type ReactNode, type SetStateAction } from 'react';
-import { CheckCircle, Download, ExternalLink, FileText, MessageSquare, Pencil, Save, Send, ShieldCheck, Trash2, Users, WalletCards } from 'lucide-react';
+import { CheckCircle, Clock, Download, ExternalLink, FileText, LayoutDashboard, MessageSquare, Pencil, Save, Send, ShieldCheck, Trash2, Users, WalletCards } from 'lucide-react';
 
 type AdminStats = {
   organizations: number;
@@ -59,6 +59,7 @@ type EditState = {
 
 export function AdminClient({ organizations, stats }: { organizations: AdminOrg[]; stats: AdminStats }) {
   const [items, setItems] = useState(organizations);
+  const [tab, setTab] = useState<'overview' | 'pending' | 'active' | 'accounting'>('overview');
   const [busy, setBusy] = useState('');
   const [references, setReferences] = useState<Record<string, string>>({});
   const [edits, setEdits] = useState<Record<string, EditState>>(() => Object.fromEntries(organizations.map((org) => [org.id, toEdit(org)])));
@@ -153,55 +154,83 @@ export function AdminClient({ organizations, stats }: { organizations: AdminOrg[
   ];
   const csv = `data:text/csv;charset=utf-8,${encodeURIComponent(exportRows.map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(';')).join('\n'))}`;
 
+  const unreadMessages = items.reduce((sum, org) => sum + (org.unreadFromOrg || 0), 0);
+
   return (
     <div className="min-h-screen bg-gray-50 px-4 py-8 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
-        <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <p className="flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-brand-700"><ShieldCheck className="h-4 w-4" /> Admin EasyAsso</p>
-            <h1 className="mt-2 text-3xl font-black text-gray-900">Pilotage, utilisateurs et comptabilité</h1>
-            <p className="mt-2 text-gray-600">Gérez les associations, les responsables, les statuts, les sites publiés et les virements de 250 €.</p>
-          </div>
-          <a href={csv} download="easyasso-comptabilite-clients.csv" className="btn btn-ghost"><Download className="h-4 w-4" /> Export comptable</a>
+        <div className="mb-5">
+          <p className="flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-brand-700"><ShieldCheck className="h-4 w-4" /> Admin EasyAsso</p>
+          <h1 className="mt-2 text-3xl font-black text-gray-900">Tableau de bord</h1>
         </div>
 
-        <section className="mb-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          <StatCard icon={<Users className="h-5 w-5" />} label="Associations" value={items.length} hint={`${active.length} actives · ${pending.length} à traiter`} />
-          <StatCard icon={<Users className="h-5 w-5" />} label="Utilisateurs" value={stats.users} hint={`${stats.trials} essais enregistrés`} />
-          <StatCard icon={<WalletCards className="h-5 w-5" />} label="CA validé" value={formatEuros(active.length * 250)} hint="Paiements EasyAsso confirmés" />
-          <StatCard icon={<WalletCards className="h-5 w-5" />} label="À encaisser" value={formatEuros(pending.length * 250)} hint={`${stats.contactMessages} messages visiteurs au total`} />
-        </section>
+        <nav className="mb-8 flex gap-1 overflow-x-auto rounded-2xl bg-white p-1.5 shadow-sm ring-1 ring-gray-100">
+          <TabButton active={tab === 'overview'} onClick={() => setTab('overview')} icon={<LayoutDashboard className="h-4 w-4" />} label="Tableau de bord" />
+          <TabButton active={tab === 'pending'} onClick={() => setTab('pending')} icon={<Clock className="h-4 w-4" />} label="Paiements à vérifier" badge={pending.length} />
+          <TabButton active={tab === 'active'} onClick={() => setTab('active')} icon={<Users className="h-4 w-4" />} label="Associations" badge={active.length} />
+          <TabButton active={tab === 'accounting'} onClick={() => setTab('accounting')} icon={<WalletCards className="h-4 w-4" />} label="Comptabilité" />
+        </nav>
 
-        <section className="mb-10 rounded-3xl bg-white p-5 shadow-sm ring-1 ring-gray-100">
-          <h2 className="text-xl font-extrabold text-gray-900">Comptabilité EasyAsso</h2>
-          <p className="mb-4 text-sm text-gray-600">Une ligne par dossier client : paiement unique, statut et référence bancaire.</p>
-          <div className="overflow-x-auto">
-            <table className="min-w-[860px] w-full text-left text-sm">
-              <thead className="text-xs uppercase tracking-wide text-gray-500">
-                <tr><th className="py-3 pr-4">Date</th><th className="py-3 pr-4">Association</th><th className="py-3 pr-4">Responsable</th><th className="py-3 pr-4">Statut</th><th className="py-3 pr-4">Montant</th><th className="py-3 pr-4">Référence</th></tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {items.map((org) => (
-                  <tr key={org.id}>
-                    <td className="py-3 pr-4 text-gray-600">{formatDate(org.paidAt || org.manual.validatedAt || org.createdAt)}</td>
-                    <td className="py-3 pr-4 font-semibold text-gray-900">{org.name}</td>
-                    <td className="py-3 pr-4 text-gray-600">{org.ownerName || '—'} · {org.ownerEmail || '—'}</td>
-                    <td className="py-3 pr-4"><StatusBadge org={org} /></td>
-                    <td className="py-3 pr-4 font-bold text-gray-900">{formatEuros(org.manual.amountEur || 250)}</td>
-                    <td className="py-3 pr-4 text-gray-600">{org.manual.bankReference || org.manual.reference || '—'}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </section>
+        {tab === 'overview' && (
+          <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <StatCard icon={<Users className="h-5 w-5" />} label="Associations" value={items.length} hint={`${active.length} actives · ${pending.length} à traiter`} />
+            <StatCard icon={<Users className="h-5 w-5" />} label="Utilisateurs" value={stats.users} hint={`${stats.trials} essais enregistrés`} />
+            <StatCard icon={<WalletCards className="h-5 w-5" />} label="CA validé" value={formatEuros(active.length * 250)} hint="Paiements EasyAsso confirmés" />
+            <StatCard icon={<WalletCards className="h-5 w-5" />} label="À encaisser" value={formatEuros(pending.length * 250)} hint={`${pending.length} dossier(s) en attente`} />
+            <StatCard icon={<MessageSquare className="h-5 w-5" />} label="Réponses non lues" value={unreadMessages} hint="Messages d’associations à lire" />
+            <StatCard icon={<MessageSquare className="h-5 w-5" />} label="Messages visiteurs" value={stats.contactMessages} hint="Reçus sur les sites publiés" />
+          </section>
+        )}
 
-        <OrgList title="Paiements à vérifier" empty="Aucun paiement en attente." items={pending} busy={busy} edits={edits} references={references} onReference={setReferences} onEdit={patchEdit} onSave={save} onActivate={activate} onRemove={remove} onMessage={sendMessage} onMarkRead={markThreadRead} />
-        <div className="mt-10">
+        {tab === 'pending' && (
+          <OrgList title="Paiements à vérifier" empty="Aucun paiement en attente." items={pending} busy={busy} edits={edits} references={references} onReference={setReferences} onEdit={patchEdit} onSave={save} onActivate={activate} onRemove={remove} onMessage={sendMessage} onMarkRead={markThreadRead} />
+        )}
+
+        {tab === 'active' && (
           <OrgList title="Associations actives" empty="Aucune association active." items={active} busy={busy} edits={edits} references={references} onReference={setReferences} onEdit={patchEdit} onSave={save} onActivate={activate} onRemove={remove} onMessage={sendMessage} onMarkRead={markThreadRead} />
-        </div>
+        )}
+
+        {tab === 'accounting' && (
+          <section className="rounded-3xl bg-white p-5 shadow-sm ring-1 ring-gray-100">
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h2 className="text-xl font-extrabold text-gray-900">Comptabilité EasyAsso</h2>
+                <p className="text-sm text-gray-600">Une ligne par dossier client : paiement unique, statut et référence bancaire.</p>
+              </div>
+              <a href={csv} download="easyasso-comptabilite-clients.csv" className="btn btn-ghost"><Download className="h-4 w-4" /> Export comptable</a>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="min-w-[860px] w-full text-left text-sm">
+                <thead className="text-xs uppercase tracking-wide text-gray-500">
+                  <tr><th className="py-3 pr-4">Date</th><th className="py-3 pr-4">Association</th><th className="py-3 pr-4">Responsable</th><th className="py-3 pr-4">Statut</th><th className="py-3 pr-4">Montant</th><th className="py-3 pr-4">Référence</th></tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {items.map((org) => (
+                    <tr key={org.id}>
+                      <td className="py-3 pr-4 text-gray-600">{formatDate(org.paidAt || org.manual.validatedAt || org.createdAt)}</td>
+                      <td className="py-3 pr-4 font-semibold text-gray-900">{org.name}</td>
+                      <td className="py-3 pr-4 text-gray-600">{org.ownerName || '—'} · {org.ownerEmail || '—'}</td>
+                      <td className="py-3 pr-4"><StatusBadge org={org} /></td>
+                      <td className="py-3 pr-4 font-bold text-gray-900">{formatEuros(org.manual.amountEur || 250)}</td>
+                      <td className="py-3 pr-4 text-gray-600">{org.manual.bankReference || org.manual.reference || '—'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        )}
       </div>
     </div>
+  );
+}
+
+function TabButton({ active, onClick, icon, label, badge }: { active: boolean; onClick: () => void; icon: ReactNode; label: string; badge?: number }) {
+  return (
+    <button onClick={onClick} className={`flex shrink-0 items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold transition ${active ? 'bg-brand-600 text-white shadow-sm' : 'text-gray-600 hover:bg-gray-100'}`}>
+      {icon} {label}
+      {badge != null && badge > 0 && <span className={`rounded-full px-2 py-0.5 text-xs ${active ? 'bg-white/20 text-white' : 'bg-gray-200 text-gray-700'}`}>{badge}</span>}
+    </button>
   );
 }
 

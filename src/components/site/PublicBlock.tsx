@@ -64,7 +64,7 @@ function renderInner(type: string, content: any, style: BlockStyle, basePath: st
       return content.url ? (
         <figure>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={safePublicUrl(content.url, { allowDataImage: true })} alt={content.alt || ''} className="mx-auto max-h-[520px] w-auto rounded-xl" />
+          <img src={safePublicUrl(content.url, { allowDataImage: true })} alt={content.alt || ''} loading="lazy" decoding="async" className="mx-auto max-h-[520px] w-auto rounded-xl" />
           {content.caption && <figcaption className="mt-2 text-sm text-gray-500">{content.caption}</figcaption>}
         </figure>
       ) : null;
@@ -139,7 +139,7 @@ function renderInner(type: string, content: any, style: BlockStyle, basePath: st
       const right = (content.imageSide || 'right') === 'right';
       const img = content.image ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={safePublicUrl(content.image, { allowDataImage: true })} alt="" className="h-full max-h-[420px] w-full rounded-2xl object-cover" />
+        <img src={safePublicUrl(content.image, { allowDataImage: true })} alt="" loading="lazy" decoding="async" className="h-full max-h-[420px] w-full rounded-2xl object-cover" />
       ) : null;
       const txt = (
         <div className="flex flex-col justify-center text-left">
@@ -161,7 +161,7 @@ function renderInner(type: string, content: any, style: BlockStyle, basePath: st
         <div className={`public-responsive-gallery ${gridCls}`}>
           {(content.images || []).map((src: string, i: number) => (
             // eslint-disable-next-line @next/next/no-img-element
-            <img key={i} src={safePublicUrl(src, { allowDataImage: true })} alt="" className="public-scroll-item aspect-square rounded-xl object-cover" />
+            <img key={i} src={safePublicUrl(src, { allowDataImage: true })} alt="" loading="lazy" decoding="async" className="public-scroll-item aspect-square rounded-xl object-cover" />
           ))}
         </div>
       );

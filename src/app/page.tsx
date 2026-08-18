@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Check, MousePointerClick, Palette, HandCoins, Users, BarChart3, Globe, Sparkles, WandSparkles, FileText, RefreshCw, ExternalLink, Gift } from 'lucide-react';
+import { Check, MousePointerClick, Palette, HandCoins, Users, BarChart3, Globe, Sparkles, WandSparkles, FileText, RefreshCw, ExternalLink, Gift, Zap, Clock, Wallet, HeartHandshake, Recycle, Server, Gauge } from 'lucide-react';
 
 const PRICE = process.env.NEXT_PUBLIC_PRICE_EUR || '250';
 
@@ -26,6 +26,22 @@ const magicTools = [
   { icon: Gift, title: 'Cagnotte Leetchi intégrée', text: 'Ajoutez votre lien Leetchi pour afficher une cagnotte avec jauge et bouton de participation directement sur le site.' },
   { icon: Globe, title: 'Site et espace en français ou en anglais', text: 'La langue choisie à l’inscription ou dans les réglages est respectée dans le générateur, le profil et les pages créées.' },
   { icon: Users, title: 'Contact, messages et données utiles', text: 'Les vraies coordonnées, le formulaire de contact, les messages reçus et les informations donateurs remontent dans le tableau de bord.' },
+];
+
+const atouts = [
+  { icon: Zap, title: 'Droit à l’essentiel', text: 'Un parcours simple qui va à ce qui compte : présenter l’association, collecter des dons, gérer le reste. Pas d’usine à gaz.' },
+  { icon: Clock, title: 'En ligne en quelques minutes', text: 'L’outil magique rédige et structure votre site à partir de quelques informations. Vous ajustez ensuite librement.' },
+  { icon: Wallet, title: 'Un prix pensé pour les associations', text: `Un paiement unique de ${PRICE} €, à vie, sans abonnement — loin des milliers d’euros d’une agence et d’un hébergement annuel.` },
+  { icon: MousePointerClick, title: 'Autonomie totale', text: 'Vous créez, modifiez et gérez tout vous-même, sans dépendre d’un prestataire ni d’aucune compétence technique.' },
+  { icon: HandCoins, title: 'Vraiment tout-en-un', text: 'Site, dons, reçus fiscaux, CRM donateurs, comptabilité, statistiques et référencement réunis au même endroit.' },
+  { icon: HeartHandshake, title: 'Accessible à toutes', text: 'Pensé pour les petites structures sans budget : une présence professionnelle ne devrait pas être réservée à celles qui peuvent se l’offrir.' },
+];
+
+const eco = [
+  { icon: Recycle, title: 'Mutualisé', text: 'Une infrastructure partagée plutôt qu’un site sur-mesure par association.' },
+  { icon: Server, title: 'Pages en cache', text: 'Servies depuis un CDN : moins de calcul à chaque visite.' },
+  { icon: Gauge, title: 'Images optimisées', text: 'Compressées et dimensionnées pour alléger le chargement.' },
+  { icon: FileText, title: 'Dématérialisé', text: 'Reçus, newsletters et dons en ligne : moins de papier et d’envois.' },
 ];
 
 export default function LandingPage() {
@@ -153,6 +169,61 @@ export default function LandingPage() {
               <p className="mt-1 text-sm text-gray-600">{f.text}</p>
             </div>
           ))}
+        </div>
+      </section>
+
+      {/* Pourquoi Easy Asso */}
+      <section className="border-t border-gray-100 bg-gray-50 py-16">
+        <div className="mx-auto max-w-6xl px-6">
+          <div className="mx-auto max-w-3xl text-center">
+            <h2 className="text-3xl font-extrabold tracking-tight text-gray-900 md:text-4xl">Pourquoi Easy Asso</h2>
+            <p className="mt-4 text-lg leading-8 text-gray-600">
+              Easy Asso est né d’une conviction simple : une association ne devrait pas avoir besoin du budget d’une agence pour exister en ligne.
+              Nous avons conçu un outil qui va droit à l’essentiel, à un prix pensé pour les petites structures, pour que chacune puisse se présenter,
+              collecter des dons et gérer son activité — sans compétence technique et sans y passer des semaines.
+            </p>
+          </div>
+          <div className="mt-12 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {atouts.map((a) => (
+              <div key={a.title} className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+                <div className="grid h-11 w-11 place-items-center rounded-xl bg-brand-50 text-brand-700"><a.icon className="h-5 w-5" /></div>
+                <h3 className="mt-4 text-lg font-bold text-gray-900">{a.title}</h3>
+                <p className="mt-1 text-sm leading-6 text-gray-600">{a.text}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Démarche responsable + empreinte estimée */}
+      <section className="mx-auto max-w-6xl px-6 py-16">
+        <div className="grid gap-8 rounded-3xl border border-green-100 bg-gradient-to-br from-green-50 to-white p-8 md:p-10 lg:grid-cols-[1.15fr_0.85fr] lg:items-center">
+          <div>
+            <span className="badge bg-green-100 text-green-800">Démarche responsable</span>
+            <h2 className="mt-4 text-3xl font-extrabold tracking-tight text-gray-900">Un site utile, et plus sobre</h2>
+            <p className="mt-3 leading-8 text-gray-600">
+              Le numérique n’est jamais sans impact. Notre approche est de le réduire concrètement : une seule infrastructure partagée par toutes les
+              associations plutôt que des sites sur-mesure refaits tous les trois ans, des pages légères servies depuis un cache, des images compressées,
+              et la dématérialisation des reçus, des newsletters et des dons.
+            </p>
+            <ul className="mt-6 grid gap-3 sm:grid-cols-2">
+              {eco.map((e) => (
+                <li key={e.title} className="flex gap-3">
+                  <e.icon className="mt-0.5 h-5 w-5 shrink-0 text-green-700" />
+                  <div><p className="font-semibold text-gray-900">{e.title}</p><p className="text-sm text-gray-600">{e.text}</p></div>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="rounded-2xl bg-white p-6 text-center shadow-sm ring-1 ring-green-100">
+            <p className="text-sm font-semibold uppercase tracking-wide text-green-700">Empreinte estimée</p>
+            <p className="mt-2 text-5xl font-black text-gray-900">≈ 0,3 g</p>
+            <p className="mt-1 text-sm text-gray-600">de CO₂e par page vue (estimation)</p>
+            <p className="mt-4 text-xs leading-5 text-gray-500">
+              Estimation basée sur le poids de nos pages et le modèle Sustainable Web Design. À titre de repère, une page web classique est souvent
+              plus lourde et émet davantage. Le numérique reste un usage à impact : nous cherchons à le réduire, pas à le nier.
+            </p>
+          </div>
         </div>
       </section>
 

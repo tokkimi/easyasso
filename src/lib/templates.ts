@@ -3,10 +3,25 @@
 // not random). The association only swaps text, photos, videos and links.
 import { defaultStyleFor, type BlockType } from './blocks';
 
-// Keyword-based placeholder photos so each template's images match its cause
-// (LoremFlickr serves Flickr photos by tag). `lock` keeps a slot stable.
-const PIC = (kw: string, w: number, h: number, lock: number) =>
-  `https://loremflickr.com/${w}/${h}/${encodeURIComponent(kw)}?lock=${lock}`;
+// Curated, cause-coherent stock photos served from Unsplash's image CDN
+// (reliable and cacheable; no API key needed to hotlink a known photo id).
+// Each cause has a small hand-picked set so the images always match the theme.
+const TEMPLATE_PHOTOS: Record<string, string[]> = {
+  'solidarite-alimentaire': ['1547592180-85f173990554', '1593113598332-cd288d649433', '1488459716781-31db52582fe9'],
+  'enfance-education': ['1509062522246-3755977927d7', '1497486751825-1233686d5d80', '1542810634-71277d95dcbb'],
+  'protection-animale': ['1450778869180-41d0601e046e', '1444212477490-ca407925329e', '1517849845537-4d257902454a'],
+  environnement: ['1441974231531-c6227db76b6e', '1472396961693-142e6e269027', '1500530855697-b586d89ba3ee'],
+  'sante-handicap': ['1576091160399-112ba8d25d1d', '1584515933487-779824d29309', '1576765608622-067973a79f53'],
+  'culture-patrimoine': ['1564399579883-451a5d44ec08', '1500534314209-a25ddb2bd429', '1482160549825-59d1b23cb208'],
+  'club-sportif': ['1461896836934-ffe607ba8211', '1517466787929-bc90951d0974', '1526232761682-d26e03ac148e'],
+  humanitaire: ['1488521787991-ed7bbaae773c', '1469571486292-0ba58a3f068b', '1532629345422-7515f3d16bb6'],
+  'solidarite-locale': ['1529156069898-49953e39b3ac', '1511632765486-a01980e01a18', '1531206715517-5c0ba140b2b8'],
+  aines: ['1544005313-94ddf0286df2', '1581579438747-1dc8d17bbce4', '1551836022-d5d88e9218df'],
+};
+const DEFAULT_PHOTOS = ['1521737604893-d14cc237f11d', '1531206715517-5c0ba140b2b8', '1488521787991-ed7bbaae773c'];
+
+const unsplash = (photoId: string, w: number, h: number) =>
+  `https://images.unsplash.com/photo-${photoId}?auto=format&fit=crop&w=${w}&h=${h}&q=80`;
 
 type Layout = 'classic' | 'impact' | 'editorial' | 'visual' | 'warm';
 
@@ -193,8 +208,8 @@ const DEFS: TemplateDef[] = [
 // (src/lib/ai.ts) as a fallback image when a section has no supplied photo.
 // `slot` keeps different image slots stable and distinct.
 export function templateImage(id: string, slot = 0, w = 1400, h = 800) {
-  const def = DEFS.find((d) => d.id === id);
-  return PIC(def?.kw || 'association,volunteer', w, h, slot + 1);
+  const photos = TEMPLATE_PHOTOS[id]?.length ? TEMPLATE_PHOTOS[id] : DEFAULT_PHOTOS;
+  return unsplash(photos[Math.abs(slot) % photos.length], w, h);
 }
 
 type BlockSeed = { type: BlockType; content: Record<string, unknown>; style?: Record<string, unknown> };
@@ -213,7 +228,7 @@ export interface BuiltTemplate {
 
 // ---- Per-layout HOME page composition (this is what makes them look different) ----
 function homeBlocks(d: TemplateDef): BlockSeed[] {
-  const img = (n: number, w = 1200, h = 700) => PIC(d.kw, w, h, n);
+  const img = (n: number, w = 1200, h = 700) => templateImage(d.id, n, w, h);
   const gallery6 = { columns: 3, images: [img(11, 600, 600), img(12, 600, 600), img(13, 600, 600), img(14, 600, 600), img(15, 600, 600), img(16, 600, 600)] };
   const gallery4 = { columns: 4, images: [img(21, 600, 600), img(22, 600, 600), img(23, 600, 600), img(24, 600, 600), img(25, 600, 600), img(26, 600, 600), img(27, 600, 600), img(28, 600, 600)] };
   const cards = { columns: 3, items: d.cards };
@@ -273,7 +288,7 @@ function homeBlocks(d: TemplateDef): BlockSeed[] {
 }
 
 function build(d: TemplateDef): BuiltTemplate {
-  const img = (n: number, w = 1400, h = 720) => PIC(d.kw, w, h, n);
+  const img = (n: number, w = 1400, h = 720) => templateImage(d.id, n, w, h);
   const donateBtn = { text: 'Faire un don', href: '/don', color: d.primary, variant: 'solid', align: 'center' };
   const headerDark = d.headerBg !== '#ffffff';
   return {

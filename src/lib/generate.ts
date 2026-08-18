@@ -1,4 +1,4 @@
-import { TEMPLATES, getTemplate, templateImage, type BuiltTemplate } from './templates';
+import { TEMPLATES, getTemplate, createPhotoAllocator, type BuiltTemplate } from './templates';
 import { defaultStyleFor } from './blocks';
 
 // Keyword signals to auto-pick the closest template from a free description.
@@ -34,14 +34,10 @@ function firstSentence(text: string): string {
 function para(parts: (string | undefined)[]): string {
   return parts.map((p) => (p || '').trim()).filter(Boolean).join('\n\n');
 }
+// Site-wide dispenser that never repeats an image (uploaded photos first, then
+// the cause's themed photos, then every other verified photo).
 function createImagePicker(photos: string[], seed: string) {
-  const submitted = photos.filter(Boolean);
-  let submittedIndex = 0;
-  let fallbackIndex = 40;
-  return (w: number, h: number) => {
-    if (submittedIndex < submitted.length) return submitted[submittedIndex++];
-    return templateImage(seed, fallbackIndex++, w, h);
-  };
+  return createPhotoAllocator(seed, photos);
 }
 
 function clean(value = '') {

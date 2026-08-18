@@ -1,5 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk';
-import { getTemplate, TEMPLATES, templateImage, type BuiltTemplate } from './templates';
+import { getTemplate, TEMPLATES, createPhotoAllocator, type BuiltTemplate } from './templates';
 import { pickTemplateId, type GenerateInput } from './generate';
 import { defaultStyleFor } from './blocks';
 
@@ -239,14 +239,9 @@ function illustrate(sections: Section[]): Section[] {
 }
 
 // Convert AI sections into our block model, injecting the association's photos.
-function sectionsToBlocks(sections: Section[], photos: string[], seed: string, isHome: boolean, language: 'fr' | 'en') {
-  let photoIdx = 0;
-  let fallbackIdx = 20;
+// `nextPhoto` is a shared, site-wide allocator so no image is ever repeated.
+function sectionsToBlocks(sections: Section[], nextPhoto: (w?: number, h?: number) => string, isHome: boolean, language: 'fr' | 'en') {
   const donateLabel = language === 'en' ? 'Donate' : 'Faire un don';
-  const nextPhoto = (w: number, h: number) => {
-    if (photoIdx < photos.length) return photos[photoIdx++];
-    return templateImage(seed, fallbackIdx++, w, h);
-  };
   const blocks: any[] = [];
   for (const s of illustrate(sections)) {
     switch (s.type) {
@@ -289,8 +284,9 @@ export async function aiGenerateSite(input: GenerateInput): Promise<BuiltTemplat
   const t: BuiltTemplate = JSON.parse(JSON.stringify(base));
   const name = input.name?.trim() || 'Votre association';
   const photos = (input.photos || []).filter(Boolean);
-  const seed = baseId;
   const language = input.language === 'en' ? 'en' : 'fr';
+  // One allocator for the whole site → the same image is never used twice.
+  const nextPhoto = createPhotoAllocator(baseId, photos);
 
   t.id = `${base.id}-ai-generated`;
   t.name = name;
@@ -311,13 +307,13 @@ export async function aiGenerateSite(input: GenerateInput): Promise<BuiltTemplat
     usedSlugs.add(slug);
     const isHome = !homeAssigned && (p.isHome || i === 0);
     if (isHome) homeAssigned = true;
-    const blocks = sectionsToBlocks(p.sections || [], photos, seed, isHome, language);
+    const blocks = sectionsToBlocks(p.sections || [], nextPhoto, isHome, language);
     // Guarantee a hero image on the home page even if the model didn't emit a banner.
     if (isHome && !blocks.some((b: any) => b.type === 'banner')) {
       blocks.unshift({
         type: 'banner', order: 0,
         content: {
-          image: photos[0] || templateImage(seed, 0, 1600, 720),
+          image: nextPhoto(1600, 720),
           title: name, subtitle: ai.tagline || '', overlay: 45, height: 460,
           button: { text: language === 'en' ? 'Donate' : 'Faire un don', href: '/don', color: '#ffffff', variant: 'solid', align: 'center' },
         },

@@ -20,8 +20,30 @@ const TEMPLATE_PHOTOS: Record<string, string[]> = {
 };
 const DEFAULT_PHOTOS = ['1521737604893-d14cc237f11d', '1531206715517-5c0ba140b2b8', '1488521787991-ed7bbaae773c'];
 
+// Every verified photo id, deduped. Used as the overflow pool so a single site
+// can show many DIFFERENT images without ever repeating one — and without any
+// risk of a broken link, since every id here is already known to load.
+const ALL_PHOTOS = Array.from(new Set([...Object.values(TEMPLATE_PHOTOS).flat(), ...DEFAULT_PHOTOS]));
+
 const unsplash = (photoId: string, w: number, h: number) =>
   `https://images.unsplash.com/photo-${photoId}?auto=format&fit=crop&w=${w}&h=${h}&q=80`;
+
+// A per-site photo dispenser that never returns the same image twice (until the
+// whole pool is exhausted). It serves the association's uploaded photos first,
+// then the cause's own themed photos, then every other verified photo.
+export function createPhotoAllocator(causeId: string, userPhotos: string[] = []) {
+  const cause = TEMPLATE_PHOTOS[causeId]?.length ? TEMPLATE_PHOTOS[causeId] : DEFAULT_PHOTOS;
+  const stock = [...cause, ...ALL_PHOTOS.filter((p) => !cause.includes(p))];
+  const users = userPhotos.filter(Boolean);
+  let u = 0;
+  let s = 0;
+  return (w = 1200, h = 800): string => {
+    if (u < users.length) return users[u++];
+    const id = stock[s % stock.length];
+    s++;
+    return unsplash(id, w, h);
+  };
+}
 
 type Layout = 'classic' | 'impact' | 'editorial' | 'visual' | 'warm';
 

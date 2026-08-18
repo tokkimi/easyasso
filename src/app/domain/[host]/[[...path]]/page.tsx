@@ -2,7 +2,9 @@ import type { Metadata } from 'next';
 import { prisma } from '@/lib/prisma';
 import { RenderSite, loadSiteByDomain } from '@/components/site/RenderSite';
 
-export const dynamic = 'force-dynamic';
+// Cache verified custom-domain pages on the CDN, refreshing in the background
+// at most once a minute (edits call revalidatePath for an immediate refresh).
+export const revalidate = 60;
 
 export async function generateMetadata({ params }: { params: Promise<{ host: string }> }): Promise<Metadata> {
   const { host } = await params;

@@ -12,12 +12,14 @@ const schema = z.object({
   email: z.string().email(),
   password: z.string().min(6),
   language: z.enum(['fr', 'en']).default('fr'),
-  phone: z.string().trim().min(1, 'Téléphone obligatoire'),
-  city: z.string().trim().min(1, 'Ville obligatoire'),
-  legalName: z.string().trim().min(1, 'Nom légal obligatoire'),
-  registrationNumber: z.string().trim().min(1, 'Numéro d’enregistrement obligatoire'),
-  legalAddress: z.string().trim().min(1, 'Adresse légale obligatoire'),
-  publicationDirector: z.string().trim().min(1, 'Directeur de publication obligatoire'),
+  // Association details are optional at signup — the association can fill them
+  // in later from Settings.
+  phone: z.string().trim().optional().default(''),
+  city: z.string().trim().optional().default(''),
+  legalName: z.string().trim().optional().default(''),
+  registrationNumber: z.string().trim().optional().default(''),
+  legalAddress: z.string().trim().optional().default(''),
+  publicationDirector: z.string().trim().optional().default(''),
 });
 
 export async function POST(req: Request) {

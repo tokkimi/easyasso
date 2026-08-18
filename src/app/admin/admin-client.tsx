@@ -306,7 +306,7 @@ function OrgCard({ org, edit, busy, reference, onReference, onEdit, onSave, onAc
 
       <details className="mt-4 rounded-2xl border border-brand-200 bg-brand-50 p-4" onToggle={(e) => { if ((e.target as HTMLDetailsElement).open) onMarkRead(org); }}>
         <summary className="flex cursor-pointer items-center gap-2 font-bold text-gray-900">
-          <MessageSquare className="h-4 w-4" /> Messagerie avec {org.ownerName || 'ce responsable'}
+          <MessageSquare className="h-4 w-4" /> Messagerie avec l’association
           {org.unreadFromOrg > 0 && <span className="badge bg-red-100 text-red-700">{org.unreadFromOrg} nouveau{org.unreadFromOrg > 1 ? 'x' : ''}</span>}
         </summary>
         <p className="mt-2 text-xs text-gray-600">Conversation à double sens. L’association vous voit sous le nom <strong>Easy Asso Manager</strong> et ses réponses reviennent ici.</p>

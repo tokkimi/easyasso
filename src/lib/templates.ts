@@ -23,22 +23,32 @@ const DEFAULT_PHOTOS = ['1521737604893-d14cc237f11d', '1531206715517-5c0ba140b2b
 const unsplash = (photoId: string, w: number, h: number) =>
   `https://images.unsplash.com/photo-${photoId}?auto=format&fit=crop&w=${w}&h=${h}&q=80`;
 
+// Size a raw Unsplash API url (which already carries its own query string).
+const sizedUnsplash = (base: string, w: number, h: number) => {
+  const sep = base.includes('?') ? '&' : '?';
+  return `${base}${sep}w=${w}&h=${h}&fit=crop&crop=entropy&auto=format&q=80`;
+};
+
+// Search query for a cause, used to fetch themed photos from the Unsplash API.
+export function causePhotoQuery(id: string): string {
+  const def = DEFS.find((d) => d.id === id);
+  return (def?.kw || 'association,solidarity').replace(/,/g, ' ');
+}
+
 // A per-site photo dispenser that never returns the same image twice (until the
-// whole pool is exhausted). It serves the association's uploaded photos first,
-// then the cause's own themed photos, then every other verified photo.
-export function createPhotoAllocator(causeId: string, userPhotos: string[] = []) {
-  // Stay STRICTLY within the cause's own themed photos so images always match
-  // the announced cause. (We cycle within them rather than borrow off-theme
-  // photos from other causes.)
-  const stock = TEMPLATE_PHOTOS[causeId]?.length ? TEMPLATE_PHOTOS[causeId] : DEFAULT_PHOTOS;
+// pool is exhausted). It serves the association's uploaded photos first, then
+// the cause's themed photos — Unsplash-fetched when available (many, varied),
+// otherwise the curated fallback set — always STRICTLY on-cause.
+export function createPhotoAllocator(causeId: string, userPhotos: string[] = [], themePhotos: string[] = []) {
   const users = userPhotos.filter(Boolean);
+  const themed = themePhotos.filter(Boolean);
+  const ids = TEMPLATE_PHOTOS[causeId]?.length ? TEMPLATE_PHOTOS[causeId] : DEFAULT_PHOTOS;
   let u = 0;
   let s = 0;
   return (w = 1200, h = 800): string => {
     if (u < users.length) return users[u++];
-    const id = stock[s % stock.length];
-    s++;
-    return unsplash(id, w, h);
+    if (themed.length) return sizedUnsplash(themed[s++ % themed.length], w, h);
+    return unsplash(ids[s++ % ids.length], w, h);
   };
 }
 

@@ -273,7 +273,7 @@ function sectionsToBlocks(sections: Section[], nextPhoto: (w?: number, h?: numbe
 
 // Full AI generation → a customized template (theme/chrome from the closest
 // preset, pages/content written by Claude).
-export async function aiGenerateSite(input: GenerateInput): Promise<BuiltTemplate | null> {
+export async function aiGenerateSite(input: GenerateInput, themePhotos: string[] = []): Promise<BuiltTemplate | null> {
   if (!aiEnabled()) return null;
   const ai = await callClaude(buildPrompt(input));
   if (!ai || !Array.isArray(ai.pages) || ai.pages.length === 0) return null;
@@ -286,7 +286,7 @@ export async function aiGenerateSite(input: GenerateInput): Promise<BuiltTemplat
   const photos = (input.photos || []).filter(Boolean);
   const language = input.language === 'en' ? 'en' : 'fr';
   // One allocator for the whole site → the same image is never used twice.
-  const nextPhoto = createPhotoAllocator(baseId, photos);
+  const nextPhoto = createPhotoAllocator(baseId, photos, themePhotos);
 
   t.id = `${base.id}-ai-generated`;
   t.name = name;

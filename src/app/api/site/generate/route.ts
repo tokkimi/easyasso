@@ -3,8 +3,10 @@ import { revalidatePath } from 'next/cache';
 import { requireApiPermission, handleApiError } from '@/lib/api';
 import { PERMISSIONS } from '@/lib/permissions';
 import { prisma } from '@/lib/prisma';
-import { buildGeneratedSite, type GenerateInput } from '@/lib/generate';
+import { buildGeneratedSite, pickTemplateId, type GenerateInput } from '@/lib/generate';
 import { aiEnabled, aiGenerateSite } from '@/lib/ai';
+import { causePhotoQuery } from '@/lib/templates';
+import { fetchCausePhotos } from '@/lib/unsplash';
 import { applyTemplateToSite } from '@/lib/apply-template';
 import { legalDocuments } from '@/lib/legal';
 import { defaultStyleFor } from '@/lib/blocks';
@@ -47,12 +49,17 @@ export async function POST(req: Request) {
       photos: Array.isArray(b.photos) ? b.photos.slice(0, 8) : [],
     };
 
+    // Fetch cause-themed photos from Unsplash (when configured) so images are
+    // coherent AND varied; empty array falls back to the curated photo set.
+    const causeId = pickTemplateId([input.mission, input.functioning, input.goodToKnow, input.beneficiaries, input.actions].filter(Boolean).join(' '), input.category);
+    const themePhotos = await fetchCausePhotos(causePhotoQuery(causeId));
+
     // Try AI generation first (rich, all pages); fall back to the deterministic
     // builder if no API key or the model call fails.
     const aiConfigured = aiEnabled();
-    const aiGenerated = await aiGenerateSite(input);
-    console.log('[magic-generator] generation_source', { organizationId: ctx.org.id, source: aiGenerated ? 'ai' : 'deterministic', aiConfigured });
-    const generated = aiGenerated || buildGeneratedSite(input);
+    const aiGenerated = await aiGenerateSite(input, themePhotos);
+    console.log('[magic-generator] generation_source', { organizationId: ctx.org.id, source: aiGenerated ? 'ai' : 'deterministic', aiConfigured, themePhotos: themePhotos.length });
+    const generated = aiGenerated || buildGeneratedSite(input, themePhotos);
     const donation = {
       locale: input.language, title: input.language === 'en' ? 'Support our causes' : 'Soutenir nos causes',
       intro: input.language === 'en' ? 'Your donation directly supports all our work.' : 'Votre don soutient directement l’ensemble de nos actions.',

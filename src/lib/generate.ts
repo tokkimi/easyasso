@@ -35,9 +35,9 @@ function para(parts: (string | undefined)[]): string {
   return parts.map((p) => (p || '').trim()).filter(Boolean).join('\n\n');
 }
 // Site-wide dispenser that never repeats an image (uploaded photos first, then
-// the cause's themed photos, then every other verified photo).
-function createImagePicker(photos: string[], seed: string) {
-  return createPhotoAllocator(seed, photos);
+// the cause's themed photos — Unsplash-fetched when available, else curated).
+function createImagePicker(photos: string[], seed: string, themePhotos: string[] = []) {
+  return createPhotoAllocator(seed, photos, themePhotos);
 }
 
 function clean(value = '') {
@@ -255,14 +255,14 @@ function reindex(pages: any[]) {
 }
 
 // Produce a fully customized template from the questionnaire + assets.
-export function buildGeneratedSite(input: GenerateInput): BuiltTemplate {
+export function buildGeneratedSite(input: GenerateInput, themePhotos: string[] = []): BuiltTemplate {
   const detectText = [input.mission, input.functioning, input.goodToKnow, input.beneficiaries, input.actions, input.description].filter(Boolean).join(' ');
   const id = pickTemplateId(detectText, input.category);
   const base = getTemplate(id) || TEMPLATES[0];
   const t: BuiltTemplate = JSON.parse(JSON.stringify(base));
   const copy = composeCopy(input);
   const photos = (input.photos || []).filter(Boolean);
-  const image = createImagePicker(photos, id);
+  const image = createImagePicker(photos, id, themePhotos);
 
   t.id = `${base.id}-generated`;
   t.name = copy.name;
@@ -335,7 +335,7 @@ export function buildGeneratedSite(input: GenerateInput): BuiltTemplate {
       blocks: [block('heading', { text: title }), block('text', { text: intro }), ...extra],
     });
     const mission = input.mission || `${copy.name} brings people together around a meaningful cause.`;
-    const englishImage = createImagePicker(photos, id);
+    const englishImage = createImagePicker(photos, id, themePhotos);
     t.id = `${base.id}-generated`;
     t.header.logoText = copy.name;
     t.footer.logoText = copy.name;

@@ -631,6 +631,10 @@ function FooterEditor({ value, onChange }: { value: any; onChange: (v: any) => v
       <Field label="Texte de présentation"><textarea className="input min-h-[70px]" value={f.text || ''} onChange={(e) => set({ text: e.target.value })} /></Field>
       <Field label="Texte “tous droits réservés”"><input className="input" value={f.allRightsText || ''} onChange={(e) => set({ allRightsText: e.target.value })} /></Field>
       <div className="border-t border-gray-100 pt-3">
+        <Toggle checked={f.showContactBubble ?? true} onChange={(v) => set({ showContactBubble: v })} label="Bulle de contact flottante" />
+        <p className="mt-1 text-xs text-gray-500">Affiche en bas de chaque page une bulle « en ligne » avec le logo, le nom, le slogan et les moyens de contact (appel, SMS, e-mail, messagerie).</p>
+      </div>
+      <div className="border-t border-gray-100 pt-3">
         <Toggle checked={f.showNewsletter ?? true} onChange={(v) => set({ showNewsletter: v })} label="Bloc newsletter" />
         {f.showNewsletter && <Field label="Titre de la newsletter"><input className="input" value={f.newsletterTitle || ''} onChange={(e) => set({ newsletterTitle: e.target.value })} /></Field>}
       </div>

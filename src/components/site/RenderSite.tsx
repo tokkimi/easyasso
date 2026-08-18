@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { DEFAULT_HEADER, DEFAULT_FOOTER, type HeaderConfig, type FooterConfig } from '@/lib/blocks';
 import { PublicBlock } from './PublicBlock';
 import { PublicHeader, PublicFooter } from './PublicChrome';
+import { ContactBubble } from './ContactBubble';
 import { themeStyle, brandCss } from '@/lib/render';
 import { googleFontsHref } from '@/lib/fonts';
 import { canShowPublicSite } from '@/lib/plan';
@@ -13,7 +14,7 @@ export async function loadSiteBySubdomain(subdomain: string) {
   return prisma.site.findUnique({
     where: { subdomain },
     include: {
-      organization: { select: { planStatus: true, trialEndsAt: true } },
+      organization: { select: { planStatus: true, trialEndsAt: true, profile: true } },
       pages: { orderBy: { order: 'asc' }, include: { blocks: { orderBy: { order: 'asc' } } } },
     },
   });
@@ -22,7 +23,7 @@ export async function loadSiteByDomain(domain: string) {
   return prisma.site.findFirst({
     where: { customDomain: domain, domainVerified: true },
     include: {
-      organization: { select: { planStatus: true, trialEndsAt: true } },
+      organization: { select: { planStatus: true, trialEndsAt: true, profile: true } },
       pages: { orderBy: { order: 'asc' }, include: { blocks: { orderBy: { order: 'asc' } } } },
     },
   });
@@ -38,6 +39,21 @@ export function RenderSite({ site, basePath, slug }: { site: SiteWithPages; base
   const theme = (site.theme as any) || {};
   const fontHref = googleFontsHref(theme.font);
 
+  // Floating contact bubble — shown on every page of every site (opt-out via
+  // footer.showContactBubble = false in the editor).
+  const profile = (((site.organization as any)?.profile) || {}) as Record<string, any>;
+  const bubble = (footer as any).showContactBubble === false ? null : (
+    <ContactBubble
+      name={site.name}
+      slogan={footer.text}
+      logoUrl={(header as any).logoUrl || (footer as any).logoUrl}
+      email={profile.email}
+      phone={profile.phone}
+      organizationId={site.organizationId}
+      locale={profile.language === 'en' ? 'en' : 'fr'}
+    />
+  );
+
   if (slug === 'cgv' || slug === 'mentions-legales') {
     const isCgv = slug === 'cgv';
     return (
@@ -50,6 +66,7 @@ export function RenderSite({ site, basePath, slug }: { site: SiteWithPages; base
           <p className="mt-4 whitespace-pre-wrap leading-relaxed text-gray-600">{isCgv ? footer.cgvContent : footer.mentionsContent}</p>
         </main>
         <PublicFooter footer={footer} orgId={site.organizationId} basePath={basePath} nav={nav} />
+        {bubble}
       </div>
     );
   }
@@ -71,6 +88,7 @@ export function RenderSite({ site, basePath, slug }: { site: SiteWithPages; base
         )}
       </main>
       <PublicFooter footer={footer} orgId={site.organizationId} basePath={basePath} nav={nav} />
+      {bubble}
     </div>
   );
 }

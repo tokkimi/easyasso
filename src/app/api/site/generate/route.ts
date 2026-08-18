@@ -9,6 +9,7 @@ import { applyTemplateToSite } from '@/lib/apply-template';
 import { legalDocuments } from '@/lib/legal';
 import { defaultStyleFor } from '@/lib/blocks';
 import { removeGeneratedCopyDuplicates } from '@/lib/copy-quality';
+import { enhanceGeneratedEditorialCopy } from '@/lib/editorial-depth';
 
 // Rich AI copywriting of a full multi-page site can take a few minutes.
 // Requires the Vercel Pro plan (Hobby caps maxDuration at 60s).
@@ -110,10 +111,10 @@ export async function POST(req: Request) {
         if (block.content?.button) block.content.button = fixDonationButton(block.content.button);
       }
     }
-    // Note: we deliberately do NOT run the templated "editorial depth" rewriter
-    // here — it overwrote real copy (AI or deterministic) with generic meta-text
-    // about the site itself ("chaque page aide les visiteurs à comprendre…").
-    // We keep only duplicate removal, which drops repeated blocks.
+    // Develop the copy with real per-cause context (history, references, stakes)
+    // then drop any repeated blocks. This is what gives the site substance when
+    // the AI provider is not configured.
+    enhanceGeneratedEditorialCopy(generated, input);
     removeGeneratedCopyDuplicates(generated, input.language);
 
     const profile = previousProfile;

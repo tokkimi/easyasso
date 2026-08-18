@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState, type Dispatch, type ReactNode, type SetStateAction } from 'react';
-import { BarChart3, CheckCircle, Clock, Download, ExternalLink, FileText, LayoutDashboard, MessageSquare, Pencil, Save, Search, Send, ShieldCheck, Trash2, Users, WalletCards } from 'lucide-react';
+import { ArrowLeft, BarChart3, CheckCircle, Clock, Download, ExternalLink, FileText, LayoutDashboard, MessageSquare, Pencil, Save, Search, Send, ShieldCheck, Trash2, Users, WalletCards } from 'lucide-react';
 
 type AdminStats = {
   organizations: number;
@@ -172,7 +172,7 @@ export function AdminClient({ organizations, stats, analytics }: { organizations
           <TabButton active={tab === 'pending'} onClick={() => setTab('pending')} icon={<Clock className="h-4 w-4" />} label="Paiements à vérifier" badge={pending.length} />
           <TabButton active={tab === 'active'} onClick={() => setTab('active')} icon={<Users className="h-4 w-4" />} label="Associations" badge={active.length} />
           <TabButton active={tab === 'messages'} onClick={() => setTab('messages')} icon={<MessageSquare className="h-4 w-4" />} label="Messagerie" badge={unreadMessages} />
-          <TabButton active={tab === 'analytics'} onClick={() => setTab('analytics')} icon={<BarChart3 className="h-4 w-4" />} label="Analytics" />
+          <TabButton active={tab === 'analytics'} onClick={() => setTab('analytics')} icon={<BarChart3 className="h-4 w-4" />} label="Statistiques" />
           <TabButton active={tab === 'seo'} onClick={() => setTab('seo')} icon={<Search className="h-4 w-4" />} label="SEO" />
           <TabButton active={tab === 'accounting'} onClick={() => setTab('accounting')} icon={<WalletCards className="h-4 w-4" />} label="Comptabilité" />
         </nav>
@@ -197,13 +197,7 @@ export function AdminClient({ organizations, stats, analytics }: { organizations
         )}
 
         {tab === 'messages' && (
-          <section className="space-y-4">
-            <h2 className="text-xl font-extrabold text-gray-900">Messagerie</h2>
-            <p className="text-sm text-gray-600">Toutes vos conversations avec les associations. Elles vous voient sous le nom <strong>Easy Asso Manager</strong>.</p>
-            {[...items].sort((a, b) => (b.unreadFromOrg - a.unreadFromOrg) || (lastAt(b) - lastAt(a))).map((org) => (
-              <ConversationCard key={org.id} org={org} busy={busy} onMessage={sendMessage} onMarkRead={markThreadRead} />
-            ))}
-          </section>
+          <MessengerView items={items} busy={busy} onMessage={sendMessage} onMarkRead={markThreadRead} />
         )}
 
         {tab === 'analytics' && (
@@ -483,37 +477,94 @@ function lastAt(org: AdminOrg) {
   return last ? new Date(last.createdAt).getTime() : 0;
 }
 
-function ConversationCard({ org, busy, onMessage, onMarkRead }: { org: AdminOrg; busy: string; onMessage: (org: AdminOrg, body: string) => Promise<boolean>; onMarkRead: (org: AdminOrg) => void }) {
+function relTime(iso: string) {
+  const diff = Date.now() - new Date(iso).getTime();
+  const min = Math.floor(diff / 60000);
+  if (min < 1) return 'à l’instant';
+  if (min < 60) return `${min} min`;
+  const h = Math.floor(min / 60);
+  if (h < 24) return `${h} h`;
+  const d = Math.floor(h / 24);
+  if (d < 7) return `${d} j`;
+  return new Date(iso).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+}
+
+function Avatar({ name }: { name: string }) {
+  const initial = (name || 'A').trim().charAt(0).toUpperCase();
+  return <div className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-brand-100 text-lg font-bold text-brand-700">{initial}</div>;
+}
+
+// Instagram-style messenger: a conversation list; click one to open its thread.
+function MessengerView({ items, busy, onMessage, onMarkRead }: { items: AdminOrg[]; busy: string; onMessage: (org: AdminOrg, body: string) => Promise<boolean>; onMarkRead: (org: AdminOrg) => void }) {
+  const [openId, setOpenId] = useState<string | null>(null);
   const [body, setBody] = useState('');
-  const sending = busy === `msg:${org.id}`;
+  const open = openId ? items.find((o) => o.id === openId) || null : null;
+  const convos = [...items].sort((a, b) => (b.unreadFromOrg - a.unreadFromOrg) || (lastAt(b) - lastAt(a)));
+
+  function openConvo(org: AdminOrg) { setOpenId(org.id); setBody(''); onMarkRead(org); }
+
   async function submit() {
-    if (!body.trim()) return;
-    const ok = await onMessage(org, body.trim());
+    if (!open || !body.trim()) return;
+    const ok = await onMessage(open, body.trim());
     if (ok) setBody('');
   }
-  return (
-    <article className="card">
-      <div className="flex items-center justify-between gap-2">
-        <h3 className="font-extrabold text-gray-900">{org.name}</h3>
-        {org.unreadFromOrg > 0 && <span className="badge bg-red-100 text-red-700">{org.unreadFromOrg} nouveau{org.unreadFromOrg > 1 ? 'x' : ''}</span>}
-      </div>
-      <p className="text-xs text-gray-500">{org.ownerName || 'Responsable'} · {org.ownerEmail}</p>
-      <div className="mt-3 max-h-64 space-y-2 overflow-y-auto rounded-xl bg-gray-50 p-3">
-        {org.thread.length === 0 && <p className="py-5 text-center text-sm text-gray-400">Aucun message. Écrivez le premier.</p>}
-        {org.thread.map((m) => (
-          <div key={m.id} className={`flex ${m.fromAdmin ? 'justify-end' : 'justify-start'}`}>
-            <div className={`max-w-[80%] rounded-2xl px-4 py-2 text-sm ${m.fromAdmin ? 'bg-brand-600 text-white' : 'bg-white ring-1 ring-gray-200 text-gray-800'}`}>
-              <p className="whitespace-pre-wrap leading-relaxed">{m.body}</p>
-              <p className={`mt-1 text-[11px] ${m.fromAdmin ? 'text-white/70' : 'text-gray-500'}`}>{m.authorName} · {formatDate(m.createdAt)}</p>
-            </div>
+
+  if (open) {
+    const sending = busy === `msg:${open.id}`;
+    return (
+      <section className="overflow-hidden rounded-3xl bg-white shadow-sm ring-1 ring-gray-100">
+        <div className="flex items-center gap-3 border-b border-gray-100 p-4">
+          <button onClick={() => setOpenId(null)} className="grid h-9 w-9 place-items-center rounded-xl text-gray-600 transition hover:bg-gray-100"><ArrowLeft className="h-5 w-5" /></button>
+          <Avatar name={open.name} />
+          <div className="min-w-0">
+            <p className="truncate font-extrabold text-gray-900">{open.name}</p>
+            <p className="truncate text-xs text-gray-500">{open.ownerEmail}</p>
           </div>
-        ))}
+        </div>
+        <div className="flex h-[52vh] flex-col gap-2 overflow-y-auto bg-gray-50 p-4">
+          {open.thread.length === 0 && <p className="my-auto text-center text-sm text-gray-400">Aucun message. Écrivez le premier.</p>}
+          {open.thread.map((m) => (
+            <div key={m.id} className={`flex ${m.fromAdmin ? 'justify-end' : 'justify-start'}`}>
+              <div className={`max-w-[80%] rounded-2xl px-4 py-2 text-sm ${m.fromAdmin ? 'bg-brand-600 text-white' : 'bg-white ring-1 ring-gray-200 text-gray-800'}`}>
+                <p className="whitespace-pre-wrap leading-relaxed">{m.body}</p>
+                <p className={`mt-1 text-[11px] ${m.fromAdmin ? 'text-white/70' : 'text-gray-500'}`}>{relTime(m.createdAt)}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="flex items-end gap-2 border-t border-gray-100 p-3">
+          <textarea className="input min-h-[52px] flex-1" value={body} onChange={(e) => setBody(e.target.value)} placeholder="Votre message…" onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submit(); } }} />
+          <button onClick={submit} disabled={sending || !body.trim()} className="btn btn-primary disabled:opacity-50"><Send className="h-4 w-4" /> {sending ? '…' : 'Envoyer'}</button>
+        </div>
+      </section>
+    );
+  }
+
+  return (
+    <section>
+      <h2 className="text-xl font-extrabold text-gray-900">Messagerie</h2>
+      <p className="mb-4 text-sm text-gray-600">Toutes vos conversations. Les associations vous voient sous le nom <strong>Easy Asso Manager</strong>.</p>
+      <div className="divide-y divide-gray-100 overflow-hidden rounded-3xl bg-white shadow-sm ring-1 ring-gray-100">
+        {convos.map((org) => {
+          const last = org.thread[org.thread.length - 1];
+          const preview = last ? `${last.fromAdmin ? 'Vous : ' : ''}${last.body}` : 'Aucun message';
+          const unread = org.unreadFromOrg > 0;
+          return (
+            <button key={org.id} onClick={() => openConvo(org)} className="flex w-full items-center gap-3 p-4 text-left transition hover:bg-gray-50">
+              <Avatar name={org.name} />
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center justify-between gap-2">
+                  <span className={`truncate ${unread ? 'font-extrabold text-gray-900' : 'font-semibold text-gray-800'}`}>{org.name}</span>
+                  {last && <span className="shrink-0 text-xs text-gray-400">{relTime(last.createdAt)}</span>}
+                </div>
+                <p className={`truncate text-sm ${unread ? 'font-semibold text-gray-700' : 'text-gray-500'}`}>{preview}</p>
+              </div>
+              {unread && <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-brand-600" />}
+            </button>
+          );
+        })}
       </div>
-      <div className="mt-3 flex items-end gap-2">
-        <textarea className="input min-h-[60px] flex-1" value={body} onFocus={() => onMarkRead(org)} onChange={(e) => setBody(e.target.value)} placeholder="Votre message…" />
-        <button onClick={submit} disabled={sending || !body.trim()} className="btn btn-primary disabled:opacity-50"><Send className="h-4 w-4" /> {sending ? 'Envoi…' : 'Envoyer'}</button>
-      </div>
-    </article>
+    </section>
   );
 }
 

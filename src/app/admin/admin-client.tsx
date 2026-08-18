@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState, type Dispatch, type ReactNode, type SetStateAction } from 'react';
-import { CheckCircle, Clock, Download, ExternalLink, FileText, LayoutDashboard, MessageSquare, Pencil, Save, Send, ShieldCheck, Trash2, Users, WalletCards } from 'lucide-react';
+import { BarChart3, CheckCircle, Clock, Download, ExternalLink, FileText, LayoutDashboard, MessageSquare, Pencil, Save, Search, Send, ShieldCheck, Trash2, Users, WalletCards } from 'lucide-react';
 
 type AdminStats = {
   organizations: number;
@@ -57,9 +57,12 @@ type EditState = {
   adminNote: string;
 };
 
-export function AdminClient({ organizations, stats }: { organizations: AdminOrg[]; stats: AdminStats }) {
+type Bar = { label: string; value: number };
+type Analytics = { total: number; last30: number; byDay: Bar[]; byHour: Bar[]; byWeekday: Bar[]; referrers: Bar[]; topOrgs: Bar[]; topPages: Bar[] };
+
+export function AdminClient({ organizations, stats, analytics }: { organizations: AdminOrg[]; stats: AdminStats; analytics: Analytics }) {
   const [items, setItems] = useState(organizations);
-  const [tab, setTab] = useState<'overview' | 'pending' | 'active' | 'accounting'>('overview');
+  const [tab, setTab] = useState<'overview' | 'pending' | 'active' | 'messages' | 'analytics' | 'seo' | 'accounting'>('overview');
   const [busy, setBusy] = useState('');
   const [references, setReferences] = useState<Record<string, string>>({});
   const [edits, setEdits] = useState<Record<string, EditState>>(() => Object.fromEntries(organizations.map((org) => [org.id, toEdit(org)])));
@@ -168,6 +171,9 @@ export function AdminClient({ organizations, stats }: { organizations: AdminOrg[
           <TabButton active={tab === 'overview'} onClick={() => setTab('overview')} icon={<LayoutDashboard className="h-4 w-4" />} label="Tableau de bord" />
           <TabButton active={tab === 'pending'} onClick={() => setTab('pending')} icon={<Clock className="h-4 w-4" />} label="Paiements à vérifier" badge={pending.length} />
           <TabButton active={tab === 'active'} onClick={() => setTab('active')} icon={<Users className="h-4 w-4" />} label="Associations" badge={active.length} />
+          <TabButton active={tab === 'messages'} onClick={() => setTab('messages')} icon={<MessageSquare className="h-4 w-4" />} label="Messagerie" badge={unreadMessages} />
+          <TabButton active={tab === 'analytics'} onClick={() => setTab('analytics')} icon={<BarChart3 className="h-4 w-4" />} label="Analytics" />
+          <TabButton active={tab === 'seo'} onClick={() => setTab('seo')} icon={<Search className="h-4 w-4" />} label="SEO" />
           <TabButton active={tab === 'accounting'} onClick={() => setTab('accounting')} icon={<WalletCards className="h-4 w-4" />} label="Comptabilité" />
         </nav>
 
@@ -188,6 +194,62 @@ export function AdminClient({ organizations, stats }: { organizations: AdminOrg[
 
         {tab === 'active' && (
           <OrgList title="Associations actives" empty="Aucune association active." items={active} busy={busy} edits={edits} references={references} onReference={setReferences} onEdit={patchEdit} onSave={save} onActivate={activate} onRemove={remove} onMessage={sendMessage} onMarkRead={markThreadRead} />
+        )}
+
+        {tab === 'messages' && (
+          <section className="space-y-4">
+            <h2 className="text-xl font-extrabold text-gray-900">Messagerie</h2>
+            <p className="text-sm text-gray-600">Toutes vos conversations avec les associations. Elles vous voient sous le nom <strong>Easy Asso Manager</strong>.</p>
+            {[...items].sort((a, b) => (b.unreadFromOrg - a.unreadFromOrg) || (lastAt(b) - lastAt(a))).map((org) => (
+              <ConversationCard key={org.id} org={org} busy={busy} onMessage={sendMessage} onMarkRead={markThreadRead} />
+            ))}
+          </section>
+        )}
+
+        {tab === 'analytics' && (
+          <section className="space-y-6">
+            <div className="grid gap-4 sm:grid-cols-3">
+              <StatCard icon={<BarChart3 className="h-5 w-5" />} label="Visites (total)" value={analytics.total} hint="Toutes les pages vues, depuis le début" />
+              <StatCard icon={<BarChart3 className="h-5 w-5" />} label="Visites (30 j)" value={analytics.last30} hint="Sur les 30 derniers jours" />
+              <StatCard icon={<Users className="h-5 w-5" />} label="Sites suivis" value={analytics.topOrgs.length} hint="Associations avec du trafic" />
+            </div>
+            <div className="grid gap-6 lg:grid-cols-2">
+              <ChartCard title="Visites par jour (14 derniers jours)"><Bars data={analytics.byDay} /></ChartCard>
+              <ChartCard title="Visites par heure (heure de Paris)"><Bars data={analytics.byHour} compact /></ChartCard>
+              <ChartCard title="Visites par jour de la semaine"><Bars data={analytics.byWeekday} /></ChartCard>
+              <ChartCard title="Provenance des visiteurs"><RankList data={analytics.referrers} empty="Pas encore de données de provenance." /></ChartCard>
+              <ChartCard title="Associations les plus visitées"><RankList data={analytics.topOrgs} empty="Aucune visite pour l’instant." /></ChartCard>
+              <ChartCard title="Pages les plus vues"><RankList data={analytics.topPages} empty="Aucune page vue." /></ChartCard>
+            </div>
+            <p className="text-xs text-gray-500">Le suivi se déclenche à chaque visite réelle (compatible avec le cache). La provenance apparaît dès que des visiteurs arrivent depuis un autre site, un moteur de recherche ou les réseaux.</p>
+          </section>
+        )}
+
+        {tab === 'seo' && (
+          <section className="space-y-4">
+            <div className="rounded-3xl bg-white p-5 shadow-sm ring-1 ring-gray-100">
+              <h2 className="text-xl font-extrabold text-gray-900">SEO — référencement</h2>
+              <p className="mt-1 text-sm text-gray-600">État du référencement de chaque site. Chaque site publié génère automatiquement un titre, une description, des balises Open Graph (partage réseaux) et est déclaré dans le sitemap.</p>
+            </div>
+            <div className="overflow-x-auto rounded-3xl bg-white p-5 shadow-sm ring-1 ring-gray-100">
+              <table className="min-w-[720px] w-full text-left text-sm">
+                <thead className="text-xs uppercase tracking-wide text-gray-500">
+                  <tr><th className="py-3 pr-4">Association</th><th className="py-3 pr-4">Publié</th><th className="py-3 pr-4">Nom de domaine</th><th className="py-3 pr-4">Indexable</th><th className="py-3 pr-4">Site</th></tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {items.map((org) => (
+                    <tr key={org.id}>
+                      <td className="py-3 pr-4 font-semibold text-gray-900">{org.name}</td>
+                      <td className="py-3 pr-4">{org.published ? <span className="text-green-700">En ligne</span> : <span className="text-amber-700">Hors ligne</span>}</td>
+                      <td className="py-3 pr-4 text-gray-600">{org.published ? 'Sous-domaine EasyAsso' : '—'}</td>
+                      <td className="py-3 pr-4">{org.published ? <span className="text-green-700">Oui</span> : <span className="text-gray-400">Non</span>}</td>
+                      <td className="py-3 pr-4"><a href={org.siteUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-brand-700">Ouvrir <ExternalLink className="h-3.5 w-3.5" /></a></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
         )}
 
         {tab === 'accounting' && (
@@ -414,4 +476,81 @@ function formatDate(value: string) {
 
 function formatEuros(value: number) {
   return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(value);
+}
+
+function lastAt(org: AdminOrg) {
+  const last = org.thread[org.thread.length - 1];
+  return last ? new Date(last.createdAt).getTime() : 0;
+}
+
+function ConversationCard({ org, busy, onMessage, onMarkRead }: { org: AdminOrg; busy: string; onMessage: (org: AdminOrg, body: string) => Promise<boolean>; onMarkRead: (org: AdminOrg) => void }) {
+  const [body, setBody] = useState('');
+  const sending = busy === `msg:${org.id}`;
+  async function submit() {
+    if (!body.trim()) return;
+    const ok = await onMessage(org, body.trim());
+    if (ok) setBody('');
+  }
+  return (
+    <article className="card">
+      <div className="flex items-center justify-between gap-2">
+        <h3 className="font-extrabold text-gray-900">{org.name}</h3>
+        {org.unreadFromOrg > 0 && <span className="badge bg-red-100 text-red-700">{org.unreadFromOrg} nouveau{org.unreadFromOrg > 1 ? 'x' : ''}</span>}
+      </div>
+      <p className="text-xs text-gray-500">{org.ownerName || 'Responsable'} · {org.ownerEmail}</p>
+      <div className="mt-3 max-h-64 space-y-2 overflow-y-auto rounded-xl bg-gray-50 p-3">
+        {org.thread.length === 0 && <p className="py-5 text-center text-sm text-gray-400">Aucun message. Écrivez le premier.</p>}
+        {org.thread.map((m) => (
+          <div key={m.id} className={`flex ${m.fromAdmin ? 'justify-end' : 'justify-start'}`}>
+            <div className={`max-w-[80%] rounded-2xl px-4 py-2 text-sm ${m.fromAdmin ? 'bg-brand-600 text-white' : 'bg-white ring-1 ring-gray-200 text-gray-800'}`}>
+              <p className="whitespace-pre-wrap leading-relaxed">{m.body}</p>
+              <p className={`mt-1 text-[11px] ${m.fromAdmin ? 'text-white/70' : 'text-gray-500'}`}>{m.authorName} · {formatDate(m.createdAt)}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="mt-3 flex items-end gap-2">
+        <textarea className="input min-h-[60px] flex-1" value={body} onFocus={() => onMarkRead(org)} onChange={(e) => setBody(e.target.value)} placeholder="Votre message…" />
+        <button onClick={submit} disabled={sending || !body.trim()} className="btn btn-primary disabled:opacity-50"><Send className="h-4 w-4" /> {sending ? 'Envoi…' : 'Envoyer'}</button>
+      </div>
+    </article>
+  );
+}
+
+function ChartCard({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <div className="rounded-3xl bg-white p-5 shadow-sm ring-1 ring-gray-100">
+      <h3 className="mb-4 font-bold text-gray-900">{title}</h3>
+      {children}
+    </div>
+  );
+}
+
+function Bars({ data, compact }: { data: Bar[]; compact?: boolean }) {
+  const max = Math.max(1, ...data.map((d) => d.value));
+  return (
+    <div className={`flex items-end gap-1 ${compact ? 'h-32' : 'h-40'}`}>
+      {data.map((d, i) => (
+        <div key={i} className="flex flex-1 flex-col items-center justify-end gap-1">
+          <div className="w-full rounded-t bg-brand-600" style={{ height: `${(d.value / max) * 100}%`, minHeight: d.value > 0 ? 3 : 0 }} title={`${d.label} : ${d.value}`} />
+          <span className={`text-gray-500 ${compact ? 'text-[9px]' : 'text-[10px]'}`}>{d.label}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function RankList({ data, empty }: { data: Bar[]; empty: string }) {
+  const max = Math.max(1, ...data.map((d) => d.value));
+  if (!data.length) return <p className="text-sm text-gray-500">{empty}</p>;
+  return (
+    <ul className="space-y-3">
+      {data.map((d, i) => (
+        <li key={i}>
+          <div className="flex items-center justify-between text-sm"><span className="truncate pr-2 font-medium text-gray-700">{d.label}</span><span className="font-bold text-gray-900">{d.value}</span></div>
+          <div className="mt-1 h-2 rounded-full bg-gray-100"><div className="h-2 rounded-full bg-brand-600" style={{ width: `${(d.value / max) * 100}%` }} /></div>
+        </li>
+      ))}
+    </ul>
+  );
 }

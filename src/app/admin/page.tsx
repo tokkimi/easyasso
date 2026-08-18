@@ -26,8 +26,55 @@ export default async function AdminPage() {
   const validatedRevenue = organizations.filter((org) => org.planStatus === 'ACTIVE').length * 250;
   const pendingRevenue = organizations.filter((org) => org.planStatus !== 'ACTIVE').length * 250;
 
+  // ---- Visitor analytics (last 30 days) ----
+  const since = new Date(Date.now() - 30 * 24 * 3600 * 1000);
+  const [events, totalViews] = await Promise.all([
+    prisma.siteEvent.findMany({ where: { type: 'pageview', createdAt: { gte: since } }, select: { path: true, referrer: true, createdAt: true, organizationId: true }, orderBy: { createdAt: 'desc' }, take: 20000 }),
+    prisma.siteEvent.count({ where: { type: 'pageview' } }),
+  ]);
+  const orgName = new Map(organizations.map((o) => [o.id, o.name]));
+  const dayFmt = new Intl.DateTimeFormat('fr-CA', { timeZone: 'Europe/Paris' });
+  const hourFmt = new Intl.DateTimeFormat('fr-FR', { timeZone: 'Europe/Paris', hour: '2-digit', hour12: false });
+  const wdFmt = new Intl.DateTimeFormat('fr-FR', { timeZone: 'Europe/Paris', weekday: 'long' });
+  const byDayMap = new Map<string, number>();
+  const byHour = Array.from({ length: 24 }, () => 0);
+  const byWeekday = new Map<string, number>();
+  const refMap = new Map<string, number>();
+  const orgViews = new Map<string, number>();
+  const pageMap = new Map<string, number>();
+  const refHost = (ref: string | null) => {
+    if (!ref) return 'Accès direct';
+    try { return new URL(ref).hostname.replace(/^www\./, ''); } catch { return 'Autre'; }
+  };
+  for (const e of events) {
+    byDayMap.set(dayFmt.format(e.createdAt), (byDayMap.get(dayFmt.format(e.createdAt)) || 0) + 1);
+    byHour[Number(hourFmt.format(e.createdAt)) % 24] += 1;
+    byWeekday.set(wdFmt.format(e.createdAt), (byWeekday.get(wdFmt.format(e.createdAt)) || 0) + 1);
+    refMap.set(refHost(e.referrer), (refMap.get(refHost(e.referrer)) || 0) + 1);
+    orgViews.set(e.organizationId, (orgViews.get(e.organizationId) || 0) + 1);
+    const p = e.path || 'accueil';
+    pageMap.set(p, (pageMap.get(p) || 0) + 1);
+  }
+  const days = Array.from({ length: 14 }, (_, i) => {
+    const key = dayFmt.format(new Date(Date.now() - (13 - i) * 86400000));
+    return { label: key.slice(5), value: byDayMap.get(key) || 0 };
+  });
+  const weekdayOrder = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'];
+  const top = (m: Map<string, number>, n = 8) => [...m.entries()].sort((a, b) => b[1] - a[1]).slice(0, n).map(([label, value]) => ({ label, value }));
+  const analytics = {
+    total: totalViews,
+    last30: events.length,
+    byDay: days,
+    byHour: byHour.map((value, hour) => ({ label: `${hour}h`, value })),
+    byWeekday: weekdayOrder.map((label) => ({ label, value: byWeekday.get(label) || 0 })),
+    referrers: top(refMap),
+    topOrgs: [...orgViews.entries()].sort((a, b) => b[1] - a[1]).slice(0, 8).map(([id, value]) => ({ label: orgName.get(id) || 'Association', value })),
+    topPages: top(pageMap),
+  };
+
   return (
     <AdminClient
+      analytics={analytics}
       stats={{
         organizations: organizations.length,
         users: userCount,

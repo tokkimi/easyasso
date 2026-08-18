@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { prisma } from '@/lib/prisma';
-import { RenderSite, loadSiteBySubdomain } from '@/components/site/RenderSite';
+import { RenderSite, loadSiteBySubdomain, siteMetadata } from '@/components/site/RenderSite';
 
 // Cache public pages and serve them from the CDN (fast worldwide), refreshing
 // in the background at most once a minute. Edits call revalidatePath, so
@@ -9,8 +9,8 @@ export const revalidate = 60;
 
 export async function generateMetadata({ params }: { params: Promise<{ subdomain: string }> }): Promise<Metadata> {
   const { subdomain } = await params;
-  const site = await prisma.site.findUnique({ where: { subdomain } });
-  return { title: site?.name || 'Easy Asso' };
+  const site = await prisma.site.findUnique({ where: { subdomain }, select: { name: true, header: true, footer: true } });
+  return siteMetadata(site);
 }
 
 export default async function PublicSite({ params }: { params: Promise<{ subdomain: string; path?: string[] }> }) {

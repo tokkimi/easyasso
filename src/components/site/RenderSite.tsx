@@ -1,9 +1,11 @@
+import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 import { DEFAULT_HEADER, DEFAULT_FOOTER, type HeaderConfig, type FooterConfig } from '@/lib/blocks';
 import { PublicBlock } from './PublicBlock';
 import { PublicHeader, PublicFooter } from './PublicChrome';
 import { ContactBubble } from './ContactBubble';
+import { PageViewTracker } from './PageViewTracker';
 import { themeStyle, brandCss } from '@/lib/render';
 import { googleFontsHref } from '@/lib/fonts';
 import { canShowPublicSite } from '@/lib/plan';
@@ -27,6 +29,24 @@ export async function loadSiteByDomain(domain: string) {
       pages: { orderBy: { order: 'asc' }, include: { blocks: { orderBy: { order: 'asc' } } } },
     },
   });
+}
+
+// SEO metadata for a public tenant site (title, description, Open Graph/Twitter
+// with the association's logo). `absolute` title keeps the tenant's own name
+// without the EasyAsso suffix.
+export function siteMetadata(site: { name: string; header: unknown; footer: unknown } | null): Metadata {
+  if (!site) return { title: 'Easy Asso' };
+  const footer = (site.footer as any) || {};
+  const header = (site.header as any) || {};
+  const raw = typeof footer.text === 'string' && footer.text.trim() ? footer.text.trim() : `Le site de ${site.name}.`;
+  const description = raw.slice(0, 300);
+  const image = header.logoUrl || footer.logoUrl;
+  return {
+    title: { absolute: site.name },
+    description,
+    openGraph: { title: site.name, description, type: 'website', images: image ? [{ url: image }] : undefined },
+    twitter: { card: 'summary', title: site.name, description },
+  };
 }
 
 export function RenderSite({ site, basePath, slug }: { site: SiteWithPages; basePath: string; slug?: string }) {
@@ -74,11 +94,10 @@ export function RenderSite({ site, basePath, slug }: { site: SiteWithPages; base
   const page = slug ? site.pages.find((p) => p.slug === slug) : site.pages.find((p) => p.isHome) || site.pages[0];
   if (!page) notFound();
 
-  prisma.siteEvent.create({ data: { organizationId: site.organizationId, type: 'pageview', path: page.slug } }).catch(() => {});
-
   return (
     <div className="flex min-h-screen flex-col" style={themeStyle(theme)}>
       {fontHref && <link rel="stylesheet" href={fontHref} />}
+      <PageViewTracker organizationId={site.organizationId} path={page.slug} />
       <PublicHeader header={header} nav={nav} basePath={basePath} />
       <main className="flex-1 py-8">
         {page.blocks.length === 0 ? (

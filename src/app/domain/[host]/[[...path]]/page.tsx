@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { prisma } from '@/lib/prisma';
-import { RenderSite, loadSiteByDomain } from '@/components/site/RenderSite';
+import { RenderSite, loadSiteByDomain, siteMetadata } from '@/components/site/RenderSite';
 
 // Cache verified custom-domain pages on the CDN, refreshing in the background
 // at most once a minute (edits call revalidatePath for an immediate refresh).
@@ -8,8 +8,8 @@ export const revalidate = 60;
 
 export async function generateMetadata({ params }: { params: Promise<{ host: string }> }): Promise<Metadata> {
   const { host } = await params;
-  const site = await prisma.site.findFirst({ where: { customDomain: decodeURIComponent(host), domainVerified: true } });
-  return { title: site?.name || 'Easy Asso' };
+  const site = await prisma.site.findFirst({ where: { customDomain: decodeURIComponent(host), domainVerified: true }, select: { name: true, header: true, footer: true } });
+  return siteMetadata(site);
 }
 
 // Rendered for verified custom domains (rewritten by middleware). basePath is

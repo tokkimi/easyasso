@@ -44,6 +44,12 @@ Chaque "section" a un "type" parmi :
 - {"type":"cta","title":"...","text":"...","buttonText":"Faire un don"}
 - {"type":"gallery"}  (galerie de photos, sans contenu)
 
+IMAGES — le site doit être ILLUSTRÉ (les images sont ajoutées automatiquement, ne fournis JAMAIS d'URL) :
+- Commence l'Accueil par un "banner".
+- Privilégie "textimage" plutôt que "text" seul pour les sections développées, en alternant imageSide "left" / "right" : ainsi chaque grande section porte une image.
+- Ajoute au moins une "gallery" (sur l'Accueil ou Nos actions).
+- N'enchaîne jamais une page entière en blocs "text" sans aucune image.
+
 Génère un site neuf, dans CET ORDRE de pages (les premières sont les plus importantes et doivent être écrites en premier) : Accueil, Nos actions, Notre impact, Notre histoire, S'engager / Devenir bénévole, Faire un don, et Contact. Crée une page Actualités (à la fin) uniquement si des actualités sont fournies.
 
 INTERDICTIONS ABSOLUES (c'est ici que se jouent les mauvais textes) :
@@ -209,6 +215,29 @@ Crée le site complet de cette association :
 ${lines.join('\n')}`;
 }
 
+const IMAGE_SECTIONS = new Set(['banner', 'textimage', 'gallery']);
+
+// Guarantee a page is illustrated. If the model returned only plain `text`
+// blocks (no image), promote every other one to `textimage` so an image is
+// auto-filled — a text-only page would otherwise render with no pictures.
+function illustrate(sections: Section[]): Section[] {
+  const list = sections.map((s) => ({ ...s })) as Section[];
+  if (list.some((s) => IMAGE_SECTIONS.has(s.type))) return list;
+  let side: 'left' | 'right' = 'right';
+  let seen = 0;
+  for (let i = 0; i < list.length; i++) {
+    const s = list[i] as any;
+    if (s.type === 'text' && s.text) {
+      if (seen % 2 === 0) {
+        list[i] = { type: 'textimage', title: s.title || '', text: s.text, imageSide: side } as Section;
+        side = side === 'right' ? 'left' : 'right';
+      }
+      seen++;
+    }
+  }
+  return list;
+}
+
 // Convert AI sections into our block model, injecting the association's photos.
 function sectionsToBlocks(sections: Section[], photos: string[], seed: string, isHome: boolean, language: 'fr' | 'en') {
   let photoIdx = 0;
@@ -219,7 +248,7 @@ function sectionsToBlocks(sections: Section[], photos: string[], seed: string, i
     return templateImage(seed, fallbackIdx++, w, h);
   };
   const blocks: any[] = [];
-  for (const s of sections) {
+  for (const s of illustrate(sections)) {
     switch (s.type) {
       case 'banner':
         blocks.push({ type: 'banner', content: { image: nextPhoto(1600, 720), title: s.title, subtitle: s.subtitle || '', overlay: 45, height: 460, button: { text: donateLabel, href: '/don', color: '#ffffff', variant: 'solid', align: 'center' } } });
@@ -282,7 +311,21 @@ export async function aiGenerateSite(input: GenerateInput): Promise<BuiltTemplat
     usedSlugs.add(slug);
     const isHome = !homeAssigned && (p.isHome || i === 0);
     if (isHome) homeAssigned = true;
-    return { title: p.title || `Page ${i + 1}`, slug: isHome ? 'accueil' : slug, isHome, showInNav: true, blocks: sectionsToBlocks(p.sections || [], photos, seed, isHome, language) };
+    const blocks = sectionsToBlocks(p.sections || [], photos, seed, isHome, language);
+    // Guarantee a hero image on the home page even if the model didn't emit a banner.
+    if (isHome && !blocks.some((b: any) => b.type === 'banner')) {
+      blocks.unshift({
+        type: 'banner', order: 0,
+        content: {
+          image: photos[0] || templateImage(seed, 0, 1600, 720),
+          title: name, subtitle: ai.tagline || '', overlay: 45, height: 460,
+          button: { text: language === 'en' ? 'Donate' : 'Faire un don', href: '/don', color: '#ffffff', variant: 'solid', align: 'center' },
+        },
+        style: defaultStyleFor('banner'),
+      });
+      blocks.forEach((b: any, order: number) => { b.order = order; });
+    }
+    return { title: p.title || `Page ${i + 1}`, slug: isHome ? 'accueil' : slug, isHome, showInNav: true, blocks };
   });
   if (!homeAssigned && t.pages[0]) t.pages[0].isHome = true;
 

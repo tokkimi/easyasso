@@ -142,6 +142,38 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Démarche responsable + empreinte estimée */}
+      <section className="mx-auto max-w-6xl px-6 py-16">
+        <div className="grid gap-8 rounded-3xl border border-green-100 bg-gradient-to-br from-green-50 to-white p-8 md:p-10 lg:grid-cols-[1.15fr_0.85fr] lg:items-center">
+          <div>
+            <span className="badge bg-green-100 text-green-800">Démarche responsable</span>
+            <h2 className="mt-4 text-3xl font-extrabold tracking-tight text-gray-900">Un site utile, et plus sobre</h2>
+            <p className="mt-3 leading-8 text-gray-600">
+              Le numérique n’est jamais sans impact. Notre approche est de le réduire concrètement : une seule infrastructure partagée par toutes les
+              associations plutôt que des sites sur-mesure refaits tous les trois ans, des pages légères servies depuis un cache, des images compressées,
+              et la dématérialisation des reçus, des newsletters et des dons.
+            </p>
+            <ul className="mt-6 grid gap-3 sm:grid-cols-2">
+              {eco.map((e) => (
+                <li key={e.title} className="flex gap-3">
+                  <e.icon className="mt-0.5 h-5 w-5 shrink-0 text-green-700" />
+                  <div><p className="font-semibold text-gray-900">{e.title}</p><p className="text-sm text-gray-600">{e.text}</p></div>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="rounded-2xl bg-white p-6 text-center shadow-sm ring-1 ring-green-100">
+            <p className="text-sm font-semibold uppercase tracking-wide text-green-700">Empreinte estimée</p>
+            <p className="mt-2 text-5xl font-black text-gray-900">≈ 0,3 g</p>
+            <p className="mt-1 text-sm text-gray-600">de CO₂e par page vue (estimation)</p>
+            <p className="mt-4 text-xs leading-5 text-gray-500">
+              Estimation basée sur le poids de nos pages et le modèle Sustainable Web Design. À titre de repère, une page web classique est souvent
+              plus lourde et émet davantage. Le numérique reste un usage à impact : nous cherchons à le réduire, pas à le nier.
+            </p>
+          </div>
+        </div>
+      </section>
+
       {/* Steps */}
       <section className="border-y border-gray-100 bg-gray-50 py-14">
         <div className="mx-auto grid max-w-6xl gap-6 px-6 sm:grid-cols-2 lg:grid-cols-4">
@@ -191,38 +223,6 @@ export default function LandingPage() {
                 <p className="mt-1 text-sm leading-6 text-gray-600">{a.text}</p>
               </div>
             ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Démarche responsable + empreinte estimée */}
-      <section className="mx-auto max-w-6xl px-6 py-16">
-        <div className="grid gap-8 rounded-3xl border border-green-100 bg-gradient-to-br from-green-50 to-white p-8 md:p-10 lg:grid-cols-[1.15fr_0.85fr] lg:items-center">
-          <div>
-            <span className="badge bg-green-100 text-green-800">Démarche responsable</span>
-            <h2 className="mt-4 text-3xl font-extrabold tracking-tight text-gray-900">Un site utile, et plus sobre</h2>
-            <p className="mt-3 leading-8 text-gray-600">
-              Le numérique n’est jamais sans impact. Notre approche est de le réduire concrètement : une seule infrastructure partagée par toutes les
-              associations plutôt que des sites sur-mesure refaits tous les trois ans, des pages légères servies depuis un cache, des images compressées,
-              et la dématérialisation des reçus, des newsletters et des dons.
-            </p>
-            <ul className="mt-6 grid gap-3 sm:grid-cols-2">
-              {eco.map((e) => (
-                <li key={e.title} className="flex gap-3">
-                  <e.icon className="mt-0.5 h-5 w-5 shrink-0 text-green-700" />
-                  <div><p className="font-semibold text-gray-900">{e.title}</p><p className="text-sm text-gray-600">{e.text}</p></div>
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div className="rounded-2xl bg-white p-6 text-center shadow-sm ring-1 ring-green-100">
-            <p className="text-sm font-semibold uppercase tracking-wide text-green-700">Empreinte estimée</p>
-            <p className="mt-2 text-5xl font-black text-gray-900">≈ 0,3 g</p>
-            <p className="mt-1 text-sm text-gray-600">de CO₂e par page vue (estimation)</p>
-            <p className="mt-4 text-xs leading-5 text-gray-500">
-              Estimation basée sur le poids de nos pages et le modèle Sustainable Web Design. À titre de repère, une page web classique est souvent
-              plus lourde et émet davantage. Le numérique reste un usage à impact : nous cherchons à le réduire, pas à le nier.
-            </p>
           </div>
         </div>
       </section>

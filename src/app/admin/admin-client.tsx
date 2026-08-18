@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState, type Dispatch, type ReactNode, type SetStateAction } from 'react';
-import { CheckCircle, Download, ExternalLink, FileText, Pencil, Save, ShieldCheck, Trash2, Users, WalletCards } from 'lucide-react';
+import { CheckCircle, Download, ExternalLink, FileText, MessageSquare, Pencil, Save, Send, ShieldCheck, Trash2, Users, WalletCards } from 'lucide-react';
 
 type AdminStats = {
   organizations: number;
@@ -89,6 +89,20 @@ export function AdminClient({ organizations, stats }: { organizations: AdminOrg[
     updateLocal(org.id, data.organization);
   }
 
+  async function sendMessage(org: AdminOrg, subject: string, message: string) {
+    setBusy(`msg:${org.id}`);
+    const res = await fetch(`/api/admin/organizations/${org.id}/message`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ subject, message }),
+    });
+    const data = await res.json().catch(() => ({}));
+    setBusy('');
+    if (!res.ok) { alert(data.error || 'Envoi impossible.'); return false; }
+    alert(`Message envoyé à ${org.name}. Il apparaît dans sa messagerie (expéditeur : Easy Asso Manager).`);
+    return true;
+  }
+
   async function remove(org: AdminOrg) {
     const ok = confirm(`Supprimer définitivement "${org.name}" ?\n\nCela supprime l'association, son site, ses dons, sa compta et l'utilisateur propriétaire s'il n'a aucun autre espace.`);
     if (!ok) return;
@@ -172,18 +186,18 @@ export function AdminClient({ organizations, stats }: { organizations: AdminOrg[
           </div>
         </section>
 
-        <OrgList title="Paiements à vérifier" empty="Aucun paiement en attente." items={pending} busy={busy} edits={edits} references={references} onReference={setReferences} onEdit={patchEdit} onSave={save} onActivate={activate} onRemove={remove} />
+        <OrgList title="Paiements à vérifier" empty="Aucun paiement en attente." items={pending} busy={busy} edits={edits} references={references} onReference={setReferences} onEdit={patchEdit} onSave={save} onActivate={activate} onRemove={remove} onMessage={sendMessage} />
         <div className="mt-10">
-          <OrgList title="Associations actives" empty="Aucune association active." items={active} busy={busy} edits={edits} references={references} onReference={setReferences} onEdit={patchEdit} onSave={save} onActivate={activate} onRemove={remove} />
+          <OrgList title="Associations actives" empty="Aucune association active." items={active} busy={busy} edits={edits} references={references} onReference={setReferences} onEdit={patchEdit} onSave={save} onActivate={activate} onRemove={remove} onMessage={sendMessage} />
         </div>
       </div>
     </div>
   );
 }
 
-function OrgList({ title, empty, items, busy, edits, references, onReference, onEdit, onSave, onActivate, onRemove }: {
+function OrgList({ title, empty, items, busy, edits, references, onReference, onEdit, onSave, onActivate, onRemove, onMessage }: {
   title: string; empty: string; items: AdminOrg[]; busy: string; edits: Record<string, EditState>; references: Record<string, string>;
-  onReference: Dispatch<SetStateAction<Record<string, string>>>; onEdit: (id: string, patch: Partial<EditState>) => void; onSave: (org: AdminOrg) => void; onActivate: (org: AdminOrg) => void; onRemove: (org: AdminOrg) => void;
+  onReference: Dispatch<SetStateAction<Record<string, string>>>; onEdit: (id: string, patch: Partial<EditState>) => void; onSave: (org: AdminOrg) => void; onActivate: (org: AdminOrg) => void; onRemove: (org: AdminOrg) => void; onMessage: (org: AdminOrg, subject: string, message: string) => Promise<boolean>;
 }) {
   return (
     <section className="space-y-4">
@@ -201,17 +215,26 @@ function OrgList({ title, empty, items, busy, edits, references, onReference, on
           onSave={() => onSave(org)}
           onActivate={() => onActivate(org)}
           onRemove={() => onRemove(org)}
+          onMessage={onMessage}
         />
       ))}
     </section>
   );
 }
 
-function OrgCard({ org, edit, busy, reference, onReference, onEdit, onSave, onActivate, onRemove }: {
-  org: AdminOrg; edit: EditState; busy: string; reference: string; onReference: (value: string) => void; onEdit: (patch: Partial<EditState>) => void; onSave: () => void; onActivate: () => void; onRemove: () => void;
+function OrgCard({ org, edit, busy, reference, onReference, onEdit, onSave, onActivate, onRemove, onMessage }: {
+  org: AdminOrg; edit: EditState; busy: string; reference: string; onReference: (value: string) => void; onEdit: (patch: Partial<EditState>) => void; onSave: () => void; onActivate: () => void; onRemove: () => void; onMessage: (org: AdminOrg, subject: string, message: string) => Promise<boolean>;
 }) {
   const isActive = org.planStatus === 'ACTIVE';
   const hasProof = Boolean(org.manual?.proofSubmittedAt || org.manual?.proofFile || org.manual?.proofNote);
+  const [msgSubject, setMsgSubject] = useState('');
+  const [msgBody, setMsgBody] = useState('');
+  const sendingMessage = busy === `msg:${org.id}`;
+  async function submitMessage() {
+    if (!msgBody.trim()) return;
+    const ok = await onMessage(org, msgSubject.trim(), msgBody.trim());
+    if (ok) { setMsgSubject(''); setMsgBody(''); }
+  }
   return (
     <article className="card">
       <div className="flex flex-wrap items-start justify-between gap-4">
@@ -268,6 +291,16 @@ function OrgCard({ org, edit, busy, reference, onReference, onEdit, onSave, onAc
         <div className="mt-4 flex flex-wrap gap-3">
           <button onClick={onSave} disabled={busy === `save:${org.id}`} className="btn btn-primary"><Save className="h-4 w-4" /> {busy === `save:${org.id}` ? 'Enregistrement…' : 'Enregistrer'}</button>
           <button onClick={onRemove} disabled={busy === `delete:${org.id}`} className="btn btn-ghost text-red-600 hover:bg-red-50"><Trash2 className="h-4 w-4" /> {busy === `delete:${org.id}` ? 'Suppression…' : 'Supprimer utilisateur/site'}</button>
+        </div>
+      </details>
+
+      <details className="mt-4 rounded-2xl border border-brand-200 bg-brand-50 p-4">
+        <summary className="flex cursor-pointer items-center gap-2 font-bold text-gray-900"><MessageSquare className="h-4 w-4" /> Écrire à {org.ownerName || 'ce responsable'}</summary>
+        <p className="mt-2 text-xs text-gray-600">Le message arrive dans la messagerie de l’association (onglet « Messages »). L’expéditeur affiché sera <strong>Easy Asso Manager</strong>.</p>
+        <div className="mt-3 space-y-3">
+          <Field label="Objet (optionnel)"><input className="input" value={msgSubject} onChange={(event) => setMsgSubject(event.target.value)} placeholder="Ex : Bienvenue sur EasyAsso" /></Field>
+          <Field label="Message"><textarea className="input min-h-[110px]" value={msgBody} onChange={(event) => setMsgBody(event.target.value)} placeholder="Votre message à l’association…" /></Field>
+          <button onClick={submitMessage} disabled={sendingMessage || !msgBody.trim()} className="btn btn-primary disabled:opacity-50"><Send className="h-4 w-4" /> {sendingMessage ? 'Envoi…' : 'Envoyer le message'}</button>
         </div>
       </details>
 

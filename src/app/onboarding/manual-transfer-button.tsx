@@ -12,7 +12,7 @@ type ManualTransferResponse = {
   error?: string;
 };
 
-export function ManualTransferButton({ price }: { price: string }) {
+export function ManualTransferButton({ price, plan = 'lifetime' }: { price: string; plan?: string }) {
   const [loading, setLoading] = useState(false);
   const [sendingProof, setSendingProof] = useState(false);
   const [details, setDetails] = useState<ManualTransferResponse | null>(null);
@@ -26,7 +26,7 @@ export function ManualTransferButton({ price }: { price: string }) {
     setLoading(true);
     setError('');
     setCopied('');
-    const res = await fetch('/api/checkout/manual-transfer', { method: 'POST' });
+    const res = await fetch('/api/checkout/manual-transfer', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ plan }) });
     const data = await res.json().catch(() => ({}));
     setLoading(false);
     if (data.url) {
@@ -82,7 +82,7 @@ export function ManualTransferButton({ price }: { price: string }) {
         <div>
           <h2 className="font-extrabold text-gray-900">Payer par virement bancaire</h2>
           <p className="mt-1 text-sm text-gray-600">
-            Vous virez {price} €, puis EasyAsso valide manuellement l’accès à vie dès réception.
+            Vous virez {price} €, puis EasyAsso valide manuellement {plan === 'annual' ? 'votre abonnement (1 an)' : 'l’accès à vie'} dès réception.
           </p>
         </div>
       </div>

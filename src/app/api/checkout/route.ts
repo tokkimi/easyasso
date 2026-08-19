@@ -1,9 +1,10 @@
 import { NextResponse } from 'next/server';
 import { requireOrg } from '@/lib/session';
-import { stripe, isDemoMode, PRICE_EUR } from '@/lib/stripe';
+import { stripe, isDemoMode } from '@/lib/stripe';
 import { activateOrganization } from '@/lib/activation';
 import { prisma } from '@/lib/prisma';
 import { planAccess } from '@/lib/plan';
+import { planFor } from '@/lib/plans';
 import { airwallexClientEnvironment, airwallexConfigured, createAirwallexPaymentIntent, createAirwallexPaymentLink } from '@/lib/airwallex';
 
 function paymentProviderMessage(raw: string) {
@@ -14,12 +15,15 @@ function paymentProviderMessage(raw: string) {
   return `Airwallex refuse la création du paiement : ${raw}. Aucun débit n’a été effectué.`;
 }
 
-export async function POST() {
+export async function POST(req: Request) {
   const ctx = await requireOrg();
   const org = ctx.organization!;
   if (org.planStatus === 'ACTIVE') {
     return NextResponse.json({ url: '/dashboard' });
   }
+  const body = await req.json().catch(() => ({}));
+  const plan = planFor(body?.plan);
+  const priceEur = plan.amountEur;
   const nextUnpaidStatus = planAccess(org).hasAccess ? org.planStatus : 'PENDING_PAYMENT';
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
@@ -33,10 +37,10 @@ export async function POST() {
   let airwallexError = '';
   if (airwallexConfigured) {
     try {
-      const payment = await createAirwallexPaymentLink({ organizationId: org.id, organizationName: org.name, amount: PRICE_EUR });
+      const payment = await createAirwallexPaymentLink({ organizationId: org.id, organizationName: org.name, amount: priceEur });
       await prisma.organization.update({
         where: { id: org.id },
-        data: { planStatus: nextUnpaidStatus, airwallexPaymentLinkId: payment.id },
+        data: { planStatus: nextUnpaidStatus, airwallexPaymentLinkId: payment.id, profile: { ...(org.profile as any || {}), plan: plan.id } },
       });
       return NextResponse.json({ url: payment.url });
     } catch (error: any) {
@@ -46,13 +50,13 @@ export async function POST() {
         const intent = await createAirwallexPaymentIntent({
           organizationId: org.id,
           organizationName: org.name,
-          amount: PRICE_EUR,
+          amount: priceEur,
           email: ctx.user.email,
           returnUrl: `${appUrl}/onboarding/success`,
         });
         await prisma.organization.update({
           where: { id: org.id },
-          data: { planStatus: nextUnpaidStatus, airwallexPaymentLinkId: intent.id },
+          data: { planStatus: nextUnpaidStatus, airwallexPaymentLinkId: intent.id, profile: { ...(org.profile as any || {}), plan: plan.id } },
         });
         const params = new URLSearchParams({
           intent_id: intent.id,
@@ -78,7 +82,7 @@ export async function POST() {
     );
   }
 
-  await prisma.organization.update({ where: { id: org.id }, data: { planStatus: nextUnpaidStatus } });
+  await prisma.organization.update({ where: { id: org.id }, data: { planStatus: nextUnpaidStatus, profile: { ...(org.profile as any || {}), plan: plan.id } } });
 
   const session = await stripe.checkout.sessions.create({
     mode: 'payment',
@@ -92,8 +96,8 @@ export async function POST() {
             quantity: 1,
             price_data: {
               currency: 'eur',
-              unit_amount: PRICE_EUR * 100,
-              product_data: { name: 'Easy Asso — Création du site de votre association' },
+              unit_amount: priceEur * 100,
+              product_data: { name: `Easy Asso — ${plan.id === 'annual' ? 'abonnement annuel' : 'accès à vie'} du site de votre association` },
             },
           },
         ],

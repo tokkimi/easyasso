@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server';
 import { requireOrg } from '@/lib/session';
 import { prisma } from '@/lib/prisma';
-import { PRICE_EUR } from '@/lib/stripe';
 import { platformBankDetails } from '@/lib/platform-admin';
 import { planAccess } from '@/lib/plan';
+import { planFor } from '@/lib/plans';
 
 function paymentReference(org: { id: string; slug: string }, existing?: string) {
   const cleanId = org.id.toUpperCase().replace(/[^A-Z0-9]/g, '');
@@ -12,10 +12,13 @@ function paymentReference(org: { id: string; slug: string }, existing?: string) 
   return neutralReference;
 }
 
-export async function POST() {
+export async function POST(req: Request) {
   const ctx = await requireOrg();
   const org = ctx.organization!;
   if (org.planStatus === 'ACTIVE') return NextResponse.json({ active: true, url: '/dashboard' });
+
+  const body = await req.json().catch(() => ({}));
+  const plan = planFor(body?.plan);
 
   const currentProfile = (org.profile || {}) as Record<string, any>;
   const currentManual = (currentProfile.easyassoManualPayment || {}) as Record<string, any>;
@@ -29,11 +32,13 @@ export async function POST() {
       planStatus: nextUnpaidStatus,
       profile: {
         ...currentProfile,
+        plan: plan.id,
         easyassoManualPayment: {
           ...currentManual,
           method: 'BANK_TRANSFER',
           status: 'WAITING_TRANSFER',
-          amountEur: PRICE_EUR,
+          plan: plan.id,
+          amountEur: plan.amountEur,
           reference,
           requestedAt,
         },
@@ -43,7 +48,8 @@ export async function POST() {
 
   return NextResponse.json({
     ok: true,
-    amountEur: PRICE_EUR,
+    plan: plan.id,
+    amountEur: plan.amountEur,
     reference,
     bank: platformBankDetails(),
   });

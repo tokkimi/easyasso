@@ -1,13 +1,13 @@
 'use client';
 import { useState } from 'react';
 
-export function PayButton({ price, demo }: { price: string; demo: boolean }) {
+export function PayButton({ price, demo, plan = 'lifetime' }: { price: string; demo: boolean; plan?: string }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   async function pay() {
     setLoading(true);
     setError('');
-    const res = await fetch('/api/checkout', { method: 'POST' });
+    const res = await fetch('/api/checkout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ plan }) });
     const data = await res.json();
     if (data.url) window.location.href = data.url;
     else {

@@ -3,17 +3,17 @@ import Link from 'next/link';
 import { requireOrg, planAccess } from '@/lib/session';
 import { isDemoMode } from '@/lib/stripe';
 import { siteUrlFor } from '@/lib/utils';
-import { PayButton } from './pay-button';
-import { ManualTransferButton } from './manual-transfer-button';
+import { PlanChooser } from './plan-chooser';
+import { PLANS, isPlanId } from '@/lib/plans';
 import { Check } from 'lucide-react';
-
-const PRICE = process.env.NEXT_PUBLIC_PRICE_EUR || '250';
 
 export default async function OnboardingPage() {
   const ctx = await requireOrg();
   const org = ctx.organization!;
   if (org.planStatus === 'ACTIVE') redirect('/dashboard');
   const access = planAccess(org);
+  const storedPlan = (org.profile as any)?.plan;
+  const initialPlan = isPlanId(storedPlan) ? storedPlan : 'lifetime';
 
   const site = await (await import('@/lib/prisma')).prisma.site.findUnique({ where: { organizationId: org.id } });
   const url = site ? siteUrlFor(site.subdomain, site.customDomain, site.domainVerified) : '';
@@ -25,13 +25,14 @@ export default async function OnboardingPage() {
           <span className={`badge mx-auto ${access.expired ? 'bg-red-50 text-red-700' : 'bg-brand-50 text-brand-700'}`}>
             {access.expired ? 'Essai terminé' : access.isTrial ? `Essai : ${access.daysLeft} jour(s) restant(s)` : 'Activation'}
           </span>
-          <h1 className="mt-3 text-2xl font-bold text-gray-900">Hébergez le site de {org.name} à vie</h1>
+          <h1 className="mt-3 text-2xl font-bold text-gray-900">Activez le site de {org.name}</h1>
           <p className="mt-2 text-gray-600">
-            Un <strong>paiement unique de {PRICE} €</strong> — pas d’abonnement. Votre site est <strong>hébergé à vie</strong>,
-            avec tous les outils (dons, CRM, comptabilité…).
+            Deux formules, sans engagement caché : <strong>{PLANS.annual.amountEur} € / an</strong> ou
+            un <strong>paiement unique de {PLANS.lifetime.amountEur} € à vie</strong> — avec tous les outils
+            (dons, CRM, comptabilité…). Paiement par virement bancaire.
           </p>
           <p className="mt-3 rounded-xl bg-amber-50 px-4 py-3 text-sm font-medium text-amber-800">
-            Tant que le paiement n’est pas confirmé par la page sécurisée, l’abonnement reste en attente : aucun accès “à vie” n’est validé automatiquement.
+            Tant que le paiement n’est pas confirmé, l’accès reste en attente : rien n’est validé automatiquement.
           </p>
 
           <div className="mt-6 rounded-xl bg-gray-50 p-4 text-left">
@@ -47,9 +48,8 @@ export default async function OnboardingPage() {
           </ul>
 
           <div className="mt-8">
-            <PayButton price={PRICE} demo={isDemoMode} />
+            <PlanChooser initialPlan={initialPlan} demo={isDemoMode} />
           </div>
-          <ManualTransferButton price={PRICE} />
           {isDemoMode && (
             <p className="mt-3 text-xs text-amber-600">
               Mode démonstration actif : le paiement est simulé (Stripe non configuré).

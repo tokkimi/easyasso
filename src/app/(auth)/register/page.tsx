@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { signIn } from 'next-auth/react';
+import { PLANS, isPlanId, type PlanId } from '@/lib/plans';
 
 const PRICE = process.env.NEXT_PUBLIC_PRICE_EUR || '250';
 
@@ -10,6 +11,7 @@ export default function RegisterPage() {
   const router = useRouter();
   const [form, setForm] = useState({
     name: '', assoName: '', email: '', password: '', language: 'fr' as 'fr' | 'en',
+    plan: 'lifetime' as PlanId,
     phone: '', city: '', legalName: '', registrationNumber: '', legalAddress: '', publicationDirector: '',
   });
   const [error, setError] = useState('');
@@ -18,6 +20,9 @@ export default function RegisterPage() {
 
   useEffect(() => {
     if (localStorage.getItem('easyasso-language') === 'en') setForm((current) => ({ ...current, language: 'en' }));
+    // Plan can be pre-selected from the pricing page (/register?plan=annual|lifetime).
+    const requested = new URLSearchParams(window.location.search).get('plan');
+    if (isPlanId(requested)) setForm((current) => ({ ...current, plan: requested }));
   }, []);
 
   function changeLanguage(language: 'fr' | 'en') {
@@ -55,6 +60,27 @@ export default function RegisterPage() {
             <div><label className="label">Email</label><input className="input" type="email" required value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder={en ? 'you@association.org' : 'vous@asso.fr'} /></div>
             <div><label className="label">{en ? 'Password' : 'Mot de passe'}</label><input className="input" type="password" required minLength={6} value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} placeholder={en ? '6 characters minimum' : '6 caractères minimum'} /></div>
             <div><label className="label">{en ? 'Workspace language' : 'Langue de votre espace'}</label><select className="input" value={form.language} onChange={(e) => changeLanguage(e.target.value as 'fr' | 'en')}><option value="fr">Français</option><option value="en">English</option></select></div>
+            <div>
+              <label className="label">{en ? 'Formula (payable later, by bank transfer)' : 'Formule (payable plus tard, par virement)'}</label>
+              <div className="grid grid-cols-2 gap-3">
+                {(['annual', 'lifetime'] as PlanId[]).map((id) => {
+                  const p = PLANS[id];
+                  const active = form.plan === id;
+                  return (
+                    <button
+                      key={id}
+                      type="button"
+                      onClick={() => setForm({ ...form, plan: id })}
+                      className={`rounded-2xl border-2 p-3 text-left transition ${active ? 'border-brand-600 bg-brand-50' : 'border-gray-200 bg-white hover:border-gray-300'}`}
+                    >
+                      <p className="font-bold text-gray-900">{id === 'annual' ? (en ? 'Annual' : 'Annuel') : (en ? 'Lifetime' : 'À vie')}</p>
+                      <p className="mt-0.5 text-lg font-extrabold text-brand-700">{p.amountEur} €<span className="text-xs font-medium text-gray-500"> {id === 'annual' ? (en ? '/ year' : '/ an') : (en ? 'once' : 'à vie')}</span></p>
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="mt-1 text-xs text-gray-500">{en ? 'You can change this anytime before paying.' : 'Modifiable à tout moment avant le paiement.'}</p>
+            </div>
             <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
               <h2 className="font-bold text-gray-900">{en ? 'Association details (optional)' : 'Coordonnées de l’association (facultatives)'}</h2>
               <p className="mt-1 text-xs text-gray-500">{en ? 'Optional: if you fill them in, they prefill Settings, legal notices and contact pages. You can complete them later from your dashboard.' : 'Facultatives : si vous les renseignez, elles remplissent automatiquement Réglages, mentions légales et contact. Vous pourrez les compléter plus tard depuis votre tableau de bord.'}</p>
@@ -72,7 +98,7 @@ export default function RegisterPage() {
             <div className="rounded-2xl border border-green-200 bg-green-50 p-4">
               <p className="font-bold text-green-950">{en ? 'Your 3-day free trial starts automatically' : 'Votre essai gratuit de 3 jours démarre automatiquement'}</p>
               <p className="mt-1 text-sm leading-6 text-green-800">
-                {en ? `No card is requested at registration. You can create and test your website first, then pay €${PRICE} later from your dashboard if you want to keep EasyAsso.` : `Aucune carte bancaire n’est demandée à l’inscription. Vous créez et testez votre site d’abord, puis vous paierez ${PRICE} € plus tard depuis votre tableau de bord si vous voulez garder EasyAsso.`}
+                {en ? `No card is requested at registration. You can create and test your website first, then pay €${PLANS[form.plan].amountEur} ${form.plan === 'annual' ? 'per year' : 'once'} later (by bank transfer) from your dashboard if you want to keep EasyAsso.` : `Aucune carte bancaire n’est demandée à l’inscription. Vous créez et testez votre site d’abord, puis vous paierez ${PLANS[form.plan].amountEur} € ${form.plan === 'annual' ? 'par an' : 'une seule fois'} plus tard (par virement) depuis votre tableau de bord si vous voulez garder EasyAsso.`}
               </p>
             </div>
             {error && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}

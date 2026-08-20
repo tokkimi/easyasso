@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { signIn } from 'next-auth/react';
+import { GoogleButton } from '../google-button';
 import { PLANS, isPlanId, type PlanId } from '@/lib/plans';
 
 const PRICE = process.env.NEXT_PUBLIC_PRICE_EUR || '250';
@@ -104,6 +105,7 @@ export default function RegisterPage() {
             {error && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
             <button className="btn btn-primary w-full py-3" disabled={loading}>{loading ? (en ? 'Creating your trial…' : 'Création de votre essai…') : (en ? 'Create my account and start the free trial' : 'Créer mon compte et démarrer l’essai gratuit')}</button>
           </form>
+          <GoogleButton callbackUrl="/dashboard/generate?welcome=1" label={en ? 'Sign up with Google' : 'S’inscrire avec Google'} />
         </div>
         <p className="mt-4 text-center text-sm text-gray-500">{en ? 'Already have an account?' : 'Déjà un compte ?'} <Link href="/login" className="font-semibold text-brand-600">{en ? 'Log in' : 'Se connecter'}</Link></p>
       </div>

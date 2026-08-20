@@ -2,7 +2,7 @@ import { createHmac, timingSafeEqual } from 'crypto';
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { activateOrganization } from '@/lib/activation';
-import { PRICE_EUR } from '@/lib/stripe';
+import { planFor } from '@/lib/plans';
 
 export async function POST(req: Request) {
   const rawBody = await req.text();
@@ -31,7 +31,8 @@ export async function POST(req: Request) {
           ? await prisma.organization.findUnique({ where: { airwallexPaymentLinkId: paymentIntentId } })
         : null;
     const correctLink = org && (!paymentLinkId || paymentLinkId === org.airwallexPaymentLinkId || paymentIntentId === org.airwallexPaymentLinkId);
-    const correctAmount = Number(payment.amount) === PRICE_EUR && payment.currency === 'EUR';
+    const plan = planFor((org?.profile as any)?.plan);
+    const correctAmount = Number(payment.amount) === plan.amountEur && payment.currency === 'EUR';
     if (org && correctLink && correctAmount && org.planStatus !== 'ACTIVE') await activateOrganization(org.id, `airwallex:${payment.id}`);
   }
   return NextResponse.json({ received: true });

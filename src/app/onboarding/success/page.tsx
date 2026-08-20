@@ -2,7 +2,8 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { requireOrg } from '@/lib/session';
 import { activateOrganization } from '@/lib/activation';
-import { isDemoMode, PRICE_EUR, stripe } from '@/lib/stripe';
+import { isDemoMode, stripe } from '@/lib/stripe';
+import { planFor } from '@/lib/plans';
 import { retrieveAirwallexPaymentIntent } from '@/lib/airwallex';
 import { CheckCircle2 } from 'lucide-react';
 
@@ -21,13 +22,15 @@ export default async function SuccessPage({
       await activateOrganization(org.id);
     } else if (params.session_id && stripe) {
       const s = await stripe.checkout.sessions.retrieve(params.session_id);
+      const plan = planFor(s.metadata?.plan);
       const correctOrg = s.client_reference_id === org.id || s.metadata?.organizationId === org.id;
-      const correctAmount = s.amount_total === PRICE_EUR * 100 && s.currency === 'eur';
+      const correctAmount = s.amount_total === plan.amountEur * 100 && s.currency === 'eur';
       if (s.payment_status === 'paid' && correctOrg && correctAmount) await activateOrganization(org.id, s.id);
     } else if (params.airwallex_intent_id) {
       const intent = await retrieveAirwallexPaymentIntent(params.airwallex_intent_id);
+      const plan = planFor((org.profile as any)?.plan);
       const correctOrg = org.airwallexPaymentLinkId === intent.id || intent.metadata?.organizationId === org.id || String(intent.merchant_order_id || '').includes(org.id);
-      const correctAmount = Number(intent.amount) === PRICE_EUR && intent.currency === 'EUR';
+      const correctAmount = Number(intent.amount) === plan.amountEur && intent.currency === 'EUR';
       if (intent.status === 'SUCCEEDED' && correctOrg && correctAmount) await activateOrganization(org.id, `airwallex:${intent.id}`);
     }
   }

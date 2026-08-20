@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import { PRICE_EUR, stripe } from '@/lib/stripe';
+import { stripe } from '@/lib/stripe';
+import { planFor } from '@/lib/plans';
 import { activateOrganization } from '@/lib/activation';
 
 export async function POST(req: Request) {
@@ -19,7 +20,8 @@ export async function POST(req: Request) {
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object as any;
     const orgId = session.metadata?.organizationId || session.client_reference_id;
-    const correctAmount = session.amount_total === PRICE_EUR * 100 && session.currency === 'eur';
+    const plan = planFor(session.metadata?.plan);
+    const correctAmount = session.amount_total === plan.amountEur * 100 && session.currency === 'eur';
     if (orgId && session.payment_status === 'paid' && correctAmount) await activateOrganization(orgId, session.id);
   }
 

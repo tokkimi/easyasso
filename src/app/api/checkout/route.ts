@@ -34,6 +34,35 @@ export async function POST(req: Request) {
     return NextResponse.json({ url: '/onboarding/success?demo=1' });
   }
 
+  // Preferred card processor: Stripe. When a Stripe key is configured, cards go
+  // through Stripe Checkout (hosted, PCI-compliant).
+  if (stripe) {
+    await prisma.organization.update({ where: { id: org.id }, data: { planStatus: nextUnpaidStatus, profile: { ...(org.profile as any || {}), plan: plan.id } } });
+
+    const session = await stripe.checkout.sessions.create({
+      mode: 'payment',
+      payment_method_types: ['card'],
+      customer_email: ctx.user.email,
+      client_reference_id: org.id,
+      line_items: [
+        {
+          quantity: 1,
+          price_data: {
+            currency: 'eur',
+            unit_amount: priceEur * 100,
+            product_data: { name: `Easy Asso — ${plan.id === 'annual' ? 'abonnement annuel' : 'accès à vie'} du site de votre association` },
+          },
+        },
+      ],
+      success_url: `${appUrl}/onboarding/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${appUrl}/onboarding?canceled=1`,
+      metadata: { organizationId: org.id, plan: plan.id },
+    });
+
+    return NextResponse.json({ url: session.url });
+  }
+
+  // Fallback card processor when Stripe is not configured.
   let airwallexError = '';
   if (airwallexConfigured) {
     try {
@@ -72,39 +101,11 @@ export async function POST(req: Request) {
     }
   }
 
-  if (!stripe) {
-    return NextResponse.json(
-      {
-        error: airwallexError ? paymentProviderMessage(airwallexError) : 'Le paiement sécurisé est momentanément indisponible. Aucun débit n’a été effectué.',
-        code: airwallexError ? 'PAYMENT_PROVIDER_PERMISSION' : 'PAYMENT_PROVIDER_MISSING',
-      },
-      { status: 503 }
-    );
-  }
-
-  await prisma.organization.update({ where: { id: org.id }, data: { planStatus: nextUnpaidStatus, profile: { ...(org.profile as any || {}), plan: plan.id } } });
-
-  const session = await stripe.checkout.sessions.create({
-    mode: 'payment',
-    payment_method_types: ['card'],
-    customer_email: ctx.user.email,
-    client_reference_id: org.id,
-    line_items: process.env.STRIPE_PRICE_ID
-      ? [{ price: process.env.STRIPE_PRICE_ID, quantity: 1 }]
-      : [
-          {
-            quantity: 1,
-            price_data: {
-              currency: 'eur',
-              unit_amount: priceEur * 100,
-              product_data: { name: `Easy Asso — ${plan.id === 'annual' ? 'abonnement annuel' : 'accès à vie'} du site de votre association` },
-            },
-          },
-        ],
-    success_url: `${appUrl}/onboarding/success?session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url: `${appUrl}/onboarding?canceled=1`,
-    metadata: { organizationId: org.id },
-  });
-
-  return NextResponse.json({ url: session.url });
+  return NextResponse.json(
+    {
+      error: airwallexError ? paymentProviderMessage(airwallexError) : 'Le paiement par carte est momentanément indisponible. Vous pouvez régler par virement bancaire. Aucun débit n’a été effectué.',
+      code: airwallexError ? 'PAYMENT_PROVIDER_PERMISSION' : 'PAYMENT_PROVIDER_MISSING',
+    },
+    { status: 503 }
+  );
 }

@@ -31,8 +31,11 @@ export async function POST(req: Request) {
   if (stripe) {
     await prisma.organization.update({ where: { id: org.id }, data: { planStatus: nextUnpaidStatus, profile: { ...(org.profile as any || {}), plan: plan.id } } });
 
+    // Annual = a real recurring subscription so the card is charged again every
+    // year automatically. Lifetime = a single one-off payment.
+    const isAnnual = plan.id === 'annual';
     const session = await stripe.checkout.sessions.create({
-      mode: 'payment',
+      mode: isAnnual ? 'subscription' : 'payment',
       payment_method_types: ['card'],
       customer_email: ctx.user.email,
       client_reference_id: org.id,
@@ -42,13 +45,15 @@ export async function POST(req: Request) {
           price_data: {
             currency: 'eur',
             unit_amount: priceEur * 100,
-            product_data: { name: `Easy Asso — ${plan.id === 'annual' ? 'abonnement annuel' : 'accès à vie'} du site de votre association` },
+            ...(isAnnual ? { recurring: { interval: 'year' as const } } : {}),
+            product_data: { name: `Easy Asso — ${isAnnual ? 'abonnement annuel' : 'accès à vie'} du site de votre association` },
           },
         },
       ],
       success_url: `${appUrl}/onboarding/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${appUrl}/onboarding?canceled=1`,
       metadata: { organizationId: org.id, plan: plan.id },
+      ...(isAnnual ? { subscription_data: { metadata: { organizationId: org.id, plan: plan.id } } } : {}),
     });
 
     return NextResponse.json({ url: session.url });

@@ -18,6 +18,10 @@ type AdminOrg = {
   id: string;
   name: string;
   planStatus: string;
+  plan?: string;
+  amountEur?: number;
+  paymentMethod?: string;
+  renewsAt?: string | null;
   createdAt: string;
   trialEndsAt: string | null;
   paidAt: string | null;
@@ -143,14 +147,16 @@ export function AdminClient({ organizations, stats, analytics }: { organizations
   }
 
   const exportRows = [
-    ['Date', 'Association', 'Responsable', 'Email', 'Statut', 'Montant', 'Référence demandée', 'Référence bancaire'],
+    ['Date', 'Association', 'Responsable', 'Email', 'Statut', 'Formule', 'Paiement', 'Montant', 'Référence demandée', 'Référence bancaire'],
     ...items.map((org) => [
       org.paidAt || org.manual.validatedAt || org.manual.requestedAt || org.createdAt,
       org.name,
       org.ownerName,
       org.ownerEmail,
       org.planStatus,
-      `${org.manual.amountEur || 250} €`,
+      planLabel(org),
+      methodLabel(org.paymentMethod),
+      `${orgAmount(org)} €`,
       org.manual.reference || '',
       org.manual.bankReference || '',
     ]),
@@ -181,8 +187,8 @@ export function AdminClient({ organizations, stats, analytics }: { organizations
           <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             <StatCard icon={<Users className="h-5 w-5" />} label="Associations" value={items.length} hint={`${active.length} actives · ${pending.length} à traiter`} />
             <StatCard icon={<Users className="h-5 w-5" />} label="Utilisateurs" value={stats.users} hint={`${stats.trials} essais enregistrés`} />
-            <StatCard icon={<WalletCards className="h-5 w-5" />} label="CA validé" value={formatEuros(active.length * 250)} hint="Paiements EasyAsso confirmés" />
-            <StatCard icon={<WalletCards className="h-5 w-5" />} label="À encaisser" value={formatEuros(pending.length * 250)} hint={`${pending.length} dossier(s) en attente`} />
+            <StatCard icon={<WalletCards className="h-5 w-5" />} label="CA validé" value={formatEuros(stats.validatedRevenue)} hint="Paiements EasyAsso confirmés (carte + virement)" />
+            <StatCard icon={<WalletCards className="h-5 w-5" />} label="À encaisser" value={formatEuros(stats.pendingRevenue)} hint="Virements et paiements en attente" />
             <StatCard icon={<MessageSquare className="h-5 w-5" />} label="Réponses non lues" value={unreadMessages} hint="Messages d’associations à lire" />
             <StatCard icon={<MessageSquare className="h-5 w-5" />} label="Messages visiteurs" value={stats.contactMessages} hint="Reçus sur les sites publiés" />
           </section>
@@ -258,7 +264,7 @@ export function AdminClient({ organizations, stats, analytics }: { organizations
             <div className="overflow-x-auto">
               <table className="min-w-[860px] w-full text-left text-sm">
                 <thead className="text-xs uppercase tracking-wide text-gray-500">
-                  <tr><th className="py-3 pr-4">Date</th><th className="py-3 pr-4">Association</th><th className="py-3 pr-4">Responsable</th><th className="py-3 pr-4">Statut</th><th className="py-3 pr-4">Montant</th><th className="py-3 pr-4">Référence</th></tr>
+                  <tr><th className="py-3 pr-4">Date</th><th className="py-3 pr-4">Association</th><th className="py-3 pr-4">Responsable</th><th className="py-3 pr-4">Statut</th><th className="py-3 pr-4">Formule</th><th className="py-3 pr-4">Paiement</th><th className="py-3 pr-4">Montant</th><th className="py-3 pr-4">Référence</th></tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
                   {items.map((org) => (
@@ -267,7 +273,9 @@ export function AdminClient({ organizations, stats, analytics }: { organizations
                       <td className="py-3 pr-4 font-semibold text-gray-900">{org.name}</td>
                       <td className="py-3 pr-4 text-gray-600">{org.ownerName || '—'} · {org.ownerEmail || '—'}</td>
                       <td className="py-3 pr-4"><StatusBadge org={org} /></td>
-                      <td className="py-3 pr-4 font-bold text-gray-900">{formatEuros(org.manual.amountEur || 250)}</td>
+                      <td className="py-3 pr-4 text-gray-600">{planLabel(org)}</td>
+                      <td className="py-3 pr-4 text-gray-600">{methodLabel(org.paymentMethod)}</td>
+                      <td className="py-3 pr-4 font-bold text-gray-900">{formatEuros(orgAmount(org))}</td>
                       <td className="py-3 pr-4 text-gray-600">{org.manual.bankReference || org.manual.reference || '—'}</td>
                     </tr>
                   ))}
@@ -354,10 +362,13 @@ function OrgCard({ org, edit, busy, reference, onReference, onEdit, onSave, onAc
       </div>
 
       <div className="mt-5 grid gap-4 lg:grid-cols-4">
+        <Info label="Formule" value={planLabel(org)} />
+        <Info label="Moyen de paiement" value={methodLabel(org.paymentMethod)} />
+        <Info label="Montant" value={formatEuros(orgAmount(org))} />
+        <Info label="Statut" value={org.manual?.status || org.planStatus} />
         <Info label="Référence demandée" value={org.manual?.reference || '—'} />
-        <Info label="Montant" value={formatEuros(org.manual?.amountEur || 250)} />
-        <Info label="Statut virement" value={org.manual?.status || org.planStatus} />
         <Info label="Référence reçue" value={org.manual?.bankReference || '—'} />
+        {org.renewsAt && <Info label="Renouvellement" value={formatDate(org.renewsAt)} />}
       </div>
 
       {hasProof && (
@@ -470,6 +481,16 @@ function formatDate(value: string) {
 
 function formatEuros(value: number) {
   return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(value);
+}
+
+function orgAmount(org: AdminOrg) {
+  return org.amountEur ?? org.manual?.amountEur ?? 250;
+}
+function planLabel(org: AdminOrg) {
+  return org.plan === 'annual' ? 'Annuel · /an' : 'À vie';
+}
+function methodLabel(method?: string) {
+  return method === 'card' ? 'Carte' : method === 'transfer' ? 'Virement' : '—';
 }
 
 function lastAt(org: AdminOrg) {

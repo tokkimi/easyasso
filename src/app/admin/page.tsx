@@ -1,6 +1,7 @@
 import { requirePlatformAdmin } from '@/lib/platform-admin';
 import { prisma } from '@/lib/prisma';
 import { siteUrlFor } from '@/lib/utils';
+import { planFor } from '@/lib/plans';
 import { AdminClient } from './admin-client';
 
 export const dynamic = 'force-dynamic';
@@ -23,8 +24,22 @@ export default async function AdminPage() {
     prisma.user.count(),
     prisma.contactMessage.count(),
   ]);
-  const validatedRevenue = organizations.filter((org) => org.planStatus === 'ACTIVE').length * 250;
-  const pendingRevenue = organizations.filter((org) => org.planStatus !== 'ACTIVE').length * 250;
+  // Per-org paid amount, honouring the chosen plan (99 €/an or 250 € à vie) and
+  // the exact amount stored on a bank-transfer request, instead of a flat 250 €.
+  const orgAmount = (org: (typeof organizations)[number]) => {
+    const profile = (org.profile || {}) as Record<string, any>;
+    const manual = (profile.easyassoManualPayment || {}) as Record<string, any>;
+    return Number(manual.amountEur) || planFor(profile.plan).amountEur;
+  };
+  const validatedRevenue = organizations
+    .filter((org) => org.planStatus === 'ACTIVE')
+    .reduce((sum, org) => sum + orgAmount(org), 0);
+  const pendingRevenue = organizations
+    .filter((org) => {
+      const manual = ((org.profile || {}) as any).easyassoManualPayment || {};
+      return org.planStatus === 'PENDING_PAYMENT' || manual.status === 'WAITING_TRANSFER';
+    })
+    .reduce((sum, org) => sum + orgAmount(org), 0);
 
   // ---- Visitor analytics (last 30 days) ----
   const since = new Date(Date.now() - 30 * 24 * 3600 * 1000);
@@ -89,10 +104,19 @@ export default async function AdminPage() {
         const owner = org.memberships[0]?.user;
         const profile = (org.profile || {}) as Record<string, any>;
         const manual = (profile.easyassoManualPayment || {}) as Record<string, any>;
+        const plan = planFor(profile.plan);
+        const amountEur = Number(manual.amountEur) || plan.amountEur;
+        // How they paid (or intend to): a bank-transfer request creates a manual
+        // record; an active org with no manual record paid by card.
+        const paymentMethod = manual.status ? 'transfer' : org.planStatus === 'ACTIVE' ? 'card' : '';
         return {
           id: org.id,
           name: org.name,
           planStatus: org.planStatus,
+          plan: plan.id,
+          amountEur,
+          paymentMethod,
+          renewsAt: typeof profile.planRenewsAt === 'string' ? profile.planRenewsAt : null,
           createdAt: org.createdAt.toISOString(),
           trialEndsAt: org.trialEndsAt ? org.trialEndsAt.toISOString() : null,
           paidAt: org.paidAt ? org.paidAt.toISOString() : null,

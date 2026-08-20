@@ -21,6 +21,8 @@ type AdminOrg = {
   plan?: string;
   amountEur?: number;
   paymentMethod?: string;
+  phone?: string;
+  city?: string;
   renewsAt?: string | null;
   createdAt: string;
   trialEndsAt: string | null;
@@ -61,6 +63,8 @@ type EditState = {
   adminNote: string;
 };
 
+type UserSortKey = 'name' | 'ownerName' | 'ownerEmail' | 'phone' | 'city' | 'planStatus' | 'plan' | 'createdAt';
+
 type Bar = { label: string; value: number };
 type Analytics = { total: number; last30: number; byDay: Bar[]; byHour: Bar[]; byWeekday: Bar[]; referrers: Bar[]; topOrgs: Bar[]; topPages: Bar[] };
 
@@ -72,15 +76,27 @@ export function AdminClient({ organizations, stats, analytics }: { organizations
   const [edits, setEdits] = useState<Record<string, EditState>>(() => Object.fromEntries(organizations.map((org) => [org.id, toEdit(org)])));
   const [openUser, setOpenUser] = useState<string | null>(null);
   const [userQuery, setUserQuery] = useState('');
+  const [sortKey, setSortKey] = useState<UserSortKey>('createdAt');
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
+  function sortBy(key: UserSortKey) {
+    if (key === sortKey) setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
+    else { setSortKey(key); setSortDir(key === 'createdAt' ? 'desc' : 'asc'); }
+  }
 
   const pending = useMemo(() => items.filter((org) => org.planStatus !== 'ACTIVE'), [items]);
   const active = useMemo(() => items.filter((org) => org.planStatus === 'ACTIVE'), [items]);
   const usersFiltered = useMemo(() => {
     const q = userQuery.trim().toLowerCase();
-    const list = [...items].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-    if (!q) return list;
-    return list.filter((org) => [org.name, org.ownerName, org.ownerEmail].some((v) => (v || '').toLowerCase().includes(q)));
-  }, [items, userQuery]);
+    let list = [...items];
+    if (q) list = list.filter((org) => [org.name, org.ownerName, org.ownerEmail, org.phone, org.city].some((v) => (v || '').toLowerCase().includes(q)));
+    list.sort((a, b) => {
+      let cmp: number;
+      if (sortKey === 'createdAt') cmp = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+      else cmp = String((a as any)[sortKey] || '').toLowerCase().localeCompare(String((b as any)[sortKey] || '').toLowerCase(), 'fr');
+      return sortDir === 'asc' ? cmp : -cmp;
+    });
+    return list;
+  }, [items, userQuery, sortKey, sortDir]);
   const openUserOrg = openUser ? items.find((org) => org.id === openUser) : null;
 
   async function activate(org: AdminOrg) {
@@ -217,15 +233,17 @@ export function AdminClient({ organizations, stats, analytics }: { organizations
               </div>
             </div>
             <div className="overflow-x-auto rounded-3xl bg-white p-2 shadow-sm ring-1 ring-gray-100">
-              <table className="min-w-[820px] w-full text-left text-sm">
+              <table className="min-w-[1040px] w-full text-left text-sm">
                 <thead className="text-xs uppercase tracking-wide text-gray-500">
                   <tr>
-                    <th className="px-3 py-3">Association</th>
-                    <th className="px-3 py-3">Responsable</th>
-                    <th className="px-3 py-3">Email</th>
-                    <th className="px-3 py-3">Statut</th>
-                    <th className="px-3 py-3">Formule</th>
-                    <th className="px-3 py-3">Inscrit le</th>
+                    <SortTh label="Association" k="name" sortKey={sortKey} sortDir={sortDir} onSort={sortBy} />
+                    <SortTh label="Responsable" k="ownerName" sortKey={sortKey} sortDir={sortDir} onSort={sortBy} />
+                    <SortTh label="Email" k="ownerEmail" sortKey={sortKey} sortDir={sortDir} onSort={sortBy} />
+                    <SortTh label="Téléphone" k="phone" sortKey={sortKey} sortDir={sortDir} onSort={sortBy} />
+                    <SortTh label="Ville" k="city" sortKey={sortKey} sortDir={sortDir} onSort={sortBy} />
+                    <SortTh label="Statut" k="planStatus" sortKey={sortKey} sortDir={sortDir} onSort={sortBy} />
+                    <SortTh label="Formule" k="plan" sortKey={sortKey} sortDir={sortDir} onSort={sortBy} />
+                    <SortTh label="Inscrit le" k="createdAt" sortKey={sortKey} sortDir={sortDir} onSort={sortBy} />
                     <th className="px-3 py-3"></th>
                   </tr>
                 </thead>
@@ -241,14 +259,16 @@ export function AdminClient({ organizations, stats, analytics }: { organizations
                       </td>
                       <td className="px-3 py-3 text-gray-600">{org.ownerName || '—'}</td>
                       <td className="px-3 py-3 text-gray-600">{org.ownerEmail || '—'}</td>
+                      <td className="px-3 py-3 text-gray-600">{org.phone || '—'}</td>
+                      <td className="px-3 py-3 text-gray-600">{org.city || '—'}</td>
                       <td className="px-3 py-3"><StatusBadge org={org} /></td>
                       <td className="px-3 py-3 text-gray-600">{planLabel(org)}</td>
                       <td className="px-3 py-3 text-gray-600">{formatDate(org.createdAt)}</td>
-                      <td className="px-3 py-3 text-right text-gray-400"><ExternalLink className="ml-auto h-4 w-4 rotate-0" /></td>
+                      <td className="px-3 py-3 text-right text-gray-400"><ExternalLink className="ml-auto h-4 w-4" /></td>
                     </tr>
                   ))}
                   {usersFiltered.length === 0 && (
-                    <tr><td colSpan={7} className="px-3 py-6 text-center text-gray-400">Aucun inscrit ne correspond à votre recherche.</td></tr>
+                    <tr><td colSpan={9} className="px-3 py-6 text-center text-gray-400">Aucun inscrit ne correspond à votre recherche.</td></tr>
                   )}
                 </tbody>
               </table>
@@ -371,6 +391,17 @@ export function AdminClient({ organizations, stats, analytics }: { organizations
   );
 }
 
+function SortTh({ label, k, sortKey, sortDir, onSort }: { label: string; k: UserSortKey; sortKey: UserSortKey; sortDir: 'asc' | 'desc'; onSort: (k: UserSortKey) => void }) {
+  const active = sortKey === k;
+  return (
+    <th className="px-3 py-3">
+      <button onClick={() => onSort(k)} className={`inline-flex items-center gap-1 uppercase tracking-wide transition hover:text-gray-800 ${active ? 'text-gray-900' : 'text-gray-500'}`}>
+        {label}<span className="text-[10px]">{active ? (sortDir === 'asc' ? '▲' : '▼') : '↕'}</span>
+      </button>
+    </th>
+  );
+}
+
 function TabButton({ active, onClick, icon, label, badge }: { active: boolean; onClick: () => void; icon: ReactNode; label: string; badge?: number }) {
   return (
     <button onClick={onClick} className={`flex shrink-0 items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold transition ${active ? 'bg-brand-600 text-white shadow-sm' : 'text-gray-600 hover:bg-gray-100'}`}>
@@ -429,7 +460,7 @@ function OrgCard({ org, edit, busy, reference, onReference, onEdit, onSave, onAc
             <StatusBadge org={org} />
             {org.ownerIsSuperAdmin && <span className="badge bg-purple-100 text-purple-700">Super admin</span>}
           </div>
-          <p className="mt-1 text-sm text-gray-600">{org.ownerName || 'Utilisateur'} · {org.ownerEmail}</p>
+          <p className="mt-1 text-sm text-gray-600">{org.ownerName || 'Utilisateur'} · {org.ownerEmail}{org.phone ? ` · ${org.phone}` : ''}{org.city ? ` · ${org.city}` : ''}</p>
           <div className="mt-2 flex flex-wrap gap-3 text-sm font-semibold">
             <a href={org.siteUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-brand-700">Voir le site <ExternalLink className="h-3.5 w-3.5" /></a>
             <span className={org.published ? 'text-green-700' : 'text-amber-700'}>{org.published ? 'Site en ligne' : 'Site hors ligne'}</span>

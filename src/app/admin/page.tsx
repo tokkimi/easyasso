@@ -116,6 +116,8 @@ export default async function AdminPage() {
           plan: plan.id,
           amountEur,
           paymentMethod,
+          phone: String(profile.phone || ''),
+          city: String(profile.city || ''),
           renewsAt: typeof profile.planRenewsAt === 'string' ? profile.planRenewsAt : null,
           createdAt: org.createdAt.toISOString(),
           trialEndsAt: org.trialEndsAt ? org.trialEndsAt.toISOString() : null,

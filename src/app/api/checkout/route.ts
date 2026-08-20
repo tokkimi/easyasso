@@ -35,9 +35,11 @@ export async function POST(req: Request) {
     // again automatically each period. Lifetime = a single one-off payment.
     const isSubscription = plan.recurring;
     const productLabel = plan.id === 'monthly' ? 'abonnement mensuel' : plan.id === 'annual' ? 'abonnement annuel' : 'accès à vie';
+    const locale = (org.profile as any)?.language === 'en' ? 'en' : 'fr';
     const session = await stripe.checkout.sessions.create({
       mode: isSubscription ? 'subscription' : 'payment',
       payment_method_types: ['card'],
+      locale,
       customer_email: ctx.user.email,
       client_reference_id: org.id,
       line_items: [

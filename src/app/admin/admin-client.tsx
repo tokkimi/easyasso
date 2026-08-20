@@ -66,13 +66,22 @@ type Analytics = { total: number; last30: number; byDay: Bar[]; byHour: Bar[]; b
 
 export function AdminClient({ organizations, stats, analytics }: { organizations: AdminOrg[]; stats: AdminStats; analytics: Analytics }) {
   const [items, setItems] = useState(organizations);
-  const [tab, setTab] = useState<'overview' | 'pending' | 'active' | 'messages' | 'analytics' | 'seo' | 'accounting'>('overview');
+  const [tab, setTab] = useState<'overview' | 'users' | 'pending' | 'active' | 'messages' | 'analytics' | 'seo' | 'accounting'>('overview');
   const [busy, setBusy] = useState('');
   const [references, setReferences] = useState<Record<string, string>>({});
   const [edits, setEdits] = useState<Record<string, EditState>>(() => Object.fromEntries(organizations.map((org) => [org.id, toEdit(org)])));
+  const [openUser, setOpenUser] = useState<string | null>(null);
+  const [userQuery, setUserQuery] = useState('');
 
   const pending = useMemo(() => items.filter((org) => org.planStatus !== 'ACTIVE'), [items]);
   const active = useMemo(() => items.filter((org) => org.planStatus === 'ACTIVE'), [items]);
+  const usersFiltered = useMemo(() => {
+    const q = userQuery.trim().toLowerCase();
+    const list = [...items].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    if (!q) return list;
+    return list.filter((org) => [org.name, org.ownerName, org.ownerEmail].some((v) => (v || '').toLowerCase().includes(q)));
+  }, [items, userQuery]);
+  const openUserOrg = openUser ? items.find((org) => org.id === openUser) : null;
 
   async function activate(org: AdminOrg) {
     setBusy(`activate:${org.id}`);
@@ -175,6 +184,7 @@ export function AdminClient({ organizations, stats, analytics }: { organizations
 
         <nav className="mb-8 flex gap-1 overflow-x-auto rounded-2xl bg-white p-1.5 shadow-sm ring-1 ring-gray-100">
           <TabButton active={tab === 'overview'} onClick={() => setTab('overview')} icon={<LayoutDashboard className="h-4 w-4" />} label="Tableau de bord" />
+          <TabButton active={tab === 'users'} onClick={() => { setTab('users'); setOpenUser(null); }} icon={<Users className="h-4 w-4" />} label="Inscrits" badge={items.length} />
           <TabButton active={tab === 'pending'} onClick={() => setTab('pending')} icon={<Clock className="h-4 w-4" />} label="Paiements à vérifier" badge={pending.length} />
           <TabButton active={tab === 'active'} onClick={() => setTab('active')} icon={<Users className="h-4 w-4" />} label="Associations" badge={active.length} />
           <TabButton active={tab === 'messages'} onClick={() => setTab('messages')} icon={<MessageSquare className="h-4 w-4" />} label="Messagerie" badge={unreadMessages} />
@@ -191,6 +201,78 @@ export function AdminClient({ organizations, stats, analytics }: { organizations
             <StatCard icon={<WalletCards className="h-5 w-5" />} label="À encaisser" value={formatEuros(stats.pendingRevenue)} hint="Virements et paiements en attente" />
             <StatCard icon={<MessageSquare className="h-5 w-5" />} label="Réponses non lues" value={unreadMessages} hint="Messages d’associations à lire" />
             <StatCard icon={<MessageSquare className="h-5 w-5" />} label="Messages visiteurs" value={stats.contactMessages} hint="Reçus sur les sites publiés" />
+          </section>
+        )}
+
+        {tab === 'users' && !openUserOrg && (
+          <section className="space-y-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h2 className="text-xl font-extrabold text-gray-900">Inscrits</h2>
+                <p className="text-sm text-gray-600">Tous les comptes créés. Cliquez sur une ligne pour ouvrir la fiche complète (voir, modifier, supprimer).</p>
+              </div>
+              <div className="relative">
+                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                <input value={userQuery} onChange={(e) => setUserQuery(e.target.value)} placeholder="Rechercher un nom, une asso, un email…" className="input w-72 max-w-full pl-9" />
+              </div>
+            </div>
+            <div className="overflow-x-auto rounded-3xl bg-white p-2 shadow-sm ring-1 ring-gray-100">
+              <table className="min-w-[820px] w-full text-left text-sm">
+                <thead className="text-xs uppercase tracking-wide text-gray-500">
+                  <tr>
+                    <th className="px-3 py-3">Association</th>
+                    <th className="px-3 py-3">Responsable</th>
+                    <th className="px-3 py-3">Email</th>
+                    <th className="px-3 py-3">Statut</th>
+                    <th className="px-3 py-3">Formule</th>
+                    <th className="px-3 py-3">Inscrit le</th>
+                    <th className="px-3 py-3"></th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {usersFiltered.map((org) => (
+                    <tr key={org.id} onClick={() => setOpenUser(org.id)} className="cursor-pointer transition hover:bg-gray-50">
+                      <td className="px-3 py-3 font-semibold text-gray-900">
+                        <span className="flex items-center gap-2">
+                          {org.name}
+                          {org.ownerIsSuperAdmin && <span className="rounded bg-brand-100 px-1.5 py-0.5 text-[10px] font-bold text-brand-700">ADMIN</span>}
+                          {org.unreadFromOrg > 0 && <span className="h-2 w-2 rounded-full bg-brand-600" title="Message non lu" />}
+                        </span>
+                      </td>
+                      <td className="px-3 py-3 text-gray-600">{org.ownerName || '—'}</td>
+                      <td className="px-3 py-3 text-gray-600">{org.ownerEmail || '—'}</td>
+                      <td className="px-3 py-3"><StatusBadge org={org} /></td>
+                      <td className="px-3 py-3 text-gray-600">{planLabel(org)}</td>
+                      <td className="px-3 py-3 text-gray-600">{formatDate(org.createdAt)}</td>
+                      <td className="px-3 py-3 text-right text-gray-400"><ExternalLink className="ml-auto h-4 w-4 rotate-0" /></td>
+                    </tr>
+                  ))}
+                  {usersFiltered.length === 0 && (
+                    <tr><td colSpan={7} className="px-3 py-6 text-center text-gray-400">Aucun inscrit ne correspond à votre recherche.</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+            <p className="text-xs text-gray-500">{items.length} compte(s) au total · {active.length} actif(s) · {pending.length} en attente.</p>
+          </section>
+        )}
+
+        {tab === 'users' && openUserOrg && (
+          <section className="space-y-4">
+            <button onClick={() => setOpenUser(null)} className="inline-flex items-center gap-2 text-sm font-semibold text-gray-600 transition hover:text-gray-900"><ArrowLeft className="h-4 w-4" /> Retour à la liste des inscrits</button>
+            <OrgCard
+              org={openUserOrg}
+              edit={edits[openUserOrg.id] || toEdit(openUserOrg)}
+              busy={busy}
+              reference={references[openUserOrg.id] || ''}
+              onReference={(value) => setReferences((current) => ({ ...current, [openUserOrg.id]: value }))}
+              onEdit={(patch) => patchEdit(openUserOrg.id, patch)}
+              onSave={() => save(openUserOrg)}
+              onActivate={() => activate(openUserOrg)}
+              onRemove={() => { remove(openUserOrg); setOpenUser(null); }}
+              onMessage={sendMessage}
+              onMarkRead={markThreadRead}
+            />
           </section>
         )}
 

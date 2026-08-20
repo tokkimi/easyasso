@@ -37,6 +37,17 @@ export function rootDomain(): string {
   return process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'localhost:3000';
 }
 
+// Canonical public base URL of the app (no trailing slash). Falls back to the
+// Vercel-provided production/deployment domain so Stripe redirects and e-mail
+// links keep working even when NEXT_PUBLIC_APP_URL isn't set manually.
+export function appBaseUrl(): string {
+  const explicit = process.env.NEXT_PUBLIC_APP_URL;
+  if (explicit) return explicit.replace(/\/$/, '');
+  const vercel = process.env.VERCEL_PROJECT_PRODUCTION_URL || process.env.VERCEL_URL;
+  if (vercel) return `https://${vercel.replace(/\/$/, '')}`;
+  return 'http://localhost:3000';
+}
+
 export function siteUrlFor(subdomain: string, customDomain?: string | null, domainVerified = false): string {
   // Never send an owner or visitor to an unverified domain: DNS and SSL may
   // still point elsewhere. The permanent EasyAsso address remains available.

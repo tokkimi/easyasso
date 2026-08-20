@@ -1,10 +1,10 @@
-import { token } from './utils';
+import { token, appBaseUrl } from './utils';
 import { prisma } from './prisma';
 
 const FROM = process.env.RESEND_FROM || 'EasyAsso <onboarding@resend.dev>';
 
 export function appUrl() {
-  return (process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000').replace(/\/$/, '');
+  return appBaseUrl();
 }
 
 export async function sendMail(input: { to: string; subject: string; html: string; text?: string }) {

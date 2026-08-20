@@ -5,6 +5,7 @@ import { activateOrganization } from '@/lib/activation';
 import { prisma } from '@/lib/prisma';
 import { planAccess } from '@/lib/plan';
 import { planFor } from '@/lib/plans';
+import { appBaseUrl } from '@/lib/utils';
 import { airwallexClientEnvironment, airwallexConfigured, createAirwallexPaymentIntent, createAirwallexPaymentLink } from '@/lib/airwallex';
 
 function paymentProviderMessage(raw: string) {
@@ -26,7 +27,7 @@ export async function POST(req: Request) {
   const priceEur = plan.amountEur;
   const nextUnpaidStatus = planAccess(org).hasAccess ? org.planStatus : 'PENDING_PAYMENT';
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+  const appUrl = appBaseUrl();
 
   // Explicit local/demo mode only: skip real payment.
   if (isDemoMode) {

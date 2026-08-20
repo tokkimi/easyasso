@@ -487,7 +487,7 @@ function orgAmount(org: AdminOrg) {
   return org.amountEur ?? org.manual?.amountEur ?? 250;
 }
 function planLabel(org: AdminOrg) {
-  return org.plan === 'annual' ? 'Annuel · /an' : 'À vie';
+  return org.plan === 'monthly' ? 'Mensuel · /mois' : org.plan === 'annual' ? 'Annuel · /an' : 'À vie';
 }
 function methodLabel(method?: string) {
   return method === 'card' ? 'Carte' : method === 'transfer' ? 'Virement' : '—';

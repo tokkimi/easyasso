@@ -41,7 +41,7 @@ export default async function SuccessPage({
           const { prisma } = await import('@/lib/prisma');
           await prisma.organization.update({
             where: { id: org.id },
-            data: { profile: { ...((org.profile as any) || {}), plan: 'annual', stripeSubscriptionId: s.subscription, stripeCustomerId: (s.customer as string) || undefined, planRenewsAt } },
+            data: { profile: { ...((org.profile as any) || {}), plan: plan.id, stripeSubscriptionId: s.subscription, stripeCustomerId: (s.customer as string) || undefined, planRenewsAt } },
           });
         }
       }

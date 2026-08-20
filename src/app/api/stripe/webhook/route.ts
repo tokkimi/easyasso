@@ -61,7 +61,7 @@ export async function POST(req: Request) {
             renewsAt = renewalIso(sub);
           } catch {}
           await patchProfile(orgId, {
-            plan: 'annual',
+            plan: plan.id,
             stripeSubscriptionId: session.subscription,
             stripeCustomerId: session.customer || undefined,
             planRenewsAt: renewsAt,

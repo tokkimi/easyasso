@@ -31,11 +31,12 @@ export async function POST(req: Request) {
   if (stripe) {
     await prisma.organization.update({ where: { id: org.id }, data: { planStatus: nextUnpaidStatus, profile: { ...(org.profile as any || {}), plan: plan.id } } });
 
-    // Annual = a real recurring subscription so the card is charged again every
-    // year automatically. Lifetime = a single one-off payment.
-    const isAnnual = plan.id === 'annual';
+    // Monthly / annual = a real recurring subscription so the card is charged
+    // again automatically each period. Lifetime = a single one-off payment.
+    const isSubscription = plan.recurring;
+    const productLabel = plan.id === 'monthly' ? 'abonnement mensuel' : plan.id === 'annual' ? 'abonnement annuel' : 'accès à vie';
     const session = await stripe.checkout.sessions.create({
-      mode: isAnnual ? 'subscription' : 'payment',
+      mode: isSubscription ? 'subscription' : 'payment',
       payment_method_types: ['card'],
       customer_email: ctx.user.email,
       client_reference_id: org.id,
@@ -45,15 +46,15 @@ export async function POST(req: Request) {
           price_data: {
             currency: 'eur',
             unit_amount: priceEur * 100,
-            ...(isAnnual ? { recurring: { interval: 'year' as const } } : {}),
-            product_data: { name: `Easy Asso — ${isAnnual ? 'abonnement annuel' : 'accès à vie'} du site de votre association` },
+            ...(isSubscription ? { recurring: { interval: (plan.interval || 'month') as 'month' | 'year' } } : {}),
+            product_data: { name: `Easy Asso — ${productLabel} du site de votre association` },
           },
         },
       ],
       success_url: `${appUrl}/onboarding/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${appUrl}/onboarding?canceled=1`,
       metadata: { organizationId: org.id, plan: plan.id },
-      ...(isAnnual ? { subscription_data: { metadata: { organizationId: org.id, plan: plan.id } } } : {}),
+      ...(isSubscription ? { subscription_data: { metadata: { organizationId: org.id, plan: plan.id } } } : {}),
     });
 
     return NextResponse.json({ url: session.url });

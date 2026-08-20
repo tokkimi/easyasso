@@ -14,10 +14,11 @@ export function PlanChooser({ initialPlan = 'lifetime', demo }: { initialPlan?: 
 
   return (
     <div>
-      <div className="grid gap-3 sm:grid-cols-2">
-        {(['annual', 'lifetime'] as PlanId[]).map((id) => {
+      <div className="grid gap-3 sm:grid-cols-3">
+        {(['monthly', 'annual', 'lifetime'] as PlanId[]).map((id) => {
           const p = PLANS[id];
           const active = plan === id;
+          const sub = id === 'monthly' ? 'Prélevé chaque mois' : id === 'annual' ? 'Prélevé chaque année' : 'Paiement unique, sans abonnement';
           return (
             <button
               key={id}
@@ -30,7 +31,7 @@ export function PlanChooser({ initialPlan = 'lifetime', demo }: { initialPlan?: 
               </span>
               <p className="mt-2 font-extrabold text-gray-900">{p.name}</p>
               <p className="mt-1 text-2xl font-extrabold text-brand-700">{p.amountEur} €<span className="text-sm font-medium text-gray-500"> {p.unit}</span></p>
-              <p className="mt-1 text-xs text-gray-500">{id === 'annual' ? 'Renouvelable chaque année' : 'Paiement unique, sans abonnement'}</p>
+              <p className="mt-1 text-xs text-gray-500">{sub}</p>
             </button>
           );
         })}
@@ -39,7 +40,11 @@ export function PlanChooser({ initialPlan = 'lifetime', demo }: { initialPlan?: 
       <div className="mt-6">
         <PayButton price={String(selected.amountEur)} demo={demo} plan={plan} />
       </div>
-      <ManualTransferButton price={String(selected.amountEur)} plan={plan} />
+      {plan === 'monthly' ? (
+        <p className="mt-3 text-center text-xs text-gray-500">La formule mensuelle est réglée par carte (prélèvement automatique chaque mois).</p>
+      ) : (
+        <ManualTransferButton price={String(selected.amountEur)} plan={plan} />
+      )}
     </div>
   );
 }

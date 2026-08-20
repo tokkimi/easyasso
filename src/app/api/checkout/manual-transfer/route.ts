@@ -20,6 +20,15 @@ export async function POST(req: Request) {
   const body = await req.json().catch(() => ({}));
   const plan = planFor(body?.plan);
 
+  // A monthly plan is a recurring card subscription; it can't be paid by a
+  // one-off bank transfer.
+  if (plan.id === 'monthly') {
+    return NextResponse.json(
+      { error: 'La formule mensuelle se règle par carte (prélèvement automatique). Choisissez la formule annuelle ou à vie pour payer par virement.' },
+      { status: 400 }
+    );
+  }
+
   const currentProfile = (org.profile || {}) as Record<string, any>;
   const currentManual = (currentProfile.easyassoManualPayment || {}) as Record<string, any>;
   const reference = paymentReference(org, currentManual.reference);

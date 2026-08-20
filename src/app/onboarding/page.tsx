@@ -27,9 +27,9 @@ export default async function OnboardingPage() {
           </span>
           <h1 className="mt-3 text-2xl font-bold text-gray-900">Activez le site de {org.name}</h1>
           <p className="mt-2 text-gray-600">
-            Deux formules, sans engagement caché : <strong>{PLANS.annual.amountEur} € / an</strong> ou
-            un <strong>paiement unique de {PLANS.lifetime.amountEur} € à vie</strong> — avec tous les outils
-            (dons, CRM, comptabilité…). Paiement par carte ou par virement.
+            Trois formules, sans engagement caché : <strong>{PLANS.monthly.amountEur} € / mois</strong>,
+            <strong> {PLANS.annual.amountEur} € / an</strong> ou un <strong>paiement unique de {PLANS.lifetime.amountEur} € à vie</strong>
+            {' '}— avec tous les outils (dons, CRM, comptabilité…). Paiement par carte ou par virement.
           </p>
           <p className="mt-3 rounded-xl bg-amber-50 px-4 py-3 text-sm font-medium text-amber-800">
             Tant que le paiement n’est pas confirmé, l’accès reste en attente : rien n’est validé automatiquement.

@@ -5,6 +5,7 @@ import { PLANS } from '@/lib/plans';
 
 const PRICE = process.env.NEXT_PUBLIC_PRICE_EUR || '250';
 const ANNUAL = PLANS.annual.amountEur;
+const MONTHLY = PLANS.monthly.amountEur;
 
 const features = [
   { icon: MousePointerClick, title: 'Éditeur visuel bloc par bloc', text: 'Cliquez, écrivez, glissez. Ce que vous voyez est ce que vos visiteurs verront.' },
@@ -19,7 +20,7 @@ const steps = [
   { n: '1', title: 'Créez votre compte', text: 'Renseignez le nom de votre association.' },
   { n: '2', title: 'Testez 3 jours gratuitement', text: 'Aucune carte bancaire à l’inscription.' },
   { n: '3', title: 'Votre site est en ligne', text: 'Une adresse est générée automatiquement pour vous.' },
-  { n: '4', title: `Gardez EasyAsso dès ${ANNUAL} € / an`, text: `${ANNUAL} € par an ou ${PRICE} € à vie — par virement, depuis votre tableau de bord.` },
+  { n: '4', title: `Gardez EasyAsso dès ${MONTHLY} € / mois`, text: `${MONTHLY} €/mois, ${ANNUAL} €/an ou ${PRICE} € à vie — par carte ou virement, depuis votre tableau de bord.` },
 ];
 
 const magicTools = [
@@ -34,7 +35,7 @@ const magicTools = [
 const atouts = [
   { icon: Zap, title: 'Droit à l’essentiel', text: 'Un parcours simple qui va à ce qui compte : présenter l’association, collecter des dons, gérer le reste. Pas d’usine à gaz.' },
   { icon: Clock, title: 'En ligne en quelques minutes', text: 'L’outil magique rédige et structure votre site à partir de quelques informations. Vous ajustez ensuite librement.' },
-  { icon: Wallet, title: 'Un prix pensé pour les associations', text: `${ANNUAL} € par an, ou un paiement unique de ${PRICE} € à vie — loin des milliers d’euros d’une agence et d’un hébergement annuel.` },
+  { icon: Wallet, title: 'Un prix pensé pour les associations', text: `Dès ${MONTHLY} € par mois, ${ANNUAL} € par an, ou un paiement unique de ${PRICE} € à vie — loin des milliers d’euros d’une agence et d’un hébergement annuel.` },
   { icon: MousePointerClick, title: 'Autonomie totale', text: 'Vous créez, modifiez et gérez tout vous-même, sans dépendre d’un prestataire ni d’aucune compétence technique.' },
   { icon: HandCoins, title: 'Vraiment tout-en-un', text: 'Site, dons, reçus fiscaux, CRM donateurs, comptabilité, statistiques et référencement réunis au même endroit.' },
   { icon: HeartHandshake, title: 'Accessible à toutes', text: 'Pensé pour les petites structures sans budget : une présence professionnelle ne devrait pas être réservée à celles qui peuvent se l’offrir.' },
@@ -74,12 +75,12 @@ export default function LandingPage() {
         </p>
         <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
           <Link href="/register" className="btn btn-primary px-6 py-3 text-base">
-            <span>Commencer — dès</span> {ANNUAL} <span>€ / an</span>
+            <span>Commencer — dès</span> {MONTHLY} <span>€ / mois</span>
           </Link>
           <Link href="/login" className="btn btn-ghost px-6 py-3 text-base">J’ai déjà un compte</Link>
         </div>
         <p className="mt-3 text-sm font-medium text-green-700">Testez tout gratuitement pendant 3 jours. Payez seulement si EasyAsso vous convient.</p>
-        <p className="mt-1 text-sm text-gray-500">{ANNUAL} € / an ou {PRICE} € à vie · Site illimité · Sans engagement</p>
+        <p className="mt-1 text-sm text-gray-500">{MONTHLY} € / mois, {ANNUAL} € / an ou {PRICE} € à vie · Site illimité · Sans engagement</p>
       </section>
 
       {/* Magic builder */}
@@ -233,15 +234,27 @@ export default function LandingPage() {
       {/* Pricing */}
       <section className="mx-auto max-w-5xl px-6 pb-20">
         <div className="mx-auto max-w-2xl text-center">
-          <h2 className="text-3xl font-extrabold tracking-tight text-gray-900 md:text-4xl">Deux formules, tout compris</h2>
-          <p className="mt-3 text-lg text-gray-600">Choisissez ce qui vous convient : un abonnement annuel léger ou un accès à vie. Mêmes fonctionnalités. Paiement par virement bancaire.</p>
+          <h2 className="text-3xl font-extrabold tracking-tight text-gray-900 md:text-4xl">Trois formules, tout compris</h2>
+          <p className="mt-3 text-lg text-gray-600">Choisissez ce qui vous convient : au mois, à l’année ou à vie. Mêmes fonctionnalités. Paiement par carte ou par virement.</p>
         </div>
-        <div className="mt-10 grid gap-6 md:grid-cols-2">
+        <div className="mt-10 grid gap-6 md:grid-cols-3">
+          {/* Monthly */}
+          <div className="flex flex-col rounded-3xl border border-gray-200 bg-white p-8 shadow-sm">
+            <p className="text-sm font-bold uppercase tracking-wide text-brand-700">Mensuel</p>
+            <div className="mt-3 text-5xl font-extrabold text-gray-900">{MONTHLY} €<span className="text-lg font-medium text-gray-500"> / mois</span></div>
+            <p className="mt-1 text-gray-500">Sans engagement, résiliable à tout moment.</p>
+            <ul className="mt-6 flex-1 space-y-2 text-left text-gray-700">
+              {['Éditeur visuel complet', 'Sous-domaine offert + domaine perso', 'Dons, reçus & campagnes', 'CRM donateurs & équipe', 'Comptabilité & statistiques'].map((i) => (
+                <li key={i} className="flex items-center gap-2"><Check className="h-5 w-5 text-green-600" /> {i}</li>
+              ))}
+            </ul>
+            <Link href="/register?plan=monthly" className="btn btn-ghost mt-8 w-full py-3 text-base">Choisir le mensuel — {MONTHLY} € / mois</Link>
+          </div>
           {/* Annual */}
           <div className="flex flex-col rounded-3xl border border-gray-200 bg-white p-8 shadow-sm">
             <p className="text-sm font-bold uppercase tracking-wide text-brand-700">Annuel</p>
             <div className="mt-3 text-5xl font-extrabold text-gray-900">{ANNUAL} €<span className="text-lg font-medium text-gray-500"> / an</span></div>
-            <p className="mt-1 text-gray-500">Idéal pour démarrer sans gros budget.</p>
+            <p className="mt-1 text-gray-500">2 mois offerts par rapport au mensuel.</p>
             <ul className="mt-6 flex-1 space-y-2 text-left text-gray-700">
               {['Éditeur visuel complet', 'Sous-domaine offert + domaine perso', 'Dons, reçus & campagnes', 'CRM donateurs & équipe', 'Comptabilité & statistiques', 'Support Stripe, HelloAsso & Leetchi'].map((i) => (
                 <li key={i} className="flex items-center gap-2"><Check className="h-5 w-5 text-green-600" /> {i}</li>

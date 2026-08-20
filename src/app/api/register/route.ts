@@ -12,7 +12,7 @@ const schema = z.object({
   email: z.string().email(),
   password: z.string().min(6),
   language: z.enum(['fr', 'en']).default('fr'),
-  plan: z.enum(['lifetime', 'annual']).optional().default('lifetime'),
+  plan: z.enum(['lifetime', 'annual', 'monthly']).optional().default('lifetime'),
   // Association details are optional at signup — the association can fill them
   // in later from Settings.
   phone: z.string().trim().optional().default(''),

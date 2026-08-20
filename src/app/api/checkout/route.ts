@@ -6,15 +6,6 @@ import { prisma } from '@/lib/prisma';
 import { planAccess } from '@/lib/plan';
 import { planFor } from '@/lib/plans';
 import { appBaseUrl } from '@/lib/utils';
-import { airwallexClientEnvironment, airwallexConfigured, createAirwallexPaymentIntent, createAirwallexPaymentLink } from '@/lib/airwallex';
-
-function paymentProviderMessage(raw: string) {
-  const value = raw.toLowerCase();
-  if (value.includes('insufficient permission') || value.includes('configuration_error')) {
-    return 'Le paiement EasyAsso est branché, mais Airwallex refuse la création de la page de paiement. Le compte Airwallex doit avoir le produit Payments activé et autorisé pour accepter les cartes en ligne. Aucun abonnement n’est activé et aucun débit n’a été effectué.';
-  }
-  return `Airwallex refuse la création du paiement : ${raw}. Aucun débit n’a été effectué.`;
-}
 
 export async function POST(req: Request) {
   const ctx = await requireOrg();
@@ -63,49 +54,11 @@ export async function POST(req: Request) {
     return NextResponse.json({ url: session.url });
   }
 
-  // Fallback card processor when Stripe is not configured.
-  let airwallexError = '';
-  if (airwallexConfigured) {
-    try {
-      const payment = await createAirwallexPaymentLink({ organizationId: org.id, organizationName: org.name, amount: priceEur });
-      await prisma.organization.update({
-        where: { id: org.id },
-        data: { planStatus: nextUnpaidStatus, airwallexPaymentLinkId: payment.id, profile: { ...(org.profile as any || {}), plan: plan.id } },
-      });
-      return NextResponse.json({ url: payment.url });
-    } catch (error: any) {
-      airwallexError = error?.message || 'Payment Link Airwallex indisponible';
-      console.error('Airwallex payment link failed; trying hosted checkout fallback', airwallexError);
-      try {
-        const intent = await createAirwallexPaymentIntent({
-          organizationId: org.id,
-          organizationName: org.name,
-          amount: priceEur,
-          email: ctx.user.email,
-          returnUrl: `${appUrl}/onboarding/success`,
-        });
-        await prisma.organization.update({
-          where: { id: org.id },
-          data: { planStatus: nextUnpaidStatus, airwallexPaymentLinkId: intent.id, profile: { ...(org.profile as any || {}), plan: plan.id } },
-        });
-        const params = new URLSearchParams({
-          intent_id: intent.id,
-          client_secret: intent.clientSecret,
-          currency: intent.currency,
-          env: airwallexClientEnvironment,
-        });
-        return NextResponse.json({ url: `/checkout/airwallex?${params.toString()}` });
-      } catch (fallbackError: any) {
-        airwallexError = fallbackError?.message || airwallexError;
-        console.error('Airwallex hosted checkout failed', airwallexError);
-      }
-    }
-  }
-
+  // Card payment isn't configured yet: direct the association to bank transfer.
   return NextResponse.json(
     {
-      error: airwallexError ? paymentProviderMessage(airwallexError) : 'Le paiement par carte est momentanément indisponible. Vous pouvez régler par virement bancaire. Aucun débit n’a été effectué.',
-      code: airwallexError ? 'PAYMENT_PROVIDER_PERMISSION' : 'PAYMENT_PROVIDER_MISSING',
+      error: 'Le paiement par carte n’est pas encore activé. Vous pouvez régler par virement bancaire juste en dessous. Aucun débit n’a été effectué.',
+      code: 'PAYMENT_PROVIDER_MISSING',
     },
     { status: 503 }
   );

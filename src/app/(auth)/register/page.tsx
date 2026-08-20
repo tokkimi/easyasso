@@ -62,7 +62,7 @@ export default function RegisterPage() {
             <div><label className="label">{en ? 'Password' : 'Mot de passe'}</label><input className="input" type="password" required minLength={6} value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} placeholder={en ? '6 characters minimum' : '6 caractères minimum'} /></div>
             <div><label className="label">{en ? 'Workspace language' : 'Langue de votre espace'}</label><select className="input" value={form.language} onChange={(e) => changeLanguage(e.target.value as 'fr' | 'en')}><option value="fr">Français</option><option value="en">English</option></select></div>
             <div>
-              <label className="label">{en ? 'Formula (payable later, by bank transfer)' : 'Formule (payable plus tard, par virement)'}</label>
+              <label className="label">{en ? 'Formula (payable after your free trial)' : 'Formule (à régler après votre essai gratuit)'}</label>
               <div className="grid grid-cols-2 gap-3">
                 {(['annual', 'lifetime'] as PlanId[]).map((id) => {
                   const p = PLANS[id];
@@ -99,7 +99,7 @@ export default function RegisterPage() {
             <div className="rounded-2xl border border-green-200 bg-green-50 p-4">
               <p className="font-bold text-green-950">{en ? 'Your 3-day free trial starts automatically' : 'Votre essai gratuit de 3 jours démarre automatiquement'}</p>
               <p className="mt-1 text-sm leading-6 text-green-800">
-                {en ? `No card is requested at registration. You can create and test your website first, then pay €${PLANS[form.plan].amountEur} ${form.plan === 'annual' ? 'per year' : 'once'} later (by bank transfer) from your dashboard if you want to keep EasyAsso.` : `Aucune carte bancaire n’est demandée à l’inscription. Vous créez et testez votre site d’abord, puis vous paierez ${PLANS[form.plan].amountEur} € ${form.plan === 'annual' ? 'par an' : 'une seule fois'} plus tard (par virement) depuis votre tableau de bord si vous voulez garder EasyAsso.`}
+                {en ? `No card is requested at registration. You can create and test your website first, then pay €${PLANS[form.plan].amountEur} ${form.plan === 'annual' ? 'per year' : 'once'} later from your dashboard if you want to keep EasyAsso.` : `Aucune carte bancaire n’est demandée à l’inscription. Vous créez et testez votre site d’abord, puis vous paierez ${PLANS[form.plan].amountEur} € ${form.plan === 'annual' ? 'par an' : 'une seule fois'} plus tard depuis votre tableau de bord si vous voulez garder EasyAsso.`}
               </p>
             </div>
             {error && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}

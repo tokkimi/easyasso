@@ -29,7 +29,7 @@ export default async function OnboardingPage() {
           <p className="mt-2 text-gray-600">
             Deux formules, sans engagement caché : <strong>{PLANS.annual.amountEur} € / an</strong> ou
             un <strong>paiement unique de {PLANS.lifetime.amountEur} € à vie</strong> — avec tous les outils
-            (dons, CRM, comptabilité…). Paiement par virement bancaire.
+            (dons, CRM, comptabilité…). Paiement par carte ou par virement.
           </p>
           <p className="mt-3 rounded-xl bg-amber-50 px-4 py-3 text-sm font-medium text-amber-800">
             Tant que le paiement n’est pas confirmé, l’accès reste en attente : rien n’est validé automatiquement.

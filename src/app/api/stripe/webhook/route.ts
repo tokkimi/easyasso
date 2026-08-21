@@ -28,6 +28,15 @@ function renewalIso(sub: any): string | undefined {
   return typeof end === 'number' ? new Date(end * 1000).toISOString() : undefined;
 }
 
+async function cancelPreviousSubscription(previousSubscriptionId?: string, nextSubscriptionId?: string) {
+  if (!stripe || !previousSubscriptionId || previousSubscriptionId === nextSubscriptionId) return;
+  try {
+    await stripe.subscriptions.cancel(previousSubscriptionId);
+  } catch (error: any) {
+    console.error('Unable to cancel previous Stripe subscription', previousSubscriptionId, error?.message);
+  }
+}
+
 export async function POST(req: Request) {
   if (!stripe) return NextResponse.json({ ok: true, demo: true });
 
@@ -96,7 +105,11 @@ export async function POST(req: Request) {
       // the signed metadata plan; the first invoice amount is validated by Stripe.
       const amountOk = isSubscription || (session.amount_total === plan.amountEur * 100 && session.currency === 'eur');
       if (orgId && paid && amountOk) {
+        const existingOrg = await prisma.organization.findUnique({ where: { id: orgId } });
+        const existingProfile = (existingOrg?.profile || {}) as Record<string, any>;
+        const previousSubscriptionId = session.metadata?.previousSubscriptionId || existingProfile.stripeSubscriptionId || '';
         await activateOrganization(orgId, session.id);
+        await cancelPreviousSubscription(previousSubscriptionId, isSubscription ? String(session.subscription || '') : undefined);
         if (isSubscription && session.subscription) {
           let renewsAt: string | undefined;
           try {
@@ -105,9 +118,20 @@ export async function POST(req: Request) {
           } catch {}
           await patchProfile(orgId, {
             plan: plan.id,
+            pendingPlan: null,
+            pendingPlanRequestedAt: null,
             stripeSubscriptionId: session.subscription,
             stripeCustomerId: session.customer || undefined,
             planRenewsAt: renewsAt,
+          });
+        } else {
+          await patchProfile(orgId, {
+            plan: plan.id,
+            pendingPlan: null,
+            pendingPlanRequestedAt: null,
+            stripeSubscriptionId: null,
+            planRenewsAt: null,
+            stripeCustomerId: session.customer || existingProfile.stripeCustomerId || undefined,
           });
         }
       }
@@ -134,6 +158,14 @@ export async function POST(req: Request) {
       const sub = event.data.object as any;
       const orgId = sub.metadata?.organizationId || (await orgIdForSubscription(sub.id));
       if (orgId) {
+        const org = await prisma.organization.findUnique({ where: { id: orgId } });
+        const profile = (org?.profile || {}) as Record<string, any>;
+        if (profile.stripeSubscriptionId && profile.stripeSubscriptionId !== sub.id) {
+          return NextResponse.json({ received: true, ignored: 'old_subscription' });
+        }
+        if (!profile.stripeSubscriptionId && profile.plan === 'lifetime') {
+          return NextResponse.json({ received: true, ignored: 'lifetime_upgrade' });
+        }
         await prisma.organization.update({ where: { id: orgId }, data: { planStatus: 'CANCELLED' } });
         await patchProfile(orgId, { subscriptionEndedAt: new Date().toISOString() });
       }

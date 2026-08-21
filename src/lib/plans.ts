@@ -20,3 +20,14 @@ export function planFor(id?: string | null) {
   if (id === 'monthly') return PLANS.monthly;
   return PLANS.lifetime;
 }
+
+export function planRank(id?: string | null) {
+  if (id === 'monthly') return 1;
+  if (id === 'annual') return 2;
+  if (id === 'lifetime') return 3;
+  return 0;
+}
+
+export function canUpgradePlan(current?: string | null, next?: string | null) {
+  return planRank(next) > planRank(current || 'monthly');
+}

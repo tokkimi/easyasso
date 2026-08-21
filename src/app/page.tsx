@@ -130,23 +130,30 @@ export default function LandingPage() {
             </div>
           </div>
 
-          <div className="mt-12 rounded-[2rem] border border-indigo-100 bg-white p-5 shadow-sm">
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-              <div>
-                <h3 className="text-2xl font-extrabold text-gray-900">Un questionnaire clair, pas un tunnel compliqué</h3>
-                <p className="mt-2 max-w-2xl text-sm leading-6 text-gray-600">Les utilisateurs voient tout de suite quoi remplir selon leur projet : association, boutique / commerce ou autre site. Logo, mission, offre, actualités, CGV et mentions légales restent guidés. Sur mobile, les aperçus restent petits et se parcourent au doigt.</p>
+          <div className="mt-12 grid gap-8 rounded-[2rem] border border-indigo-100 bg-white p-6 shadow-sm lg:grid-cols-[0.9fr_1.1fr] lg:items-center lg:p-8">
+            <div>
+              <span className="badge bg-brand-50 text-brand-700">Aperçu scrollable</span>
+              <h3 className="mt-4 text-3xl font-extrabold leading-tight text-gray-900">Un questionnaire clair, pas un tunnel compliqué</h3>
+              <p className="mt-4 text-base leading-8 text-gray-600">Les utilisateurs voient tout de suite quoi remplir selon leur projet : association, boutique / commerce ou autre site. Logo, mission, offre, actualités, CGV et mentions légales restent guidés.</p>
+              <p className="mt-3 text-sm leading-6 text-gray-500">À droite, faites défiler les captures pour voir les deux versions du questionnaire. Sur mobile, le défilement se fait naturellement au doigt.</p>
+              <div className="mt-6 grid gap-3 text-sm text-gray-700 sm:grid-cols-2 lg:grid-cols-1">
+                <div className="rounded-2xl bg-indigo-50 p-4"><strong className="text-gray-900">Association</strong><span className="mt-1 block text-gray-600">Cause, mission, fonctionnement, dons, CGV et actualités.</span></div>
+                <div className="rounded-2xl bg-violet-50 p-4"><strong className="text-gray-900">Boutique / commerce</strong><span className="mt-1 block text-gray-600">Univers de marque, offre, logo, pages et boutique prête à remplir.</span></div>
               </div>
-              <span className="badge bg-brand-50 text-brand-700">Mini aperçu scrollable</span>
             </div>
-            <div className="mt-6 flex gap-4 overflow-x-auto pb-4 [scrollbar-width:thin]">
-              {magicScreens.map((screen) => (
-                <figure key={screen.src} className="w-52 shrink-0 snap-start overflow-hidden rounded-2xl border border-gray-200 bg-gray-50 shadow-sm sm:w-60">
-                  <div className="relative h-72 w-full bg-white sm:h-80">
-                    <Image src={screen.src} alt={screen.alt} fill sizes="(max-width: 640px) 208px, 240px" className="object-cover object-top" />
-                  </div>
-                  <figcaption className="border-t border-gray-100 bg-white px-3 py-2 text-center text-xs font-bold text-gray-700">{screen.title}</figcaption>
-                </figure>
-              ))}
+            <div className="relative">
+              <div className="pointer-events-none absolute -left-3 top-1/2 hidden -translate-y-1/2 flex-col gap-2 lg:flex"><span className="h-2 w-2 rounded-full bg-brand-600" /><span className="h-2 w-2 rounded-full bg-brand-300" /></div>
+              <div className="pointer-events-none absolute -right-3 top-1/2 hidden -translate-y-1/2 flex-col gap-2 lg:flex"><span className="h-2 w-2 rounded-full bg-brand-300" /><span className="h-2 w-2 rounded-full bg-brand-600" /></div>
+              <div className="max-h-[540px] snap-y snap-mandatory overflow-y-auto rounded-[1.75rem] border border-indigo-100 bg-gradient-to-b from-indigo-50 to-white p-4 shadow-inner [scrollbar-width:thin] sm:max-h-[620px]">
+                <div className="space-y-5">
+                  {magicScreens.map((screen) => (
+                    <figure key={screen.src} className="snap-start overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-md">
+                      <Image src={screen.src} alt={screen.alt} width={760} height={980} sizes="(max-width: 1024px) 92vw, 560px" className="h-auto w-full" />
+                      <figcaption className="border-t border-gray-100 bg-white px-4 py-3 text-center text-sm font-extrabold text-gray-800">{screen.title}</figcaption>
+                    </figure>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
 

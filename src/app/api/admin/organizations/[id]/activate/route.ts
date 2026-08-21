@@ -24,6 +24,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     data: {
       profile: {
         ...currentProfile,
+        ...(currentManual.plan ? { plan: currentManual.plan, pendingPlan: null, pendingPlanRequestedAt: null } : {}),
         easyassoManualPayment: {
           ...currentManual,
           status: 'VALIDATED',

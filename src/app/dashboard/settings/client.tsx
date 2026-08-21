@@ -4,6 +4,8 @@ import { useRouter } from 'next/navigation';
 import { Globe, Check, Copy, CreditCard, ExternalLink, Building2, Save, ShoppingCart, Link2, ShieldCheck, UserRound, Lock, Power } from 'lucide-react';
 import { PageHeader } from '@/components/ui';
 import { formatDate } from '@/lib/utils';
+import { canUpgradePlan, PLANS, type PlanId } from '@/lib/plans';
+import { ManualTransferButton } from '@/app/onboarding/manual-transfer-button';
 
 export function SettingsClient({ org, user, site, freeUrl, rootDomain, canDomain, categories }: any) {
   const router = useRouter();
@@ -16,6 +18,8 @@ export function SettingsClient({ org, user, site, freeUrl, rootDomain, canDomain
   const [domainChoice, setDomainChoice] = useState<'connect' | 'buy' | null>(site.customDomain ? 'connect' : null);
   const [profile, setProfile] = useState({ language: 'fr', year: '', category: '', mission: '', functioning: '', actions: '', beneficiaries: '', goodToKnow: '', slogan: '', generateCgv: true, city: '', email: '', phone: '', legalName: '', registrationNumber: '', legalAddress: '', publicationDirector: '', facebook: '', instagram: '', linkedin: '', youtube: '', tiktok: '', twitter: '', ...(org.profile || {}) });
   const [account, setAccount] = useState({ name: user.name || '', email: user.email || '', currentPassword: '', newPassword: '' });
+  const [billingLoading, setBillingLoading] = useState('');
+  const [billingError, setBillingError] = useState('');
 
   async function saveName() {
     await fetch('/api/site', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name }) });
@@ -68,6 +72,22 @@ export function SettingsClient({ org, user, site, freeUrl, rootDomain, canDomain
     if (!res.ok) setPublished(!value);
     router.refresh();
     setTimeout(() => setMsg(''), 3000);
+  }
+  const currentPlan = ((profile as any).plan === 'monthly' || (profile as any).plan === 'annual' || (profile as any).plan === 'lifetime' ? (profile as any).plan : 'lifetime') as PlanId;
+  const pendingPlan = ((profile as any).pendingPlan === 'monthly' || (profile as any).pendingPlan === 'annual' || (profile as any).pendingPlan === 'lifetime' ? (profile as any).pendingPlan : '') as PlanId | '';
+  const isActivePlan = org.planStatus === 'ACTIVE';
+  const planIds = ['monthly', 'annual', 'lifetime'] as PlanId[];
+  const selectablePlans = planIds.filter((plan) => !isActivePlan || canUpgradePlan(currentPlan, plan));
+  async function payPlan(plan: PlanId) {
+    setBillingLoading(plan);
+    setBillingError('');
+    const res = await fetch('/api/checkout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ plan }) });
+    const data = await res.json().catch(() => ({}));
+    if (data.url) window.location.href = data.url;
+    else {
+      setBillingError(data.error || 'Impossible d’ouvrir le paiement sécurisé. Aucun débit n’a été effectué.');
+      setBillingLoading('');
+    }
   }
 
   return (
@@ -213,15 +233,55 @@ export function SettingsClient({ org, user, site, freeUrl, rootDomain, canDomain
       {/* Billing */}
       <div className="card mb-6">
         <h2 className="mb-1 flex items-center gap-2 font-bold text-gray-900"><CreditCard className="h-5 w-5" /> Abonnement</h2>
-        <div className="mt-2 flex items-center justify-between">
+        <div className="mt-2 flex items-center justify-between gap-4">
           <div>
             <span className={`badge ${org.planStatus === 'ACTIVE' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
-              {org.planStatus === 'ACTIVE' ? 'Actif' : org.planStatus}
+              {org.planStatus === 'ACTIVE' ? 'Actif' : org.planStatus === 'TRIAL' ? 'Essai gratuit' : org.planStatus === 'PENDING_PAYMENT' ? 'Paiement en attente' : org.planStatus}
             </span>
             {org.paidAt && <p className="mt-1 text-sm text-gray-500">Réglé le {formatDate(org.paidAt)}</p>}
+            {pendingPlan && <p className="mt-1 text-sm font-medium text-amber-700">Upgrade demandé : {PLANS[pendingPlan].name}</p>}
           </div>
-          <span className="text-sm text-gray-500">Paiement unique — accès à vie</span>
+          <span className="text-right text-sm text-gray-500">Formule actuelle : <strong className="text-gray-700">{PLANS[currentPlan].name}</strong></span>
         </div>
+
+        {billingError && <p className="mt-4 rounded-xl bg-red-50 p-3 text-sm text-red-700">{billingError}</p>}
+
+        <div className="mt-5 grid gap-3 md:grid-cols-3">
+          {planIds.map((planId) => {
+            const plan = PLANS[planId];
+            const isCurrent = isActivePlan && currentPlan === planId;
+            const canSelect = selectablePlans.includes(planId);
+            const transferAllowed = planId !== 'monthly' && canSelect;
+            return (
+              <div key={plan.id} className={`rounded-2xl border p-4 ${isCurrent ? 'border-green-200 bg-green-50' : canSelect ? 'border-gray-200 bg-white' : 'border-gray-100 bg-gray-50 opacity-70'}`}>
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <h3 className="font-extrabold text-gray-900">{plan.name}</h3>
+                    <p className="text-sm text-gray-500">{plan.period}</p>
+                  </div>
+                  {isCurrent && <span className="badge bg-green-100 text-green-700">Actuel</span>}
+                </div>
+                <p className="mt-3 text-3xl font-black text-gray-900">{plan.amountEur} €</p>
+                <p className="text-xs text-gray-500">{planId === 'monthly' ? 'Prélèvement mensuel par carte.' : planId === 'annual' ? 'Paiement annuel, carte ou virement.' : 'Paiement unique, carte ou virement.'}</p>
+                {canSelect ? (
+                  <div className="mt-4 space-y-2">
+                    <button onClick={() => payPlan(planId)} disabled={billingLoading === planId} className="btn btn-primary w-full text-sm">
+                      {billingLoading === planId ? 'Ouverture…' : isActivePlan ? `Passer à ${plan.name}` : `Payer ${plan.amountEur} €`}
+                    </button>
+                    {transferAllowed && <ManualTransferButton price={String(plan.amountEur)} plan={planId} />}
+                  </div>
+                ) : (
+                  <p className="mt-4 rounded-xl bg-white/70 p-3 text-xs text-gray-500">
+                    {isCurrent ? 'Votre formule active.' : 'Formule inférieure à votre abonnement actuel.'}
+                  </p>
+                )}
+              </div>
+            );
+          })}
+        </div>
+        <p className="mt-4 text-xs text-gray-500">
+          Si vous êtes en essai ou en attente de paiement, choisissez une formule pour activer durablement votre site. Si vous êtes déjà actif, seuls les upgrades sont proposés pour éviter les doubles changements contradictoires.
+        </p>
       </div>
 
       <div className="card border-2 border-gray-200">

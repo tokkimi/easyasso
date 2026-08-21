@@ -53,6 +53,25 @@ button, a, input, select, textarea { touch-action: manipulation; }
   flex: 0 0 min(78vw, 300px);
   scroll-snap-align: start;
 }
+
+@keyframes easyasso-marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+.animate-easyasso-marquee {
+  animation: easyasso-marquee 34s linear infinite;
+  will-change: transform;
+}
+
+.animate-easyasso-marquee:hover,
+.animate-easyasso-marquee:focus-within {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-easyasso-marquee { animation: none; }
+}
 .public-responsive-columns.public-horizontal-scroll > .public-scroll-item {
   border-radius: .75rem;
   background: rgba(255,255,255,.72);

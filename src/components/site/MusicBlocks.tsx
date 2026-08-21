@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef } from 'react';
+import { useState } from 'react';
 import { Play, Instagram, Music2, Youtube, CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react';
 import { safePublicUrl, videoEmbed } from '@/lib/render';
 
@@ -68,9 +68,13 @@ export function MusicTracks({ content }: { content: any }) {
 export function VideoGrid({ content }: { content: any }) {
   const videos: { url?: string; title?: string }[] = Array.isArray(content?.videos) ? content.videos : [];
   const clean = videos.filter((v) => v && v.url);
+  const [playing, setPlaying] = useState<Record<number, boolean>>({});
+
+  const youtubeId = (url: string) => url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([\w-]{11})/)?.[1] || '';
+  const youtubeMark = <svg viewBox="0 0 24 17" aria-hidden="true" className="h-6 w-8"><path fill="#FF0000" d="M23.5 2.65a3 3 0 0 0-2.12-2.12C19.5 0 12 0 12 0S4.5 0 2.62.53A3 3 0 0 0 .5 2.65 31.6 31.6 0 0 0 0 8.5a31.6 31.6 0 0 0 .5 5.85 3 3 0 0 0 2.12 2.12C4.5 17 12 17 12 17s7.5 0 9.38-.53a3 3 0 0 0 2.12-2.12A31.6 31.6 0 0 0 24 8.5a31.6 31.6 0 0 0-.5-5.85Z"/><path fill="white" d="m9.6 12.15 6.3-3.65-6.3-3.65v7.3Z"/></svg>;
   return (
     <div className="mx-auto w-full max-w-6xl px-4 pt-6">
-      {content?.title && <h2 className="text-2xl font-extrabold uppercase tracking-tight md:text-3xl">{content.title}</h2>}
+      <div className="mb-3" aria-label="YouTube">{youtubeMark}</div>
       {clean.length === 0 ? (
         <p className="py-10 text-center text-sm text-gray-400">Ajoutez des liens YouTube — les vidéos s’intègrent automatiquement.</p>
       ) : (
@@ -80,12 +84,20 @@ export function VideoGrid({ content }: { content: any }) {
           <div id="video-rail" className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-12 pb-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {clean.map((v, i) => {
             const src = safePublicUrl(videoEmbed(v.url || ''));
+            const id = youtubeId(v.url || '');
+            const thumbnail = id ? `https://i.ytimg.com/vi/${id}/hqdefault.jpg` : '';
             return (
               <div key={i} className="w-[78vw] max-w-[320px] shrink-0 snap-start md:w-[320px]">
                 <div className="relative aspect-video w-full overflow-hidden rounded-2xl bg-black shadow-sm">
-                  {src && <iframe src={src} className="absolute inset-0 h-full w-full" allowFullScreen title={v.title || `video-${i}`} />}
+                  {playing[i] && src ? (
+                    <iframe src={`${src}${src.includes('?') ? '&' : '?'}autoplay=1&modestbranding=1&rel=0`} className="absolute inset-0 h-full w-full border-0" allow="autoplay; encrypted-media; picture-in-picture" allowFullScreen title={`YouTube video ${i + 1}`} />
+                  ) : (
+                    <button type="button" aria-label="Lire la vidéo" onClick={() => setPlaying((state) => ({ ...state, [i]: true }))} className="absolute inset-0 flex items-center justify-center bg-black/35 transition hover:bg-black/45 focus:outline-none focus:ring-2 focus:ring-white/80">
+                      {thumbnail && /* eslint-disable-next-line @next/next/no-img-element */ <img src={thumbnail} alt="" loading="lazy" className="absolute inset-0 h-full w-full object-cover" />}
+                      <span className="relative grid h-14 w-20 place-items-center rounded-2xl bg-black/50 shadow-lg backdrop-blur-sm transition hover:bg-black/60">{youtubeMark}</span>
+                    </button>
+                  )}
                 </div>
-                {v.title && <p className="mt-2 truncate text-sm font-semibold text-gray-800">{v.title}</p>}
               </div>
             );
           })}
@@ -329,13 +341,8 @@ export function InstagramPreview({ content }: { content: any }) {
 
   return (
     <div className="mx-auto w-full max-w-5xl px-4">
-      <div className="flex flex-wrap items-center justify-center gap-3 text-center">
-        <span className="grid h-11 w-11 place-items-center rounded-full bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-600"><Instagram className="h-6 w-6 text-white" /></span>
-        <div className="text-left">
-          {content?.title && <p className="text-xl font-extrabold">{content.title}</p>}
-          {username && <p className="text-sm text-gray-500">@{username}</p>}
-        </div>
-        {profileUrl && <a href={profileUrl} target="_blank" rel="noreferrer" className="rounded-full bg-[var(--brand)] px-5 py-2.5 text-sm font-bold text-white transition hover:opacity-90">Suivre</a>}
+      <div className="mb-3 flex items-center" aria-label="Instagram">
+        <span className="grid h-7 w-7 place-items-center rounded-lg bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-600"><Instagram className="h-4 w-4 text-white" /></span>
       </div>
 
       {embedCode ? (
@@ -345,8 +352,8 @@ export function InstagramPreview({ content }: { content: any }) {
       ) : embeds.length > 0 ? (
         <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {embeds.map((src: string, i: number) => (
-            <div key={i} className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-gray-100">
-              <iframe src={src} title={`instagram-${i}`} loading="lazy" scrolling="no" className="h-[500px] w-full border-0" />
+            <div key={i} className="relative aspect-square overflow-hidden rounded-2xl bg-gray-100">
+              <iframe src={src} title={`instagram-${i}`} loading="lazy" scrolling="no" className="absolute left-0 top-[-64px] h-[760px] w-full border-0" />
             </div>
           ))}
         </div>

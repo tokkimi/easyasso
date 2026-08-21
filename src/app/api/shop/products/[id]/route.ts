@@ -2,15 +2,7 @@ import { NextResponse } from 'next/server';
 import { requireApiPermission, handleApiError } from '@/lib/api';
 import { PERMISSIONS } from '@/lib/permissions';
 import { prisma } from '@/lib/prisma';
-
-function euros(value: unknown) {
-  return Math.max(0, Math.round((Number(value) || 0) * 100));
-}
-function optionalStock(value: unknown) {
-  if (value === '' || value === null || value === undefined) return null;
-  const n = Math.floor(Number(value));
-  return Number.isFinite(n) && n >= 0 ? n : null;
-}
+import { eurosToCents as euros, optionalStock, cleanImages } from '@/lib/shop';
 
 async function ownProduct(orgId: string, id: string) {
   const product = await prisma.product.findUnique({ where: { id } });
@@ -27,7 +19,9 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     if (b.name !== undefined) data.name = String(b.name).trim().slice(0, 140);
     if (b.description !== undefined) data.description = String(b.description).slice(0, 4000);
     if (b.priceEuros !== undefined) data.priceCents = euros(b.priceEuros);
-    if (b.imageUrl !== undefined) data.imageUrl = b.imageUrl ? String(b.imageUrl).slice(0, 2_000_000) : null;
+    if (b.images !== undefined) { const imgs = cleanImages(b.images); data.images = imgs as any; data.imageUrl = imgs[0] || null; }
+    if (b.category !== undefined) data.category = String(b.category).slice(0, 60);
+    if (b.brand !== undefined) data.brand = String(b.brand).slice(0, 80);
     if (b.stock !== undefined) data.stock = optionalStock(b.stock);
     if (b.active !== undefined) data.active = !!b.active;
     const product = await prisma.product.update({ where: { id }, data });

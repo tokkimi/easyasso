@@ -1,6 +1,6 @@
 'use client';
-import { useState } from 'react';
-import { Plus, Trash2, Pencil, Save, X, Package, Eye, EyeOff } from 'lucide-react';
+import { useMemo, useRef, useState } from 'react';
+import { Plus, Trash2, Pencil, Save, X, Package, Eye, EyeOff, Star, ArrowLeft, ArrowRight, ImagePlus } from 'lucide-react';
 import { PageHeader } from '@/components/ui';
 
 type Product = {
@@ -9,16 +9,22 @@ type Product = {
   description: string;
   priceCents: number;
   imageUrl?: string | null;
+  images?: string[];
+  category?: string;
+  brand?: string;
   stock?: number | null;
   active: boolean;
 };
 
-type Draft = { name: string; description: string; priceEuros: string; imageUrl: string; stock: string };
+type Draft = { name: string; description: string; priceEuros: string; images: string[]; category: string; brand: string; stock: string };
 
-const EMPTY: Draft = { name: '', description: '', priceEuros: '', imageUrl: '', stock: '' };
+const EMPTY: Draft = { name: '', description: '', priceEuros: '', images: [], category: '', brand: '', stock: '' };
 
 function euros(cents: number) {
   return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format((cents || 0) / 100);
+}
+function mainImage(p: Product) {
+  return (p.images && p.images[0]) || p.imageUrl || '';
 }
 
 export function ShopClient({ enabled: initialEnabled, initial }: { enabled: boolean; initial: Product[] }) {
@@ -27,6 +33,9 @@ export function ShopClient({ enabled: initialEnabled, initial }: { enabled: bool
   const [draft, setDraft] = useState<Draft | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const dragIndex = useRef<number | null>(null);
+
+  const categories = useMemo(() => Array.from(new Set(products.map((p) => p.category).filter(Boolean))) as string[], [products]);
 
   async function toggleShop() {
     const next = !enabled;
@@ -37,11 +46,15 @@ export function ShopClient({ enabled: initialEnabled, initial }: { enabled: bool
   function startAdd() { setEditingId(null); setDraft({ ...EMPTY }); }
   function startEdit(p: Product) {
     setEditingId(p.id);
-    setDraft({ name: p.name, description: p.description || '', priceEuros: String((p.priceCents || 0) / 100), imageUrl: p.imageUrl || '', stock: p.stock == null ? '' : String(p.stock) });
+    setDraft({
+      name: p.name, description: p.description || '', priceEuros: String((p.priceCents || 0) / 100),
+      images: (p.images && p.images.length ? p.images : p.imageUrl ? [p.imageUrl] : []),
+      category: p.category || '', brand: p.brand || '', stock: p.stock == null ? '' : String(p.stock),
+    });
   }
   function cancel() { setDraft(null); setEditingId(null); }
 
-  async function readImage(file: File): Promise<string> {
+  function readImage(file: File): Promise<string> {
     return new Promise((resolve, reject) => {
       const r = new FileReader();
       r.onload = () => resolve(String(r.result));
@@ -49,11 +62,30 @@ export function ShopClient({ enabled: initialEnabled, initial }: { enabled: bool
       r.readAsDataURL(file);
     });
   }
+  async function addFiles(files: FileList | null) {
+    if (!draft || !files) return;
+    const list = Array.from(files).slice(0, 8);
+    const urls = await Promise.all(list.map(readImage));
+    setDraft((d) => (d ? { ...d, images: [...d.images, ...urls].slice(0, 8) } : d));
+  }
+  function moveImage(from: number, to: number) {
+    setDraft((d) => {
+      if (!d || to < 0 || to >= d.images.length) return d;
+      const imgs = [...d.images];
+      const [m] = imgs.splice(from, 1);
+      imgs.splice(to, 0, m);
+      return { ...d, images: imgs };
+    });
+  }
+  function removeImage(i: number) {
+    setDraft((d) => (d ? { ...d, images: d.images.filter((_, idx) => idx !== i) } : d));
+  }
+  function makeMain(i: number) { moveImage(i, 0); }
 
   async function save() {
     if (!draft || !draft.name.trim()) { alert('Le nom du produit est requis.'); return; }
     setBusy(true);
-    const payload = { name: draft.name.trim(), description: draft.description, priceEuros: draft.priceEuros, imageUrl: draft.imageUrl, stock: draft.stock };
+    const payload = { name: draft.name.trim(), description: draft.description, priceEuros: draft.priceEuros, images: draft.images, category: draft.category.trim(), brand: draft.brand.trim(), stock: draft.stock };
     const url = editingId ? `/api/shop/products/${editingId}` : '/api/shop/products';
     const res = await fetch(url, { method: editingId ? 'PATCH' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
     const data = await res.json().catch(() => ({}));
@@ -63,12 +95,10 @@ export function ShopClient({ enabled: initialEnabled, initial }: { enabled: bool
     else setProducts((all) => [...all, data.product]);
     cancel();
   }
-
   async function toggleActive(p: Product) {
     setProducts((all) => all.map((x) => (x.id === p.id ? { ...x, active: !x.active } : x)));
     await fetch(`/api/shop/products/${p.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ active: !p.active }) }).catch(() => {});
   }
-
   async function remove(p: Product) {
     if (!confirm(`Supprimer « ${p.name} » ?`)) return;
     setProducts((all) => all.filter((x) => x.id !== p.id));
@@ -77,7 +107,7 @@ export function ShopClient({ enabled: initialEnabled, initial }: { enabled: bool
 
   return (
     <div>
-      <PageHeader title="Boutique" subtitle="Activez votre boutique en ligne et gérez vos produits. Les commandes apparaîtront dans votre comptabilité." />
+      <PageHeader title="Boutique" subtitle="Activez votre boutique et gérez vos produits. Les commandes apparaîtront dans votre comptabilité." />
 
       {/* Activation toggle */}
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-gray-200">
@@ -109,25 +139,51 @@ export function ShopClient({ enabled: initialEnabled, initial }: { enabled: bool
           {/* Add / edit form */}
           {draft && (
             <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-gray-200">
-              <div className="grid gap-4 md:grid-cols-2">
-                <div><label className="label">Nom du produit</label><input className="input" value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} placeholder="Ex : T-shirt logo" /></div>
+              {/* Photos */}
+              <label className="label">Photos <span className="font-normal text-gray-400">— la 1ʳᵉ est l’image principale, glissez pour réorganiser</span></label>
+              <div className="flex flex-wrap gap-3">
+                {draft.images.map((src, i) => (
+                  <div
+                    key={i}
+                    draggable
+                    onDragStart={() => { dragIndex.current = i; }}
+                    onDragOver={(e) => e.preventDefault()}
+                    onDrop={() => { if (dragIndex.current !== null) moveImage(dragIndex.current, i); dragIndex.current = null; }}
+                    className={`group relative h-24 w-24 shrink-0 overflow-hidden rounded-xl ring-2 ${i === 0 ? 'ring-brand-500' : 'ring-gray-200'}`}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={src} alt="" className="h-full w-full object-cover" />
+                    {i === 0 && <span className="absolute left-1 top-1 rounded bg-brand-600 px-1 py-0.5 text-[9px] font-bold text-white">PRINCIPALE</span>}
+                    <div className="absolute inset-x-0 bottom-0 flex justify-between bg-black/45 px-1 py-0.5 opacity-0 transition group-hover:opacity-100">
+                      <button type="button" onClick={() => moveImage(i, i - 1)} title="Déplacer à gauche" className="text-white disabled:opacity-30" disabled={i === 0}><ArrowLeft className="h-3.5 w-3.5" /></button>
+                      {i !== 0 && <button type="button" onClick={() => makeMain(i)} title="Définir comme principale" className="text-white"><Star className="h-3.5 w-3.5" /></button>}
+                      <button type="button" onClick={() => moveImage(i, i + 1)} title="Déplacer à droite" className="text-white disabled:opacity-30" disabled={i === draft.images.length - 1}><ArrowRight className="h-3.5 w-3.5" /></button>
+                    </div>
+                    <button type="button" onClick={() => removeImage(i)} title="Supprimer" className="absolute right-1 top-1 grid h-5 w-5 place-items-center rounded-full bg-black/50 text-white"><X className="h-3 w-3" /></button>
+                  </div>
+                ))}
+                {draft.images.length < 8 && (
+                  <label className="grid h-24 w-24 shrink-0 cursor-pointer place-items-center rounded-xl border-2 border-dashed border-gray-300 text-gray-400 transition hover:border-brand-400 hover:text-brand-500">
+                    <div className="text-center"><ImagePlus className="mx-auto h-6 w-6" /><span className="text-[10px]">Ajouter</span></div>
+                    <input type="file" accept="image/*" multiple className="hidden" onChange={(e) => { addFiles(e.target.files); e.currentTarget.value = ''; }} />
+                  </label>
+                )}
+              </div>
+
+              <div className="mt-4 grid gap-4 md:grid-cols-2">
+                <div><label className="label">Nom du produit</label><input className="input" value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} placeholder="Ex : Sac Marmont" /></div>
                 <div><label className="label">Prix (€)</label><input className="input" type="number" min="0" step="0.01" value={draft.priceEuros} onChange={(e) => setDraft({ ...draft, priceEuros: e.target.value })} placeholder="19.90" /></div>
+                <div>
+                  <label className="label">Catégorie</label>
+                  <input className="input" list="shop-categories" value={draft.category} onChange={(e) => setDraft({ ...draft, category: e.target.value })} placeholder="Ex : Sacs, Chaussures, Robes…" />
+                  <datalist id="shop-categories">{categories.map((c) => <option key={c} value={c} />)}</datalist>
+                </div>
+                <div><label className="label">Marque <span className="font-normal text-gray-400">(optionnel)</span></label><input className="input" value={draft.brand} onChange={(e) => setDraft({ ...draft, brand: e.target.value })} placeholder="Ex : Gucci" /></div>
                 <div className="md:col-span-2"><label className="label">Description</label><textarea className="input min-h-[80px]" value={draft.description} onChange={(e) => setDraft({ ...draft, description: e.target.value })} placeholder="Décrivez le produit…" /></div>
-                <div>
-                  <label className="label">Stock (laisser vide = illimité)</label>
-                  <input className="input" type="number" min="0" step="1" value={draft.stock} onChange={(e) => setDraft({ ...draft, stock: e.target.value })} placeholder="illimité" />
-                </div>
-                <div>
-                  <label className="label">Photo</label>
-                  <input type="file" accept="image/*" className="input" onChange={async (e) => { const f = e.target.files?.[0]; if (f) setDraft({ ...draft, imageUrl: await readImage(f) }); }} />
-                  {draft.imageUrl && (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={draft.imageUrl} alt="" className="mt-2 h-20 w-20 rounded-lg object-cover" />
-                  )}
-                </div>
+                <div><label className="label">Stock <span className="font-normal text-gray-400">(vide = illimité)</span></label><input className="input" type="number" min="0" step="1" value={draft.stock} onChange={(e) => setDraft({ ...draft, stock: e.target.value })} placeholder="illimité" /></div>
               </div>
               <div className="mt-4 flex gap-2">
-                <button onClick={save} disabled={busy} className="btn btn-primary"><Save className="h-4 w-4" /> {busy ? 'Enregistrement…' : editingId ? 'Enregistrer' : 'Ajouter'}</button>
+                <button onClick={save} disabled={busy} className="btn btn-primary"><Save className="h-4 w-4" /> {busy ? 'Enregistrement…' : editingId ? 'Enregistrer' : 'Ajouter le produit'}</button>
                 <button onClick={cancel} className="btn btn-ghost"><X className="h-4 w-4" /> Annuler</button>
               </div>
             </div>
@@ -137,22 +193,23 @@ export function ShopClient({ enabled: initialEnabled, initial }: { enabled: bool
           {products.length === 0 && !draft && (
             <div className="rounded-2xl border-2 border-dashed border-gray-200 p-8 text-center text-gray-500">Aucun produit pour l’instant. Cliquez « Ajouter un produit ».</div>
           )}
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
             {products.map((p) => (
               <div key={p.id} className={`overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-gray-200 ${!p.active ? 'opacity-60' : ''}`}>
-                {p.imageUrl ? (
+                {mainImage(p) ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={p.imageUrl} alt={p.name} className="h-40 w-full object-cover" />
+                  <img src={mainImage(p)} alt={p.name} className="aspect-square w-full object-cover" />
                 ) : (
-                  <div className="grid h-40 w-full place-items-center bg-gray-100 text-gray-300"><Package className="h-10 w-10" /></div>
+                  <div className="grid aspect-square w-full place-items-center bg-gray-100 text-gray-300"><Package className="h-10 w-10" /></div>
                 )}
                 <div className="p-4">
+                  {p.brand && <p className="text-xs font-bold uppercase tracking-wide text-brand-700">{p.brand}{p.category ? ` · ${p.category}` : ''}</p>}
                   <div className="flex items-start justify-between gap-2">
                     <p className="font-bold text-gray-900">{p.name}</p>
                     <p className="shrink-0 font-extrabold text-brand-700">{euros(p.priceCents)}</p>
                   </div>
                   {p.description && <p className="mt-1 line-clamp-2 text-sm text-gray-500">{p.description}</p>}
-                  <p className="mt-1 text-xs text-gray-400">{p.stock == null ? 'Stock illimité' : `${p.stock} en stock`}</p>
+                  <p className="mt-1 text-xs text-gray-400">{p.stock == null ? 'Stock illimité' : `${p.stock} en stock`}{(p.images?.length || 0) > 1 ? ` · ${p.images!.length} photos` : ''}</p>
                   <div className="mt-3 flex gap-1">
                     <button onClick={() => startEdit(p)} className="btn btn-ghost flex-1 text-sm"><Pencil className="h-4 w-4" /> Modifier</button>
                     <button onClick={() => toggleActive(p)} title={p.active ? 'Masquer' : 'Afficher'} className="grid h-9 w-9 place-items-center rounded-lg text-gray-500 hover:bg-gray-100">{p.active ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}</button>

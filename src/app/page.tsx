@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { Check, MousePointerClick, Palette, HandCoins, BarChart3, Globe, Sparkles, WandSparkles, FileText, RefreshCw, ExternalLink, Gift, Zap, Clock, Wallet, HeartHandshake, Recycle, Server, Gauge, Store, MessageSquareText } from 'lucide-react';
+import { Check, MousePointerClick, Palette, HandCoins, BarChart3, Globe, Sparkles, WandSparkles, FileText, ExternalLink, Gift, Zap, Clock, Wallet, HeartHandshake, Recycle, Server, Gauge, Store, MessageSquareText } from 'lucide-react';
 
 import { PLANS } from '@/lib/plans';
 import { LanguageSwitcher } from '@/components/language-provider';
@@ -140,9 +140,8 @@ export default function LandingPage() {
             </div>
           </div>
 
-          <div className="mt-10 grid gap-6 rounded-3xl border border-gray-200 bg-white p-7 shadow-sm md:grid-cols-[1fr_auto] md:items-center">
-            <div className="flex gap-4"><RefreshCw className="mt-1 h-6 w-6 shrink-0 text-brand-600" /><div><h3 className="text-lg font-bold text-gray-900">Un nouveau départ à chaque génération</h3><p className="mt-1 text-sm leading-6 text-gray-600">Lorsque vous recommencez, l’ancien site est entièrement remplacé. Aucun ancien texte, logo ou bloc ne vient polluer la nouvelle création.</p></div></div>
-            <Link href="/register" className="btn btn-primary px-6 py-3">Essayer l’outil magique <Sparkles className="h-4 w-4" /></Link>
+          <div className="mt-10 flex justify-center">
+            <Link href="/register" className="btn btn-primary px-7 py-3 text-base">Essayer l’outil magique <Sparkles className="h-4 w-4" /></Link>
           </div>
 
           <div className="mt-8 rounded-3xl border border-indigo-100 bg-white px-5 py-8 shadow-sm sm:px-7 lg:px-9">

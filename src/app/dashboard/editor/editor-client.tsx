@@ -670,25 +670,35 @@ function StreamingEditor({ c, onContent }: { c: any; onContent: (v: any) => void
 }
 
 function InstagramEditor({ c, onContent }: { c: any; onContent: (v: any) => void }) {
-  const posts: any[] = Array.isArray(c.posts) ? c.posts : [];
-  const setPost = (i: number, patch: any) => onContent({ ...c, posts: posts.map((p, j) => (j === i ? { ...p, ...patch } : p)) });
+  const postUrls: string[] = Array.isArray(c.postUrls) ? c.postUrls : [];
+  const setUrl = (i: number, v: string) => onContent({ ...c, postUrls: postUrls.map((u, j) => (j === i ? v : u)) });
   return (
     <>
-      <Field label="Nom d’utilisateur Instagram"><input className="input" value={c.username || ''} onChange={(e) => onContent({ ...c, username: e.target.value })} placeholder="oddymatt_music" /></Field>
+      <Field label="Titre du bloc"><input className="input" value={c.title || ''} onChange={(e) => onContent({ ...c, title: e.target.value })} placeholder="Sur Instagram" /></Field>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Field label="Nom d’utilisateur"><input className="input" value={c.username || ''} onChange={(e) => onContent({ ...c, username: e.target.value })} placeholder="oddymatt_music" /></Field>
+        <Field label="Nombre de posts affichés"><input className="input" type="number" min={1} max={12} value={c.count || 6} onChange={(e) => onContent({ ...c, count: Math.max(1, Math.min(12, +e.target.value || 6)) })} /></Field>
+      </div>
       <Field label="Lien du profil (optionnel)"><input className="input" type="url" value={c.url || ''} onChange={(e) => onContent({ ...c, url: e.target.value })} placeholder="https://instagram.com/…" /></Field>
-      <p className="text-xs text-gray-500">Ajoutez quelques visuels de posts (Instagram ne permet pas de les récupérer automatiquement).</p>
-      <div className="grid grid-cols-3 gap-2">
-        {posts.map((p, i) => (
-          <div key={i}>
-            <ImageInput value={p.image || ''} onChange={(url) => setPost(i, { image: url })} />
-            <input className="input mt-1 text-xs" type="url" value={p.url || ''} onChange={(e) => setPost(i, { url: e.target.value })} placeholder="lien (option)" />
-          </div>
-        ))}
+
+      <div>
+        <label className="label">Liens de vos posts (affichés en direct)</label>
+        <p className="mb-2 text-xs text-gray-500">Collez l’adresse de chaque post (…/p/… ou …/reel/…) : ils s’affichent en temps réel via Instagram.</p>
+        <div className="space-y-2">
+          {postUrls.map((u, i) => (
+            <div key={i} className="flex gap-2">
+              <input className="input flex-1" type="url" value={u} onChange={(e) => setUrl(i, e.target.value)} placeholder="https://www.instagram.com/p/…" />
+              <button type="button" onClick={() => onContent({ ...c, postUrls: postUrls.filter((_, j) => j !== i) })} className="shrink-0 text-red-500 hover:text-red-700"><Trash2 className="h-4 w-4" /></button>
+            </div>
+          ))}
+        </div>
+        {postUrls.length < 12 && <button type="button" onClick={() => onContent({ ...c, postUrls: [...postUrls, ''] })} className="btn btn-ghost mt-2 text-sm"><Plus className="h-4 w-4" /> Ajouter un post</button>}
       </div>
-      <div className="flex gap-2">
-        <button type="button" onClick={() => onContent({ ...c, posts: [...posts, { image: '', url: '' }] })} className="btn btn-ghost text-sm"><Plus className="h-4 w-4" /> Ajouter un post</button>
-        {posts.length > 0 && <button type="button" onClick={() => onContent({ ...c, posts: posts.slice(0, -1) })} className="btn btn-ghost text-sm text-red-500">Retirer le dernier</button>}
-      </div>
+
+      <Field label="Ou : code d’intégration d’un widget (flux auto — LightWidget, Behold…)">
+        <textarea className="input min-h-24 font-mono text-xs" value={c.embedCode || ''} onChange={(e) => onContent({ ...c, embedCode: e.target.value })} placeholder="<iframe src='https://lightwidget.com/…'></iframe>" />
+        <p className="mt-1 text-xs text-gray-400">Pour un flux Instagram automatique (derniers posts en continu), collez ici le code fourni par un service de widget gratuit.</p>
+      </Field>
     </>
   );
 }

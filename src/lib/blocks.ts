@@ -173,7 +173,7 @@ export function defaultContentFor(type: BlockType): Record<string, unknown> {
     case 'streaming':
       return { title: 'Écoutez-moi', links: { spotify: '', deezer: '', appleMusic: '', soundcloud: '', youtube: '' } };
     case 'instagram':
-      return { title: 'Sur Instagram', username: '', url: '', posts: [] };
+      return { title: 'Sur Instagram', username: '', url: '', count: 6, postUrls: [], embedCode: '', posts: [] };
     default:
       return {};
   }

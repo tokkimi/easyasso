@@ -124,34 +124,59 @@ export function StreamingLinks({ content }: { content: any }) {
   );
 }
 
-// ---- Aperçu Instagram ------------------------------------------------------
+// ---- Aperçu Instagram (posts en temps réel via l'embed officiel) -----------
+function instaEmbedUrl(url: string): string {
+  const m = String(url).match(/instagram\.com\/(?:[^/]+\/)?(p|reel|tv)\/([A-Za-z0-9_-]+)/);
+  return m ? `https://www.instagram.com/${m[1]}/${m[2]}/embed` : '';
+}
 export function InstagramPreview({ content }: { content: any }) {
   const username = String(content?.username || '').replace(/^@/, '');
   const profileUrl = safePublicUrl(content?.url || (username ? `https://instagram.com/${username}` : ''));
-  const posts: { image?: string; url?: string }[] = Array.isArray(content?.posts) ? content.posts.filter((p: any) => p?.image) : [];
+  const count = Math.max(1, Math.min(12, Number(content?.count) || 6));
+  const embeds = (Array.isArray(content?.postUrls) ? content.postUrls : []).map(instaEmbedUrl).filter(Boolean).slice(0, count);
+  const embedCode = typeof content?.embedCode === 'string' ? content.embedCode.trim() : '';
+  // Legacy: manually uploaded post images.
+  const images: { image?: string; url?: string }[] = Array.isArray(content?.posts) ? content.posts.filter((p: any) => p?.image).slice(0, count) : [];
+
   return (
-    <div className="mx-auto w-full max-w-3xl px-4">
-      <div className="overflow-hidden rounded-3xl bg-gray-950 p-5 text-white">
-        <div className="flex items-center gap-3">
-          <span className="grid h-11 w-11 place-items-center rounded-full bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-600"><Instagram className="h-6 w-6 text-white" /></span>
-          <div className="min-w-0 flex-1"><p className="truncate font-extrabold">{username ? `@${username}` : content?.title || 'Instagram'}</p><p className="text-xs text-white/60">Instagram</p></div>
-          {profileUrl && <a href={profileUrl} target="_blank" rel="noreferrer" className="rounded-full bg-white px-4 py-2 text-sm font-bold text-gray-900">Suivre</a>}
+    <div className="mx-auto w-full max-w-5xl px-4">
+      <div className="flex flex-wrap items-center justify-center gap-3 text-center">
+        <span className="grid h-11 w-11 place-items-center rounded-full bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-600"><Instagram className="h-6 w-6 text-white" /></span>
+        <div className="text-left">
+          {content?.title && <p className="text-xl font-extrabold">{content.title}</p>}
+          {username && <p className="text-sm text-gray-500">@{username}</p>}
         </div>
-        {posts.length > 0 && (
-          <div className="mt-4 grid grid-cols-3 gap-1.5">
-            {posts.slice(0, 9).map((p, i) => {
-              const href = safePublicUrl(p.url || profileUrl || '');
-              const cell = (
-                <div className="aspect-square w-full overflow-hidden rounded-lg bg-white/10">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  {p.image && <img src={p.image} alt="" loading="lazy" className="h-full w-full object-cover" />}
-                </div>
-              );
-              return href ? <a key={i} href={href} target="_blank" rel="noreferrer">{cell}</a> : <div key={i}>{cell}</div>;
-            })}
-          </div>
-        )}
+        {profileUrl && <a href={profileUrl} target="_blank" rel="noreferrer" className="rounded-full bg-[var(--brand)] px-5 py-2.5 text-sm font-bold text-white transition hover:opacity-90">Suivre</a>}
       </div>
+
+      {embedCode ? (
+        <div className="mt-6">
+          <iframe title="Instagram" srcDoc={embedCode} sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox" className="min-h-[560px] w-full rounded-2xl border-0 bg-transparent" />
+        </div>
+      ) : embeds.length > 0 ? (
+        <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {embeds.map((src: string, i: number) => (
+            <div key={i} className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-gray-100">
+              <iframe src={src} title={`instagram-${i}`} loading="lazy" scrolling="no" className="h-[500px] w-full border-0" />
+            </div>
+          ))}
+        </div>
+      ) : images.length > 0 ? (
+        <div className="mt-6 grid grid-cols-3 gap-2">
+          {images.map((p, i) => {
+            const href = safePublicUrl(p.url || profileUrl || '');
+            const cell = (
+              <div className="aspect-square w-full overflow-hidden rounded-xl bg-gray-100">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                {p.image && <img src={p.image} alt="" loading="lazy" className="h-full w-full object-cover" />}
+              </div>
+            );
+            return href ? <a key={i} href={href} target="_blank" rel="noreferrer">{cell}</a> : <div key={i}>{cell}</div>;
+          })}
+        </div>
+      ) : (
+        <p className="mt-6 text-center text-sm text-gray-400">Ajoutez les liens de vos posts Instagram — ils s’afficheront ici en direct.</p>
+      )}
     </div>
   );
 }

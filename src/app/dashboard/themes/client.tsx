@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { Check, Loader2, Wand2, Eye, X, Monitor, Smartphone } from 'lucide-react';
 import { PageHeader } from '@/components/ui';
 
-type T = { id: string; name: string; category: string; family: 'association' | 'shop'; tagline: string; preview: string; primary: string };
+type T = { id: string; name: string; category: string; family: 'association' | 'shop' | 'music'; tagline: string; preview: string; primary: string };
 
 export function ThemesClient({ templates, welcome }: { templates: T[]; welcome: boolean }) {
   const router = useRouter();
@@ -12,10 +12,10 @@ export function ThemesClient({ templates, welcome }: { templates: T[]; welcome: 
   const [confirmId, setConfirmId] = useState<string | null>(null);
   const [previewId, setPreviewId] = useState<string | null>(null);
   const [device, setDevice] = useState<'desktop' | 'mobile'>('desktop');
-  const [family, setFamily] = useState<'all' | 'association' | 'shop'>('all');
+  const [family, setFamily] = useState<'all' | 'association' | 'shop' | 'music'>('all');
   const previewT = templates.find((t) => t.id === previewId);
   const shown = family === 'all' ? templates : templates.filter((t) => t.family === family);
-  const counts = { all: templates.length, association: templates.filter((t) => t.family === 'association').length, shop: templates.filter((t) => t.family === 'shop').length };
+  const counts = { all: templates.length, association: templates.filter((t) => t.family === 'association').length, shop: templates.filter((t) => t.family === 'shop').length, music: templates.filter((t) => t.family === 'music').length };
 
   async function apply(id: string) {
     setApplying(id);
@@ -45,7 +45,7 @@ export function ThemesClient({ templates, welcome }: { templates: T[]; welcome: 
 
       {/* Category filter */}
       <div className="mb-6 flex flex-wrap gap-2">
-        {([['all', 'Tous'], ['association', 'Associations'], ['shop', 'Boutiques']] as const).map(([value, label]) => (
+        {([['all', 'Tous'], ['association', 'Associations'], ['shop', 'Boutiques'], ['music', 'Musique']] as const).map(([value, label]) => (
           <button key={value} onClick={() => setFamily(value)} className={`rounded-full px-4 py-2 text-sm font-semibold transition ${family === value ? 'bg-brand-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
             {label} <span className={family === value ? 'text-white/70' : 'text-gray-400'}>({counts[value]})</span>
           </button>

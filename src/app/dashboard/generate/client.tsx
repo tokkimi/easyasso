@@ -43,13 +43,14 @@ function prepareLogoForGeneration(value: string): Promise<string> {
   });
 }
 
-type Preview = { id: string; name: string; preview: string; family: 'association' | 'shop' };
+type Preview = { id: string; name: string; preview: string; family: 'association' | 'shop' | 'music' };
 
 export function GenerateClient({ orgName, profile, categories, previews = [], welcome, initialLogo = '' }: { orgName: string; profile: any; categories: { id: string; name: string }[]; previews?: Preview[]; welcome: boolean; initialLogo?: string }) {
   const [f, setF] = useState({
     name: orgName || '', year: profile.year || '', mission: profile.mission || '', functioning: profile.functioning || '', actions: profile.actions || '',
     siteType: (profile.siteType || (profile.hasShop && profile.isAssociation === false ? 'shop' : 'association')) as 'association' | 'shop' | 'other' | 'music',
     hasShop: profile.hasShop ?? false,
+    genre: profile.genre || '',
     musicSpotify: profile.streamingLinks?.spotify || '', musicDeezer: profile.streamingLinks?.deezer || '', musicApple: profile.streamingLinks?.appleMusic || '', musicSoundcloud: profile.streamingLinks?.soundcloud || '', musicYoutube: profile.streamingLinks?.youtube || '', instagram: profile.instagram || '',
     language: profile.language || 'fr', beneficiaries: profile.beneficiaries || '', goodToKnow: profile.goodToKnow || '', slogan: profile.slogan || '', generateCgv: profile.generateCgv ?? true, news: '', city: profile.city || '', email: profile.email || '', legalCountry: profile.legalCountry || 'France', category: profile.category || '',
     donationCardEnabled: profile.donationCardEnabled ?? false, donationStripeUrl: profile.donationStripeUrl || '', donationHelloAssoEnabled: profile.donationHelloAssoEnabled ?? Boolean(profile.donationHelloAssoUrl), donationHelloAssoUrl: profile.donationHelloAssoUrl || '', donationTransferEnabled: profile.donationTransferEnabled ?? false, donationIban: profile.donationIban || '', donationBic: profile.donationBic || '', donationAccountHolder: profile.donationAccountHolder || '', donationBankName: profile.donationBankName || '', donationChequeEnabled: profile.donationChequeEnabled ?? false, donationChequePayable: profile.donationChequePayable || '', donationChequeAddress: profile.donationChequeAddress || '',
@@ -164,6 +165,7 @@ export function GenerateClient({ orgName, profile, categories, previews = [], we
         {isMusic && (
           <section className="space-y-4 rounded-2xl border border-gray-200 p-4">
             <div><h3 className="font-extrabold text-gray-900">Vos liens (les miniatures seront celles des liens)</h3><p className="text-sm text-gray-500">Collez vos liens : les pochettes et titres sont récupérés automatiquement.</p></div>
+            <Field label="Style de musique"><input className="input" value={f.genre} onChange={(e) => set('genre', e.target.value)} placeholder="ex : techno, rap, house, pop, rock…" /><p className="mt-1 text-xs text-gray-400">La couleur d’accent du site s’adapte à votre style.</p></Field>
             <div className="grid gap-3 sm:grid-cols-2">
               <Field label="Spotify"><input className="input" type="url" value={f.musicSpotify} onChange={(e) => set('musicSpotify', e.target.value)} placeholder="https://open.spotify.com/artist/…" /></Field>
               <Field label="Deezer"><input className="input" type="url" value={f.musicDeezer} onChange={(e) => set('musicDeezer', e.target.value)} placeholder="https://www.deezer.com/artist/…" /></Field>

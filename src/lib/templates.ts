@@ -250,7 +250,7 @@ function seed(list: BlockSeed[]) {
 }
 
 export interface BuiltTemplate {
-  id: string; name: string; category: string; family: 'association' | 'shop'; tagline: string; preview: string;
+  id: string; name: string; category: string; family: 'association' | 'shop' | 'music'; tagline: string; preview: string;
   theme: any; header: any; footer: any;
   pages: { title: string; slug: string; isHome: boolean; showInNav: boolean; blocks: any[] }[];
 }
@@ -528,7 +528,84 @@ function buildShop(d: ShopDef): BuiltTemplate {
   };
 }
 
-export const TEMPLATES: BuiltTemplate[] = [...DEFS.map(build), ...SHOP_DEFS.map(buildShop)];
+// ---------------------------------------------------------------------------
+// Music / artist templates (family: 'music') — stylish dark backgrounds.
+// The media blocks (streaming links, tracks, videos, Instagram) are empty and
+// prompt the artist to paste their links; thumbnails then come from the links.
+// ---------------------------------------------------------------------------
+interface MusicThemeDef {
+  id: string; name: string; tagline: string;
+  primary: string; background: string; text: string; headerBg: string; headerText: string; footerBg: string; footerText: string; font: string;
+  heroTitle: string; heroSubtitle: string; bio: string;
+}
+
+const MUSIC_DEFS: MusicThemeDef[] = [
+  {
+    id: 'music-neon', name: 'Neon Nights', tagline: 'Électro / club — noir profond & néon violet',
+    primary: '#a855f7', background: '#0a0a0f', text: '#ececf3', headerBg: '#0a0a0f', headerText: '#ececf3', footerBg: '#050507', footerText: '#b8b8c8', font: 'montserrat',
+    heroTitle: 'VOTRE NOM D’ARTISTE', heroSubtitle: 'Nouveaux sons, sorties et dates — tout est là.',
+    bio: 'Présentez votre univers, votre parcours et votre son. Quelques lignes suffisent : d’où vous venez, ce qui vous inspire et ce que le public retrouve dans votre musique.',
+  },
+  {
+    id: 'music-crimson', name: 'Crimson Rave', tagline: 'Hardstyle / techno — noir & rouge intense',
+    primary: '#ef2d56', background: '#0b0b0c', text: '#f3f0f0', headerBg: '#0b0b0c', headerText: '#f3f0f0', footerBg: '#000000', footerText: '#d1c9c9', font: 'montserrat',
+    heroTitle: 'VOTRE NOM D’ARTISTE', heroSubtitle: 'Raw sound. Dernières sorties et lives.',
+    bio: 'Racontez votre énergie sur scène et en studio. Votre style, vos influences, vos plus gros moments : donnez envie de vous suivre et de venir vous voir en live.',
+  },
+  {
+    id: 'music-gold', name: 'Golden Studio', tagline: 'Rap / RnB — noir élégant & or',
+    primary: '#d4af37', background: '#0c0b09', text: '#efe9dc', headerBg: '#0c0b09', headerText: '#efe9dc', footerBg: '#060504', footerText: '#cbb98f', font: 'playfair',
+    heroTitle: 'VOTRE NOM D’ARTISTE', heroSubtitle: 'Nouveaux titres, clips et collaborations.',
+    bio: 'Posez votre identité en quelques phrases : votre plume, votre son, votre histoire. Ce texte donne le ton avant même la première écoute.',
+  },
+];
+
+function buildMusicTemplate(d: MusicThemeDef): BuiltTemplate {
+  const streaming = { spotify: '', deezer: '', appleMusic: '', soundcloud: '', youtube: '' };
+  const preview = `https://picsum.photos/seed/${d.id}/800/500?grayscale`;
+  const s = (list: BlockSeed[]) => seed(list);
+  return {
+    id: d.id, name: d.name, category: 'Musique', family: 'music', tagline: d.tagline, preview,
+    theme: { primary: d.primary, secondary: d.footerBg, background: d.background, text: d.text, font: d.font },
+    header: { logoText: 'Votre nom d’artiste', showNav: true, sticky: true, background: d.headerBg, textColor: d.headerText, cta: { text: 'Écouter', href: '/sons', color: d.primary, variant: 'solid', align: 'right' } },
+    footer: {
+      logoText: 'Votre nom d’artiste', text: d.tagline,
+      showNewsletter: true, newsletterTitle: 'Recevez mes sorties',
+      showCgv: true, cgvContent: 'Mentions à compléter.', showMentions: true, mentionsContent: 'Mentions légales à compléter.',
+      allRightsText: `© ${new Date().getFullYear()} Votre nom d’artiste.`,
+      background: d.footerBg, textColor: d.footerText,
+      columns: [
+        { title: 'Musique', links: [{ label: 'Accueil', href: '/' }, { label: 'Sons', href: '/sons' }] },
+        { title: 'Infos', links: [{ label: 'Bio', href: '/bio' }, { label: 'Contact', href: '/contact' }] },
+      ],
+    },
+    pages: [
+      { title: 'Accueil', slug: 'accueil', isHome: true, showInNav: true, blocks: s([
+        { type: 'banner', content: { image: `https://picsum.photos/seed/${d.id}-hero/1600/760?grayscale`, title: d.heroTitle, subtitle: d.heroSubtitle, overlay: 60, height: 540, button: { text: 'Écouter', href: '/sons', color: '#ffffff', variant: 'solid', align: 'center' } } },
+        { type: 'streaming', content: { title: 'Écoutez partout', links: streaming } },
+        { type: 'tracks', content: { title: 'Derniers sons', layout: 'grid', tracks: [] } },
+        { type: 'videos', content: { title: 'Vidéos', videos: [] } },
+        { type: 'instagram', content: { title: 'Instagram', username: '', url: '', posts: [] } },
+      ]) },
+      { title: 'Sons', slug: 'sons', isHome: false, showInNav: true, blocks: s([
+        { type: 'heading', content: { text: 'Discographie' } },
+        { type: 'tracks', content: { title: '', layout: 'list', tracks: [] } },
+        { type: 'streaming', content: { title: 'Écoutez partout', links: streaming } },
+      ]) },
+      { title: 'Bio', slug: 'bio', isHome: false, showInNav: true, blocks: s([
+        { type: 'heading', content: { text: 'Bio' } },
+        { type: 'text', content: { text: d.bio } },
+      ]) },
+      { title: 'Contact', slug: 'contact', isHome: false, showInNav: true, blocks: s([
+        { type: 'heading', content: { text: 'Contact' } },
+        { type: 'text', content: { text: 'Booking, presse, collaborations : écrivez-nous.' } },
+        { type: 'social', content: { social: { align: 'center' } } },
+      ]) },
+    ],
+  };
+}
+
+export const TEMPLATES: BuiltTemplate[] = [...DEFS.map(build), ...SHOP_DEFS.map(buildShop), ...MUSIC_DEFS.map(buildMusicTemplate)];
 
 export function getTemplate(id: string): BuiltTemplate | undefined {
   return TEMPLATES.find((t) => t.id === id);

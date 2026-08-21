@@ -11,7 +11,7 @@ export function MusicTracks({ content }: { content: any }) {
 
   return (
     <div className="mx-auto w-full max-w-6xl px-4">
-      {content?.title && <h2 className="text-2xl font-extrabold uppercase tracking-tight text-gray-900 md:text-3xl">{content.title}</h2>}
+      {content?.title && <h2 className="text-2xl font-extrabold uppercase tracking-tight md:text-3xl">{content.title}</h2>}
       {clean.length === 0 ? (
         <p className="py-10 text-center text-sm text-gray-400">Ajoutez vos sons — leurs pochettes s’afficheront automatiquement.</p>
       ) : layout === 'list' ? (
@@ -66,7 +66,7 @@ export function VideoGrid({ content }: { content: any }) {
   const clean = videos.filter((v) => v && v.url);
   return (
     <div className="mx-auto w-full max-w-6xl px-4">
-      {content?.title && <h2 className="text-2xl font-extrabold uppercase tracking-tight text-gray-900 md:text-3xl">{content.title}</h2>}
+      {content?.title && <h2 className="text-2xl font-extrabold uppercase tracking-tight md:text-3xl">{content.title}</h2>}
       {clean.length === 0 ? (
         <p className="py-10 text-center text-sm text-gray-400">Ajoutez des liens YouTube — les vidéos s’intègrent automatiquement.</p>
       ) : (
@@ -106,7 +106,7 @@ export function StreamingLinks({ content }: { content: any }) {
   const items = STREAMING.filter((s) => links[s.key]);
   return (
     <div className="mx-auto w-full max-w-4xl px-4 text-center">
-      {content?.title && <h2 className="text-2xl font-extrabold uppercase tracking-tight text-gray-900 md:text-3xl">{content.title}</h2>}
+      {content?.title && <h2 className="text-2xl font-extrabold uppercase tracking-tight md:text-3xl">{content.title}</h2>}
       {items.length === 0 ? (
         <p className="py-8 text-sm text-gray-400">Ajoutez vos liens Spotify, Deezer, Apple Music, SoundCloud, YouTube.</p>
       ) : (

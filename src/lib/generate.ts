@@ -180,6 +180,8 @@ export interface GenerateInput {
   // tone / page structure.
   siteType?: 'association' | 'shop' | 'other' | 'music';
   hasShop?: boolean;
+  genre?: string; // music style (techno, rap, pop…) — drives the accent colour
+
   slogan?: string;
   generateCgv?: boolean;
   year?: string;
@@ -262,6 +264,20 @@ function reindex(pages: any[]) {
 
 export type MusicTrack = { title?: string; artist?: string; url?: string; thumbnail?: string; year?: string; source?: string };
 
+// Map a music genre to a dark-theme accent colour, so the generated artist site
+// adapts to the style entered in the questionnaire.
+function genreAccent(genre = ''): string {
+  const g = stripAccents(genre.toLowerCase());
+  if (/techno|hardstyle|hardcore|rawstyle|tekno|acid|industrial|rave|frenchcore/.test(g)) return '#ef2d56';
+  if (/rap|hip.?hop|trap|drill|rnb|r&b|soul/.test(g)) return '#d4af37';
+  if (/house|edm|electro|dance|club|disco|deep|tech.?house/.test(g)) return '#a855f7';
+  if (/rock|metal|punk|grunge|hard.?rock/.test(g)) return '#f97316';
+  if (/pop|kpop|variete|chanson/.test(g)) return '#ec4899';
+  if (/reggae|dancehall|afro|amapiano|dub/.test(g)) return '#22c55e';
+  if (/jazz|blues|lounge|classique|classical|ambient|lofi|lo-fi/.test(g)) return '#38bdf8';
+  return '#a855f7';
+}
+
 // Build a complete musician/artist site from the provided links (streaming,
 // tracks, videos, Instagram). Thumbnails come from the real links (resolved by
 // the caller), so images are always the right ones and never broken.
@@ -271,7 +287,9 @@ export function buildMusicSite(
 ): BuiltTemplate {
   const name = input.name?.trim() || 'Artiste';
   const en = input.language === 'en';
-  const tagline = input.slogan?.trim() || firstSentence(input.mission || '') || (en ? 'Music, releases and links.' : 'Sons, sorties et liens.');
+  const accent = genreAccent(input.genre);
+  const genreLabel = clean(input.genre || '');
+  const tagline = input.slogan?.trim() || (genreLabel ? (en ? `${genreLabel} — new releases and links.` : `${genreLabel} — sorties et liens.`) : firstSentence(input.mission || '')) || (en ? 'Music, releases and links.' : 'Sons, sorties et liens.');
   const bio = polishUserText(input.mission || '') || (en ? `${name} shares music and new releases here.` : `${name} partage ici sa musique et ses dernières sorties.`);
   const heroImage = media.tracks.find((t) => t.thumbnail)?.thumbnail || input.logoUrl || templateImage('club-sportif', 1, 1600, 760);
   const streamingFilled = Object.values(media.streaming || {}).some(Boolean);
@@ -304,16 +322,16 @@ export function buildMusicSite(
   ]) });
 
   return {
-    id: 'music-generated', name, category: 'Musique', family: 'shop', tagline,
+    id: 'music-generated', name, category: 'Musique', family: 'music', tagline,
     preview: heroImage, pages,
-    theme: { primary: '#111827', secondary: '#0b0b0c', background: '#faf8f5', text: '#111827', font: 'montserrat' },
-    header: { logoText: name, logoUrl: input.logoUrl || undefined, showNav: true, sticky: true, background: '#ffffff', textColor: '#111827', cta: streamingFilled ? { text: en ? 'Listen' : 'Écouter', href: '/sons', color: '#111827', variant: 'solid', align: 'right' } : undefined },
+    theme: { primary: accent, secondary: '#050507', background: '#0a0a0f', text: '#ececf3', font: 'montserrat' },
+    header: { logoText: name, logoUrl: input.logoUrl || undefined, showNav: true, sticky: true, background: '#0a0a0f', textColor: '#ececf3', cta: streamingFilled ? { text: en ? 'Listen' : 'Écouter', href: '/sons', color: accent, variant: 'solid', align: 'right' } : undefined },
     footer: {
       logoText: name, logoUrl: input.logoUrl || undefined, text: tagline,
       showNewsletter: true, newsletterTitle: en ? 'Get the latest releases' : 'Recevez mes sorties',
       showCgv: true, cgvContent: '', showMentions: true, mentionsContent: '',
       allRightsText: `© ${new Date().getFullYear()} ${name}.`,
-      background: '#0b0b0c', textColor: '#e5e7eb',
+      background: '#050507', textColor: '#b8b8c8',
       columns: [
         { title: 'Musique', links: [{ label: en ? 'Home' : 'Accueil', href: '/' }, { label: en ? 'Music' : 'Sons', href: '/sons' }] },
         { title: 'Infos', links: [{ label: 'Bio', href: '/bio' }, { label: 'Contact', href: '/contact' }] },

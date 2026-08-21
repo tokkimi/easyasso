@@ -174,6 +174,8 @@ function missionFrom(input: GenerateInput, cause: CauseProfile, name: string, la
 export interface GenerateInput {
   name: string;
   language?: 'fr' | 'en';
+  // What the site is for: 'association' (default), 'shop', 'business', 'other'.
+  kind?: string;
   slogan?: string;
   generateCgv?: boolean;
   year?: string;

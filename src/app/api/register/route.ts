@@ -13,6 +13,8 @@ const schema = z.object({
   password: z.string().min(6),
   language: z.enum(['fr', 'en']).default('fr'),
   plan: z.enum(['lifetime', 'annual', 'monthly']).optional().default('lifetime'),
+  // Easy Asso is open to everyone, not only associations.
+  kind: z.enum(['association', 'shop', 'business', 'other']).optional().default('association'),
   // Association details are optional at signup — the association can fill them
   // in later from Settings.
   phone: z.string().trim().optional().default(''),
@@ -30,7 +32,7 @@ export async function POST(req: Request) {
   if (!parsed.success) {
     return NextResponse.json({ error: 'Champs invalides', details: parsed.error.flatten() }, { status: 400 });
   }
-  const { name, assoName, email, password, language, plan, phone, city, legalName, registrationNumber, legalAddress, publicationDirector } = parsed.data;
+  const { name, assoName, email, password, language, plan, kind, phone, city, legalName, registrationNumber, legalAddress, publicationDirector } = parsed.data;
   const lower = email.toLowerCase();
 
   const existing = await prisma.user.findUnique({ where: { email: lower } });
@@ -42,6 +44,7 @@ export async function POST(req: Request) {
   const user = await prisma.user.create({ data: { name, email: lower, passwordHash } });
   await createOrganizationForUser(user.id, assoName, language, false, {
     plan,
+    kind,
     email: lower,
     phone,
     city,

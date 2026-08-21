@@ -65,13 +65,14 @@ export default function LandingPage() {
 
       {/* Hero */}
       <section className="mx-auto max-w-6xl px-6 pb-16 pt-10 text-center">
-        <div className="flex flex-wrap items-center justify-center gap-2"><span className="badge bg-brand-50 text-brand-700">Pensé pour les associations, simple pour tous</span><span className="badge bg-green-100 text-green-800">3 jours gratuits, sans carte bancaire</span></div>
+        <div className="flex flex-wrap items-center justify-center gap-2"><span className="badge bg-brand-50 text-brand-700">Désormais ouvert à tous</span><span className="badge bg-green-100 text-green-800">3 jours gratuits, sans carte bancaire</span></div>
         <h1 className="mx-auto mt-5 max-w-3xl text-4xl font-extrabold leading-tight tracking-tight text-gray-900 md:text-6xl">
-          Le site de votre association,<br /> en ligne en <span className="text-brand-600">quelques minutes</span>.
+          Votre site internet,<br /> en ligne en <span className="text-brand-600">quelques minutes</span>.
         </h1>
         <p className="mx-auto mt-5 max-w-2xl text-lg text-gray-600">
-          Créez, éditez et gérez tout vous-même, sans aucune compétence technique. Dons, donateurs,
-          comptabilité et statistiques inclus. En totale autonomie.
+          Associations, boutiques, entreprises, créateurs : créez, éditez et gérez tout vous-même,
+          sans aucune compétence technique. Dons, ventes, contacts, comptabilité et statistiques inclus.
+          En totale autonomie.
         </p>
         <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
           <Link href="/register" className="btn btn-primary px-6 py-3 text-base">

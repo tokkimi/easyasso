@@ -13,17 +13,25 @@ export default function RegisterPage() {
   const [form, setForm] = useState({
     name: '', assoName: '', email: '', password: '', language: 'fr' as 'fr' | 'en',
     plan: 'lifetime' as PlanId,
+    kind: 'association' as 'association' | 'shop' | 'business' | 'other',
     phone: '', city: '', legalName: '', registrationNumber: '', legalAddress: '', publicationDirector: '',
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const en = form.language === 'en';
+  const isAsso = form.kind === 'association';
+  const structureLabel = form.kind === 'shop' ? (en ? 'shop' : 'boutique') : form.kind === 'business' ? (en ? 'business' : 'entreprise') : form.kind === 'other' ? (en ? 'project' : 'structure') : (en ? 'association' : 'association');
+  const nameLabel = form.kind === 'shop' ? (en ? 'Shop name' : 'Nom de votre boutique') : form.kind === 'business' ? (en ? 'Business name' : 'Nom de votre entreprise') : form.kind === 'other' ? (en ? 'Project name' : 'Nom de votre projet') : (en ? 'Association name' : 'Nom de l’association');
 
   useEffect(() => {
     if (localStorage.getItem('easyasso-language') === 'en') setForm((current) => ({ ...current, language: 'en' }));
     // Plan can be pre-selected from the pricing page (/register?plan=annual|lifetime).
-    const requested = new URLSearchParams(window.location.search).get('plan');
+    const params = new URLSearchParams(window.location.search);
+    const requested = params.get('plan');
     if (isPlanId(requested)) setForm((current) => ({ ...current, plan: requested }));
+    // Activity type can be pre-selected from the home (/register?kind=shop).
+    const kind = params.get('kind');
+    if (kind === 'shop' || kind === 'business' || kind === 'other') setForm((current) => ({ ...current, kind }));
   }, []);
 
   function changeLanguage(language: 'fr' | 'en') {
@@ -53,11 +61,24 @@ export default function RegisterPage() {
           {/* eslint-disable-next-line @next/next/no-img-element */}<img src="/easyasso-logo.png" alt="EasyAsso" className="h-20 w-auto" />
         </Link>
         <div className="card">
-          <h1 className="text-xl font-bold text-gray-900">{en ? 'Create your association website' : 'Créer le site de votre association'}</h1>
-          <p className="mt-1 text-sm text-gray-500">{en ? `3-day free trial — no credit card required. Then €${PRICE} once, and your website is hosted for life.` : `Essai gratuit de 3 jours — sans carte bancaire. Ensuite ${PRICE} € une seule fois, votre site est hébergé à vie.`}</p>
+          <h1 className="text-xl font-bold text-gray-900">{en ? 'Create your website' : 'Créez votre site internet'}</h1>
+          <p className="mt-1 text-sm text-gray-500">{en ? '3-day free trial — no credit card required. For associations, shops, businesses and creators.' : 'Essai gratuit de 3 jours — sans carte bancaire. Pour les associations, boutiques, entreprises et créateurs.'}</p>
           <form onSubmit={submit} className="mt-6 space-y-4">
+            <div>
+              <label className="label">{en ? 'What are you creating?' : 'Que créez-vous ?'}</label>
+              <div className="grid grid-cols-2 gap-2">
+                {([
+                  ['association', en ? 'Association' : 'Association'],
+                  ['shop', en ? 'Online shop' : 'Boutique en ligne'],
+                  ['business', en ? 'Business' : 'Entreprise / Pro'],
+                  ['other', en ? 'Other project' : 'Autre projet'],
+                ] as const).map(([value, label]) => (
+                  <button key={value} type="button" onClick={() => setForm({ ...form, kind: value })} className={`rounded-xl border-2 px-3 py-2 text-sm font-semibold transition ${form.kind === value ? 'border-brand-600 bg-brand-50 text-brand-700' : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'}`}>{label}</button>
+                ))}
+              </div>
+            </div>
             <div><label className="label">{en ? 'Your name' : 'Votre nom'}</label><input className="input" required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder={en ? 'Mary Smith' : 'Marie Dupont'} /></div>
-            <div><label className="label">{en ? 'Association name' : 'Nom de l’association'}</label><input className="input" required value={form.assoName} onChange={(e) => setForm({ ...form, assoName: e.target.value })} placeholder={en ? 'Community Friends' : 'Les Amis du Quartier'} /></div>
+            <div><label className="label">{nameLabel}</label><input className="input" required value={form.assoName} onChange={(e) => setForm({ ...form, assoName: e.target.value })} placeholder={form.kind === 'shop' ? (en ? 'My Little Shop' : 'Ma Jolie Boutique') : form.kind === 'business' ? (en ? 'Smith & Co' : 'Dupont & Cie') : en ? 'Community Friends' : 'Les Amis du Quartier'} /></div>
             <div><label className="label">Email</label><input className="input" type="email" required value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder={en ? 'you@association.org' : 'vous@asso.fr'} /></div>
             <div><label className="label">{en ? 'Password' : 'Mot de passe'}</label><input className="input" type="password" required minLength={6} value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} placeholder={en ? '6 characters minimum' : '6 caractères minimum'} /></div>
             <div><label className="label">{en ? 'Workspace language' : 'Langue de votre espace'}</label><select className="input" value={form.language} onChange={(e) => changeLanguage(e.target.value as 'fr' | 'en')}><option value="fr">Français</option><option value="en">English</option></select></div>
@@ -85,7 +106,7 @@ export default function RegisterPage() {
               <p className="mt-1 text-xs text-gray-500">{en ? 'You can change this anytime before paying.' : 'Modifiable à tout moment avant le paiement.'}</p>
             </div>
             <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
-              <h2 className="font-bold text-gray-900">{en ? 'Association details (optional)' : 'Coordonnées de l’association (facultatives)'}</h2>
+              <h2 className="font-bold text-gray-900">{en ? `${isAsso ? 'Association' : 'Legal'} details (optional)` : `Coordonnées ${isAsso ? 'de l’association' : `de votre ${structureLabel}`} (facultatives)`}</h2>
               <p className="mt-1 text-xs text-gray-500">{en ? 'Optional: if you fill them in, they prefill Settings, legal notices and contact pages. You can complete them later from your dashboard.' : 'Facultatives : si vous les renseignez, elles remplissent automatiquement Réglages, mentions légales et contact. Vous pourrez les compléter plus tard depuis votre tableau de bord.'}</p>
               <div className="mt-4 space-y-3">
                 <div><label className="label">{en ? 'Legal association name' : 'Nom légal de l’association'}</label><input className="input" value={form.legalName} onChange={(e) => setForm({ ...form, legalName: e.target.value })} placeholder={form.assoName || (en ? 'Official registered name' : 'Nom officiel déclaré')} /></div>

@@ -104,8 +104,9 @@ export async function POST(req: Request) {
       buttonText: input.language === 'en' ? 'Contribute on Leetchi' : 'Participer à la cagnotte',
     };
     const anyDonation = donation.cardEnabled || donation.helloAssoEnabled || donation.transferEnabled || donation.chequeEnabled || ((b.leetchiEnabled ?? previousProfile.leetchiEnabled) && leetchi.url);
-    // A shop or music site with no donation method doesn't get a "Faire un don" page.
-    const wantDonationPage = (siteType !== 'shop' && siteType !== 'music') || !!anyDonation;
+    // Only association projects (or projects that explicitly configure a
+    // collection method) get a donation page by default.
+    const wantDonationPage = siteType === 'association' || !!anyDonation;
 
     const isDonationText = (value = '') => /\bfaire[-\s]*un[-\s]*don\b|\bdon\b|donat|soutenir|support|donate/i.test(value);
     if (wantDonationPage) {

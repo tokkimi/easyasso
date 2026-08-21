@@ -37,10 +37,10 @@ export function ContactBubble({ name, slogan, logoUrl, email, phone, organizatio
   }
 
   const Avatar = (
-    <div className="h-10 w-10 shrink-0 overflow-hidden rounded-xl bg-white/10">
+    <div className="h-10 w-10 shrink-0 overflow-hidden rounded-xl bg-transparent">
       {logoUrl
         // eslint-disable-next-line @next/next/no-img-element
-        ? <img src={logoUrl} alt={name} className="h-full w-full object-cover" />
+        ? <img src={logoUrl} alt={name} className="h-full w-full object-contain p-0.5" />
         : <div className="grid h-full w-full place-items-center text-base font-bold text-white/90">{initial}</div>}
     </div>
   );

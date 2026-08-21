@@ -338,6 +338,9 @@ function enrichCards(items: any[], copy: ReturnType<typeof buildCopy>) {
 }
 
 export function enhanceGeneratedEditorialCopy(template: BuiltTemplate, input: GenerateInput) {
+  // Music, commerce and other project sites have their own editorial voice.
+  // Never run the association-only enrichment over them.
+  if (input.siteType && input.siteType !== 'association') return template;
   const copy = buildCopy(input);
   const forceInternalGenerator = /-generated$/.test(template.id || '') && !/-ai-generated$/.test(template.id || '');
 

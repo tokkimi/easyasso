@@ -8,7 +8,7 @@ import { NewsletterForm } from './NewsletterForm';
 interface NavItem { title: string; slug: string; isHome: boolean }
 const SOCIAL_LABELS = new Set(['facebook', 'instagram', 'linkedin', 'youtube', 'tiktok', 'x']);
 const isSocialColumn = (column: FooterConfig['columns'][number]) => column.links.length > 0 && column.links.every((link) => SOCIAL_LABELS.has(link.label.toLowerCase()));
-const logoFrameClass = 'inline-flex max-w-[220px] items-center rounded-xl bg-white/90 p-1.5 shadow-sm ring-1 ring-black/5 sm:max-w-[280px]';
+const logoFrameClass = 'inline-flex max-w-[220px] items-center rounded-xl bg-transparent p-0.5 sm:max-w-[280px]';
 const headerLogoClass = 'max-h-14 w-auto max-w-full object-contain';
 const footerLogoClass = 'max-h-16 w-auto max-w-full object-contain';
 

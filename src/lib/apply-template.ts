@@ -55,6 +55,10 @@ function leetchiContent(profile: TemplateProfile, language: 'fr' | 'en') {
 function personalizeTemplate(template: BuiltTemplate, orgName: string, profile: TemplateProfile = {}) {
   const next = cloneTemplate(template);
   const isGeneratedSite = String(next.id || '').includes('generated');
+  const siteType = profile.siteType === 'music' || profile.siteType === 'shop' || profile.siteType === 'other'
+    ? profile.siteType
+    : 'association';
+  const isAssociation = siteType === 'association';
   const language = profile.language === 'en' ? 'en' : 'fr';
   const mission = String(profile.mission || '').trim();
   const functioning = String(profile.functioning || '').trim();
@@ -71,7 +75,7 @@ function personalizeTemplate(template: BuiltTemplate, orgName: string, profile: 
   const missionText = compactParagraph([
     year ? `${orgName} existe depuis ${year}${city ? ` à ${city}` : ''}.` : '',
     mission,
-    beneficiaries ? `L’association accompagne principalement : ${beneficiaries}.` : '',
+    beneficiaries ? `${isAssociation ? 'L’association accompagne principalement' : 'Nous nous adressons principalement'} : ${beneficiaries}.` : '',
     functioning,
   ]);
   const actionText = compactParagraph([
@@ -83,13 +87,13 @@ function personalizeTemplate(template: BuiltTemplate, orgName: string, profile: 
     email ? `Email : ${email}` : '',
     phone ? `Téléphone : ${phone}` : '',
     address ? `Adresse : ${address}` : '',
-  ]) || 'Ajoutez ici les coordonnées publiques de votre association.';
+  ]) || (isAssociation ? 'Ajoutez ici les coordonnées publiques de votre association.' : 'Ajoutez ici vos coordonnées publiques.');
 
   next.header = { ...next.header, logoText: orgName };
   next.footer = {
     ...next.footer,
     logoText: orgName,
-    text: slogan || firstSentence(mission) || next.footer.text,
+    text: slogan || (isAssociation ? firstSentence(mission) : next.footer.text),
     allRightsText: language === 'en'
       ? `© ${new Date().getFullYear()} ${orgName}. All rights reserved.`
       : `© ${new Date().getFullYear()} ${orgName}. Tous droits réservés.`,
@@ -107,14 +111,14 @@ function personalizeTemplate(template: BuiltTemplate, orgName: string, profile: 
         continue;
       }
 
-      if (block.type === 'textimage') {
+      if (isAssociation && block.type === 'textimage') {
         const title = String(block.content.title || '').toLowerCase();
         if ((title.includes('mission') || title.includes('association')) && missionText) block.content.text = missionText;
         else if (actionText) block.content.text = actionText;
         continue;
       }
 
-      if (block.type === 'text') {
+      if (isAssociation && block.type === 'text') {
         const current = String(block.content.text || '');
         if (/collez ici|helloasso|formulaire de don/i.test(current)) {
           block.content.text = 'Choisissez un montant, renseignez vos coordonnées, puis finalisez votre don selon les moyens proposés par l’association.';
@@ -128,7 +132,7 @@ function personalizeTemplate(template: BuiltTemplate, orgName: string, profile: 
         continue;
       }
 
-      if (block.type === 'cards' && Array.isArray(block.content.items)) {
+      if (isAssociation && block.type === 'cards' && Array.isArray(block.content.items)) {
         if (actions || beneficiaries || goodToKnow) {
           block.content.items = block.content.items.map((item: any, index: number) => ({
             ...item,

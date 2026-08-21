@@ -109,8 +109,15 @@ INTERDICTIONS ABSOLUES :
 
 RÉDACTION : développe vraiment (chaque page 3 à 5 sections, chaque texte 90 à 180 mots), parle du style, de la qualité, du savoir-faire, de l'expérience client, des valeurs de la marque, de ce qui la rend unique. Ton chaleureux, désirable, professionnel, immédiatement publiable.`;
 
+const SYSTEM_MUSIC = `Tu es le concepteur-rédacteur d'un artiste, d'un groupe ou d'un projet musical. Tu écris directement à la première personne ("je", "nous", "mon projet", "notre musique"), jamais comme une association. Retourne uniquement un objet JSON valide avec "tagline" et "pages". Structure les pages autour de l'accueil, des sons, de la biographie / de l'univers, des actualités si elles sont fournies, et du contact. Décris le style musical, les influences, l'énergie, le parcours et l'expérience d'écoute à partir des informations données. N'invente jamais de titre, de date de sortie, de chiffre, de concert, de collaboration ou de plateforme. N'emploie jamais les mots association, bénévoles, adhérents, donateurs, cause ou bénéficiaires sauf s'ils sont réellement fournis et pertinents. Chaque texte doit apporter une idée nouvelle, être naturel, précis et publiable (90 à 180 mots). Les sections peuvent être banner, heading, text, textimage, cards, cta, gallery. N'ajoute pas d'appel au don par défaut.`;
+
+const SYSTEM_OTHER = `Tu es le concepteur-rédacteur d'un projet, d'une entreprise, d'un indépendant ou d'un collectif créatif. Tu écris le site de l'intérieur, avec "je", "nous", "notre projet" ou "notre activité" selon le contexte. Retourne uniquement un objet JSON valide avec "tagline" et "pages". Adapte les pages à l'activité : accueil, à propos, services / offre, réalisations ou projets, informations pratiques et contact ; actualités uniquement si elles sont fournies. N'utilise jamais le vocabulaire d'une association (cause, bénévoles, adhérents, public aidé, donateurs) et ne crée pas de page de don, sauf si le questionnaire demande explicitement une collecte. N'invente ni produit, ni prix, ni certification, ni résultat, ni statistique. Reformule les réponses en textes clairs, concrets et développés, sans répétition ni phrase générique.`;
+
 function systemFor(input: GenerateInput) {
-  return input.siteType === 'shop' ? SYSTEM_SHOP : SYSTEM;
+  if (input.siteType === 'shop') return SYSTEM_SHOP;
+  if (input.siteType === 'music') return SYSTEM_MUSIC;
+  if (input.siteType === 'other') return SYSTEM_OTHER;
+  return SYSTEM;
 }
 
 // Walk the "pages" array object by object, brace-matching and respecting
@@ -241,6 +248,41 @@ Crée le site complet de cette boutique / marque :
 ${lines.join('\n')}`;
   }
 
+  if (input.siteType === 'music') {
+    const lines = [
+      `Nom de l’artiste / projet : ${input.name || 'Non précisé'}`,
+      input.genre ? `Genre et esthétique musicale : ${input.genre}` : '',
+      input.year ? `Début du projet : ${input.year}` : '',
+      input.mission ? `Bio / univers : ${input.mission}` : '',
+      input.functioning ? `Manière de créer et de travailler : ${input.functioning}` : '',
+      input.actions ? `Sons, sorties ou activités : ${input.actions}` : '',
+      input.goodToKnow ? `Informations utiles : ${input.goodToKnow}` : '',
+      input.news ? `Actualités : ${input.news}` : 'Aucune actualité fournie : ne pas créer de page Actualités.',
+      input.slogan ? `Slogan : ${input.slogan}` : '',
+      input.city ? `Ville / scène : ${input.city}` : '',
+      input.email ? `Email de contact : ${input.email}` : '',
+    ].filter(Boolean);
+    return `${languageInstruction}\n\nComprends ces réponses et écris le site de cet artiste ou projet musical. Ne les recopie pas telles quelles, n'invente aucune information et ne transforme jamais le projet en association.\n\n${lines.join('\n')}`;
+  }
+
+  if (input.siteType === 'other') {
+    const lines = [
+      `Nom du projet / activité : ${input.name || 'Non précisé'}`,
+      input.category ? `Type d’activité : ${input.category}` : '',
+      input.year ? `Année de création : ${input.year}` : '',
+      input.mission ? `Présentation / univers : ${input.mission}` : '',
+      input.functioning ? `Fonctionnement : ${input.functioning}` : '',
+      input.actions ? `Offre, services ou réalisations : ${input.actions}` : '',
+      input.beneficiaries ? `Clients, audience ou utilisateurs : ${input.beneficiaries}` : '',
+      input.goodToKnow ? `Informations pratiques : ${input.goodToKnow}` : '',
+      input.news ? `Actualités : ${input.news}` : 'Aucune actualité fournie : ne pas créer de page Actualités.',
+      input.slogan ? `Slogan : ${input.slogan}` : '',
+      input.city ? `Ville : ${input.city}` : '',
+      input.email ? `Email : ${input.email}` : '',
+    ].filter(Boolean);
+    return `${languageInstruction}\n\nComprends ces réponses et écris un site adapté à cette activité. Utilise le vocabulaire du métier, pas celui d’une association. Ne recopie pas les champs bruts et n’invente aucune information.\n\n${lines.join('\n')}`;
+  }
+
   const lines = [
     `Nom de l'association : ${input.name || 'Non précisé'}`,
     input.year ? `Année de création : ${input.year}` : '',
@@ -330,15 +372,18 @@ export async function aiGenerateSite(input: GenerateInput, themePhotos: string[]
   const ai = await callClaude(buildPrompt(input), systemFor(input));
   if (!ai || !Array.isArray(ai.pages) || ai.pages.length === 0) return null;
   const isShop = input.siteType === 'shop';
+  const isAssociation = input.siteType === 'association' || !input.siteType;
   const cta = isShop
     ? { label: input.language === 'en' ? 'Shop now' : 'Découvrir la boutique', href: '/boutique' }
-    : { label: input.language === 'en' ? 'Donate' : 'Faire un don', href: '/don' };
+    : isAssociation
+      ? { label: input.language === 'en' ? 'Donate' : 'Faire un don', href: '/don' }
+      : { label: input.language === 'en' ? 'Learn more' : 'Découvrir', href: '/contact' };
 
   const detect = [input.mission, input.functioning, input.goodToKnow, input.beneficiaries, input.actions].filter(Boolean).join(' ');
   const baseId = pickTemplateId(detect, input.category);
   const base = getTemplate(baseId) || TEMPLATES[0];
   const t: BuiltTemplate = JSON.parse(JSON.stringify(base));
-  const name = input.name?.trim() || 'Votre association';
+  const name = input.name?.trim() || (isAssociation ? 'Votre association' : 'Votre projet');
   const photos = (input.photos || []).filter(Boolean);
   const language = input.language === 'en' ? 'en' : 'fr';
   // One allocator for the whole site → the same image is never used twice.
@@ -391,14 +436,16 @@ export async function aiGenerateSite(input: GenerateInput, themePhotos: string[]
   }
   const contactClosing = isShop
     ? (language === 'en' ? 'A question about an item, an order or a custom request? Contact us — we’ll be happy to help.' : 'Une question sur un article, une commande ou une demande sur mesure ? Contactez-nous : nous vous répondrons avec plaisir.')
-    : (language === 'en' ? 'A question, a partnership idea or ready to get involved? Contact us: our team will be happy to reply.' : 'Une question, une proposition de partenariat ou l’envie de nous rejoindre ? Contactez-nous : notre équipe vous répondra avec plaisir.');
+    : isAssociation
+      ? (language === 'en' ? 'A question, a partnership idea or ready to get involved? Contact us: our team will be happy to reply.' : 'Une question, une proposition de partenariat ou l’envie de nous rejoindre ? Contactez-nous : notre équipe vous répondra avec plaisir.')
+      : (language === 'en' ? 'A question about the project or a collaboration idea? Contact us and we will get back to you.' : 'Une question sur le projet ou une idée de collaboration ? Contactez-nous et nous vous répondrons.');
   const contactLines = [
     input.email ? `Email${language === 'en' ? '' : ' '} : ${input.email.trim()}` : '',
     input.city ? (language === 'en' ? `We are based in ${input.city.trim()}.` : `Nous sommes basés à ${input.city.trim()}.`) : '',
     contactClosing,
   ].filter(Boolean).join('\n\n');
   contact.blocks.unshift(
-    { type: 'heading', order: 0, content: { text: isShop ? (language === 'en' ? 'Contact us' : 'Contactez-nous') : (language === 'en' ? 'Let’s talk about your involvement' : 'Parlons de votre engagement') }, style: defaultStyleFor('heading') },
+    { type: 'heading', order: 0, content: { text: isShop ? (language === 'en' ? 'Contact us' : 'Contactez-nous') : isAssociation ? (language === 'en' ? 'Let’s talk about your involvement' : 'Parlons de votre engagement') : (language === 'en' ? 'Let’s talk' : 'Parlons-en') }, style: defaultStyleFor('heading') },
     { type: 'text', order: 1, content: { text: contactLines }, style: defaultStyleFor('text') },
   );
   contact.blocks.forEach((block: any, order: number) => { block.order = order; });

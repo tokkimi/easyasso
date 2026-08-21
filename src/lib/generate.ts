@@ -199,8 +199,42 @@ export interface GenerateInput {
   description?: string;   // legacy free text
 }
 
+function composeProjectCopy(input: GenerateInput) {
+  const language = input.language === 'en' ? 'en' : 'fr';
+  const name = input.name?.trim() || (language === 'en' ? 'Our project' : 'Notre projet');
+  const intro = polishUserText(input.mission || input.description || '') || (language === 'en' ? 'A project built around a clear idea and a practical way to bring it to life.' : 'Un projet construit autour d’une idée claire et d’une manière concrète de la faire vivre.');
+  const offer = polishUserText(input.actions || input.functioning || '') || (language === 'en' ? 'Discover our approach, our work and the ways to collaborate with us.' : 'Découvrez notre approche, nos réalisations et les façons de collaborer avec nous.');
+  const audience = polishUserText(input.beneficiaries || '') || (language === 'en' ? 'people, clients and partners who share this interest' : 'les personnes, clients et partenaires qui partagent cet intérêt');
+  const practical = polishUserText(input.goodToKnow || '');
+  const contact = para([
+    input.email ? (language === 'en' ? `Email: ${input.email}.` : `Email : ${input.email}.`) : '',
+    input.city ? (language === 'en' ? `Based in ${input.city}.` : `Basé à ${input.city}.`) : '',
+    language === 'en' ? 'A question or a collaboration idea? Get in touch and let’s talk.' : 'Une question ou une idée de collaboration ? Écrivez-nous pour en parler.',
+  ]);
+  const year = input.year ? (language === 'en' ? `Created in ${input.year}, ${name} has grown from a simple idea into a project with a clear direction.` : `Créé en ${input.year}, ${name} est né d’une idée simple qui s’est développée avec une direction claire.`) : '';
+  return {
+    name,
+    heroSubtitle: firstSentence(intro),
+    aboutText: para([year, intro, language === 'en' ? `We create for ${audience}, with attention to usefulness, quality and a consistent experience.` : `Nous créons pour ${audience}, avec une attention portée à l’utilité, à la qualité et à une expérience cohérente.`]),
+    actionText: para([offer, language === 'en' ? `Our work takes shape through concrete choices, careful execution and an ongoing dialogue with the people who use or discover it.` : `Notre travail se construit par des choix concrets, une réalisation soignée et un dialogue continu avec celles et ceux qui le découvrent ou l’utilisent.`]),
+    impactText: para([language === 'en' ? `The project is designed to be useful in real situations: clear to understand, easy to discover and built to grow without losing its identity.` : `Le projet est pensé pour être utile dans la réalité : facile à comprendre, agréable à découvrir et capable d’évoluer sans perdre son identité.`, practical]),
+    goodToKnowText: practical,
+    contactText: contact,
+    cards: language === 'en' ? [
+      { icon: 'Sparkles', title: 'Our approach', text: 'A clear direction, thoughtful choices and a consistent experience.' },
+      { icon: 'Star', title: 'What we create', text: 'Work shaped by the project’s universe, skills and ambitions.' },
+      { icon: 'Handshake', title: 'Collaborate', text: 'Let’s discuss a project, a service or an idea together.' },
+    ] : [
+      { icon: 'Sparkles', title: 'Notre approche', text: 'Une direction claire, des choix réfléchis et une expérience cohérente.' },
+      { icon: 'Star', title: 'Ce que nous créons', text: 'Des réalisations guidées par un univers, des savoir-faire et des ambitions.' },
+      { icon: 'Handshake', title: 'Collaborer', text: 'Parlons ensemble d’un projet, d’un service ou d’une idée.' },
+    ],
+  };
+}
+
 // Build developed, multi-paragraph copy from the questionnaire answers.
 function composeCopy(input: GenerateInput) {
+  if (input.siteType === 'other') return composeProjectCopy(input);
   const name = input.name?.trim() || 'notre association';
   const language = input.language === 'en' ? 'en' : 'fr';
   const cause = inferCause(input);
@@ -433,7 +467,24 @@ export function buildGeneratedSite(input: GenerateInput, themePhotos: string[] =
 
   // Reliable English fallback when the AI provider is unavailable: never
   // return a French template to an association whose saved language is English.
-  if (input.language === 'en') {
+  if (input.language === 'en' && input.siteType === 'other') {
+    const block = (type: string, content: any) => ({ type, order: 0, content, style: defaultStyleFor(type as any) });
+    const page = (title: string, slug: string, intro: string, extra: any[] = []) => ({
+      title, slug, isHome: slug === 'home', showInNav: true,
+      blocks: [block('heading', { text: title }), block('text', { text: intro }), ...extra],
+    });
+    const englishImage = createImagePicker(photos, id, themePhotos);
+    t.pages = [
+      { title: 'Home', slug: 'home', isHome: true, showInNav: true, blocks: [
+        block('banner', { image: englishImage(1600, 760), title: copy.name, subtitle: copy.heroSubtitle, overlay: 45, height: 460, button: { text: 'Discover', href: '/contact', color: '#ffffff', variant: 'solid', align: 'center' } }),
+        block('textimage', { title: 'About the project', text: copy.aboutText, image: englishImage(900, 700), imageSide: 'right' }),
+      ] },
+      page('Our work', 'our-work', copy.actionText),
+      page('Projects and services', 'projects', copy.impactText),
+      ...(input.news?.trim() ? [page('News', 'news', input.news)] : []),
+      page('Contact', 'contact', copy.contactText),
+    ];
+  } else if (input.language === 'en') {
     const block = (type: string, content: any) => ({ type, order: 0, content, style: defaultStyleFor(type as any) });
     const page = (title: string, slug: string, intro: string, extra: any[] = []) => ({
       title, slug, isHome: slug === 'home', showInNav: true,

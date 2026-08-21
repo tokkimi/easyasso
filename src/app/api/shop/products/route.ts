@@ -1,8 +1,25 @@
 import { NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { requireApiPermission, handleApiError } from '@/lib/api';
 import { PERMISSIONS } from '@/lib/permissions';
 import { prisma } from '@/lib/prisma';
 import { eurosToCents as euros, optionalStock, cleanImages } from '@/lib/shop';
+
+async function revalidateOrgShop(orgId: string) {
+  const site = await prisma.site.findUnique({
+    where: { organizationId: orgId },
+    include: { pages: { select: { slug: true, isHome: true, blocks: { select: { type: true } } } } },
+  });
+  if (!site) return;
+  const slugs = new Set<string>(['']);
+  for (const page of site.pages) {
+    if (page.slug === 'boutique' || page.blocks.some((block) => block.type === 'shop')) slugs.add(page.isHome ? '' : page.slug);
+  }
+  for (const slug of slugs) {
+    revalidatePath(slug ? `/s/${site.subdomain}/${slug}` : `/s/${site.subdomain}`);
+    if (site.customDomain) revalidatePath(slug ? `/domain/${site.customDomain}/${slug}` : `/domain/${site.customDomain}`);
+  }
+}
 
 // Create a product for this organization's shop.
 export async function POST(req: Request) {
@@ -28,6 +45,7 @@ export async function POST(req: Request) {
         order: count,
       },
     });
+    await revalidateOrgShop(ctx.org.id);
     return NextResponse.json({ product });
   } catch (e) { return handleApiError(e); }
 }

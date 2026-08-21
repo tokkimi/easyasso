@@ -1,21 +1,12 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { Check, MousePointerClick, Palette, HandCoins, Users, BarChart3, Globe, Sparkles, WandSparkles, FileText, RefreshCw, ExternalLink, Gift, Zap, Clock, Wallet, HeartHandshake, Recycle, Server, Gauge } from 'lucide-react';
+import { Check, MousePointerClick, Palette, HandCoins, BarChart3, Globe, Sparkles, WandSparkles, FileText, RefreshCw, ExternalLink, Gift, Zap, Clock, Wallet, HeartHandshake, Recycle, Server, Gauge, Store, MessageSquareText } from 'lucide-react';
 
 import { PLANS } from '@/lib/plans';
 
 const PRICE = process.env.NEXT_PUBLIC_PRICE_EUR || '250';
 const ANNUAL = PLANS.annual.amountEur;
 const MONTHLY = PLANS.monthly.amountEur;
-
-const features = [
-  { icon: MousePointerClick, title: 'Éditeur visuel bloc par bloc', text: 'Cliquez, écrivez, glissez. Ce que vous voyez est ce que vos visiteurs verront.' },
-  { icon: Palette, title: '50 couleurs & boutons sur mesure', text: 'Titres, textes, images, vidéos, réseaux sociaux, alignements et boutons configurables.' },
-  { icon: HandCoins, title: 'Dons, reçus & campagnes', text: 'Collectez via Stripe, virement, chèque, HelloAsso en un clic ou cagnotte Leetchi. Reçus fiscaux et classement des donateurs.' },
-  { icon: Users, title: 'CRM & équipe', text: 'Base de donateurs, rôles et permissions détaillés pour vos bénévoles.' },
-  { icon: BarChart3, title: 'Comptabilité complète', text: 'Recettes, dépenses, catégories, exports comptables et statistiques.' },
-  { icon: Globe, title: 'Votre nom de domaine', text: 'Un sous-domaine offert immédiatement, votre domaine personnalisé en quelques clics.' },
-];
 
 const steps = [
   { n: '1', title: 'Créez votre compte', text: 'Renseignez le nom de votre projet (association, boutique…).' },
@@ -25,12 +16,18 @@ const steps = [
 ];
 
 const magicTools = [
+  { icon: MousePointerClick, title: 'Éditeur visuel bloc par bloc', text: 'Pages, menus, textes, images, vidéos, boutons et couleurs restent modifiables directement.' },
+  { icon: Palette, title: '50 couleurs & boutons sur mesure', text: 'Titres, réseaux sociaux, alignements, boutons pleins ou contours : tout se personnalise simplement.' },
+  { icon: Store, title: 'Boutique / commerce inclus', text: 'Produits, univers de marque, pages boutique et contenus adaptés si le projet vend quelque chose.' },
+  { icon: HandCoins, title: 'Dons, reçus & campagnes', text: 'Collecte par carte, virement, chèque, HelloAsso ou Leetchi, avec suivi des donateurs et reçus.' },
   { icon: FileText, title: 'CGV et mentions légales générées', text: 'EasyAsso prépare des documents détaillés à partir des informations légales de l’association, puis vous pouvez les modifier.' },
   { icon: HandCoins, title: 'Questionnaire de dons prêt à l’emploi', text: 'Montants proposés, don libre, coordonnées donateur, carte, HelloAsso, virement ou chèque : tout est déjà structuré.' },
   { icon: ExternalLink, title: 'HelloAsso connecté en un clic', text: 'Collez simplement votre lien HelloAsso : EasyAsso l’ajoute automatiquement au formulaire de dons de votre site.' },
   { icon: Gift, title: 'Cagnotte Leetchi intégrée', text: 'Ajoutez votre lien Leetchi pour afficher une cagnotte avec jauge et bouton de participation directement sur le site.' },
+  { icon: BarChart3, title: 'CRM, stats et comptabilité', text: 'Dons, donateurs, reçus, recettes, dépenses, exports et statistiques remontent dans le tableau de bord.' },
+  { icon: Globe, title: 'Nom de domaine guidé', text: 'Sous-domaine immédiat, domaine personnalisé seulement quand il est vraiment prêt.' },
   { icon: Globe, title: 'Site et espace en français ou en anglais', text: 'La langue choisie à l’inscription ou dans les réglages est respectée dans le générateur, le profil et les pages créées.' },
-  { icon: Users, title: 'Contact, messages et données utiles', text: 'Les vraies coordonnées, le formulaire de contact, les messages reçus et les informations donateurs remontent dans le tableau de bord.' },
+  { icon: MessageSquareText, title: 'Contact et messagerie', text: 'Les vraies coordonnées, le formulaire de contact et les messages reçus arrivent dans l’espace utilisateur.' },
 ];
 
 const atouts = [
@@ -162,27 +159,28 @@ export default function LandingPage() {
             <Link href="/register" className="btn btn-primary px-6 py-3">Essayer l’outil magique <Sparkles className="h-4 w-4" /></Link>
           </div>
 
-          <div className="mt-8 grid gap-6 rounded-3xl border border-indigo-100 bg-white p-7 shadow-sm lg:grid-cols-[1fr_0.92fr] lg:items-center">
-            <div>
-              <div className="max-w-2xl">
-                <h3 className="text-2xl font-extrabold text-gray-900">Il prépare aussi les parties compliquées</h3>
-                <p className="mt-2 text-sm leading-6 text-gray-600">Pas besoin de savoir rédiger une page légale, construire un appel au don ou organiser les informations du tableau de bord : l’outil magique pose les bases, vous ajustez ensuite si besoin.</p>
-              </div>
-              <div className="mt-6 grid gap-4 sm:grid-cols-2">
-                {magicTools.map((tool) => (
-                  <div key={tool.title} className="flex gap-4 rounded-2xl border border-gray-100 bg-gray-50 p-4">
-                    <tool.icon className="mt-1 h-5 w-5 shrink-0 text-brand-600" />
-                    <div><h4 className="font-bold text-gray-900">{tool.title}</h4><p className="mt-1 text-sm leading-6 text-gray-600">{tool.text}</p></div>
-                  </div>
-                ))}
-              </div>
+          <div className="mt-8 rounded-3xl border border-indigo-100 bg-white px-5 py-8 shadow-sm sm:px-7 lg:px-9">
+            <div className="mx-auto max-w-3xl text-center">
+              <h3 className="text-2xl font-extrabold text-gray-900 md:text-3xl">Tout est inclus</h3>
+              <p className="mt-3 text-sm leading-6 text-gray-600 md:text-base md:leading-7">Un backend très complet, une interface “pour les nuls”. Pas besoin de savoir rédiger une page légale, construire un appel au don, lancer une boutique ou organiser les informations du tableau de bord : EasyAsso pose les bases, vous gardez le contrôle de A à Z.</p>
             </div>
-            <figure className="overflow-hidden rounded-3xl border border-gray-200 bg-gray-950 p-2 shadow-xl shadow-indigo-100">
-              <div className="relative aspect-[16/9] w-full overflow-hidden rounded-2xl bg-white">
-                <Image src="/home-showcase/dashboard.webp" alt="Aperçu du tableau de bord EasyAsso" fill sizes="(max-width: 1024px) 100vw, 470px" className="object-cover object-top" />
+
+            <figure className="mx-auto mt-7 max-w-3xl">
+              <div className="relative aspect-[16/9] w-full overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-xl shadow-indigo-100/70">
+                <Image src="/home-showcase/dashboard.webp" alt="Aperçu du tableau de bord EasyAsso" fill sizes="(max-width: 768px) 92vw, 760px" className="object-cover object-top" />
               </div>
-              <figcaption className="px-3 py-3 text-sm font-semibold text-white">Tableau de bord : dons, CRM, comptabilité, statistiques et édition du site au même endroit.</figcaption>
+              <figcaption className="mx-auto mt-3 max-w-2xl text-center text-sm font-semibold text-gray-700">Tableau de bord : boutique, dons, CRM, comptabilité, statistiques et édition du site au même endroit.</figcaption>
             </figure>
+
+            <div className="-mx-5 mt-8 flex snap-x gap-3 overflow-x-auto px-5 pb-2 sm:mx-auto sm:grid sm:max-w-5xl sm:grid-cols-2 sm:gap-4 sm:overflow-visible sm:px-0 lg:grid-cols-4">
+              {magicTools.map((tool) => (
+                <div key={tool.title} className="flex min-w-[44vw] snap-start flex-col rounded-2xl border border-gray-100 bg-gray-50 p-4 sm:min-w-0">
+                  <tool.icon className="h-5 w-5 shrink-0 text-brand-600" />
+                  <h4 className="mt-3 text-sm font-extrabold leading-5 text-gray-900">{tool.title}</h4>
+                  <p className="mt-2 text-xs leading-5 text-gray-600">{tool.text}</p>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
@@ -227,23 +225,6 @@ export default function LandingPage() {
               <div className="grid h-10 w-10 place-items-center rounded-full bg-brand-600 text-lg font-bold text-white">{s.n}</div>
               <h3 className="mt-4 font-bold text-gray-900">{s.title}</h3>
               <p className="mt-1 text-sm text-gray-600">{s.text}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Features */}
-      <section className="mx-auto max-w-6xl px-6 py-16">
-        <h2 className="text-center text-3xl font-extrabold text-gray-900">Tout est inclus</h2>
-        <p className="mx-auto mt-3 max-w-2xl text-center text-gray-600">
-          Un backend très complet, une interface “pour les nuls”. Vous gardez le contrôle de A à Z.
-        </p>
-        <div className="mt-10 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {features.map((f) => (
-            <div key={f.title} className="card">
-              <f.icon className="h-8 w-8 text-brand-600" />
-              <h3 className="mt-4 text-lg font-bold text-gray-900">{f.title}</h3>
-              <p className="mt-1 text-sm text-gray-600">{f.text}</p>
             </div>
           ))}
         </div>

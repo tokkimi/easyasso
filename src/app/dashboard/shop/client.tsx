@@ -95,7 +95,24 @@ export function ShopClient({ enabled: initialEnabled, initial, boutiqueUrl = '',
   function readImage(file: File): Promise<string> {
     return new Promise((resolve, reject) => {
       const r = new FileReader();
-      r.onload = () => resolve(String(r.result));
+      r.onload = () => {
+        const img = new Image();
+        img.onload = () => {
+          const max = 1400;
+          const ratio = Math.min(1, max / Math.max(img.width, img.height));
+          const canvas = document.createElement('canvas');
+          canvas.width = Math.max(1, Math.round(img.width * ratio));
+          canvas.height = Math.max(1, Math.round(img.height * ratio));
+          const ctx = canvas.getContext('2d');
+          if (!ctx) { resolve(String(r.result)); return; }
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          let out = canvas.toDataURL('image/webp', 0.82);
+          if (out.length > 700_000) out = canvas.toDataURL('image/webp', 0.68);
+          resolve(out.length < String(r.result).length ? out : String(r.result));
+        };
+        img.onerror = () => resolve(String(r.result));
+        img.src = String(r.result);
+      };
       r.onerror = reject;
       r.readAsDataURL(file);
     });
@@ -124,11 +141,21 @@ export function ShopClient({ enabled: initialEnabled, initial, boutiqueUrl = '',
     if (!draft || !draft.name.trim()) { alert('Le nom du produit est requis.'); return; }
     setBusy(true);
     const payload = { name: draft.name.trim(), description: draft.description, priceEuros: draft.priceEuros, images: draft.images, category: draft.category.trim(), brand: draft.brand.trim(), stock: draft.stock };
+    if (JSON.stringify(payload).length > 4_000_000) {
+      setBusy(false);
+      alert('Les photos sont trop lourdes. Ajoutez moins d’images ou utilisez des photos plus légères.');
+      return;
+    }
     const url = editingId ? `/api/shop/products/${editingId}` : '/api/shop/products';
     const res = await fetch(url, { method: editingId ? 'PATCH' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-    const data = await res.json().catch(() => ({}));
+    const text = await res.text().catch(() => '');
+    let data: any = {};
+    try { data = text ? JSON.parse(text) : {}; } catch {}
     setBusy(false);
-    if (!res.ok) { alert(data.error || 'Enregistrement impossible.'); return; }
+    if (!res.ok) {
+      alert(data.error || (res.status === 413 ? 'Les photos sont trop lourdes. Essayez avec une image plus légère.' : 'Enregistrement impossible. Réessayez dans quelques secondes.'));
+      return;
+    }
     if (editingId) setProducts((all) => all.map((p) => (p.id === editingId ? data.product : p)));
     else setProducts((all) => [...all, data.product]);
     cancel();

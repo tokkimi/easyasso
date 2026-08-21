@@ -43,6 +43,49 @@ export async function POST(req: Request) {
   }
 
   try {
+    // A shop customer paid: complete the order, decrement stock, record income.
+    if (event.type === 'checkout.session.completed' && event.data.object?.metadata?.orderType === 'shop') {
+      const session = event.data.object as any;
+      const paid = session.payment_status === 'paid' || session.status === 'complete';
+      const order = await prisma.order.findFirst({ where: { id: session.metadata?.orderId, status: 'PENDING' }, include: { items: true } });
+      if (order && paid) {
+        const details = session.customer_details || {};
+        const shipping = session.shipping_details?.address || session.customer_details?.address;
+        const address = shipping ? [shipping.line1, shipping.line2, `${shipping.postal_code || ''} ${shipping.city || ''}`.trim(), shipping.country].filter(Boolean).join(', ') : '';
+        await prisma.order.update({
+          where: { id: order.id },
+          data: {
+            status: 'PAID',
+            stripePaymentIntentId: (session.payment_intent as string) || null,
+            customerName: details.name || '',
+            customerEmail: details.email || '',
+            customerPhone: details.phone || '',
+            shippingAddress: address,
+          },
+        });
+        // Decrement stock for tracked products.
+        for (const item of order.items) {
+          if (item.productId) {
+            const p = await prisma.product.findUnique({ where: { id: item.productId } });
+            if (p && p.stock != null) await prisma.product.update({ where: { id: p.id }, data: { stock: Math.max(0, p.stock - item.quantity) } });
+          }
+        }
+        // Record the sale in accounting.
+        const count = order.items.reduce((s, i) => s + i.quantity, 0);
+        await prisma.transaction.create({
+          data: {
+            organizationId: order.organizationId,
+            kind: 'INCOME',
+            label: `Vente boutique — ${count} article${count > 1 ? 's' : ''}`,
+            amountCents: order.totalCents,
+            method: 'CARD',
+            reference: order.id,
+          },
+        });
+      }
+      return NextResponse.json({ received: true });
+    }
+
     if (event.type === 'checkout.session.completed') {
       const session = event.data.object as any;
       const orgId = session.metadata?.organizationId || session.client_reference_id;

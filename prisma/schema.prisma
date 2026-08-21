@@ -99,6 +99,7 @@ model Organization {
   platformMessages PlatformMessage[]
   roles         Role[]
   products      Product[]
+  orders        Order[]
 }
 
 enum SystemRole {
@@ -357,6 +358,36 @@ model Product {
   updatedAt      DateTime @updatedAt
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   @@index([organizationId, order])
+}
+
+model Order {
+  id                    String   @id @default(cuid())
+  organizationId        String
+  status                String   @default("PENDING") // PENDING | PAID | SHIPPED | CANCELLED
+  customerName          String   @default("")
+  customerEmail         String   @default("")
+  customerPhone         String   @default("")
+  shippingAddress       String   @default("")
+  totalCents            Int      @default(0)
+  currency              String   @default("eur")
+  stripeSessionId       String?  @unique
+  stripePaymentIntentId String?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  items        OrderItem[]
+  @@index([organizationId, createdAt])
+}
+
+model OrderItem {
+  id         String @id @default(cuid())
+  orderId    String
+  productId  String?
+  name       String
+  priceCents Int
+  quantity   Int    @default(1)
+  order      Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  @@index([orderId])
 }
 
 model ContactMessage {

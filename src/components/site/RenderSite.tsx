@@ -119,6 +119,7 @@ export async function RenderSite({ site, basePath, slug }: { site: SiteWithPages
   // Load products only when the page actually shows a shop block, and only when
   // the shop is enabled for this organization.
   const shopEnabled = Boolean(profile.shopEnabled ?? profile.hasShop);
+  const shopReady = Boolean(profile.stripeConnectReady);
   const hasShopBlock = page.blocks.some((b) => b.type === 'shop');
   const products = hasShopBlock && shopEnabled ? await loadShopProducts(site.organizationId) : [];
 
@@ -131,7 +132,7 @@ export async function RenderSite({ site, basePath, slug }: { site: SiteWithPages
         {page.blocks.length === 0 ? (
           <p className="py-20 text-center text-gray-400">Cette page est vide.</p>
         ) : (
-          page.blocks.map((b) => <PublicBlock key={b.id} type={b.type} content={b.content as any} style={b.style as any} basePath={basePath} organizationId={site.organizationId} products={b.type === 'shop' ? products : undefined} />)
+          page.blocks.map((b) => <PublicBlock key={b.id} type={b.type} content={b.content as any} style={b.style as any} basePath={basePath} organizationId={site.organizationId} products={b.type === 'shop' ? products : undefined} shopReady={b.type === 'shop' ? shopReady : undefined} />)
         )}
       </main>
       <PublicFooter footer={footer} orgId={site.organizationId} basePath={basePath} nav={nav} />

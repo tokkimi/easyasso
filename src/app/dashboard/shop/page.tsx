@@ -9,9 +9,10 @@ export const dynamic = 'force-dynamic';
 export default async function ShopPage() {
   const ctx = await requirePermission(PERMISSIONS.SITE_VIEW);
   const org = ctx.organization!;
-  const [products, site] = await Promise.all([
+  const [products, site, orders] = await Promise.all([
     prisma.product.findMany({ where: { organizationId: org.id }, orderBy: { order: 'asc' } }),
     prisma.site.findUnique({ where: { organizationId: org.id }, include: { pages: { select: { slug: true } } } }),
+    prisma.order.findMany({ where: { organizationId: org.id, status: { in: ['PAID', 'SHIPPED'] } }, orderBy: { createdAt: 'desc' }, take: 50, include: { items: true } }),
   ]);
   const profile = (org.profile as any) || {};
   const enabled = Boolean(profile.shopEnabled ?? profile.hasShop);
@@ -25,6 +26,7 @@ export default async function ShopPage() {
       hasBoutiquePage={hasBoutiquePage}
       connectStarted={Boolean(profile.stripeConnectAccountId)}
       connectReady={Boolean(profile.stripeConnectReady)}
+      orders={JSON.parse(JSON.stringify(orders))}
     />
   );
 }

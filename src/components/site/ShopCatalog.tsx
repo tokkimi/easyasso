@@ -1,6 +1,6 @@
 'use client';
-import { useMemo, useState } from 'react';
-import { Search, X, Heart, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { Search, X, Heart, ChevronLeft, ChevronRight, ShoppingBag, Plus, Minus, Trash2 } from 'lucide-react';
 
 export type ShopProduct = {
   id: string;
@@ -13,20 +13,32 @@ export type ShopProduct = {
   stock?: number | null;
 };
 
+type CartLine = { id: string; name: string; priceCents: number; image?: string; qty: number };
+
 function euros(cents: number) {
   return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: (cents % 100 ? 2 : 0) }).format((cents || 0) / 100);
 }
 
 export function ShopCatalog({
-  products, title, intro, search = true, showCategories = true, columns = 4,
-}: { products: ShopProduct[]; title?: string; intro?: string; search?: boolean; showCategories?: boolean; columns?: number }) {
+  products, title, intro, search = true, showCategories = true, columns = 4, organizationId = '', canCheckout = false,
+}: { products: ShopProduct[]; title?: string; intro?: string; search?: boolean; showCategories?: boolean; columns?: number; organizationId?: string; canCheckout?: boolean }) {
   const [q, setQ] = useState('');
-  const [cat, setCat] = useState<string>('');
+  const [cat, setCat] = useState('');
   const [sort, setSort] = useState<'recent' | 'price-asc' | 'price-desc'>('recent');
   const [open, setOpen] = useState<ShopProduct | null>(null);
+  const [cart, setCart] = useState<CartLine[]>([]);
+  const [cartOpen, setCartOpen] = useState(false);
+  const [paying, setPaying] = useState(false);
+
+  const storageKey = `easyasso-cart-${organizationId}`;
+  useEffect(() => {
+    try { const raw = localStorage.getItem(storageKey); if (raw) setCart(JSON.parse(raw)); } catch {}
+  }, [storageKey]);
+  useEffect(() => {
+    try { localStorage.setItem(storageKey, JSON.stringify(cart)); } catch {}
+  }, [cart, storageKey]);
 
   const categories = useMemo(() => Array.from(new Set(products.map((p) => p.category).filter(Boolean))) as string[], [products]);
-
   const list = useMemo(() => {
     let l = products.slice();
     if (cat) l = l.filter((p) => p.category === cat);
@@ -34,17 +46,51 @@ export function ShopCatalog({
     if (query) l = l.filter((p) => [p.name, p.brand, p.category, p.description].some((v) => (v || '').toLowerCase().includes(query)));
     if (sort === 'price-asc') l.sort((a, b) => a.priceCents - b.priceCents);
     else if (sort === 'price-desc') l.sort((a, b) => b.priceCents - a.priceCents);
-    return l; // 'recent' keeps the server order (newest handled server-side)
+    return l;
   }, [products, cat, q, sort]);
 
   const gridCols = columns >= 4 ? 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4' : columns === 3 ? 'grid-cols-2 md:grid-cols-3' : 'grid-cols-2';
+  const cartCount = cart.reduce((s, l) => s + l.qty, 0);
+  const cartTotal = cart.reduce((s, l) => s + l.priceCents * l.qty, 0);
+
+  function addToCart(p: ShopProduct, qty = 1) {
+    setCart((c) => {
+      const found = c.find((l) => l.id === p.id);
+      if (found) return c.map((l) => (l.id === p.id ? { ...l, qty: Math.min(99, l.qty + qty) } : l));
+      return [...c, { id: p.id, name: p.name, priceCents: p.priceCents, image: p.images[0], qty }];
+    });
+    setOpen(null);
+    setCartOpen(true);
+  }
+  function setQty(id: string, qty: number) {
+    setCart((c) => (qty <= 0 ? c.filter((l) => l.id !== id) : c.map((l) => (l.id === id ? { ...l, qty: Math.min(99, qty) } : l))));
+  }
+
+  async function checkout() {
+    if (cart.length === 0) return;
+    setPaying(true);
+    const returnPath = typeof window !== 'undefined' ? window.location.pathname : '';
+    const res = await fetch('/api/shop/checkout', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ organizationId, returnPath, items: cart.map((l) => ({ productId: l.id, quantity: l.qty })) }),
+    });
+    const data = await res.json().catch(() => ({}));
+    setPaying(false);
+    if (!res.ok || !data.url) { alert(data.error || 'Paiement impossible pour le moment.'); return; }
+    window.location.href = data.url;
+  }
+
+  // Clear the cart after a successful return from Stripe.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (new URLSearchParams(window.location.search).get('order') === 'success') { setCart([]); try { localStorage.removeItem(storageKey); } catch {} }
+  }, [storageKey]);
 
   return (
     <div className="mx-auto w-full max-w-6xl px-4">
       {title && <h2 className="text-center text-3xl font-extrabold text-gray-900 md:text-4xl">{title}</h2>}
       {intro && <p className="mx-auto mt-2 max-w-2xl text-center text-gray-500">{intro}</p>}
 
-      {/* Categories — horizontal scroll on mobile and desktop */}
       {showCategories && categories.length > 0 && (
         <div className="mt-6 -mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <button onClick={() => setCat('')} className={`shrink-0 rounded-full px-4 py-2 text-sm font-semibold transition ${cat === '' ? 'bg-[var(--brand)] text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>Tout</button>
@@ -54,7 +100,6 @@ export function ShopCatalog({
         </div>
       )}
 
-      {/* Search (shop page only) + sort */}
       {(search || products.length > 3) && (
         <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           {search ? (
@@ -71,7 +116,6 @@ export function ShopCatalog({
         </div>
       )}
 
-      {/* Product grid */}
       {list.length === 0 ? (
         <p className="py-16 text-center text-gray-400">{products.length === 0 ? 'La boutique arrive bientôt.' : 'Aucun produit ne correspond à votre recherche.'}</p>
       ) : (
@@ -95,14 +139,59 @@ export function ShopCatalog({
         </div>
       )}
 
-      {open && <ProductModal product={open} onClose={() => setOpen(null)} />}
+      {open && <ProductModal product={open} canCheckout={canCheckout} onAdd={addToCart} onClose={() => setOpen(null)} />}
+
+      {/* Floating cart */}
+      {canCheckout && cartCount > 0 && !cartOpen && (
+        <button onClick={() => setCartOpen(true)} className="fixed bottom-5 right-5 z-50 flex items-center gap-2 rounded-full bg-[var(--brand)] px-5 py-3 font-bold text-white shadow-lg">
+          <ShoppingBag className="h-5 w-5" /> {cartCount} · {euros(cartTotal)}
+        </button>
+      )}
+
+      {cartOpen && (
+        <div className="fixed inset-0 z-[60] flex justify-end bg-black/50" onClick={() => setCartOpen(false)}>
+          <div className="flex h-full w-full max-w-md flex-col bg-white" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between border-b border-gray-100 p-4">
+              <p className="text-lg font-extrabold text-gray-900">Votre panier</p>
+              <button onClick={() => setCartOpen(false)} className="grid h-9 w-9 place-items-center rounded-xl text-gray-500 hover:bg-gray-100"><X className="h-5 w-5" /></button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-4">
+              {cart.length === 0 ? <p className="py-16 text-center text-gray-400">Votre panier est vide.</p> : cart.map((l) => (
+                <div key={l.id} className="flex items-center gap-3 border-b border-gray-100 py-3">
+                  <div className="h-16 w-16 shrink-0 overflow-hidden rounded-lg bg-gray-100">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    {l.image && <img src={l.image} alt="" className="h-full w-full object-cover" />}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-semibold text-gray-900">{l.name}</p>
+                    <p className="text-sm text-gray-500">{euros(l.priceCents)}</p>
+                    <div className="mt-1 flex items-center gap-2">
+                      <button onClick={() => setQty(l.id, l.qty - 1)} className="grid h-7 w-7 place-items-center rounded-md border border-gray-200"><Minus className="h-3.5 w-3.5" /></button>
+                      <span className="w-6 text-center text-sm font-semibold">{l.qty}</span>
+                      <button onClick={() => setQty(l.id, l.qty + 1)} className="grid h-7 w-7 place-items-center rounded-md border border-gray-200"><Plus className="h-3.5 w-3.5" /></button>
+                      <button onClick={() => setQty(l.id, 0)} className="ml-auto text-gray-400 hover:text-red-500"><Trash2 className="h-4 w-4" /></button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="border-t border-gray-100 p-4">
+              <div className="mb-3 flex items-center justify-between text-lg font-extrabold text-gray-900"><span>Total</span><span>{euros(cartTotal)}</span></div>
+              <button onClick={checkout} disabled={paying || cart.length === 0} className="w-full rounded-xl bg-[var(--brand)] py-3 font-bold text-white transition hover:opacity-90 disabled:opacity-50">{paying ? 'Redirection…' : 'Payer par carte'}</button>
+              <p className="mt-2 text-center text-xs text-gray-400">Paiement sécurisé par Stripe · Livraison renseignée à l’étape suivante</p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
-function ProductModal({ product, onClose }: { product: ShopProduct; onClose: () => void }) {
+function ProductModal({ product, canCheckout, onAdd, onClose }: { product: ShopProduct; canCheckout: boolean; onAdd: (p: ShopProduct, qty: number) => void; onClose: () => void }) {
   const [i, setI] = useState(0);
+  const [qty, setQty] = useState(1);
   const imgs = product.images.length ? product.images : [''];
+  const soldOut = product.stock != null && product.stock <= 0;
   const prev = () => setI((v) => (v - 1 + imgs.length) % imgs.length);
   const next = () => setI((v) => (v + 1) % imgs.length);
   return (
@@ -136,6 +225,17 @@ function ProductModal({ product, onClose }: { product: ShopProduct; onClose: () 
           </div>
           {product.stock != null && <p className="mt-1 text-sm text-gray-500">{product.stock > 0 ? `${product.stock} en stock` : 'Épuisé'}</p>}
           {product.description && <p className="mt-3 whitespace-pre-wrap leading-relaxed text-gray-600">{product.description}</p>}
+          {canCheckout && !soldOut && (
+            <div className="mt-5 flex items-center gap-3">
+              <div className="flex items-center rounded-xl border border-gray-200">
+                <button onClick={() => setQty((q) => Math.max(1, q - 1))} className="grid h-11 w-11 place-items-center text-gray-600"><Minus className="h-4 w-4" /></button>
+                <span className="w-8 text-center font-semibold">{qty}</span>
+                <button onClick={() => setQty((q) => Math.min(99, q + 1))} className="grid h-11 w-11 place-items-center text-gray-600"><Plus className="h-4 w-4" /></button>
+              </div>
+              <button onClick={() => onAdd(product, qty)} className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-[var(--brand)] py-3 font-bold text-white transition hover:opacity-90"><ShoppingBag className="h-5 w-5" /> Ajouter au panier</button>
+            </div>
+          )}
+          {soldOut && <p className="mt-5 rounded-xl bg-gray-100 py-3 text-center font-semibold text-gray-500">Produit épuisé</p>}
         </div>
       </div>
     </div>

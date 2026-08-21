@@ -16,6 +16,9 @@ type Product = {
   active: boolean;
 };
 
+type OrderItem = { id: string; name: string; priceCents: number; quantity: number };
+type Order = { id: string; status: string; customerName: string; customerEmail: string; customerPhone: string; shippingAddress: string; totalCents: number; createdAt: string; items: OrderItem[] };
+
 type Draft = { name: string; description: string; priceEuros: string; images: string[]; category: string; brand: string; stock: string };
 
 const EMPTY: Draft = { name: '', description: '', priceEuros: '', images: [], category: '', brand: '', stock: '' };
@@ -23,11 +26,14 @@ const EMPTY: Draft = { name: '', description: '', priceEuros: '', images: [], ca
 function euros(cents: number) {
   return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format((cents || 0) / 100);
 }
+function formatDate(iso: string) {
+  return new Date(iso).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });
+}
 function mainImage(p: Product) {
   return (p.images && p.images[0]) || p.imageUrl || '';
 }
 
-export function ShopClient({ enabled: initialEnabled, initial, boutiqueUrl = '', hasBoutiquePage: initialHasPage = false, connectStarted = false, connectReady: initialReady = false }: { enabled: boolean; initial: Product[]; boutiqueUrl?: string; hasBoutiquePage?: boolean; connectStarted?: boolean; connectReady?: boolean }) {
+export function ShopClient({ enabled: initialEnabled, initial, boutiqueUrl = '', hasBoutiquePage: initialHasPage = false, connectStarted = false, connectReady: initialReady = false, orders = [] }: { enabled: boolean; initial: Product[]; boutiqueUrl?: string; hasBoutiquePage?: boolean; connectStarted?: boolean; connectReady?: boolean; orders?: Order[] }) {
   const [enabled, setEnabled] = useState(initialEnabled);
   const [products, setProducts] = useState<Product[]>(initial);
   const [draft, setDraft] = useState<Draft | null>(null);
@@ -196,6 +202,29 @@ export function ShopClient({ enabled: initialEnabled, initial, boutiqueUrl = '',
           </div>
           {!connect.ready && products.length > 0 && (
             <p className="flex items-center gap-1.5 text-xs text-amber-700"><AlertCircle className="h-3.5 w-3.5" /> Tant que Stripe n’est pas connecté, les clients peuvent voir vos produits mais pas payer par carte.</p>
+          )}
+
+          {/* Recent orders */}
+          {orders.length > 0 && (
+            <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-gray-200">
+              <h2 className="mb-3 text-lg font-extrabold text-gray-900">Commandes payées <span className="text-gray-400">({orders.length})</span></h2>
+              <div className="divide-y divide-gray-100">
+                {orders.map((o) => (
+                  <div key={o.id} className="flex flex-wrap items-center justify-between gap-2 py-3">
+                    <div className="min-w-0">
+                      <p className="font-semibold text-gray-900">{o.customerName || 'Client'} <span className="ml-1 rounded-full bg-green-100 px-2 py-0.5 text-[11px] font-bold text-green-700">{o.status === 'SHIPPED' ? 'Expédiée' : 'Payée'}</span></p>
+                      <p className="truncate text-sm text-gray-500">{o.items.map((i) => `${i.quantity}× ${i.name}`).join(', ')}</p>
+                      {(o.customerEmail || o.shippingAddress) && <p className="truncate text-xs text-gray-400">{[o.customerEmail, o.customerPhone, o.shippingAddress].filter(Boolean).join(' · ')}</p>}
+                    </div>
+                    <div className="text-right">
+                      <p className="font-extrabold text-gray-900">{euros(o.totalCents)}</p>
+                      <p className="text-xs text-gray-400">{formatDate(o.createdAt)}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <p className="mt-3 text-xs text-gray-400">Ces ventes sont aussi enregistrées dans votre Comptabilité.</p>
+            </div>
           )}
 
           <div className="flex items-center justify-between">

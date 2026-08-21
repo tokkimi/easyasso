@@ -13,8 +13,18 @@ export default async function ShopPage() {
     prisma.product.findMany({ where: { organizationId: org.id }, orderBy: { order: 'asc' } }),
     prisma.site.findUnique({ where: { organizationId: org.id }, include: { pages: { select: { slug: true } } } }),
   ]);
-  const enabled = Boolean((org.profile as any)?.shopEnabled ?? (org.profile as any)?.hasShop);
+  const profile = (org.profile as any) || {};
+  const enabled = Boolean(profile.shopEnabled ?? profile.hasShop);
   const boutiqueUrl = site ? `${siteUrlFor(site.subdomain, site.customDomain, site.domainVerified)}/boutique` : '';
   const hasBoutiquePage = Boolean(site?.pages.some((p) => p.slug === 'boutique'));
-  return <ShopClient enabled={enabled} initial={JSON.parse(JSON.stringify(products))} boutiqueUrl={boutiqueUrl} hasBoutiquePage={hasBoutiquePage} />;
+  return (
+    <ShopClient
+      enabled={enabled}
+      initial={JSON.parse(JSON.stringify(products))}
+      boutiqueUrl={boutiqueUrl}
+      hasBoutiquePage={hasBoutiquePage}
+      connectStarted={Boolean(profile.stripeConnectAccountId)}
+      connectReady={Boolean(profile.stripeConnectReady)}
+    />
+  );
 }

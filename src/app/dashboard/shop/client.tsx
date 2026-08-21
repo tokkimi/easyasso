@@ -1,6 +1,6 @@
 'use client';
-import { useMemo, useRef, useState } from 'react';
-import { Plus, Trash2, Pencil, Save, X, Package, Eye, EyeOff, Star, ArrowLeft, ArrowRight, ImagePlus, ExternalLink, LayoutTemplate } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Plus, Trash2, Pencil, Save, X, Package, Eye, EyeOff, Star, ArrowLeft, ArrowRight, ImagePlus, ExternalLink, LayoutTemplate, CreditCard, CheckCircle2, AlertCircle } from 'lucide-react';
 import { PageHeader } from '@/components/ui';
 
 type Product = {
@@ -27,7 +27,7 @@ function mainImage(p: Product) {
   return (p.images && p.images[0]) || p.imageUrl || '';
 }
 
-export function ShopClient({ enabled: initialEnabled, initial, boutiqueUrl = '', hasBoutiquePage: initialHasPage = false }: { enabled: boolean; initial: Product[]; boutiqueUrl?: string; hasBoutiquePage?: boolean }) {
+export function ShopClient({ enabled: initialEnabled, initial, boutiqueUrl = '', hasBoutiquePage: initialHasPage = false, connectStarted = false, connectReady: initialReady = false }: { enabled: boolean; initial: Product[]; boutiqueUrl?: string; hasBoutiquePage?: boolean; connectStarted?: boolean; connectReady?: boolean }) {
   const [enabled, setEnabled] = useState(initialEnabled);
   const [products, setProducts] = useState<Product[]>(initial);
   const [draft, setDraft] = useState<Draft | null>(null);
@@ -35,7 +35,26 @@ export function ShopClient({ enabled: initialEnabled, initial, boutiqueUrl = '',
   const [busy, setBusy] = useState(false);
   const [hasPage, setHasPage] = useState(initialHasPage);
   const [creatingPage, setCreatingPage] = useState(false);
+  const [connect, setConnect] = useState({ started: connectStarted, ready: initialReady });
+  const [connecting, setConnecting] = useState(false);
   const dragIndex = useRef<number | null>(null);
+
+  // Coming back from Stripe onboarding: refresh the account status.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (new URLSearchParams(window.location.search).get('connect')) {
+      fetch('/api/shop/connect').then((r) => r.json()).then((d) => setConnect({ started: !!d.started, ready: !!d.ready })).catch(() => {});
+    }
+  }, []);
+
+  async function connectStripe() {
+    setConnecting(true);
+    const res = await fetch('/api/shop/connect', { method: 'POST' });
+    const data = await res.json().catch(() => ({}));
+    setConnecting(false);
+    if (!res.ok || !data.url) { alert(data.error || 'Connexion Stripe impossible.'); return; }
+    window.location.href = data.url;
+  }
 
   async function addBoutiquePage() {
     setCreatingPage(true);
@@ -159,6 +178,25 @@ export function ShopClient({ enabled: initialEnabled, initial, boutiqueUrl = '',
               <button onClick={addBoutiquePage} disabled={creatingPage} className="btn btn-primary"><Plus className="h-4 w-4" /> {creatingPage ? 'Création…' : 'Créer la page Boutique'}</button>
             )}
           </div>
+
+          {/* Payments — Stripe Connect */}
+          <div className={`flex flex-wrap items-center justify-between gap-3 rounded-2xl border p-4 ${connect.ready ? 'border-green-200 bg-green-50/60' : 'border-amber-200 bg-amber-50/60'}`}>
+            <div className="flex items-center gap-3">
+              <div className={`grid h-10 w-10 place-items-center rounded-xl bg-white ring-1 ${connect.ready ? 'text-green-600 ring-green-100' : 'text-amber-600 ring-amber-100'}`}>{connect.ready ? <CheckCircle2 className="h-5 w-5" /> : <CreditCard className="h-5 w-5" />}</div>
+              <div>
+                <p className="font-bold text-gray-900">{connect.ready ? 'Paiements activés — vous encaissez vos ventes' : 'Encaisser les paiements par carte'}</p>
+                <p className="text-sm text-gray-600">{connect.ready ? 'L’argent des ventes arrive directement sur votre compte Stripe.' : connect.started ? 'Votre inscription Stripe n’est pas terminée. Finalisez-la pour encaisser.' : 'Reliez votre compte Stripe pour recevoir l’argent de vos ventes directement.'}</p>
+              </div>
+            </div>
+            {connect.ready ? (
+              <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-3 py-1 text-sm font-semibold text-green-700"><CheckCircle2 className="h-4 w-4" /> Prêt</span>
+            ) : (
+              <button onClick={connectStripe} disabled={connecting} className="btn btn-primary"><CreditCard className="h-4 w-4" /> {connecting ? 'Ouverture…' : connect.started ? 'Continuer l’inscription' : 'Connecter mon compte Stripe'}</button>
+            )}
+          </div>
+          {!connect.ready && products.length > 0 && (
+            <p className="flex items-center gap-1.5 text-xs text-amber-700"><AlertCircle className="h-3.5 w-3.5" /> Tant que Stripe n’est pas connecté, les clients peuvent voir vos produits mais pas payer par carte.</p>
+          )}
 
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-extrabold text-gray-900">Vos produits {products.length > 0 && <span className="text-gray-400">({products.length})</span>}</h2>

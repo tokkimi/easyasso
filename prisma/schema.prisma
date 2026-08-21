@@ -98,6 +98,7 @@ model Organization {
   contactMessages ContactMessage[]
   platformMessages PlatformMessage[]
   roles         Role[]
+  products      Product[]
 }
 
 enum SystemRole {
@@ -336,6 +337,23 @@ model PlatformMessage {
   createdAt      DateTime @default(now())
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   @@index([organizationId, createdAt])
+}
+
+model Product {
+  id             String   @id @default(cuid())
+  organizationId String
+  name           String
+  description    String   @default("")
+  priceCents     Int      @default(0)
+  currency       String   @default("eur")
+  imageUrl       String?
+  stock          Int?     // null = unlimited stock
+  active         Boolean  @default(true)
+  order          Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  @@index([organizationId, order])
 }
 
 model ContactMessage {

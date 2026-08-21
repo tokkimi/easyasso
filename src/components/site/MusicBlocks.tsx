@@ -14,7 +14,7 @@ export function MusicTracks({ content }: { content: any }) {
   const clean = tracks.filter((t) => t && (t.title || t.thumbnail || t.url));
 
   return (
-    <div className="mx-auto w-full max-w-6xl px-4">
+    <div className="mx-auto w-full max-w-6xl px-4 pt-6">
       {content?.title && <h2 className="text-2xl font-extrabold uppercase tracking-tight md:text-3xl">{content.title}</h2>}
       {clean.length === 0 ? (
         <p className="py-10 text-center text-sm text-gray-400">Ajoutez vos sons — leurs pochettes s’afficheront automatiquement.</p>
@@ -69,7 +69,7 @@ export function VideoGrid({ content }: { content: any }) {
   const videos: { url?: string; title?: string }[] = Array.isArray(content?.videos) ? content.videos : [];
   const clean = videos.filter((v) => v && v.url);
   return (
-    <div className="mx-auto w-full max-w-6xl px-4">
+    <div className="mx-auto w-full max-w-6xl px-4 pt-6">
       {content?.title && <h2 className="text-2xl font-extrabold uppercase tracking-tight md:text-3xl">{content.title}</h2>}
       {clean.length === 0 ? (
         <p className="py-10 text-center text-sm text-gray-400">Ajoutez des liens YouTube — les vidéos s’intègrent automatiquement.</p>
@@ -267,7 +267,7 @@ export function OfficialPlayers({ content }: { content: any }) {
     });
 
   return (
-    <div className="mx-auto w-full max-w-6xl px-4">
+    <div className="mx-auto w-full max-w-6xl px-4 pt-6">
       <div className="max-w-2xl">
         {content?.title && <h2 className="text-2xl font-extrabold uppercase tracking-tight md:text-3xl">{content.title}</h2>}
         {content?.intro && <p className="mt-2 text-sm leading-relaxed text-gray-500">{content.intro}</p>}

@@ -3,7 +3,8 @@ import { revalidatePath } from 'next/cache';
 import { requireApiPermission, handleApiError } from '@/lib/api';
 import { PERMISSIONS } from '@/lib/permissions';
 import { prisma } from '@/lib/prisma';
-import { buildGeneratedSite, pickTemplateId, type GenerateInput } from '@/lib/generate';
+import { buildGeneratedSite, buildMusicSite, pickTemplateId, type GenerateInput } from '@/lib/generate';
+import { resolveMediaLink } from '@/lib/oembed';
 import { aiEnabled, aiGenerateSite } from '@/lib/ai';
 import { causePhotoQuery } from '@/lib/templates';
 import { fetchCausePhotos } from '@/lib/unsplash';
@@ -25,7 +26,7 @@ export async function POST(req: Request) {
     const previousProfile = (ctx.org.profile as Record<string, any>) || {};
     const requestedSlogan = typeof b.slogan === 'string' && b.slogan.trim() ? b.slogan.trim() : (previousProfile.slogan || '');
     const generateLegal = b.generateCgv !== false;
-    const siteType: 'association' | 'shop' | 'other' = ['association', 'shop', 'other'].includes(b.siteType) ? b.siteType : 'association';
+    const siteType: 'association' | 'shop' | 'other' | 'music' = ['association', 'shop', 'other', 'music'].includes(b.siteType) ? b.siteType : 'association';
     const hasShop = siteType === 'shop' || !!b.hasShop;
 
     if (b.name && b.name.trim() && b.name.trim() !== ctx.org.name) {
@@ -58,12 +59,26 @@ export async function POST(req: Request) {
     const causeId = pickTemplateId([input.mission, input.functioning, input.goodToKnow, input.beneficiaries, input.actions].filter(Boolean).join(' '), input.category);
     const themePhotos = await fetchCausePhotos(causePhotoQuery(causeId));
 
-    // Try AI generation first (rich, all pages); fall back to the deterministic
-    // builder if no API key or the model call fails.
-    const aiConfigured = aiEnabled();
-    const aiGenerated = await aiGenerateSite(input, themePhotos);
-    console.log('[magic-generator] generation_source', { organizationId: ctx.org.id, source: aiGenerated ? 'ai' : 'deterministic', aiConfigured, themePhotos: themePhotos.length });
-    const generated = aiGenerated || buildGeneratedSite(input, themePhotos);
+    // Music/artist site: build from the provided links, with real thumbnails.
+    let generated: any;
+    if (siteType === 'music') {
+      const trackLinks = (Array.isArray(b.trackLinks) ? b.trackLinks : []).filter(Boolean).slice(0, 12).map(String);
+      const tracks = await Promise.all(trackLinks.map(async (u: string) => {
+        const r = await resolveMediaLink(u);
+        return { url: u, title: r?.title || '', artist: r?.author || '', thumbnail: r?.thumbnail || '', source: r?.source || '', year: '' };
+      }));
+      const videoLinks = (Array.isArray(b.videoLinks) ? b.videoLinks : []).filter(Boolean).slice(0, 12).map(String);
+      const streaming = b.streamingLinks && typeof b.streamingLinks === 'object' ? b.streamingLinks : {};
+      generated = buildMusicSite(input, { tracks, streaming, videos: videoLinks, instagram: String(b.instagram || '') });
+      console.log('[magic-generator] generation_source', { organizationId: ctx.org.id, source: 'music', tracks: tracks.length });
+    } else {
+      // Try AI generation first (rich, all pages); fall back to the deterministic
+      // builder if no API key or the model call fails.
+      const aiConfigured = aiEnabled();
+      const aiGenerated = await aiGenerateSite(input, themePhotos);
+      console.log('[magic-generator] generation_source', { organizationId: ctx.org.id, source: aiGenerated ? 'ai' : 'deterministic', aiConfigured, themePhotos: themePhotos.length });
+      generated = aiGenerated || buildGeneratedSite(input, themePhotos);
+    }
     const donation = {
       locale: input.language, title: input.language === 'en' ? 'Support our causes' : 'Soutenir nos causes',
       intro: input.language === 'en' ? 'Your donation directly supports all our work.' : 'Votre don soutient directement l’ensemble de nos actions.',
@@ -88,8 +103,8 @@ export async function POST(req: Request) {
       buttonText: input.language === 'en' ? 'Contribute on Leetchi' : 'Participer à la cagnotte',
     };
     const anyDonation = donation.cardEnabled || donation.helloAssoEnabled || donation.transferEnabled || donation.chequeEnabled || ((b.leetchiEnabled ?? previousProfile.leetchiEnabled) && leetchi.url);
-    // A pure shop with no donation method doesn't get a "Faire un don" page.
-    const wantDonationPage = siteType !== 'shop' || !!anyDonation;
+    // A shop or music site with no donation method doesn't get a "Faire un don" page.
+    const wantDonationPage = (siteType !== 'shop' && siteType !== 'music') || !!anyDonation;
 
     const isDonationText = (value = '') => /\bfaire[-\s]*un[-\s]*don\b|\bdon\b|donat|soutenir|support|donate/i.test(value);
     if (wantDonationPage) {
@@ -160,6 +175,10 @@ export async function POST(req: Request) {
       ...profile,
       language: input.language,
       siteType,
+      streamingLinks: siteType === 'music' ? (b.streamingLinks || {}) : profile.streamingLinks,
+      trackLinks: siteType === 'music' ? (Array.isArray(b.trackLinks) ? b.trackLinks : []) : profile.trackLinks,
+      videoLinks: siteType === 'music' ? (Array.isArray(b.videoLinks) ? b.videoLinks : []) : profile.videoLinks,
+      instagram: siteType === 'music' ? (b.instagram || '') : profile.instagram,
       hasShop: hasShop || profile.hasShop || false,
       shopEnabled: hasShop || profile.shopEnabled || false,
       isAssociation: siteType === 'association' ? true : (profile.isAssociation ?? siteType !== 'shop'),

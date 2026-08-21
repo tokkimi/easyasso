@@ -1,4 +1,4 @@
-import { TEMPLATES, getTemplate, createPhotoAllocator, type BuiltTemplate } from './templates';
+import { TEMPLATES, getTemplate, createPhotoAllocator, templateImage, type BuiltTemplate } from './templates';
 import { defaultStyleFor } from './blocks';
 
 // Keyword signals to auto-pick the closest template from a free description.
@@ -176,9 +176,9 @@ export interface GenerateInput {
   language?: 'fr' | 'en';
   // What the site is for: 'association' (default), 'shop', 'business', 'other'.
   kind?: string;
-  // Chosen at magic generation: 'association' | 'shop' | 'other'. Drives the
-  // questionnaire wording and the AI's tone / page structure.
-  siteType?: 'association' | 'shop' | 'other';
+  // Chosen at magic generation: drives the questionnaire wording and the AI's
+  // tone / page structure.
+  siteType?: 'association' | 'shop' | 'other' | 'music';
   hasShop?: boolean;
   slogan?: string;
   generateCgv?: boolean;
@@ -258,6 +258,68 @@ function composeCopy(input: GenerateInput) {
 
 function reindex(pages: any[]) {
   for (const p of pages) p.blocks.forEach((b: any, i: number) => { b.order = i; });
+}
+
+export type MusicTrack = { title?: string; artist?: string; url?: string; thumbnail?: string; year?: string; source?: string };
+
+// Build a complete musician/artist site from the provided links (streaming,
+// tracks, videos, Instagram). Thumbnails come from the real links (resolved by
+// the caller), so images are always the right ones and never broken.
+export function buildMusicSite(
+  input: GenerateInput,
+  media: { tracks: MusicTrack[]; streaming: Record<string, string>; videos: string[]; instagram: string },
+): BuiltTemplate {
+  const name = input.name?.trim() || 'Artiste';
+  const en = input.language === 'en';
+  const tagline = input.slogan?.trim() || firstSentence(input.mission || '') || (en ? 'Music, releases and links.' : 'Sons, sorties et liens.');
+  const bio = polishUserText(input.mission || '') || (en ? `${name} shares music and new releases here.` : `${name} partage ici sa musique et ses dernières sorties.`);
+  const heroImage = media.tracks.find((t) => t.thumbnail)?.thumbnail || input.logoUrl || templateImage('club-sportif', 1, 1600, 760);
+  const streamingFilled = Object.values(media.streaming || {}).some(Boolean);
+  const s = (list: { type: string; content: any; style?: any }[]) => list.map((b, order) => ({ type: b.type, order, content: b.content, style: { ...defaultStyleFor(b.type as any), ...(b.style || {}) } }));
+
+  const home = s([
+    { type: 'banner', content: { image: heroImage, title: name, subtitle: tagline, overlay: 55, height: 520, button: streamingFilled ? { text: en ? 'Listen' : 'Écouter', href: '#ecouter', color: '#ffffff', variant: 'solid', align: 'center' } : undefined } },
+    ...(streamingFilled ? [{ type: 'streaming', content: { title: en ? 'Listen everywhere' : 'Écoutez partout', links: media.streaming } }] : []),
+    ...(media.tracks.length ? [{ type: 'tracks', content: { title: en ? 'Latest tracks' : 'Derniers sons', layout: 'grid', tracks: media.tracks } }] : []),
+    ...(media.videos.length ? [{ type: 'videos', content: { title: en ? 'Videos' : 'Vidéos', videos: media.videos.map((u) => ({ url: u, title: '' })) } }] : []),
+    ...(media.instagram ? [{ type: 'instagram', content: { title: 'Instagram', username: media.instagram.replace(/^@/, '').replace(/^https?:\/\/(www\.)?instagram\.com\//, '').replace(/\/$/, ''), url: media.instagram.startsWith('http') ? media.instagram : '', posts: [] } }] : []),
+  ]);
+
+  const pages: BuiltTemplate['pages'] = [{ title: en ? 'Home' : 'Accueil', slug: 'accueil', isHome: true, showInNav: true, blocks: home }];
+  if (media.tracks.length) {
+    pages.push({ title: en ? 'Music' : 'Sons', slug: 'sons', isHome: false, showInNav: true, blocks: s([
+      { type: 'heading', content: { text: en ? 'Discography' : 'Discographie' } },
+      { type: 'tracks', content: { title: '', layout: 'list', tracks: media.tracks } },
+      ...(streamingFilled ? [{ type: 'streaming', content: { title: en ? 'Listen everywhere' : 'Écoutez partout', links: media.streaming } }] : []),
+    ]) });
+  }
+  pages.push({ title: en ? 'About' : 'Bio', slug: 'bio', isHome: false, showInNav: true, blocks: s([
+    { type: 'heading', content: { text: en ? 'About' : 'Bio' } },
+    { type: 'text', content: { text: bio } },
+  ]) });
+  pages.push({ title: 'Contact', slug: 'contact', isHome: false, showInNav: true, blocks: s([
+    { type: 'heading', content: { text: 'Contact' } },
+    { type: 'text', content: { text: input.email ? `${en ? 'Booking / contact' : 'Booking / contact'} : ${input.email}` : (en ? 'For booking and enquiries, get in touch.' : 'Pour le booking et vos demandes, écrivez-nous.') } },
+    { type: 'social', content: { social: { align: 'center' } } },
+  ]) });
+
+  return {
+    id: 'music-generated', name, category: 'Musique', family: 'shop', tagline,
+    preview: heroImage, pages,
+    theme: { primary: '#111827', secondary: '#0b0b0c', background: '#faf8f5', text: '#111827', font: 'montserrat' },
+    header: { logoText: name, logoUrl: input.logoUrl || undefined, showNav: true, sticky: true, background: '#ffffff', textColor: '#111827', cta: streamingFilled ? { text: en ? 'Listen' : 'Écouter', href: '/sons', color: '#111827', variant: 'solid', align: 'right' } : undefined },
+    footer: {
+      logoText: name, logoUrl: input.logoUrl || undefined, text: tagline,
+      showNewsletter: true, newsletterTitle: en ? 'Get the latest releases' : 'Recevez mes sorties',
+      showCgv: true, cgvContent: '', showMentions: true, mentionsContent: '',
+      allRightsText: `© ${new Date().getFullYear()} ${name}.`,
+      background: '#0b0b0c', textColor: '#e5e7eb',
+      columns: [
+        { title: 'Musique', links: [{ label: en ? 'Home' : 'Accueil', href: '/' }, { label: en ? 'Music' : 'Sons', href: '/sons' }] },
+        { title: 'Infos', links: [{ label: 'Bio', href: '/bio' }, { label: 'Contact', href: '/contact' }] },
+      ],
+    },
+  };
 }
 
 // Produce a fully customized template from the questionnaire + assets.

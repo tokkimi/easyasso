@@ -48,31 +48,43 @@ type Preview = { id: string; name: string; preview: string; family: 'association
 export function GenerateClient({ orgName, profile, categories, previews = [], welcome, initialLogo = '' }: { orgName: string; profile: any; categories: { id: string; name: string }[]; previews?: Preview[]; welcome: boolean; initialLogo?: string }) {
   const [f, setF] = useState({
     name: orgName || '', year: profile.year || '', mission: profile.mission || '', functioning: profile.functioning || '', actions: profile.actions || '',
-    siteType: (profile.siteType || (profile.hasShop && profile.isAssociation === false ? 'shop' : 'association')) as 'association' | 'shop' | 'other',
+    siteType: (profile.siteType || (profile.hasShop && profile.isAssociation === false ? 'shop' : 'association')) as 'association' | 'shop' | 'other' | 'music',
     hasShop: profile.hasShop ?? false,
+    musicSpotify: profile.streamingLinks?.spotify || '', musicDeezer: profile.streamingLinks?.deezer || '', musicApple: profile.streamingLinks?.appleMusic || '', musicSoundcloud: profile.streamingLinks?.soundcloud || '', musicYoutube: profile.streamingLinks?.youtube || '', instagram: profile.instagram || '',
     language: profile.language || 'fr', beneficiaries: profile.beneficiaries || '', goodToKnow: profile.goodToKnow || '', slogan: profile.slogan || '', generateCgv: profile.generateCgv ?? true, news: '', city: profile.city || '', email: profile.email || '', legalCountry: profile.legalCountry || 'France', category: profile.category || '',
     donationCardEnabled: profile.donationCardEnabled ?? false, donationStripeUrl: profile.donationStripeUrl || '', donationHelloAssoEnabled: profile.donationHelloAssoEnabled ?? Boolean(profile.donationHelloAssoUrl), donationHelloAssoUrl: profile.donationHelloAssoUrl || '', donationTransferEnabled: profile.donationTransferEnabled ?? false, donationIban: profile.donationIban || '', donationBic: profile.donationBic || '', donationAccountHolder: profile.donationAccountHolder || '', donationBankName: profile.donationBankName || '', donationChequeEnabled: profile.donationChequeEnabled ?? false, donationChequePayable: profile.donationChequePayable || '', donationChequeAddress: profile.donationChequeAddress || '',
     leetchiEnabled: profile.leetchiEnabled ?? Boolean(profile.leetchiUrl), leetchiUrl: profile.leetchiUrl || '', leetchiEmbedUrl: profile.leetchiEmbedUrl || '', leetchiEmbedCode: profile.leetchiEmbedCode || '', leetchiCollectedEuros: profile.leetchiCollectedEuros || '', leetchiGoalEuros: profile.leetchiGoalEuros || '',
   });
   const [logo, setLogo] = useState(initialLogo);
   const [photos, setPhotos] = useState<string[]>(['']);
+  const [trackLinks, setTrackLinks] = useState<string[]>(Array.isArray(profile.trackLinks) && profile.trackLinks.length ? profile.trackLinks : ['', '', '']);
+  const [videoLinks, setVideoLinks] = useState<string[]>(Array.isArray(profile.videoLinks) && profile.videoLinks.length ? profile.videoLinks : ['']);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const set = (k: string, v: string) => setF((s) => ({ ...s, [k]: v }));
   const isShop = f.siteType === 'shop';
-  const nameLabel = isShop ? 'Nom de la boutique / marque' : f.siteType === 'other' ? 'Nom de votre projet' : 'Nom de l’association';
-  const missionLabel = isShop ? 'Présentez votre univers / votre marque ★' : 'À propos / votre mission ★';
+  const isMusic = f.siteType === 'music';
+  const nameLabel = isMusic ? 'Nom d’artiste / de groupe' : isShop ? 'Nom de la boutique / marque' : f.siteType === 'other' ? 'Nom de votre projet' : 'Nom de l’association';
+  const missionLabel = isMusic ? 'Votre bio ★' : isShop ? 'Présentez votre univers / votre marque ★' : 'À propos / votre mission ★';
   const functioningLabel = isShop ? 'Que proposez-vous ? (votre offre)' : 'Comment fonctionne votre association ?';
   const actionsLabel = isShop ? 'Votre savoir-faire / vos gammes' : 'Vos actions / activités concrètes';
   const beneficiariesLabel = isShop ? 'Votre clientèle' : 'Public aidé / bénéficiaires';
-  const visualPreviews = previews.filter((p) => (isShop ? p.family === 'shop' : p.family === 'association'));
+  const visualPreviews = isMusic ? [] : previews.filter((p) => (isShop ? p.family === 'shop' : p.family === 'association'));
+
+  function setArr(setter: (v: string[]) => void, arr: string[], i: number, v: string) { setter(arr.map((x, j) => (j === i ? v : x))); }
 
   async function generate() {
     if (!f.mission.trim()) return;
     setBusy(true); setError('');
     const compressedLogo = logo ? await prepareLogoForGeneration(logo) : undefined;
     const compressedPhotos = await Promise.all(photos.filter(Boolean).map((photo) => compressForGeneration(photo, 900, 0.68)));
-    const basePayload = { ...f, name: f.name.trim(), logoUrl: compressedLogo };
+    const musicPayload = isMusic ? {
+      streamingLinks: { spotify: f.musicSpotify, deezer: f.musicDeezer, appleMusic: f.musicApple, soundcloud: f.musicSoundcloud, youtube: f.musicYoutube },
+      trackLinks: trackLinks.filter(Boolean),
+      videoLinks: videoLinks.filter(Boolean),
+      instagram: f.instagram,
+    } : {};
+    const basePayload = { ...f, ...musicPayload, name: f.name.trim(), logoUrl: compressedLogo };
     // Keep the request safely below the hosting limit. URL-based photos do
     // not add meaningful payload weight and are always retained.
     const safePhotos: string[] = [];
@@ -120,18 +132,18 @@ export function GenerateClient({ orgName, profile, categories, previews = [], we
         {/* Site type — adapts the questionnaire and the AI's tone */}
         <div className="rounded-2xl border border-brand-100 bg-brand-50/60 p-4">
           <p className="mb-2 text-sm font-bold text-gray-900">Quel type de site voulez-vous créer ?</p>
-          <div className="grid grid-cols-3 gap-2">
-            {([['association', 'Association'], ['shop', 'Boutique / Commerce'], ['other', 'Autre projet']] as const).map(([value, label]) => (
-              <button key={value} type="button" onClick={() => setF((s) => ({ ...s, siteType: value, hasShop: value === 'shop' ? true : s.hasShop }))} className={`rounded-xl border-2 px-2 py-2 text-sm font-semibold transition ${f.siteType === value ? 'border-brand-600 bg-white text-brand-700' : 'border-transparent bg-white/70 text-gray-600 hover:bg-white'}`}>{label}</button>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+            {([['association', 'Association'], ['shop', 'Boutique'], ['music', 'Site musical'], ['other', 'Autre projet']] as const).map(([value, label]) => (
+              <button key={value} type="button" onClick={() => setF((s) => ({ ...s, siteType: value, hasShop: value === 'shop' ? true : value === 'music' ? false : s.hasShop }))} className={`rounded-xl border-2 px-2 py-2 text-sm font-semibold transition ${f.siteType === value ? 'border-brand-600 bg-white text-brand-700' : 'border-transparent bg-white/70 text-gray-600 hover:bg-white'}`}>{label}</button>
             ))}
           </div>
-          {f.siteType !== 'shop' && (
+          {(f.siteType === 'association' || f.siteType === 'other') && (
             <label className="mt-3 flex cursor-pointer items-center gap-3 rounded-xl bg-white px-3 py-2.5 text-sm ring-1 ring-gray-200">
               <input type="checkbox" className="h-5 w-5" checked={f.hasShop} onChange={(e) => setF((s) => ({ ...s, hasShop: e.target.checked }))} />
               <span><strong className="text-gray-900">Ajouter aussi une boutique en ligne</strong><span className="block text-xs text-gray-500">Une page Boutique prête à remplir sera créée (activable/désactivable ensuite).</span></span>
             </label>
           )}
-          <p className="mt-2 text-xs text-gray-500">{isShop ? 'L’IA écrira un vrai site de boutique (univers, sélection, infos pratiques) — les produits s’ajoutent ensuite dans l’onglet Boutique.' : 'L’IA adapte les textes et les pages à votre type de projet.'}</p>
+          <p className="mt-2 text-xs text-gray-500">{isMusic ? 'Site d’artiste : liens streaming, derniers sons (pochettes récupérées automatiquement depuis les liens), vidéos et Instagram.' : isShop ? 'L’IA écrira un vrai site de boutique (univers, sélection, infos pratiques) — les produits s’ajoutent ensuite dans l’onglet Boutique.' : 'L’IA adapte les textes et les pages à votre type de projet.'}</p>
 
           {visualPreviews.length > 0 && (
             <div className="mt-3">
@@ -149,9 +161,41 @@ export function GenerateClient({ orgName, profile, categories, previews = [], we
           )}
         </div>
 
+        {isMusic && (
+          <section className="space-y-4 rounded-2xl border border-gray-200 p-4">
+            <div><h3 className="font-extrabold text-gray-900">Vos liens (les miniatures seront celles des liens)</h3><p className="text-sm text-gray-500">Collez vos liens : les pochettes et titres sont récupérés automatiquement.</p></div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Field label="Spotify"><input className="input" type="url" value={f.musicSpotify} onChange={(e) => set('musicSpotify', e.target.value)} placeholder="https://open.spotify.com/artist/…" /></Field>
+              <Field label="Deezer"><input className="input" type="url" value={f.musicDeezer} onChange={(e) => set('musicDeezer', e.target.value)} placeholder="https://www.deezer.com/artist/…" /></Field>
+              <Field label="Apple Music"><input className="input" type="url" value={f.musicApple} onChange={(e) => set('musicApple', e.target.value)} placeholder="https://music.apple.com/…" /></Field>
+              <Field label="SoundCloud"><input className="input" type="url" value={f.musicSoundcloud} onChange={(e) => set('musicSoundcloud', e.target.value)} placeholder="https://soundcloud.com/…" /></Field>
+              <Field label="YouTube"><input className="input" type="url" value={f.musicYoutube} onChange={(e) => set('musicYoutube', e.target.value)} placeholder="https://youtube.com/@…" /></Field>
+              <Field label="Instagram"><input className="input" type="url" value={f.instagram} onChange={(e) => set('instagram', e.target.value)} placeholder="https://instagram.com/… ou @pseudo" /></Field>
+            </div>
+            <div>
+              <label className="label">Derniers sons (liens Spotify, YouTube, SoundCloud…)</label>
+              <div className="space-y-2">
+                {trackLinks.map((l, i) => (
+                  <input key={i} className="input" type="url" value={l} onChange={(e) => setArr(setTrackLinks, trackLinks, i, e.target.value)} placeholder="Lien d’un son — la pochette s’affichera automatiquement" />
+                ))}
+              </div>
+              {trackLinks.length < 12 && <button type="button" onClick={() => setTrackLinks([...trackLinks, ''])} className="btn btn-ghost mt-2 text-sm"><Plus className="h-4 w-4" /> Ajouter un son</button>}
+            </div>
+            <div>
+              <label className="label">Vidéos YouTube (optionnel)</label>
+              <div className="space-y-2">
+                {videoLinks.map((l, i) => (
+                  <input key={i} className="input" type="url" value={l} onChange={(e) => setArr(setVideoLinks, videoLinks, i, e.target.value)} placeholder="https://youtube.com/watch?v=…" />
+                ))}
+              </div>
+              {videoLinks.length < 12 && <button type="button" onClick={() => setVideoLinks([...videoLinks, ''])} className="btn btn-ghost mt-2 text-sm"><Plus className="h-4 w-4" /> Ajouter une vidéo</button>}
+            </div>
+          </section>
+        )}
+
         <div className="grid gap-4 sm:grid-cols-3">
           <div className="sm:col-span-2">
-            <Field label={nameLabel}><input className="input" value={f.name} onChange={(e) => set('name', e.target.value)} placeholder={isShop ? 'Ma Jolie Boutique' : 'Les Amis du Quartier'} /></Field>
+            <Field label={nameLabel}><input className="input" value={f.name} onChange={(e) => set('name', e.target.value)} placeholder={isMusic ? 'OddyMatt' : isShop ? 'Ma Jolie Boutique' : 'Les Amis du Quartier'} /></Field>
           </div>
           <Field label="Année de création"><input className="input" value={f.year} onChange={(e) => set('year', e.target.value)} placeholder="2015" /></Field>
         </div>
@@ -212,7 +256,9 @@ export function GenerateClient({ orgName, profile, categories, previews = [], we
             placeholder="Ex : reçus fiscaux, horaires, adhésion, comment devenir bénévole, partenaires…" />
         </Field>
 
-        {isShop ? (
+        {isMusic ? (
+          <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4 text-sm text-gray-600">Votre site d’artiste affichera vos sons, vos liens streaming, vos vidéos et votre Instagram — avec les vraies pochettes de vos liens.</div>
+        ) : isShop ? (
           <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4 text-sm text-gray-600">Votre catalogue et le paiement se gèrent dans l’onglet <strong>Boutique</strong> — une page Boutique prête à remplir sera créée automatiquement.</div>
         ) : (
         <section className="space-y-4 rounded-2xl border border-gray-200 p-4">

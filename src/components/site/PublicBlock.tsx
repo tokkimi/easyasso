@@ -9,14 +9,15 @@ import { ContactForm } from './ContactForm';
 import { DonationBlock } from './DonationBlock';
 import { LeetchiBlock } from './LeetchiBlock';
 import { ShopCatalog, type ShopProduct } from './ShopCatalog';
+import { MusicTracks, VideoGrid, StreamingLinks, InstagramPreview } from './MusicBlocks';
 
 const CARD_ICONS: Record<string, any> = {
   Heart, Users, HandHeart, HandCoins, Star, Gift, Leaf, Home, BookOpen, Shield, Sparkles, Handshake,
 };
 
 // Blocks that break out of the narrow text column
-const WIDE = new Set(['textimage', 'gallery', 'cards', 'contact', 'donation', 'leetchi']);
-const FULL = new Set(['banner', 'slideshow', 'cta', 'shop']);
+const WIDE = new Set(['textimage', 'gallery', 'cards', 'contact', 'donation', 'leetchi', 'streaming', 'instagram']);
+const FULL = new Set(['banner', 'slideshow', 'cta', 'shop', 'tracks', 'videos']);
 
 // The old default button colour was a fixed blue; on a themed site it should
 // follow the site's brand colour instead.
@@ -214,6 +215,14 @@ function renderInner(type: string, content: any, style: BlockStyle, basePath: st
           canCheckout={!!shopReady}
         />
       );
+    case 'tracks':
+      return <MusicTracks content={content} />;
+    case 'videos':
+      return <VideoGrid content={content} />;
+    case 'streaming':
+      return <StreamingLinks content={content} />;
+    case 'instagram':
+      return <InstagramPreview content={content} />;
     default:
       return null;
   }

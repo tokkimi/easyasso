@@ -5,6 +5,7 @@ import {
   Type, Heading, Image as ImageIcon, Video, MousePointerClick, Share2, Columns, MoveVertical, Code,
   PanelTop, PanelBottom, Palette, Files, ChevronLeft, Check,
   GalleryThumbnails, PanelsTopLeft, GalleryHorizontalEnd, Images, LayoutGrid, Megaphone, SlidersHorizontal, X, Mail, HandCoins, ExternalLink,
+  ShoppingBag, Music2, Youtube, Music, Instagram, Loader2,
 } from 'lucide-react';
 import { BLOCK_LIBRARY, type BlockType, type ButtonConfig } from '@/lib/blocks';
 import { PublicBlock } from '@/components/site/PublicBlock';
@@ -16,6 +17,7 @@ import { ColorGrid, AlignPicker, Field, Toggle, ImageInput } from './controls';
 const ICONS: Record<string, any> = {
   Heading, Type, Image: ImageIcon, Video, MousePointerClick, Share2, Columns, MoveVertical, Code,
   GalleryThumbnails, PanelsTopLeft, GalleryHorizontalEnd, Images, LayoutGrid, Megaphone, Mail, HandCoins, ExternalLink,
+  ShoppingBag, Music2, Youtube, Music, Instagram,
 };
 
 const CARD_ICON_CHOICES = ['Heart', 'Users', 'HandHeart', 'HandCoins', 'Star', 'Gift', 'Leaf', 'Home', 'BookOpen', 'Shield', 'Sparkles', 'Handshake'];
@@ -439,6 +441,11 @@ function BlockInspector({ block, onContent, onStyle, onDelete }: { block: Block;
         </>
       )}
 
+      {block.type === 'tracks' && <TracksEditor c={c} onContent={onContent} />}
+      {block.type === 'videos' && <VideosEditor c={c} onContent={onContent} />}
+      {block.type === 'streaming' && <StreamingEditor c={c} onContent={onContent} />}
+      {block.type === 'instagram' && <InstagramEditor c={c} onContent={onContent} />}
+
       {block.type === 'columns' && (
         <>
           <Field label="Nombre de colonnes">
@@ -559,6 +566,130 @@ function BlockInspector({ block, onContent, onStyle, onDelete }: { block: Block;
 
       <Field label="Espacement vertical"><input type="range" min={0} max={80} value={s.paddingY ?? 16} onChange={(e) => onStyle({ ...s, paddingY: +e.target.value })} className="w-full" /></Field>
     </div>
+  );
+}
+
+async function fetchOembed(url: string) {
+  try {
+    const res = await fetch(`/api/oembed?url=${encodeURIComponent(url)}`);
+    if (!res.ok) return null;
+    return await res.json();
+  } catch { return null; }
+}
+
+function TracksEditor({ c, onContent }: { c: any; onContent: (v: any) => void }) {
+  const tracks: any[] = Array.isArray(c.tracks) ? c.tracks : [];
+  const [loading, setLoading] = useState<number | null>(null);
+  const setTrack = (i: number, patch: any) => onContent({ ...c, tracks: tracks.map((t, j) => (j === i ? { ...t, ...patch } : t)) });
+  const add = () => onContent({ ...c, tracks: [...tracks, { title: '', artist: '', url: '', thumbnail: '', year: '', source: '' }] });
+  const remove = (i: number) => onContent({ ...c, tracks: tracks.filter((_, j) => j !== i) });
+  const resolve = async (i: number, url: string) => {
+    if (!url) return;
+    setLoading(i);
+    const data = await fetchOembed(url);
+    setLoading(null);
+    if (!data) { alert('Impossible de récupérer la pochette de ce lien.'); return; }
+    setTrack(i, { thumbnail: data.thumbnail || tracks[i]?.thumbnail, title: tracks[i]?.title || data.title || '', artist: tracks[i]?.artist || data.author || '', source: data.source || '' });
+  };
+  return (
+    <>
+      <Field label="Titre du bloc"><input className="input" value={c.title || ''} onChange={(e) => onContent({ ...c, title: e.target.value })} placeholder="Derniers sons" /></Field>
+      <Field label="Affichage">
+        <select className="input" value={c.layout || 'grid'} onChange={(e) => onContent({ ...c, layout: e.target.value })}>
+          <option value="grid">Grille qui défile (comme « Derniers sons »)</option>
+          <option value="list">Liste (comme un catalogue)</option>
+        </select>
+      </Field>
+      <div className="space-y-3">
+        {tracks.map((t, i) => (
+          <div key={i} className="rounded-xl border border-gray-200 p-3">
+            <div className="flex items-start gap-3">
+              <div className="h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-gray-100 ring-1 ring-gray-200">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                {t.thumbnail && <img src={t.thumbnail} alt="" className="h-full w-full object-cover" />}
+              </div>
+              <div className="min-w-0 flex-1 space-y-2">
+                <div className="flex gap-2">
+                  <input className="input flex-1" type="url" value={t.url || ''} onChange={(e) => setTrack(i, { url: e.target.value })} placeholder="Lien Spotify, YouTube, SoundCloud…" />
+                  <button type="button" onClick={() => resolve(i, t.url)} disabled={loading === i} className="btn btn-ghost shrink-0 text-sm">{loading === i ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Pochette'}</button>
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  <input className="input" value={t.title || ''} onChange={(e) => setTrack(i, { title: e.target.value })} placeholder="Titre" />
+                  <input className="input" value={t.artist || ''} onChange={(e) => setTrack(i, { artist: e.target.value })} placeholder="Artiste" />
+                  <input className="input" value={t.year || ''} onChange={(e) => setTrack(i, { year: e.target.value })} placeholder="Année" />
+                </div>
+              </div>
+              <button type="button" onClick={() => remove(i)} className="shrink-0 text-red-500 hover:text-red-700"><Trash2 className="h-4 w-4" /></button>
+            </div>
+          </div>
+        ))}
+      </div>
+      <button type="button" onClick={add} className="btn btn-ghost text-sm"><Plus className="h-4 w-4" /> Ajouter un son</button>
+    </>
+  );
+}
+
+function VideosEditor({ c, onContent }: { c: any; onContent: (v: any) => void }) {
+  const videos: any[] = Array.isArray(c.videos) ? c.videos : [];
+  const setV = (i: number, patch: any) => onContent({ ...c, videos: videos.map((v, j) => (j === i ? { ...v, ...patch } : v)) });
+  return (
+    <>
+      <Field label="Titre du bloc"><input className="input" value={c.title || ''} onChange={(e) => onContent({ ...c, title: e.target.value })} placeholder="Vidéos" /></Field>
+      <div className="space-y-2">
+        {videos.map((v, i) => (
+          <div key={i} className="flex gap-2">
+            <input className="input flex-1" type="url" value={v.url || ''} onChange={(e) => setV(i, { url: e.target.value })} placeholder="https://youtube.com/watch?v=…" />
+            <input className="input w-40" value={v.title || ''} onChange={(e) => setV(i, { title: e.target.value })} placeholder="Titre (option)" />
+            <button type="button" onClick={() => onContent({ ...c, videos: videos.filter((_, j) => j !== i) })} className="shrink-0 text-red-500 hover:text-red-700"><Trash2 className="h-4 w-4" /></button>
+          </div>
+        ))}
+      </div>
+      <button type="button" onClick={() => onContent({ ...c, videos: [...videos, { url: '', title: '' }] })} className="btn btn-ghost text-sm"><Plus className="h-4 w-4" /> Ajouter une vidéo YouTube</button>
+    </>
+  );
+}
+
+function StreamingEditor({ c, onContent }: { c: any; onContent: (v: any) => void }) {
+  const links = c.links || {};
+  const set = (k: string, v: string) => onContent({ ...c, links: { ...links, [k]: v } });
+  const fields: [string, string, string][] = [
+    ['spotify', 'Spotify', 'https://open.spotify.com/artist/…'],
+    ['deezer', 'Deezer', 'https://www.deezer.com/artist/…'],
+    ['appleMusic', 'Apple Music', 'https://music.apple.com/…'],
+    ['soundcloud', 'SoundCloud', 'https://soundcloud.com/…'],
+    ['youtube', 'YouTube', 'https://youtube.com/@…'],
+  ];
+  return (
+    <>
+      <Field label="Titre du bloc"><input className="input" value={c.title || ''} onChange={(e) => onContent({ ...c, title: e.target.value })} placeholder="Écoutez-moi" /></Field>
+      {fields.map(([k, label, ph]) => (
+        <Field key={k} label={label}><input className="input" type="url" value={links[k] || ''} onChange={(e) => set(k, e.target.value)} placeholder={ph} /></Field>
+      ))}
+    </>
+  );
+}
+
+function InstagramEditor({ c, onContent }: { c: any; onContent: (v: any) => void }) {
+  const posts: any[] = Array.isArray(c.posts) ? c.posts : [];
+  const setPost = (i: number, patch: any) => onContent({ ...c, posts: posts.map((p, j) => (j === i ? { ...p, ...patch } : p)) });
+  return (
+    <>
+      <Field label="Nom d’utilisateur Instagram"><input className="input" value={c.username || ''} onChange={(e) => onContent({ ...c, username: e.target.value })} placeholder="oddymatt_music" /></Field>
+      <Field label="Lien du profil (optionnel)"><input className="input" type="url" value={c.url || ''} onChange={(e) => onContent({ ...c, url: e.target.value })} placeholder="https://instagram.com/…" /></Field>
+      <p className="text-xs text-gray-500">Ajoutez quelques visuels de posts (Instagram ne permet pas de les récupérer automatiquement).</p>
+      <div className="grid grid-cols-3 gap-2">
+        {posts.map((p, i) => (
+          <div key={i}>
+            <ImageInput value={p.image || ''} onChange={(url) => setPost(i, { image: url })} />
+            <input className="input mt-1 text-xs" type="url" value={p.url || ''} onChange={(e) => setPost(i, { url: e.target.value })} placeholder="lien (option)" />
+          </div>
+        ))}
+      </div>
+      <div className="flex gap-2">
+        <button type="button" onClick={() => onContent({ ...c, posts: [...posts, { image: '', url: '' }] })} className="btn btn-ghost text-sm"><Plus className="h-4 w-4" /> Ajouter un post</button>
+        {posts.length > 0 && <button type="button" onClick={() => onContent({ ...c, posts: posts.slice(0, -1) })} className="btn btn-ghost text-sm text-red-500">Retirer le dernier</button>}
+      </div>
+    </>
   );
 }
 

@@ -40,7 +40,11 @@ export type BlockType =
   | 'contact'
   | 'donation'
   | 'leetchi'
-  | 'shop';
+  | 'shop'
+  | 'tracks'
+  | 'videos'
+  | 'streaming'
+  | 'instagram';
 
 export interface BlockStyle {
   align?: Align;
@@ -68,6 +72,10 @@ export const BLOCK_LIBRARY: {
   { type: 'donation', label: 'Questionnaire de dons', icon: 'HandCoins', description: 'Montants, coordonnées donateur, Stripe, HelloAsso, virement et chèque', group: 'layouts' },
   { type: 'leetchi', label: 'Cagnotte Leetchi', icon: 'ExternalLink', description: 'Jauge de cagnotte + bouton pour participer', group: 'layouts' },
   { type: 'shop', label: 'Boutique / Produits', icon: 'ShoppingBag', description: 'Catalogue avec catégories, recherche et grille de produits', group: 'layouts' },
+  { type: 'tracks', label: 'Sons / Playlist', icon: 'Music2', description: 'Vos sons en grille qui défile ou en liste — miniatures récupérées des liens', group: 'layouts' },
+  { type: 'videos', label: 'Vidéos YouTube', icon: 'Youtube', description: 'Une grille de vidéos YouTube (miniatures automatiques)', group: 'layouts' },
+  { type: 'streaming', label: 'Liens streaming', icon: 'Music', description: 'Spotify, Deezer, Apple Music, SoundCloud, YouTube — boutons stylés', group: 'layouts' },
+  { type: 'instagram', label: 'Aperçu Instagram', icon: 'Instagram', description: 'Aperçu de votre profil Instagram avec bouton suivre', group: 'layouts' },
   // Basic building blocks
   { type: 'heading', label: 'Titre', icon: 'Heading', description: 'Un grand titre', group: 'basics' },
   { type: 'text', label: 'Texte', icon: 'Type', description: 'Un paragraphe', group: 'basics' },
@@ -158,6 +166,14 @@ export function defaultContentFor(type: BlockType): Record<string, unknown> {
       return { title: 'Notre cagnotte Leetchi', intro: 'Suivez l’avancement de la collecte et participez en quelques clics.', url: '', embedUrl: '', embedCode: '', collectedEuros: '', goalEuros: '', buttonText: 'Participer à la cagnotte' };
     case 'shop':
       return { title: 'Notre boutique', intro: '', search: true, showCategories: true, columns: 4 };
+    case 'tracks':
+      return { title: 'Derniers sons', layout: 'grid', tracks: [] };
+    case 'videos':
+      return { title: 'Vidéos', videos: [] };
+    case 'streaming':
+      return { title: 'Écoutez-moi', links: { spotify: '', deezer: '', appleMusic: '', soundcloud: '', youtube: '' } };
+    case 'instagram':
+      return { title: 'Sur Instagram', username: '', url: '', posts: [] };
     default:
       return {};
   }
@@ -182,7 +198,12 @@ export function defaultStyleFor(type: BlockType): BlockStyle {
     case 'leetchi':
       return { paddingY: 40 };
     case 'shop':
+    case 'tracks':
+    case 'videos':
+    case 'instagram':
       return { paddingY: 28 };
+    case 'streaming':
+      return { paddingY: 32 };
     default:
       return { align: 'center', paddingY: 16 };
   }

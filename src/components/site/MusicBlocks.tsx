@@ -14,7 +14,7 @@ export function MusicTracks({ content }: { content: any }) {
   const clean = tracks.filter((t) => t && (t.title || t.thumbnail || t.url));
 
   return (
-    <div className="mx-auto w-full max-w-6xl px-4 pt-6">
+    <div className="mx-auto w-full max-w-6xl px-4 pt-10">
       {content?.title && <h2 className="text-2xl font-extrabold uppercase tracking-tight md:text-3xl">{content.title}</h2>}
       {clean.length === 0 ? (
         <p className="py-10 text-center text-sm text-gray-400">Ajoutez vos sons — leurs pochettes s’afficheront automatiquement.</p>
@@ -44,7 +44,7 @@ export function MusicTracks({ content }: { content: any }) {
             return (
               <div key={i} className="w-60 shrink-0 snap-start overflow-hidden rounded-3xl bg-white shadow-sm ring-1 ring-gray-100">
                 <div className="aspect-square w-full overflow-hidden bg-gray-100">
-                  {t.thumbnail && /* eslint-disable-next-line @next/next/no-img-element */ <img src={t.thumbnail} alt="" loading="lazy" className="h-full w-full object-cover" />}
+                  {t.thumbnail && /* eslint-disable-next-line @next/next/no-img-element */ <img src={t.thumbnail} alt="" loading="lazy" className="h-full w-full object-contain" />}
                 </div>
                 <div className="p-4">
                   {t.year && <p className="text-xs font-bold tracking-widest text-[var(--brand)]">{t.year}</p>}

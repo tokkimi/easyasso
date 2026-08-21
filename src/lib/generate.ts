@@ -264,6 +264,22 @@ function reindex(pages: any[]) {
 
 export type MusicTrack = { title?: string; artist?: string; url?: string; thumbnail?: string; year?: string; source?: string };
 
+function musicPlayerItems(tracks: MusicTrack[], videos: string[]) {
+  return [
+    ...tracks.filter((track) => track.url).map((track) => ({
+      platform: `${track.source || ''} ${track.url || ''}`.toLowerCase().includes('soundcloud') ? 'soundcloud'
+        : `${track.source || ''} ${track.url || ''}`.toLowerCase().includes('deezer') ? 'deezer'
+          : `${track.source || ''} ${track.url || ''}`.toLowerCase().includes('youtube') || `${track.url || ''}`.toLowerCase().includes('youtu.be') ? 'youtube'
+            : 'spotify',
+      url: track.url,
+      title: track.title || '',
+      artist: track.artist || '',
+      releaseDate: '',
+    })),
+    ...videos.filter(Boolean).map((url) => ({ platform: 'youtube', url, title: '', artist: '', releaseDate: '' })),
+  ];
+}
+
 // Map a music genre to a dark-theme accent colour, so the generated artist site
 // adapts to the style entered in the questionnaire.
 function genreAccent(genre = ''): string {
@@ -293,11 +309,13 @@ export function buildMusicSite(
   const bio = polishUserText(input.mission || '') || (en ? `${name} shares music and new releases here.` : `${name} partage ici sa musique et ses dernières sorties.`);
   const heroImage = media.tracks.find((t) => t.thumbnail)?.thumbnail || input.logoUrl || templateImage('club-sportif', 1, 1600, 760);
   const streamingFilled = Object.values(media.streaming || {}).some(Boolean);
+  const playerItems = musicPlayerItems(media.tracks, media.videos);
   const s = (list: { type: string; content: any; style?: any }[]) => list.map((b, order) => ({ type: b.type, order, content: b.content, style: { ...defaultStyleFor(b.type as any), ...(b.style || {}) } }));
 
   const home = s([
     { type: 'banner', content: { image: heroImage, title: name, subtitle: tagline, overlay: 55, height: 520, button: streamingFilled ? { text: en ? 'Listen' : 'Écouter', href: '#ecouter', color: '#ffffff', variant: 'solid', align: 'center' } : undefined } },
     ...(streamingFilled ? [{ type: 'streaming', content: { title: en ? 'Listen everywhere' : 'Écoutez partout', links: media.streaming } }] : []),
+    ...(playerItems.length ? [{ type: 'players', content: { title: en ? 'Latest releases' : 'Dernières sorties', intro: en ? 'Listen through the official players, with the newest releases first when dates are filled in.' : 'Écoutez directement via les lecteurs officiels, avec les sorties les plus récentes en premier lorsque les dates sont remplies.', sort: 'newest', items: playerItems } }] : []),
     ...(media.tracks.length ? [{ type: 'tracks', content: { title: en ? 'Latest tracks' : 'Derniers sons', layout: 'grid', tracks: media.tracks } }] : []),
     ...(media.videos.length ? [{ type: 'videos', content: { title: en ? 'Videos' : 'Vidéos', videos: media.videos.map((u) => ({ url: u, title: '' })) } }] : []),
     ...(media.instagram ? [{ type: 'instagram', content: { title: 'Instagram', username: media.instagram.replace(/^@/, '').replace(/^https?:\/\/(www\.)?instagram\.com\//, '').replace(/\/$/, ''), url: media.instagram.startsWith('http') ? media.instagram : '', posts: [] } }] : []),
@@ -307,6 +325,7 @@ export function buildMusicSite(
   if (media.tracks.length) {
     pages.push({ title: en ? 'Music' : 'Sons', slug: 'sons', isHome: false, showInNav: true, blocks: s([
       { type: 'heading', content: { text: en ? 'Discography' : 'Discographie' } },
+      { type: 'players', content: { title: en ? 'Official players' : 'Lecteurs officiels', intro: en ? 'Spotify, SoundCloud, Deezer and YouTube embeds stay connected to the original platforms.' : 'Les embeds Spotify, SoundCloud, Deezer et YouTube restent connectés aux plateformes originales.', sort: 'newest', items: playerItems } },
       { type: 'tracks', content: { title: '', layout: 'list', tracks: media.tracks } },
       ...(streamingFilled ? [{ type: 'streaming', content: { title: en ? 'Listen everywhere' : 'Écoutez partout', links: media.streaming } }] : []),
     ]) });

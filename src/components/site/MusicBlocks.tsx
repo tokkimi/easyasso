@@ -1,7 +1,8 @@
-import { Play, Instagram, Music2, Youtube, Music } from 'lucide-react';
+import { Play, Instagram, Music2, Youtube, CalendarDays } from 'lucide-react';
 import { safePublicUrl, videoEmbed } from '@/lib/render';
 
 export type Track = { title?: string; artist?: string; url?: string; thumbnail?: string; year?: string; source?: string };
+type PlayerItem = { platform?: string; url?: string; title?: string; artist?: string; releaseDate?: string };
 
 // ---- Sons / Playlist -------------------------------------------------------
 export function MusicTracks({ content }: { content: any }) {
@@ -98,12 +99,30 @@ const STREAMING = [
 ];
 function StreamingIcon({ k }: { k: string }) {
   if (k === 'youtube') return <Youtube className="h-5 w-5" />;
-  if (k === 'soundcloud') return <Music className="h-5 w-5" />;
+  if (k === 'soundcloud') {
+    return <svg viewBox="0 0 44 28" className="h-5 w-8" aria-hidden="true"><path fill="currentColor" d="M31 27H11a11 11 0 0 1 0-22 12 12 0 0 1 21 5 8.5 8.5 0 0 1-1 17ZM3 15h2v10H3Zm5-6h2v18H8Zm5-4h2v22h-2Zm5-1h2v23h-2Zm5 2h2v21h-2Z" /></svg>;
+  }
+  if (k === 'spotify') {
+    return <svg viewBox="0 0 32 32" className="h-5 w-5" aria-hidden="true"><circle cx="16" cy="16" r="16" fill="currentColor" /><path d="M8.2 12.2c5.4-1.8 11.3-1 15.2 1.3M9.5 16c4.4-1.3 9-.8 12.2 1M10.7 19.5c3.2-.9 6.5-.5 9 .7" fill="none" stroke="currentColor" strokeLinecap="round" strokeWidth="2.2" className="text-black/75" /></svg>;
+  }
+  if (k === 'deezer') {
+    return <svg viewBox="0 0 36 30" className="h-5 w-6" aria-hidden="true"><path fill="#ff0092" d="M0 20h7v7H0z" /><path fill="#ff8c00" d="M8 13h7v14H8z" /><path fill="#00c7f2" d="M16 6h7v21h-7z" /><path fill="#a238ff" d="M24 0h7v27h-7z" /></svg>;
+  }
   return <Music2 className="h-5 w-5" />;
+}
+
+function streamingLinkClass(style: string) {
+  if (style === 'transparent-dark') return 'bg-white/0 text-gray-950 ring-1 ring-gray-950/20 hover:bg-gray-950/5';
+  if (style === 'text-white') return 'bg-transparent px-2 text-white shadow-none hover:opacity-75';
+  if (style === 'text-black') return 'bg-transparent px-2 text-gray-950 shadow-none hover:opacity-75';
+  return 'bg-gray-950 text-white hover:opacity-90';
 }
 export function StreamingLinks({ content }: { content: any }) {
   const links = content?.links || {};
   const items = STREAMING.filter((s) => links[s.key]);
+  const linkStyle = content?.linkStyle || 'dark-button';
+  const glowColor = content?.glowColor || '';
+  const textOnly = linkStyle === 'text-white' || linkStyle === 'text-black';
   return (
     <div className="mx-auto w-full max-w-4xl px-4 text-center">
       {content?.title && <h2 className="text-2xl font-extrabold uppercase tracking-tight md:text-3xl">{content.title}</h2>}
@@ -113,11 +132,167 @@ export function StreamingLinks({ content }: { content: any }) {
         <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
           {items.map((s) => (
             <a key={s.key} href={safePublicUrl(links[s.key]) || '#'} target="_blank" rel="noreferrer"
-              className="inline-flex items-center gap-2.5 rounded-full bg-gray-900 px-5 py-3 text-sm font-bold text-white transition hover:opacity-90"
-              style={{ boxShadow: `0 8px 20px -8px ${s.color}66` }}>
+              className={`inline-flex items-center gap-2.5 rounded-full py-3 text-sm font-bold transition ${textOnly ? '' : 'px-5'} ${streamingLinkClass(linkStyle)}`}
+              style={textOnly ? undefined : { boxShadow: `0 12px 26px -12px ${(glowColor || s.color)}aa` }}>
               <span style={{ color: s.color }}><StreamingIcon k={s.key} /></span> {s.label}
             </a>
           ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ---- Lecteurs officiels Spotify / SoundCloud / Deezer / YouTube -----------
+function detectPlatform(rawUrl = '', forced = '') {
+  const forcedPlatform = String(forced || '').toLowerCase();
+  if (['spotify', 'soundcloud', 'deezer', 'youtube'].includes(forcedPlatform)) return forcedPlatform;
+  const u = String(rawUrl).toLowerCase();
+  if (u.includes('open.spotify.com')) return 'spotify';
+  if (u.includes('soundcloud.com')) return 'soundcloud';
+  if (u.includes('deezer.com')) return 'deezer';
+  if (u.includes('youtube.com') || u.includes('youtu.be')) return 'youtube';
+  return '';
+}
+
+function spotifyEmbed(rawUrl: string) {
+  const clean = safePublicUrl(rawUrl);
+  if (!clean) return '';
+  try {
+    const u = new URL(clean);
+    if (!u.hostname.includes('open.spotify.com')) return '';
+    const parts = u.pathname.split('/').filter(Boolean);
+    if (parts.length < 2) return '';
+    const [kind, id] = parts;
+    if (!['track', 'album', 'playlist', 'artist', 'episode', 'show'].includes(kind)) return '';
+    return `https://open.spotify.com/embed/${kind}/${id}`;
+  } catch { return ''; }
+}
+
+function soundCloudEmbed(rawUrl: string) {
+  const clean = safePublicUrl(rawUrl);
+  if (!clean) return '';
+  try {
+    const u = new URL(clean);
+    if (!u.hostname.includes('soundcloud.com')) return '';
+    return `https://w.soundcloud.com/player/?url=${encodeURIComponent(clean)}&auto_play=false&hide_related=false&show_comments=false&show_user=true&show_reposts=false&visual=true`;
+  } catch { return ''; }
+}
+
+function deezerEmbed(rawUrl: string) {
+  const clean = safePublicUrl(rawUrl);
+  if (!clean) return '';
+  try {
+    const u = new URL(clean);
+    if (!u.hostname.includes('deezer.com')) return '';
+    const parts = u.pathname.split('/').filter(Boolean);
+    const typeIndex = parts.findIndex((part) => ['track', 'album', 'playlist', 'artist'].includes(part));
+    if (typeIndex < 0 || !parts[typeIndex + 1]) return '';
+    return `https://widget.deezer.com/widget/dark/${parts[typeIndex]}/${parts[typeIndex + 1]}`;
+  } catch { return ''; }
+}
+
+function officialEmbed(item: PlayerItem) {
+  const platform = detectPlatform(item.url, item.platform);
+  if (platform === 'spotify') return spotifyEmbed(item.url || '');
+  if (platform === 'soundcloud') return soundCloudEmbed(item.url || '');
+  if (platform === 'deezer') return deezerEmbed(item.url || '');
+  if (platform === 'youtube') return safePublicUrl(videoEmbed(item.url || ''));
+  return '';
+}
+
+function platformLabel(platform: string) {
+  if (platform === 'spotify') return 'Spotify';
+  if (platform === 'soundcloud') return 'SoundCloud';
+  if (platform === 'deezer') return 'Deezer';
+  if (platform === 'youtube') return 'YouTube';
+  return 'Lecteur';
+}
+
+function PlatformLogo({ platform }: { platform: string }) {
+  if (platform === 'youtube') {
+    return <span className="inline-flex items-center gap-2 font-black text-[#ff0000]"><span className="grid h-7 w-10 place-items-center rounded-lg bg-[#ff0000] text-white"><Play className="h-4 w-4 fill-current" /></span>YouTube</span>;
+  }
+  if (platform === 'spotify') {
+    return (
+      <span className="inline-flex items-center gap-2 font-black text-[#1db954]">
+        <svg viewBox="0 0 32 32" className="h-7 w-7" aria-hidden="true"><circle cx="16" cy="16" r="16" fill="currentColor" /><path d="M8.2 12.2c5.4-1.8 11.3-1 15.2 1.3M9.5 16c4.4-1.3 9-.8 12.2 1M10.7 19.5c3.2-.9 6.5-.5 9 .7" fill="none" stroke="#0a0a0a" strokeLinecap="round" strokeWidth="2.2" /></svg>
+        Spotify
+      </span>
+    );
+  }
+  if (platform === 'soundcloud') {
+    return (
+      <span className="inline-flex items-center gap-2 font-black text-[#ff5500]">
+        <svg viewBox="0 0 44 28" className="h-7 w-11" aria-hidden="true"><path fill="currentColor" d="M31 27H11a11 11 0 0 1 0-22 12 12 0 0 1 21 5 8.5 8.5 0 0 1-1 17ZM3 15h2v10H3Zm5-6h2v18H8Zm5-4h2v22h-2Zm5-1h2v23h-2Zm5 2h2v21h-2Z" /></svg>
+        SoundCloud
+      </span>
+    );
+  }
+  if (platform === 'deezer') {
+    return (
+      <span className="inline-flex items-center gap-2 font-black text-[#a238ff]">
+        <svg viewBox="0 0 36 30" className="h-7 w-9" aria-hidden="true">
+          <path fill="#ff0092" d="M0 20h7v7H0z" /><path fill="#ff8c00" d="M8 13h7v14H8z" /><path fill="#00c7f2" d="M16 6h7v21h-7z" /><path fill="#a238ff" d="M24 0h7v27h-7z" />
+        </svg>
+        Deezer
+      </span>
+    );
+  }
+  return <span className="inline-flex items-center gap-2 font-black"><Music2 className="h-6 w-6" />Lecteur</span>;
+}
+
+export function OfficialPlayers({ content }: { content: any }) {
+  const items: PlayerItem[] = Array.isArray(content?.items) ? content.items : [];
+  const clean = items
+    .filter((item) => item?.url && officialEmbed(item))
+    .sort((a, b) => {
+      if (content?.sort === 'manual') return 0;
+      const da = Date.parse(a.releaseDate || '');
+      const db = Date.parse(b.releaseDate || '');
+      if (Number.isNaN(da) && Number.isNaN(db)) return 0;
+      if (Number.isNaN(da)) return 1;
+      if (Number.isNaN(db)) return -1;
+      return db - da;
+    });
+
+  return (
+    <div className="mx-auto w-full max-w-6xl px-4">
+      <div className="max-w-2xl">
+        {content?.title && <h2 className="text-2xl font-extrabold uppercase tracking-tight md:text-3xl">{content.title}</h2>}
+        {content?.intro && <p className="mt-2 text-sm leading-relaxed text-gray-500">{content.intro}</p>}
+      </div>
+      {clean.length === 0 ? (
+        <p className="py-10 text-center text-sm text-gray-400">Ajoutez des liens Spotify, SoundCloud, Deezer ou YouTube : les lecteurs officiels s’afficheront ici.</p>
+      ) : (
+        <div className="mt-6 -mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          {clean.map((item, i) => {
+            const platform = detectPlatform(item.url, item.platform);
+            const src = officialEmbed(item);
+            const isVideo = platform === 'youtube';
+            return (
+              <article key={`${item.url}-${i}`} className="w-[82vw] max-w-[380px] shrink-0 snap-start overflow-hidden rounded-3xl bg-white shadow-sm ring-1 ring-gray-100 md:w-[360px]">
+                <div className="flex min-h-[96px] flex-col justify-between gap-3 border-b border-gray-100 p-4">
+                  <PlatformLogo platform={platform} />
+                  <div>
+                    {item.title && <h3 className="line-clamp-2 text-base font-extrabold text-gray-900">{item.title}</h3>}
+                    {item.artist && <p className="mt-1 truncate text-sm text-gray-500">{item.artist}</p>}
+                    {item.releaseDate && <p className="mt-2 inline-flex items-center gap-1 text-xs font-bold text-gray-400"><CalendarDays className="h-3.5 w-3.5" /> {new Date(item.releaseDate).toLocaleDateString('fr-FR')}</p>}
+                  </div>
+                </div>
+                <div className={isVideo ? 'relative aspect-video bg-black' : 'bg-gray-50 p-3'}>
+                  <iframe
+                    src={src}
+                    title={`${platformLabel(platform)} ${item.title || i + 1}`}
+                    loading="lazy"
+                    allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                    allowFullScreen
+                    className={isVideo ? 'absolute inset-0 h-full w-full border-0' : 'h-[352px] w-full rounded-2xl border-0'}
+                  />
+                </div>
+              </article>
+            );
+          })}
         </div>
       )}
     </div>

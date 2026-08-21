@@ -5,7 +5,7 @@ import {
   Type, Heading, Image as ImageIcon, Video, MousePointerClick, Share2, Columns, MoveVertical, Code,
   PanelTop, PanelBottom, Palette, Files, ChevronLeft, Check,
   GalleryThumbnails, PanelsTopLeft, GalleryHorizontalEnd, Images, LayoutGrid, Megaphone, SlidersHorizontal, X, Mail, HandCoins, ExternalLink,
-  ShoppingBag, Music2, Youtube, Music, Instagram, Loader2,
+  ShoppingBag, Music2, Youtube, Music, Instagram, ListMusic, Loader2,
 } from 'lucide-react';
 import { BLOCK_LIBRARY, type BlockType, type ButtonConfig } from '@/lib/blocks';
 import { PublicBlock } from '@/components/site/PublicBlock';
@@ -17,7 +17,7 @@ import { ColorGrid, AlignPicker, Field, Toggle, ImageInput } from './controls';
 const ICONS: Record<string, any> = {
   Heading, Type, Image: ImageIcon, Video, MousePointerClick, Share2, Columns, MoveVertical, Code,
   GalleryThumbnails, PanelsTopLeft, GalleryHorizontalEnd, Images, LayoutGrid, Megaphone, Mail, HandCoins, ExternalLink,
-  ShoppingBag, Music2, Youtube, Music, Instagram,
+  ShoppingBag, Music2, Youtube, Music, Instagram, ListMusic,
 };
 
 const CARD_ICON_CHOICES = ['Heart', 'Users', 'HandHeart', 'HandCoins', 'Star', 'Gift', 'Leaf', 'Home', 'BookOpen', 'Shield', 'Sparkles', 'Handshake'];
@@ -444,6 +444,7 @@ function BlockInspector({ block, onContent, onStyle, onDelete }: { block: Block;
       {block.type === 'tracks' && <TracksEditor c={c} onContent={onContent} />}
       {block.type === 'videos' && <VideosEditor c={c} onContent={onContent} />}
       {block.type === 'streaming' && <StreamingEditor c={c} onContent={onContent} />}
+      {block.type === 'players' && <PlayersEditor c={c} onContent={onContent} />}
       {block.type === 'instagram' && <InstagramEditor c={c} onContent={onContent} />}
 
       {block.type === 'columns' && (
@@ -662,9 +663,78 @@ function StreamingEditor({ c, onContent }: { c: any; onContent: (v: any) => void
   return (
     <>
       <Field label="Titre du bloc"><input className="input" value={c.title || ''} onChange={(e) => onContent({ ...c, title: e.target.value })} placeholder="Écoutez-moi" /></Field>
+      <Field label="Style des liens">
+        <select className="input" value={c.linkStyle || 'dark-button'} onChange={(e) => onContent({ ...c, linkStyle: e.target.value })}>
+          <option value="dark-button">Bouton noir, texte blanc</option>
+          <option value="transparent-dark">Fond transparent, texte noir</option>
+          <option value="text-black">Logo + texte noir, sans bouton</option>
+          <option value="text-white">Logo + texte blanc, sans bouton</option>
+        </select>
+      </Field>
+      {!['text-black', 'text-white'].includes(c.linkStyle || 'dark-button') && (
+        <Field label="Couleur du reflet sous les boutons">
+          <ColorGrid value={c.glowColor || '#ef4444'} onChange={(glowColor) => onContent({ ...c, glowColor })} />
+          <button type="button" onClick={() => onContent({ ...c, glowColor: '' })} className="mt-2 text-xs font-semibold text-brand-600 hover:text-brand-700">
+            Utiliser la couleur de chaque plateforme
+          </button>
+          <p className="mt-1 text-xs text-gray-400">Choisissez une couleur unique pour le reflet, ou gardez les couleurs Spotify, YouTube, Deezer, etc.</p>
+        </Field>
+      )}
       {fields.map(([k, label, ph]) => (
         <Field key={k} label={label}><input className="input" type="url" value={links[k] || ''} onChange={(e) => set(k, e.target.value)} placeholder={ph} /></Field>
       ))}
+    </>
+  );
+}
+
+function PlayersEditor({ c, onContent }: { c: any; onContent: (v: any) => void }) {
+  const items: any[] = Array.isArray(c.items) ? c.items : [];
+  const [loading, setLoading] = useState<number | null>(null);
+  const setItem = (i: number, patch: any) => onContent({ ...c, items: items.map((item, j) => (j === i ? { ...item, ...patch } : item)) });
+  const add = () => onContent({ ...c, items: [...items, { platform: 'spotify', url: '', title: '', artist: '', releaseDate: '' }] });
+  const remove = (i: number) => onContent({ ...c, items: items.filter((_, j) => j !== i) });
+  const resolve = async (i: number, url: string) => {
+    if (!url) return;
+    setLoading(i);
+    const data = await fetchOembed(url);
+    setLoading(null);
+    if (!data) { alert('Impossible de récupérer les infos de ce lien. Vous pouvez quand même les remplir à la main.'); return; }
+    setItem(i, { title: items[i]?.title || data.title || '', artist: items[i]?.artist || data.author || '' });
+  };
+  return (
+    <>
+      <Field label="Titre du bloc"><input className="input" value={c.title || ''} onChange={(e) => onContent({ ...c, title: e.target.value })} placeholder="Dernières sorties" /></Field>
+      <Field label="Petit texte d’introduction"><textarea className="input" value={c.intro || ''} onChange={(e) => onContent({ ...c, intro: e.target.value })} placeholder="Écoutez les sons directement depuis les plateformes officielles." /></Field>
+      <Field label="Ordre d’affichage">
+        <select className="input" value={c.sort || 'newest'} onChange={(e) => onContent({ ...c, sort: e.target.value })}>
+          <option value="newest">Plus récent en premier (avec la date)</option>
+          <option value="manual">Ordre manuel</option>
+        </select>
+      </Field>
+      <div className="space-y-3">
+        {items.map((item, i) => (
+          <div key={i} className="space-y-3 rounded-xl border border-gray-200 p-3">
+            <div className="grid gap-2 sm:grid-cols-[150px_1fr_auto]">
+              <select className="input" value={item.platform || 'spotify'} onChange={(e) => setItem(i, { platform: e.target.value })}>
+                <option value="spotify">Spotify</option>
+                <option value="soundcloud">SoundCloud</option>
+                <option value="deezer">Deezer</option>
+                <option value="youtube">YouTube</option>
+              </select>
+              <input className="input" type="url" value={item.url || ''} onChange={(e) => setItem(i, { url: e.target.value })} placeholder="Lien officiel du son, album, playlist ou vidéo" />
+              <button type="button" onClick={() => resolve(i, item.url)} disabled={loading === i} className="btn btn-ghost shrink-0 text-sm">{loading === i ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Infos'}</button>
+            </div>
+            <div className="grid gap-2 sm:grid-cols-3">
+              <input className="input" value={item.title || ''} onChange={(e) => setItem(i, { title: e.target.value })} placeholder="Titre" />
+              <input className="input" value={item.artist || ''} onChange={(e) => setItem(i, { artist: e.target.value })} placeholder="Artiste / projet" />
+              <input className="input" type="date" value={item.releaseDate || ''} onChange={(e) => setItem(i, { releaseDate: e.target.value })} />
+            </div>
+            <button type="button" onClick={() => remove(i)} className="inline-flex items-center gap-1 text-xs font-semibold text-red-500 hover:text-red-700"><Trash2 className="h-4 w-4" /> Retirer ce lecteur</button>
+          </div>
+        ))}
+      </div>
+      <button type="button" onClick={add} className="btn btn-ghost text-sm"><Plus className="h-4 w-4" /> Ajouter un lecteur officiel</button>
+      <p className="text-xs leading-relaxed text-gray-500">Astuce : mettez les dates de sortie pour obtenir automatiquement l’ordre chronologique du plus récent au plus ancien. Sans date, l’ordre reste manuel.</p>
     </>
   );
 }

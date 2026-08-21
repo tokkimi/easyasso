@@ -44,6 +44,7 @@ export type BlockType =
   | 'tracks'
   | 'videos'
   | 'streaming'
+  | 'players'
   | 'instagram';
 
 export interface BlockStyle {
@@ -75,6 +76,7 @@ export const BLOCK_LIBRARY: {
   { type: 'tracks', label: 'Sons / Playlist', icon: 'Music2', description: 'Vos sons en grille qui défile ou en liste — miniatures récupérées des liens', group: 'layouts' },
   { type: 'videos', label: 'Vidéos YouTube', icon: 'Youtube', description: 'Une grille de vidéos YouTube (miniatures automatiques)', group: 'layouts' },
   { type: 'streaming', label: 'Liens streaming', icon: 'Music', description: 'Spotify, Deezer, Apple Music, SoundCloud, YouTube — boutons stylés', group: 'layouts' },
+  { type: 'players', label: 'Lecteurs officiels', icon: 'ListMusic', description: 'Spotify, SoundCloud, Deezer et YouTube en lecteurs officiels triés du plus récent au plus ancien', group: 'layouts' },
   { type: 'instagram', label: 'Aperçu Instagram', icon: 'Instagram', description: 'Aperçu de votre profil Instagram avec bouton suivre', group: 'layouts' },
   // Basic building blocks
   { type: 'heading', label: 'Titre', icon: 'Heading', description: 'Un grand titre', group: 'basics' },
@@ -171,7 +173,9 @@ export function defaultContentFor(type: BlockType): Record<string, unknown> {
     case 'videos':
       return { title: 'Vidéos', videos: [] };
     case 'streaming':
-      return { title: 'Écoutez-moi', links: { spotify: '', deezer: '', appleMusic: '', soundcloud: '', youtube: '' } };
+      return { title: 'Écoutez-moi', linkStyle: 'dark-button', glowColor: '', links: { spotify: '', deezer: '', appleMusic: '', soundcloud: '', youtube: '' } };
+    case 'players':
+      return { title: 'Dernières sorties', intro: 'Écoutez les sons directement depuis les plateformes officielles.', sort: 'newest', items: [] };
     case 'instagram':
       return { title: 'Sur Instagram', username: '', url: '', count: 6, postUrls: [], embedCode: '', posts: [] };
     default:
@@ -200,6 +204,7 @@ export function defaultStyleFor(type: BlockType): BlockStyle {
     case 'shop':
     case 'tracks':
     case 'videos':
+    case 'players':
     case 'instagram':
       return { paddingY: 28 };
     case 'streaming':

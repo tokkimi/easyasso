@@ -9,7 +9,7 @@ import { ContactForm } from './ContactForm';
 import { DonationBlock } from './DonationBlock';
 import { LeetchiBlock } from './LeetchiBlock';
 import { ShopCatalog, type ShopProduct } from './ShopCatalog';
-import { MusicTracks, VideoGrid, StreamingLinks, InstagramPreview } from './MusicBlocks';
+import { MusicTracks, VideoGrid, StreamingLinks, OfficialPlayers, InstagramPreview } from './MusicBlocks';
 
 const CARD_ICONS: Record<string, any> = {
   Heart, Users, HandHeart, HandCoins, Star, Gift, Leaf, Home, BookOpen, Shield, Sparkles, Handshake,
@@ -17,7 +17,7 @@ const CARD_ICONS: Record<string, any> = {
 
 // Blocks that break out of the narrow text column
 const WIDE = new Set(['textimage', 'gallery', 'cards', 'contact', 'donation', 'leetchi', 'streaming', 'instagram']);
-const FULL = new Set(['banner', 'slideshow', 'cta', 'shop', 'tracks', 'videos']);
+const FULL = new Set(['banner', 'slideshow', 'cta', 'shop', 'tracks', 'videos', 'players']);
 
 // The old default button colour was a fixed blue; on a themed site it should
 // follow the site's brand colour instead.
@@ -221,6 +221,8 @@ function renderInner(type: string, content: any, style: BlockStyle, basePath: st
       return <VideoGrid content={content} />;
     case 'streaming':
       return <StreamingLinks content={content} />;
+    case 'players':
+      return <OfficialPlayers content={content} />;
     case 'instagram':
       return <InstagramPreview content={content} />;
     default:

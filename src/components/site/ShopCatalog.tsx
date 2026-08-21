@@ -29,25 +29,35 @@ export function ShopCatalog({
   const [cart, setCart] = useState<CartLine[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
   const [paying, setPaying] = useState(false);
+  const [favorites, setFavorites] = useState<string[]>([]);
+  const [showFavorites, setShowFavorites] = useState(false);
 
   const storageKey = `easyasso-cart-${organizationId}`;
+  const favoritesKey = `easyasso-favorites-${organizationId}`;
   useEffect(() => {
     try { const raw = localStorage.getItem(storageKey); if (raw) setCart(JSON.parse(raw)); } catch {}
   }, [storageKey]);
   useEffect(() => {
     try { localStorage.setItem(storageKey, JSON.stringify(cart)); } catch {}
   }, [cart, storageKey]);
+  useEffect(() => {
+    try { const raw = localStorage.getItem(favoritesKey); if (raw) setFavorites(JSON.parse(raw)); } catch {}
+  }, [favoritesKey]);
+  useEffect(() => {
+    try { localStorage.setItem(favoritesKey, JSON.stringify(favorites)); } catch {}
+  }, [favorites, favoritesKey]);
 
   const categories = useMemo(() => Array.from(new Set(products.map((p) => p.category).filter(Boolean))) as string[], [products]);
   const list = useMemo(() => {
     let l = products.slice();
+    if (showFavorites) l = l.filter((p) => favorites.includes(p.id));
     if (cat) l = l.filter((p) => p.category === cat);
     const query = q.trim().toLowerCase();
     if (query) l = l.filter((p) => [p.name, p.brand, p.category, p.description].some((v) => (v || '').toLowerCase().includes(query)));
     if (sort === 'price-asc') l.sort((a, b) => a.priceCents - b.priceCents);
     else if (sort === 'price-desc') l.sort((a, b) => b.priceCents - a.priceCents);
     return l;
-  }, [products, cat, q, sort]);
+  }, [products, cat, q, sort, favorites, showFavorites]);
 
   const gridCols = columns >= 4 ? 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4' : columns === 3 ? 'grid-cols-2 md:grid-cols-3' : 'grid-cols-2';
   const cartCount = cart.reduce((s, l) => s + l.qty, 0);
@@ -64,6 +74,9 @@ export function ShopCatalog({
   }
   function setQty(id: string, qty: number) {
     setCart((c) => (qty <= 0 ? c.filter((l) => l.id !== id) : c.map((l) => (l.id === id ? { ...l, qty: Math.min(99, qty) } : l))));
+  }
+  function toggleFavorite(id: string) {
+    setFavorites((items) => items.includes(id) ? items.filter((x) => x !== id) : [...items, id]);
   }
 
   async function checkout() {
@@ -113,11 +126,19 @@ export function ShopCatalog({
             <option value="price-asc">Prix croissant</option>
             <option value="price-desc">Prix décroissant</option>
           </select>
+          <button
+            type="button"
+            onClick={() => setShowFavorites((v) => !v)}
+            className={`inline-flex items-center justify-center gap-2 rounded-xl border px-3 py-2.5 text-sm font-bold transition ${showFavorites ? 'border-[var(--brand)] bg-[var(--brand)] text-white' : 'border-gray-200 bg-white text-gray-700 hover:border-[var(--brand)] hover:text-[var(--brand)]'}`}
+          >
+            <Heart className={`h-4 w-4 ${showFavorites ? 'fill-current' : ''}`} />
+            Favoris {favorites.length > 0 ? `(${favorites.length})` : ''}
+          </button>
         </div>
       )}
 
       {list.length === 0 ? (
-        <p className="py-16 text-center text-gray-400">{products.length === 0 ? 'La boutique arrive bientôt.' : 'Aucun produit ne correspond à votre recherche.'}</p>
+        <p className="py-16 text-center text-gray-400">{products.length === 0 ? 'La boutique arrive bientôt.' : showFavorites ? 'Aucun favori pour le moment.' : 'Aucun produit ne correspond à votre recherche.'}</p>
       ) : (
         <div className={`mt-6 grid gap-4 ${gridCols}`}>
           {list.map((p) => (
@@ -127,7 +148,16 @@ export function ShopCatalog({
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={p.images[0]} alt={p.name} loading="lazy" className="h-full w-full object-cover transition duration-300 group-hover:scale-105" />
                 ) : null}
-                <span className="absolute bottom-2 right-2 grid h-8 w-8 place-items-center rounded-full bg-white/90 text-gray-500 shadow-sm"><Heart className="h-4 w-4" /></span>
+                <span
+                  role="button"
+                  tabIndex={0}
+                  aria-label={favorites.includes(p.id) ? 'Retirer des favoris' : 'Ajouter aux favoris'}
+                  onClick={(e) => { e.stopPropagation(); toggleFavorite(p.id); }}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); toggleFavorite(p.id); } }}
+                  className={`absolute bottom-2 right-2 grid h-9 w-9 place-items-center rounded-full bg-white/95 shadow-sm transition ${favorites.includes(p.id) ? 'text-rose-500' : 'text-gray-500 hover:text-rose-500'}`}
+                >
+                  <Heart className={`h-4 w-4 ${favorites.includes(p.id) ? 'fill-current' : ''}`} />
+                </span>
               </div>
               <div className="mt-2">
                 {(p.brand || p.category) && <p className="truncate text-[11px] font-bold uppercase tracking-wide text-gray-500"><span className="text-[var(--brand)]">{p.brand}</span>{p.brand && p.category ? ' · ' : ''}{p.category}</p>}
@@ -139,7 +169,7 @@ export function ShopCatalog({
         </div>
       )}
 
-      {open && <ProductModal product={open} canCheckout={canCheckout} onAdd={addToCart} onClose={() => setOpen(null)} />}
+      {open && <ProductModal product={open} canCheckout={canCheckout} isFavorite={favorites.includes(open.id)} onToggleFavorite={() => toggleFavorite(open.id)} onAdd={addToCart} onClose={() => setOpen(null)} />}
 
       {/* Floating cart */}
       {canCheckout && cartCount > 0 && !cartOpen && (
@@ -187,7 +217,7 @@ export function ShopCatalog({
   );
 }
 
-function ProductModal({ product, canCheckout, onAdd, onClose }: { product: ShopProduct; canCheckout: boolean; onAdd: (p: ShopProduct, qty: number) => void; onClose: () => void }) {
+function ProductModal({ product, canCheckout, isFavorite, onToggleFavorite, onAdd, onClose }: { product: ShopProduct; canCheckout: boolean; isFavorite: boolean; onToggleFavorite: () => void; onAdd: (p: ShopProduct, qty: number) => void; onClose: () => void }) {
   const [i, setI] = useState(0);
   const [qty, setQty] = useState(1);
   const imgs = product.images.length ? product.images : [''];
@@ -221,7 +251,17 @@ function ProductModal({ product, canCheckout, onAdd, onClose }: { product: ShopP
           {(product.brand || product.category) && <p className="text-xs font-bold uppercase tracking-wide text-gray-500"><span className="text-[var(--brand)]">{product.brand}</span>{product.brand && product.category ? ' · ' : ''}{product.category}</p>}
           <div className="mt-1 flex items-start justify-between gap-3">
             <h3 className="text-xl font-extrabold text-gray-900">{product.name}</h3>
-            <p className="shrink-0 text-xl font-extrabold text-gray-900">{euros(product.priceCents)}</p>
+            <div className="flex shrink-0 items-center gap-2">
+              <p className="text-xl font-extrabold text-gray-900">{euros(product.priceCents)}</p>
+              <button
+                type="button"
+                onClick={onToggleFavorite}
+                className={`grid h-10 w-10 place-items-center rounded-full border transition ${isFavorite ? 'border-rose-200 bg-rose-50 text-rose-500' : 'border-gray-200 text-gray-500 hover:border-rose-200 hover:text-rose-500'}`}
+                aria-label={isFavorite ? 'Retirer des favoris' : 'Ajouter aux favoris'}
+              >
+                <Heart className={`h-5 w-5 ${isFavorite ? 'fill-current' : ''}`} />
+              </button>
+            </div>
           </div>
           {product.stock != null && <p className="mt-1 text-sm text-gray-500">{product.stock > 0 ? `${product.stock} en stock` : 'Épuisé'}</p>}
           {product.description && <p className="mt-3 whitespace-pre-wrap leading-relaxed text-gray-600">{product.description}</p>}

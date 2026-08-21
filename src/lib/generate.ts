@@ -176,6 +176,10 @@ export interface GenerateInput {
   language?: 'fr' | 'en';
   // What the site is for: 'association' (default), 'shop', 'business', 'other'.
   kind?: string;
+  // Chosen at magic generation: 'association' | 'shop' | 'other'. Drives the
+  // questionnaire wording and the AI's tone / page structure.
+  siteType?: 'association' | 'shop' | 'other';
+  hasShop?: boolean;
   slogan?: string;
   generateCgv?: boolean;
   year?: string;

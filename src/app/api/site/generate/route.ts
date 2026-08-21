@@ -25,6 +25,8 @@ export async function POST(req: Request) {
     const previousProfile = (ctx.org.profile as Record<string, any>) || {};
     const requestedSlogan = typeof b.slogan === 'string' && b.slogan.trim() ? b.slogan.trim() : (previousProfile.slogan || '');
     const generateLegal = b.generateCgv !== false;
+    const siteType: 'association' | 'shop' | 'other' = ['association', 'shop', 'other'].includes(b.siteType) ? b.siteType : 'association';
+    const hasShop = siteType === 'shop' || !!b.hasShop;
 
     if (b.name && b.name.trim() && b.name.trim() !== ctx.org.name) {
       await prisma.organization.update({ where: { id: ctx.org.id }, data: { name: b.name.trim() } });
@@ -33,6 +35,8 @@ export async function POST(req: Request) {
     const input: GenerateInput = {
       name,
       language: b.language === 'en' ? 'en' : 'fr',
+      siteType,
+      hasShop,
       slogan: requestedSlogan || undefined,
       generateCgv: generateLegal,
       year: b.year || undefined,
@@ -83,7 +87,12 @@ export async function POST(req: Request) {
       goalEuros: b.leetchiGoalEuros ?? previousProfile.leetchiGoalEuros ?? '',
       buttonText: input.language === 'en' ? 'Contribute on Leetchi' : 'Participer à la cagnotte',
     };
+    const anyDonation = donation.cardEnabled || donation.helloAssoEnabled || donation.transferEnabled || donation.chequeEnabled || ((b.leetchiEnabled ?? previousProfile.leetchiEnabled) && leetchi.url);
+    // A pure shop with no donation method doesn't get a "Faire un don" page.
+    const wantDonationPage = siteType !== 'shop' || !!anyDonation;
+
     const isDonationText = (value = '') => /\bfaire[-\s]*un[-\s]*don\b|\bdon\b|donat|soutenir|support|donate/i.test(value);
+    if (wantDonationPage) {
     let donationPage = generated.pages.find((page: any) => isDonationText(`${page.slug} ${page.title}`));
     if (!donationPage) {
       donationPage = { title: input.language === 'en' ? 'Donate' : 'Faire un don', slug: input.language === 'en' ? 'donate' : 'don', isHome: false, showInNav: true, blocks: [] };
@@ -118,6 +127,28 @@ export async function POST(req: Request) {
         if (block.content?.button) block.content.button = fixDonationButton(block.content.button);
       }
     }
+    } // end wantDonationPage
+
+    // Shop: add a ready-to-fill Boutique page (empty catalogue block — products
+    // are added later from the Boutique tab, never invented at generation).
+    if (hasShop && !generated.pages.some((p: any) => p.slug === 'boutique' || p.type === 'shop' || (p.blocks || []).some((bl: any) => bl.type === 'shop'))) {
+      generated.pages.push({
+        title: 'Boutique', slug: 'boutique', isHome: false, showInNav: true,
+        blocks: [
+          { type: 'banner', order: 0, content: { title: 'Notre boutique', subtitle: 'Découvrez notre sélection.', overlay: 40, height: 340, image: 'https://picsum.photos/seed/boutique/1600/700' }, style: defaultStyleFor('banner') },
+          { type: 'shop', order: 1, content: { title: '', intro: '', search: true, showCategories: true, columns: 4 }, style: defaultStyleFor('shop') },
+        ],
+      });
+    }
+
+    // Every generated site gets a social-links block on the contact page (empty,
+    // ready to fill), so the networks are one click away.
+    const contactPage = generated.pages.find((p: any) => p.slug === 'contact' || /contact/i.test(p.title));
+    if (contactPage && !(contactPage.blocks || []).some((bl: any) => bl.type === 'social')) {
+      contactPage.blocks = contactPage.blocks || [];
+      contactPage.blocks.push({ type: 'social', order: contactPage.blocks.length, content: { social: { align: 'center' } }, style: defaultStyleFor('social') });
+    }
+
     // Develop the copy with real per-cause context (history, references, stakes)
     // then drop any repeated blocks. This is what gives the site substance when
     // the AI provider is not configured.
@@ -128,6 +159,10 @@ export async function POST(req: Request) {
     const generationProfile = {
       ...profile,
       language: input.language,
+      siteType,
+      hasShop: hasShop || profile.hasShop || false,
+      shopEnabled: hasShop || profile.shopEnabled || false,
+      isAssociation: siteType === 'association' ? true : (profile.isAssociation ?? siteType !== 'shop'),
       slogan: requestedSlogan,
       generateCgv: generateLegal,
       year: input.year || profile.year || '',

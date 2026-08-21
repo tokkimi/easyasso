@@ -87,6 +87,32 @@ RÈGLES DE RÉDACTION — DÉVELOPPE VRAIMENT (c'est essentiel) :
 - La page impact décrit ce que change notre action et rappelle l'enjeu global chiffré ; les résultats propres à l'association viennent du questionnaire, le contexte du secteur de tes connaissances fiables.
 - Le ton est chaleureux, direct, crédible, développé et immédiatement publiable.`;
 
+// Shop / brand / creator variant: same JSON format and same exactness rules, but
+// a commercial voice and a page structure built around an offer, not a cause.
+const SYSTEM_SHOP = `Tu es le concepteur-rédacteur de cette boutique / marque. Tu écris le site À SA PLACE, de l'intérieur, à la première personne ("nous", "notre boutique", "notre atelier", "je" pour un créateur solo si c'est plus juste). Le lecteur doit avoir l'impression que ce sont les fondateurs eux-mêmes qui présentent leur univers et leurs produits.
+
+Tu réponds UNIQUEMENT avec un objet JSON valide (aucun texte avant ou après, pas de markdown), au format :
+{
+  "tagline": "phrase d'accroche courte",
+  "pages": [ { "title": "Accueil", "slug": "accueil", "isHome": true, "sections": [ ... ] }, ... ]
+}
+Types de "section" : {"type":"banner","title":"...","subtitle":"..."} (uniquement en haut de l'accueil), {"type":"heading","text":"..."}, {"type":"text","text":"..."}, {"type":"textimage","title":"...","text":"...","imageSide":"right"}, {"type":"cards","title":"...","items":[{"icon":"Star","title":"...","text":"..."}]} (icônes: Star, Gift, Sparkles, Heart, Handshake, Shield, Leaf, Home, Users), {"type":"cta","title":"...","text":"...","buttonText":"Découvrir la boutique"}, {"type":"gallery"}.
+
+STRUCTURE DES PAGES (dans cet ordre) : Accueil, Notre univers (à propos / histoire de la marque), Notre sélection / Nos produits (page DESCRIPTIVE qui présente les gammes, les matières, le style, le savoir-faire — SANS lister de produits précis ni de prix : le catalogue s'affiche sur une page Boutique séparée), Livraison & retours / Infos pratiques, puis Contact. Crée une page Actualités seulement si des nouveautés sont fournies.
+
+INTERDICTIONS ABSOLUES :
+1. N'INVENTE JAMAIS de produits, de références, de prix, de promotions, de stock, d'avis clients ni de chiffres de ventes. Le catalogue réel sera ajouté séparément par le commerçant. Sur la page produits, décris l'OFFRE et l'UNIVERS (types d'articles, matières, style, engagement qualité), jamais un article précis inventé.
+2. AUCUNE FAUSSE INFO. Ne cite un chiffre, une date, un label ou une certification que si c'est un fait général fiable ; dans le doute, reste qualitatif.
+3. NE PARLE JAMAIS DU SITE NI DES PAGES (« cette page présente… »). Écris directement le contenu.
+4. NE PARLE PAS de dons, de bénévoles, d'adhérents ni de cause caritative (sauf si le questionnaire indique explicitement une dimension solidaire).
+5. Ne recopie jamais un champ brut du questionnaire, ne mets jamais un bloc en MAJUSCULES.
+
+RÉDACTION : développe vraiment (chaque page 3 à 5 sections, chaque texte 90 à 180 mots), parle du style, de la qualité, du savoir-faire, de l'expérience client, des valeurs de la marque, de ce qui la rend unique. Ton chaleureux, désirable, professionnel, immédiatement publiable.`;
+
+function systemFor(input: GenerateInput) {
+  return input.siteType === 'shop' ? SYSTEM_SHOP : SYSTEM;
+}
+
 // Walk the "pages" array object by object, brace-matching and respecting
 // strings, so we can recover every COMPLETE page even if the response was cut
 // off mid-array (token cap). The important "Nos actions" page comes early and
@@ -152,7 +178,7 @@ function parseAiSite(text: string): AiSite | null {
 // Nos actions…), the important pages survive even when the tail is cut.
 const GENERATION_DEADLINE_MS = 280000;
 
-async function callClaude(prompt: string): Promise<AiSite | null> {
+async function callClaude(prompt: string, system: string = SYSTEM): Promise<AiSite | null> {
   const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
   let buffer = '';
   let timer: ReturnType<typeof setTimeout> | undefined;
@@ -161,7 +187,7 @@ async function callClaude(prompt: string): Promise<AiSite | null> {
       model: MODEL,
       max_tokens: 24000,
       thinking: { type: 'disabled' },
-      system: SYSTEM,
+      system,
       messages: [{ role: 'user', content: prompt }],
     });
     stream.on('text', (delta) => { buffer += delta; });
@@ -188,6 +214,33 @@ async function callClaude(prompt: string): Promise<AiSite | null> {
 }
 
 function buildPrompt(input: GenerateInput): string {
+  const languageInstruction = input.language === 'en'
+    ? 'Write the ENTIRE generated website in natural, professional English. Every title, paragraph, button and navigation label must be in English.'
+    : 'Rédige l’intégralité du site en français naturel et professionnel.';
+
+  if (input.siteType === 'shop') {
+    const lines = [
+      `Nom de la boutique / marque : ${input.name || 'Non précisé'}`,
+      input.year ? `Année de création : ${input.year}` : '',
+      input.mission ? `Présentation / univers de la marque : ${input.mission}` : '',
+      input.functioning ? `Ce que nous proposons / notre offre : ${input.functioning}` : '',
+      input.actions ? `Notre savoir-faire / nos gammes : ${input.actions}` : '',
+      input.beneficiaries ? `Notre clientèle : ${input.beneficiaries}` : '',
+      input.goodToKnow ? `Infos pratiques (livraison, retours, matières…) : ${input.goodToKnow}` : '',
+      input.news ? `Nouveautés à mettre en avant : ${input.news}` : 'Aucune nouveauté fournie : ne pas créer de page Actualités.',
+      input.slogan ? `Slogan exact pour le pied de page : ${input.slogan}` : '',
+      input.city ? `Ville : ${input.city}` : '',
+      input.email ? `Email de contact : ${input.email}` : '',
+    ].filter(Boolean);
+    return `${languageInstruction}
+
+Important : les informations ci-dessous peuvent être courtes ou incomplètes. Comprends-les, reformule-les et transforme-les en vrais textes de site marchand désirables. N'invente AUCUN produit, prix ou promotion précis : le catalogue sera ajouté séparément. Décris l'univers, le style, la qualité et l'expérience.
+
+Crée le site complet de cette boutique / marque :
+
+${lines.join('\n')}`;
+  }
+
   const lines = [
     `Nom de l'association : ${input.name || 'Non précisé'}`,
     input.year ? `Année de création : ${input.year}` : '',
@@ -201,9 +254,6 @@ function buildPrompt(input: GenerateInput): string {
     input.city ? `Ville : ${input.city}` : '',
     input.email ? `Email de contact : ${input.email}` : '',
   ].filter(Boolean);
-  const languageInstruction = input.language === 'en'
-    ? 'Write the ENTIRE generated website in natural, professional English. Every title, paragraph, button and navigation label must be in English.'
-    : 'Rédige l’intégralité du site en français naturel et professionnel.';
   return `${languageInstruction}
 
 Important : les informations ci-dessous peuvent être courtes, mal orthographiées ou incomplètes. Tu dois les comprendre, les reformuler et les transformer en vrais textes de site. Ne recopie pas bêtement les mots du questionnaire dans des phrases toutes faites.
@@ -240,13 +290,13 @@ function illustrate(sections: Section[]): Section[] {
 
 // Convert AI sections into our block model, injecting the association's photos.
 // `nextPhoto` is a shared, site-wide allocator so no image is ever repeated.
-function sectionsToBlocks(sections: Section[], nextPhoto: (w?: number, h?: number) => string, isHome: boolean, language: 'fr' | 'en') {
-  const donateLabel = language === 'en' ? 'Donate' : 'Faire un don';
+function sectionsToBlocks(sections: Section[], nextPhoto: (w?: number, h?: number) => string, isHome: boolean, language: 'fr' | 'en', cta: { label: string; href: string }) {
+  const donateLabel = cta.label;
   const blocks: any[] = [];
   for (const s of illustrate(sections)) {
     switch (s.type) {
       case 'banner':
-        blocks.push({ type: 'banner', content: { image: nextPhoto(1600, 720), title: s.title, subtitle: s.subtitle || '', overlay: 45, height: 460, button: { text: donateLabel, href: '/don', color: '#ffffff', variant: 'solid', align: 'center' } } });
+        blocks.push({ type: 'banner', content: { image: nextPhoto(1600, 720), title: s.title, subtitle: s.subtitle || '', overlay: 45, height: 460, button: { text: donateLabel, href: cta.href, color: '#ffffff', variant: 'solid', align: 'center' } } });
         break;
       case 'heading':
         blocks.push({ type: 'heading', content: { text: s.text } });
@@ -261,7 +311,7 @@ function sectionsToBlocks(sections: Section[], nextPhoto: (w?: number, h?: numbe
         blocks.push({ type: 'cards', content: { columns: Math.min(3, Math.max(2, (s.items || []).length)) || 3, items: (s.items || []).slice(0, 4).map((it) => ({ icon: it.icon || 'Heart', title: it.title, text: it.text })) } });
         break;
       case 'cta':
-        blocks.push({ type: 'cta', content: { title: s.title, text: s.text || '', button: { text: s.buttonText || donateLabel, href: '/don', color: '#1b5df5', variant: 'solid', align: 'center' } }, style: { paddingY: 44 } });
+        blocks.push({ type: 'cta', content: { title: s.title, text: s.text || '', button: { text: s.buttonText || donateLabel, href: cta.href, color: '#1b5df5', variant: 'solid', align: 'center' } }, style: { paddingY: 44 } });
         break;
       case 'gallery':
         // Keep the gallery small so it doesn't force repeats when the curated
@@ -277,8 +327,12 @@ function sectionsToBlocks(sections: Section[], nextPhoto: (w?: number, h?: numbe
 // preset, pages/content written by Claude).
 export async function aiGenerateSite(input: GenerateInput, themePhotos: string[] = []): Promise<BuiltTemplate | null> {
   if (!aiEnabled()) return null;
-  const ai = await callClaude(buildPrompt(input));
+  const ai = await callClaude(buildPrompt(input), systemFor(input));
   if (!ai || !Array.isArray(ai.pages) || ai.pages.length === 0) return null;
+  const isShop = input.siteType === 'shop';
+  const cta = isShop
+    ? { label: input.language === 'en' ? 'Shop now' : 'Découvrir la boutique', href: '/boutique' }
+    : { label: input.language === 'en' ? 'Donate' : 'Faire un don', href: '/don' };
 
   const detect = [input.mission, input.functioning, input.goodToKnow, input.beneficiaries, input.actions].filter(Boolean).join(' ');
   const baseId = pickTemplateId(detect, input.category);
@@ -309,7 +363,7 @@ export async function aiGenerateSite(input: GenerateInput, themePhotos: string[]
     usedSlugs.add(slug);
     const isHome = !homeAssigned && (p.isHome || i === 0);
     if (isHome) homeAssigned = true;
-    const blocks = sectionsToBlocks(p.sections || [], nextPhoto, isHome, language);
+    const blocks = sectionsToBlocks(p.sections || [], nextPhoto, isHome, language, cta);
     // Guarantee a hero image on the home page even if the model didn't emit a banner.
     if (isHome && !blocks.some((b: any) => b.type === 'banner')) {
       blocks.unshift({
@@ -317,7 +371,7 @@ export async function aiGenerateSite(input: GenerateInput, themePhotos: string[]
         content: {
           image: nextPhoto(1600, 720),
           title: name, subtitle: ai.tagline || '', overlay: 45, height: 460,
-          button: { text: language === 'en' ? 'Donate' : 'Faire un don', href: '/don', color: '#ffffff', variant: 'solid', align: 'center' },
+          button: { text: cta.label, href: cta.href, color: '#ffffff', variant: 'solid', align: 'center' },
         },
         style: defaultStyleFor('banner'),
       });
@@ -335,15 +389,16 @@ export async function aiGenerateSite(input: GenerateInput, themePhotos: string[]
     contact = { title: 'Contact', slug: 'contact', isHome: false, showInNav: true, blocks: [] };
     t.pages.push(contact);
   }
+  const contactClosing = isShop
+    ? (language === 'en' ? 'A question about an item, an order or a custom request? Contact us — we’ll be happy to help.' : 'Une question sur un article, une commande ou une demande sur mesure ? Contactez-nous : nous vous répondrons avec plaisir.')
+    : (language === 'en' ? 'A question, a partnership idea or ready to get involved? Contact us: our team will be happy to reply.' : 'Une question, une proposition de partenariat ou l’envie de nous rejoindre ? Contactez-nous : notre équipe vous répondra avec plaisir.');
   const contactLines = [
     input.email ? `Email${language === 'en' ? '' : ' '} : ${input.email.trim()}` : '',
     input.city ? (language === 'en' ? `We are based in ${input.city.trim()}.` : `Nous sommes basés à ${input.city.trim()}.`) : '',
-    language === 'en'
-      ? 'A question, a partnership idea or ready to get involved? Contact us: our team will be happy to reply.'
-      : 'Une question, une proposition de partenariat ou l’envie de nous rejoindre ? Contactez-nous : notre équipe vous répondra avec plaisir.',
+    contactClosing,
   ].filter(Boolean).join('\n\n');
   contact.blocks.unshift(
-    { type: 'heading', order: 0, content: { text: language === 'en' ? 'Let’s talk about your involvement' : 'Parlons de votre engagement' }, style: defaultStyleFor('heading') },
+    { type: 'heading', order: 0, content: { text: isShop ? (language === 'en' ? 'Contact us' : 'Contactez-nous') : (language === 'en' ? 'Let’s talk about your involvement' : 'Parlons de votre engagement') }, style: defaultStyleFor('heading') },
     { type: 'text', order: 1, content: { text: contactLines }, style: defaultStyleFor('text') },
   );
   contact.blocks.forEach((block: any, order: number) => { block.order = order; });

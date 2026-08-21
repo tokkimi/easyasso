@@ -46,6 +46,8 @@ function prepareLogoForGeneration(value: string): Promise<string> {
 export function GenerateClient({ orgName, profile, categories, welcome, initialLogo = '' }: { orgName: string; profile: any; categories: { id: string; name: string }[]; welcome: boolean; initialLogo?: string }) {
   const [f, setF] = useState({
     name: orgName || '', year: profile.year || '', mission: profile.mission || '', functioning: profile.functioning || '', actions: profile.actions || '',
+    siteType: (profile.siteType || (profile.hasShop && profile.isAssociation === false ? 'shop' : 'association')) as 'association' | 'shop' | 'other',
+    hasShop: profile.hasShop ?? false,
     language: profile.language || 'fr', beneficiaries: profile.beneficiaries || '', goodToKnow: profile.goodToKnow || '', slogan: profile.slogan || '', generateCgv: profile.generateCgv ?? true, news: '', city: profile.city || '', email: profile.email || '', category: profile.category || '',
     donationCardEnabled: profile.donationCardEnabled ?? false, donationStripeUrl: profile.donationStripeUrl || '', donationHelloAssoEnabled: profile.donationHelloAssoEnabled ?? Boolean(profile.donationHelloAssoUrl), donationHelloAssoUrl: profile.donationHelloAssoUrl || '', donationTransferEnabled: profile.donationTransferEnabled ?? false, donationIban: profile.donationIban || '', donationBic: profile.donationBic || '', donationAccountHolder: profile.donationAccountHolder || '', donationBankName: profile.donationBankName || '', donationChequeEnabled: profile.donationChequeEnabled ?? false, donationChequePayable: profile.donationChequePayable || '', donationChequeAddress: profile.donationChequeAddress || '',
     leetchiEnabled: profile.leetchiEnabled ?? Boolean(profile.leetchiUrl), leetchiUrl: profile.leetchiUrl || '', leetchiEmbedUrl: profile.leetchiEmbedUrl || '', leetchiEmbedCode: profile.leetchiEmbedCode || '', leetchiCollectedEuros: profile.leetchiCollectedEuros || '', leetchiGoalEuros: profile.leetchiGoalEuros || '',
@@ -55,6 +57,12 @@ export function GenerateClient({ orgName, profile, categories, welcome, initialL
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const set = (k: string, v: string) => setF((s) => ({ ...s, [k]: v }));
+  const isShop = f.siteType === 'shop';
+  const nameLabel = isShop ? 'Nom de la boutique / marque' : f.siteType === 'other' ? 'Nom de votre projet' : 'Nom de l’association';
+  const missionLabel = isShop ? 'Présentez votre univers / votre marque ★' : 'À propos / votre mission ★';
+  const functioningLabel = isShop ? 'Que proposez-vous ? (votre offre)' : 'Comment fonctionne votre association ?';
+  const actionsLabel = isShop ? 'Votre savoir-faire / vos gammes' : 'Vos actions / activités concrètes';
+  const beneficiariesLabel = isShop ? 'Votre clientèle' : 'Public aidé / bénéficiaires';
 
   async function generate() {
     if (!f.mission.trim()) return;
@@ -105,28 +113,46 @@ export function GenerateClient({ orgName, profile, categories, welcome, initialL
       <div className="card space-y-5">
         {error && <div className="rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</div>}
         {Object.values(profile || {}).some(Boolean) && <div className="rounded-lg bg-green-50 p-3 text-sm text-green-800">Les informations enregistrées dans Réglages ont été préremplies. Vous pouvez les adapter pour cette génération.</div>}
+
+        {/* Site type — adapts the questionnaire and the AI's tone */}
+        <div className="rounded-2xl border border-brand-100 bg-brand-50/60 p-4">
+          <p className="mb-2 text-sm font-bold text-gray-900">Quel type de site voulez-vous créer ?</p>
+          <div className="grid grid-cols-3 gap-2">
+            {([['association', 'Association'], ['shop', 'Boutique / Commerce'], ['other', 'Autre projet']] as const).map(([value, label]) => (
+              <button key={value} type="button" onClick={() => setF((s) => ({ ...s, siteType: value, hasShop: value === 'shop' ? true : s.hasShop }))} className={`rounded-xl border-2 px-2 py-2 text-sm font-semibold transition ${f.siteType === value ? 'border-brand-600 bg-white text-brand-700' : 'border-transparent bg-white/70 text-gray-600 hover:bg-white'}`}>{label}</button>
+            ))}
+          </div>
+          {f.siteType !== 'shop' && (
+            <label className="mt-3 flex cursor-pointer items-center gap-3 rounded-xl bg-white px-3 py-2.5 text-sm ring-1 ring-gray-200">
+              <input type="checkbox" className="h-5 w-5" checked={f.hasShop} onChange={(e) => setF((s) => ({ ...s, hasShop: e.target.checked }))} />
+              <span><strong className="text-gray-900">Ajouter aussi une boutique en ligne</strong><span className="block text-xs text-gray-500">Une page Boutique prête à remplir sera créée (activable/désactivable ensuite).</span></span>
+            </label>
+          )}
+          <p className="mt-2 text-xs text-gray-500">{isShop ? 'L’IA écrira un vrai site de boutique (univers, sélection, infos pratiques) — les produits s’ajoutent ensuite dans l’onglet Boutique.' : 'L’IA adapte les textes et les pages à votre type de projet.'}</p>
+        </div>
+
         <div className="grid gap-4 sm:grid-cols-3">
           <div className="sm:col-span-2">
-            <Field label="Nom de l’association"><input className="input" value={f.name} onChange={(e) => set('name', e.target.value)} placeholder="Les Amis du Quartier" /></Field>
+            <Field label={nameLabel}><input className="input" value={f.name} onChange={(e) => set('name', e.target.value)} placeholder={isShop ? 'Ma Jolie Boutique' : 'Les Amis du Quartier'} /></Field>
           </div>
           <Field label="Année de création"><input className="input" value={f.year} onChange={(e) => set('year', e.target.value)} placeholder="2015" /></Field>
         </div>
 
         <div className="rounded-2xl border border-brand-100 bg-brand-50/60 p-4">
-          <p className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-700">Logo de l’association</p>
+          <p className="mb-1 block text-xs font-semibold uppercase tracking-wide text-brand-700">{isShop ? 'Logo de la boutique' : 'Logo'}</p>
           <p className="mb-3 text-sm text-gray-600">Il sera automatiquement utilisé dans l’en-tête et le pied de page du nouveau site généré.</p>
           <ImageInput value={logo} onChange={setLogo} kind="logo" />
         </div>
 
-        <Field label="À propos / votre mission ★">
+        <Field label={missionLabel}>
           <textarea className="input min-h-[110px]" value={f.mission} onChange={(e) => set('mission', e.target.value)}
-            placeholder="Qui êtes-vous, quelle est votre cause, vos valeurs ? Ex : Nous aidons les personnes âgées isolées à rompre la solitude…" />
+            placeholder={isShop ? 'Qui êtes-vous, que vendez-vous, quel est votre style, vos valeurs ? Ex : créations artisanales en cuir, faites main à Lyon…' : 'Qui êtes-vous, quelle est votre cause, vos valeurs ? Ex : Nous aidons les personnes âgées isolées à rompre la solitude…'} />
           <p className="mt-1 text-xs text-gray-400">Champ le plus important — sert de base à tous les textes.</p>
         </Field>
 
-        <Field label="Comment fonctionne votre association ?">
+        <Field label={functioningLabel}>
           <textarea className="input min-h-[90px]" value={f.functioning} onChange={(e) => set('functioning', e.target.value)}
-            placeholder="Bénévoles, adhérents, organisation, fréquence des actions, financement…" />
+            placeholder={isShop ? 'Types de produits, matières, gammes, éditions limitées, sur-mesure…' : 'Bénévoles, adhérents, organisation, fréquence des actions, financement…'} />
         </Field>
 
         <Field label="Slogan court pour le pied de page">
@@ -141,14 +167,14 @@ export function GenerateClient({ orgName, profile, categories, welcome, initialL
           <p className="mt-1 text-xs text-gray-400">La page Actualités sera créée uniquement si vous ajoutez du contenu ici.</p>
         </Field>
 
-        <Field label="Vos actions / activités concrètes">
+        <Field label={actionsLabel}>
           <textarea className="input min-h-[70px]" value={f.actions} onChange={(e) => set('actions', e.target.value)}
-            placeholder="Ex : visites à domicile, sorties, ateliers, distributions, événements…" />
+            placeholder={isShop ? 'Ex : maroquinerie, bijoux faits main, seconde main de luxe…' : 'Ex : visites à domicile, sorties, ateliers, distributions, événements…'} />
         </Field>
 
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Public aidé / bénéficiaires"><input className="input" value={f.beneficiaries} onChange={(e) => set('beneficiaries', e.target.value)} placeholder="personnes âgées, enfants, animaux…" /></Field>
-          <Field label="Type d’association">
+          <Field label={beneficiariesLabel}><input className="input" value={f.beneficiaries} onChange={(e) => set('beneficiaries', e.target.value)} placeholder={isShop ? 'ex : femmes, amateurs de mode, familles…' : 'personnes âgées, enfants, animaux…'} /></Field>
+          <Field label={isShop ? 'Catégorie de boutique' : 'Type d’association'}>
             <select className="input" value={f.category} onChange={(e) => set('category', e.target.value)}>
               <option value="">Détection automatique ✨</option>
               {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
@@ -161,6 +187,9 @@ export function GenerateClient({ orgName, profile, categories, welcome, initialL
             placeholder="Ex : reçus fiscaux, horaires, adhésion, comment devenir bénévole, partenaires…" />
         </Field>
 
+        {isShop ? (
+          <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4 text-sm text-gray-600">Votre catalogue et le paiement se gèrent dans l’onglet <strong>Boutique</strong> — une page Boutique prête à remplir sera créée automatiquement.</div>
+        ) : (
         <section className="space-y-4 rounded-2xl border border-gray-200 p-4">
           <div><h3 className="font-extrabold text-gray-900">Comment souhaitez-vous recevoir les dons ?</h3><p className="text-sm text-gray-500">Ces choix créeront automatiquement le formulaire public « Faire un don ».</p></div>
           <label className="flex items-center gap-3 font-semibold"><input type="checkbox" className="h-5 w-5" checked={f.donationCardEnabled} onChange={(e) => setF((s) => ({ ...s, donationCardEnabled: e.target.checked }))} /> Carte bancaire / Stripe</label>
@@ -174,6 +203,7 @@ export function GenerateClient({ orgName, profile, categories, welcome, initialL
           <label className="flex items-center gap-3 font-semibold"><input type="checkbox" className="h-5 w-5" checked={f.donationChequeEnabled} onChange={(e) => setF((s) => ({ ...s, donationChequeEnabled: e.target.checked }))} /> Chèque</label>
           {f.donationChequeEnabled && <div className="grid gap-3 sm:grid-cols-2"><Field label="Ordre du chèque"><input className="input" value={f.donationChequePayable} onChange={(e) => set('donationChequePayable', e.target.value)} /></Field><Field label="Adresse d’envoi"><textarea className="input" value={f.donationChequeAddress} onChange={(e) => set('donationChequeAddress', e.target.value)} /></Field></div>}
         </section>
+        )}
 
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Ville"><input className="input" value={f.city} onChange={(e) => set('city', e.target.value)} placeholder="Lyon" /></Field>

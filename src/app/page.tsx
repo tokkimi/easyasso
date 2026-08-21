@@ -49,14 +49,14 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-white">
       {/* Nav */}
-      <header className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
+      <header className="mx-auto flex max-w-6xl flex-wrap items-center justify-center gap-3 px-4 py-4 sm:flex-nowrap sm:justify-between sm:px-6 sm:py-5">
         <Link href="/" aria-label="EasyAsso — accueil" className="shrink-0">
-          <Image src="/easyasso-logo.png" alt="EasyAsso" width={156} height={82} priority className="h-14 w-auto sm:h-16" />
+          <Image src="/easyasso-logo.png" alt="EasyAsso" width={156} height={82} priority className="h-10 w-auto sm:h-16" />
         </Link>
-        <nav className="flex items-center gap-3">
+        <nav className="flex w-full flex-wrap items-center justify-center gap-2 sm:w-auto sm:justify-end sm:gap-3">
           <LanguageSwitcher variant="inline" />
-          <Link href="/login" className="btn btn-ghost">Connexion</Link>
-          <Link href="/register" className="btn btn-primary">Créer mon site</Link>
+          <Link href="/login" className="btn btn-ghost px-3 py-2 text-sm sm:px-4 sm:py-2.5 sm:text-base">Connexion</Link>
+          <Link href="/register" className="btn btn-primary px-3 py-2 text-sm sm:px-4 sm:py-2.5 sm:text-base">Créer mon site</Link>
         </nav>
       </header>
 

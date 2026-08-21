@@ -10,7 +10,7 @@ export const revalidate = 60;
 export async function generateMetadata({ params }: { params: Promise<{ subdomain: string }> }): Promise<Metadata> {
   const { subdomain } = await params;
   const site = await prisma.site.findUnique({ where: { subdomain }, select: { name: true, header: true, footer: true } });
-  return siteMetadata(site);
+  return siteMetadata(site, subdomain);
 }
 
 export default async function PublicSite({ params }: { params: Promise<{ subdomain: string; path?: string[] }> }) {

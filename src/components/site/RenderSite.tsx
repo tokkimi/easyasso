@@ -10,6 +10,7 @@ import { PageViewTracker } from './PageViewTracker';
 import { themeStyle, brandCss } from '@/lib/render';
 import { googleFontsHref } from '@/lib/fonts';
 import { canShowPublicSite } from '@/lib/plan';
+import { isVielusosSite, VIELUSOS_BRAND } from '@/lib/vielusos';
 
 type SiteWithPages = NonNullable<Awaited<ReturnType<typeof loadSiteBySubdomain>>>;
 
@@ -35,13 +36,13 @@ export async function loadSiteByDomain(domain: string) {
 // SEO metadata for a public tenant site (title, description, Open Graph/Twitter
 // with the association's logo). `absolute` title keeps the tenant's own name
 // without the EasyAsso suffix.
-export function siteMetadata(site: { name: string; header: unknown; footer: unknown } | null): Metadata {
+export function siteMetadata(site: { name: string; header: unknown; footer: unknown } | null, subdomain?: string): Metadata {
   if (!site) return { title: 'Easy Asso' };
   const footer = (site.footer as any) || {};
   const header = (site.header as any) || {};
   const raw = typeof footer.text === 'string' && footer.text.trim() ? footer.text.trim() : `Le site de ${site.name}.`;
   const description = raw.slice(0, 300);
-  const image = header.logoUrl || footer.logoUrl;
+  const image = isVielusosSite({ subdomain }) ? VIELUSOS_BRAND.logoUrl : (header.logoUrl || footer.logoUrl);
   return {
     title: { absolute: site.name },
     description,
@@ -83,6 +84,13 @@ export async function RenderSite({ site, basePath, slug }: { site: SiteWithPages
   const header = { ...DEFAULT_HEADER, ...(site.header as any) } as HeaderConfig;
   const footer = { ...DEFAULT_FOOTER, ...(site.footer as any) } as FooterConfig;
   const profile = (((site.organization as any)?.profile) || {}) as Record<string, any>;
+  const vielusos = isVielusosSite(site);
+  const publicHeader = vielusos
+    ? { ...header, logoUrl: VIELUSOS_BRAND.logoUrl, logoText: site.name, background: VIELUSOS_BRAND.surface, textColor: '#f7f7fb' }
+    : header;
+  const publicFooter = vielusos
+    ? { ...footer, logoUrl: VIELUSOS_BRAND.logoUrl, logoText: site.name, background: VIELUSOS_BRAND.surface, textColor: '#f7f7fb' }
+    : footer;
   const shopEnabled = Boolean(profile.shopEnabled ?? profile.hasShop);
   const nav = site.pages.filter((p) => p.showInNav && (p.slug !== 'boutique' || shopEnabled)).map((p) => ({ title: p.title, slug: p.slug, isHome: p.isHome }));
   const theme = (site.theme as any) || {};
@@ -93,8 +101,8 @@ export async function RenderSite({ site, basePath, slug }: { site: SiteWithPages
   const bubble = (footer as any).showContactBubble === false ? null : (
     <ContactBubble
       name={site.name}
-      slogan={footer.text}
-      logoUrl={(header as any).logoUrl || (footer as any).logoUrl}
+      slogan={publicFooter.text}
+      logoUrl={(publicHeader as any).logoUrl || (publicFooter as any).logoUrl}
       email={profile.email}
       phone={profile.phone}
       organizationId={site.organizationId}
@@ -104,12 +112,12 @@ export async function RenderSite({ site, basePath, slug }: { site: SiteWithPages
 
   if (slug === 'client') {
     return (
-      <div className="flex min-h-screen flex-col" style={themeStyle(theme)}>
+      <div className={`flex min-h-screen flex-col ${vielusos ? 'vielusos-site' : ''}`} style={publicSiteStyle(theme, vielusos)}>
         {fontHref && <link rel="stylesheet" href={fontHref} />}
-        <style dangerouslySetInnerHTML={{ __html: brandCss(theme.primary) }} />
-        <PublicHeader header={header} nav={nav} basePath={basePath} />
-        <ClientAccessPage organizationId={site.organizationId} organizationName={site.name} locale={profile.language === 'en' ? 'en' : 'fr'} />
-        <PublicFooter footer={footer} orgId={site.organizationId} basePath={basePath} nav={nav} />
+        <style dangerouslySetInnerHTML={{ __html: `${brandCss(theme.primary)}${vielusosCss(vielusos)}` }} />
+        <PublicHeader header={publicHeader} nav={nav} basePath={basePath} />
+        <ClientAccessPage organizationId={site.organizationId} organizationName={site.name} locale={profile.language === 'en' ? 'en' : 'fr'} branded={vielusos} />
+        <PublicFooter footer={publicFooter} orgId={site.organizationId} basePath={basePath} nav={nav} />
         {bubble}
       </div>
     );
@@ -118,15 +126,15 @@ export async function RenderSite({ site, basePath, slug }: { site: SiteWithPages
   if (slug === 'cgv' || slug === 'mentions-legales') {
     const isCgv = slug === 'cgv';
     return (
-      <div className="min-h-screen" style={themeStyle(theme)}>
+      <div className={`min-h-screen ${vielusos ? 'vielusos-site' : ''}`} style={publicSiteStyle(theme, vielusos)}>
         {fontHref && <link rel="stylesheet" href={fontHref} />}
-        <style dangerouslySetInnerHTML={{ __html: brandCss(theme.primary) }} />
-        <PublicHeader header={header} nav={nav} basePath={basePath} />
+        <style dangerouslySetInnerHTML={{ __html: `${brandCss(theme.primary)}${vielusosCss(vielusos)}` }} />
+        <PublicHeader header={publicHeader} nav={nav} basePath={basePath} />
         <main className="mx-auto max-w-3xl px-4 py-12">
           <h1 className="text-3xl font-extrabold">{isCgv ? 'Conditions générales' : 'Mentions légales'}</h1>
-          <p className="mt-4 whitespace-pre-wrap leading-relaxed text-gray-600">{isCgv ? footer.cgvContent : footer.mentionsContent}</p>
+        <p className="mt-4 whitespace-pre-wrap leading-relaxed text-gray-600">{isCgv ? publicFooter.cgvContent : publicFooter.mentionsContent}</p>
         </main>
-        <PublicFooter footer={footer} orgId={site.organizationId} basePath={basePath} nav={nav} />
+        <PublicFooter footer={publicFooter} orgId={site.organizationId} basePath={basePath} nav={nav} />
         {bubble}
       </div>
     );
@@ -144,40 +152,138 @@ export async function RenderSite({ site, basePath, slug }: { site: SiteWithPages
   const products = hasShopBlock && shopEnabled ? await loadShopProducts(site.organizationId) : [];
 
   return (
-    <div className="flex min-h-screen flex-col" style={themeStyle(theme)}>
+    <div className={`flex min-h-screen flex-col ${vielusos ? 'vielusos-site' : ''}`} style={publicSiteStyle(theme, vielusos)}>
       {fontHref && <link rel="stylesheet" href={fontHref} />}
+      <style dangerouslySetInnerHTML={{ __html: `${brandCss(theme.primary)}${vielusosCss(vielusos)}` }} />
       <PageViewTracker organizationId={site.organizationId} path={page.slug} />
-      <PublicHeader header={header} nav={nav} basePath={basePath} />
+      <PublicHeader header={publicHeader} nav={nav} basePath={basePath} />
+      {vielusos && page.isHome && <VielusosHero title={site.name} />}
+      {vielusos && (page.slug === 'bio' || page.slug === 'about') && <VielusosBio blocks={page.blocks as any[]} />}
       <main className="flex-1 py-8">
-        {page.blocks.length === 0 ? (
+        {vielusos && (page.slug === 'bio' || page.slug === 'about') ? null : page.blocks.length === 0 ? (
           <p className="py-20 text-center text-gray-400">Cette page est vide.</p>
         ) : (
           page.blocks.map((b) => <PublicBlock key={b.id} type={b.type} content={b.content as any} style={b.style as any} basePath={basePath} organizationId={site.organizationId} products={b.type === 'shop' ? products : undefined} shopReady={b.type === 'shop' ? shopReady : undefined} />)
         )}
       </main>
-      <PublicFooter footer={footer} orgId={site.organizationId} basePath={basePath} nav={nav} />
+      <PublicFooter footer={publicFooter} orgId={site.organizationId} basePath={basePath} nav={nav} />
       {bubble}
     </div>
   );
 }
 
-function ClientAccessPage({ organizationId, organizationName, locale }: { organizationId: string; organizationName: string; locale: 'fr' | 'en' }) {
+function VielusosBio({ blocks }: { blocks: any[] }) {
+  const copy = blocks
+    .flatMap((block) => {
+      const content = (block?.content || {}) as Record<string, unknown>;
+      return [content.text, content.body, content.description, content.subtitle];
+    })
+    .filter((value): value is string => typeof value === 'string' && value.trim().length > 40)
+    .filter((value) => !/(association|associatif|bénévole|bénévoles|don|adhérent|public accompagné|partenaires)/i.test(value))
+    .map((value) => value.trim())
+    .slice(0, 2);
+
+  return (
+    <section className="relative overflow-hidden border-y border-white/10 bg-black/35 px-5 py-12 md:px-12 md:py-20">
+      <div className="mx-auto grid max-w-6xl gap-8 md:grid-cols-[1.05fr_.95fr] md:items-center">
+        <div>
+          <p className="text-xs font-black uppercase tracking-[0.32em] text-white/55">Vielusos · artiste</p>
+          <h2 className="mt-3 text-4xl font-black uppercase tracking-tight text-white md:text-6xl">À propos</h2>
+          <div className="mt-6 space-y-5 text-base leading-8 text-white/70 md:text-lg">
+            {copy.length > 0 ? copy.map((text, index) => <p key={index}>{text}</p>) : (
+              <>
+                <p>Vielusos développe une musique sombre et cinématographique, portée par une tension constante entre fragilité, puissance et lumière. Chaque sortie est pensée comme une scène : une atmosphère, une voix, une image et une émotion qui restent après l’écoute.</p>
+                <p>Entre productions introspectives et élans plus bruts, son univers avance par contrastes. Les textures, les silences et les mélodies construisent une signature reconnaissable, à la croisée du récit visuel et de la création sonore.</p>
+                <p className="text-white/55">Production · écriture · direction artistique</p>
+              </>
+            )}
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-3 md:gap-4">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/vielusos/profile.jpg" alt="Vielusos" className="col-span-2 aspect-[16/9] w-full rounded-2xl object-cover object-center shadow-2xl ring-1 ring-white/15" />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/vielusos/profile-2.png" alt="" className="aspect-square w-full rounded-2xl object-cover shadow-xl ring-1 ring-white/15" />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/vielusos/angel-in-hell.png" alt="" className="aspect-square w-full rounded-2xl object-cover shadow-xl ring-1 ring-white/15" />
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function VielusosHero({ title }: { title: string }) {
+  return (
+    <section className="relative isolate aspect-video w-full overflow-hidden bg-[#08080c]" aria-label={title}>
+      <video
+        className="absolute inset-0 h-full w-full object-contain opacity-80"
+        autoPlay
+        muted
+        loop
+        playsInline
+        preload="metadata"
+        poster={VIELUSOS_BRAND.backgroundUrl}
+        aria-hidden="true"
+      >
+        <source src="/vielusos/banner.mp4" type="video/mp4" />
+      </video>
+      <div className="absolute inset-0 bg-gradient-to-b from-black/45 via-black/20 to-[#08080c]" aria-hidden="true" />
+      <div className="relative flex h-full items-end px-6 pb-8 md:px-12 md:pb-12">
+        <div className="max-w-xl">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={VIELUSOS_BRAND.logoUrl} alt="" className="mb-5 h-16 w-16 object-contain opacity-90 md:h-20 md:w-20" />
+          <p className="text-xs font-black uppercase tracking-[0.32em] text-white/65">{title}</p>
+          <h1 className="mt-2 text-3xl font-black uppercase tracking-tight text-white md:text-5xl">𝐏𝐎𝐖𝐄𝐑 𝐎𝐅 𝐄𝐌𝐎𝐓𝐈𝐎𝐍</h1>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function publicSiteStyle(theme: any, vielusos: boolean): React.CSSProperties {
+  const base = themeStyle(theme);
+  if (!vielusos) return base;
+  return {
+    ...base,
+    backgroundColor: VIELUSOS_BRAND.surface,
+    backgroundImage: `linear-gradient(rgba(8, 8, 12, .72), rgba(8, 8, 12, .72)), url(${VIELUSOS_BRAND.backgroundUrl})`,
+    backgroundPosition: 'center top',
+    backgroundRepeat: 'no-repeat',
+    backgroundSize: 'cover',
+    backgroundAttachment: 'fixed',
+    color: '#f7f7fb',
+  };
+}
+
+function vielusosCss(enabled: boolean): string {
+  if (!enabled) return '';
+  return `
+.vielusos-site main { background: transparent; }
+.vielusos-site .public-block-shell .text-gray-900, .vielusos-site .public-block-shell .text-gray-950 { color: #f7f7fb !important; }
+.vielusos-site .public-block-shell .text-gray-600, .vielusos-site .public-block-shell .text-gray-500 { color: rgba(247,247,251,.72) !important; }
+.vielusos-site .public-block-shell .bg-white { background: rgba(10,10,15,.68) !important; }
+.vielusos-site .public-block-shell .ring-gray-100 { --tw-ring-color: rgba(255,255,255,.18) !important; }
+.vielusos-site .public-header-shell, .vielusos-site .public-footer-shell { background: #0b0b10 !important; }
+`;
+}
+
+function ClientAccessPage({ organizationId, organizationName, locale, branded = false }: { organizationId: string; organizationName: string; locale: 'fr' | 'en'; branded?: boolean }) {
   const en = locale === 'en';
   return (
-    <main className="flex-1 bg-gray-50 px-4 py-12">
-      <section className="mx-auto max-w-2xl rounded-[2rem] bg-white p-6 text-center shadow-sm ring-1 ring-gray-200 md:p-10">
-        <p className="text-sm font-bold uppercase tracking-[0.2em] text-[var(--brand)]">
-          {en ? 'Customer area' : 'Espace client'}
+    <main className={`flex-1 px-4 py-12 ${branded ? 'bg-transparent' : 'bg-gray-50'}`}>
+      <section className={`mx-auto max-w-2xl rounded-[2rem] p-6 text-center shadow-sm md:p-10 ${branded ? 'bg-[#0b0b10]/80 text-[#f7f7fb] ring-1 ring-white/15 backdrop-blur-xl' : 'bg-white ring-1 ring-gray-200'}`}>
+        <p className={`text-sm font-bold uppercase tracking-[0.2em] ${branded ? 'text-[#d33f5c]' : 'text-[var(--brand)]'}`}>
+          {branded ? 'Vielusos · espace client' : en ? 'Customer area' : 'Espace client'}
         </p>
-        <h1 className="mt-3 text-3xl font-black text-gray-900 md:text-4xl">
+        <h1 className={`mt-3 text-3xl font-black md:text-4xl ${branded ? 'text-white' : 'text-gray-900'}`}>
           {en ? 'Sign in or create your customer account' : 'Connexion ou inscription client'}
         </h1>
-        <p className="mx-auto mt-4 max-w-xl text-gray-600">
+        <p className={`mx-auto mt-4 max-w-xl ${branded ? 'text-white/65' : 'text-gray-600'}`}>
           {en
             ? `Use your email to sign in or create your customer profile on ${organizationName}'s website.`
             : `Utilisez votre email pour vous connecter ou créer votre profil client sur le site de ${organizationName}.`}
         </p>
-        <CustomerAccessForm organizationId={organizationId} organizationName={organizationName} locale={locale} />
+        <CustomerAccessForm organizationId={organizationId} organizationName={organizationName} locale={locale} branded={branded} />
       </section>
     </main>
   );

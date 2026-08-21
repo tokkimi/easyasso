@@ -233,7 +233,7 @@ function platformLabel(platform: string) {
 
 function PlatformLogo({ platform }: { platform: string }) {
   if (platform === 'youtube') {
-    return <span className="inline-flex items-center gap-2 font-black text-[#ff0000]"><span className="grid h-7 w-10 place-items-center rounded-lg bg-[#ff0000] text-white"><Play className="h-4 w-4 fill-current" /></span>YouTube</span>;
+    return <span className="inline-flex items-center text-[#ff0000]" aria-label="YouTube"><span className="grid h-7 w-10 place-items-center rounded-lg bg-[#ff0000] text-white"><Play className="h-4 w-4 fill-current" /></span></span>;
   }
   if (platform === 'spotify') {
     return (
@@ -265,8 +265,16 @@ function PlatformLogo({ platform }: { platform: string }) {
 }
 
 export function OfficialPlayers({ content }: { content: any }) {
+  const [playing, setPlaying] = useState<Record<string, boolean>>({});
   const items: PlayerItem[] = Array.isArray(content?.items) ? content.items : [];
-  const clean = items
+  // Also surface platform URLs saved in the site's streaming-links settings.
+  // This prevents a configured release from disappearing simply because it
+  // was not manually duplicated in the player block.
+  const linkedItems: PlayerItem[] = Object.entries(content?.links || {})
+    .filter(([, url]) => typeof url === 'string' && url.trim())
+    .map(([platform, url]) => ({ platform, url: String(url) }));
+  const uniqueItems = Array.from(new Map([...items, ...linkedItems].filter((item) => item?.url).map((item) => [item.url, item])).values());
+  const clean = uniqueItems
     .filter((item) => item?.url && officialEmbed(item))
     .sort((a, b) => {
       if (content?.sort === 'manual') return 0;
@@ -287,38 +295,56 @@ export function OfficialPlayers({ content }: { content: any }) {
       {clean.length === 0 ? (
         <p className="py-10 text-center text-sm text-gray-400">Ajoutez des liens Spotify, SoundCloud, Deezer ou YouTube : les lecteurs officiels s’afficheront ici.</p>
       ) : (
-        <div className="relative mt-6">
-          <button type="button" aria-label="Lecteur précédent" onClick={() => document.getElementById('official-player-rail')?.scrollBy({ left: -330, behavior: 'smooth' })} className="absolute left-1 top-1/2 z-10 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full bg-black/65 text-white shadow-lg backdrop-blur transition hover:bg-black/85 focus:outline-none focus:ring-2 focus:ring-white/80"><ChevronLeft className="h-5 w-5" /></button>
-          <button type="button" aria-label="Lecteur suivant" onClick={() => document.getElementById('official-player-rail')?.scrollBy({ left: 330, behavior: 'smooth' })} className="absolute right-1 top-1/2 z-10 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full bg-black/65 text-white shadow-lg backdrop-blur transition hover:bg-black/85 focus:outline-none focus:ring-2 focus:ring-white/80"><ChevronRight className="h-5 w-5" /></button>
-          <div id="official-player-rail" className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-12 pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {clean.map((item, i) => {
-            const platform = detectPlatform(item.url, item.platform);
-            const src = officialEmbed(item);
-            const isVideo = platform === 'youtube';
+        <div className="mt-6 space-y-10">
+          {Array.from(new Set(clean.map((item) => detectPlatform(item.url, item.platform)))).map((platform) => {
+            const group = clean.filter((item) => detectPlatform(item.url, item.platform) === platform);
+            const railId = `official-player-rail-${platform}`;
             return (
-              <article key={`${item.url}-${i}`} className="w-[74vw] max-w-[300px] shrink-0 snap-start overflow-hidden rounded-2xl border border-white/20 bg-transparent shadow-sm backdrop-blur-md md:w-[300px]">
-                <div className="flex min-h-[82px] flex-col justify-between gap-2 border-b border-white/20 bg-transparent p-3">
+              <section key={platform} aria-labelledby={`${railId}-title`}>
+                <div id={`${railId}-title`} className="mb-3 flex items-center gap-2 text-sm font-black uppercase tracking-[0.16em] text-white/85">
                   <PlatformLogo platform={platform} />
-                  <div>
-                    {item.title && <h3 className="line-clamp-2 text-base font-extrabold text-white">{item.title}</h3>}
-                    {item.artist && <p className="mt-1 truncate text-sm text-white/70">{item.artist}</p>}
-                    {item.releaseDate && <p className="mt-2 inline-flex items-center gap-1 text-xs font-bold text-white/50"><CalendarDays className="h-3.5 w-3.5" /> {new Date(item.releaseDate).toLocaleDateString('fr-FR')}</p>}
+                </div>
+                <div className="relative">
+                  <button type="button" aria-label={`${platformLabel(platform)} précédent`} onClick={() => document.getElementById(railId)?.scrollBy({ left: -330, behavior: 'smooth' })} className="absolute left-1 top-1/2 z-10 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full bg-black/65 text-white shadow-lg backdrop-blur transition hover:bg-black/85 focus:outline-none focus:ring-2 focus:ring-white/80"><ChevronLeft className="h-5 w-5" /></button>
+                  <button type="button" aria-label={`${platformLabel(platform)} suivant`} onClick={() => document.getElementById(railId)?.scrollBy({ left: 330, behavior: 'smooth' })} className="absolute right-1 top-1/2 z-10 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full bg-black/65 text-white shadow-lg backdrop-blur transition hover:bg-black/85 focus:outline-none focus:ring-2 focus:ring-white/80"><ChevronRight className="h-5 w-5" /></button>
+                  <div id={railId} className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-12 pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                    {group.map((item, i) => {
+                      const src = officialEmbed(item);
+                      const isVideo = platform === 'youtube';
+                      const youtubeId = isVideo ? item.url?.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([\w-]{11})/)?.[1] : '';
+                      const thumbnail = youtubeId ? `https://i.ytimg.com/vi/${youtubeId}/hqdefault.jpg` : '';
+                      const key = `${platform}-${item.url}-${i}`;
+                      if (isVideo) return (
+                        <article key={key} className="relative aspect-video w-[82vw] max-w-[320px] shrink-0 snap-start overflow-hidden rounded-2xl bg-black/70 shadow-sm ring-1 ring-white/20 md:w-[320px]">
+                          {playing[key] ? (
+                            <iframe src={`${src}${src.includes('?') ? '&' : '?'}autoplay=1&modestbranding=1&rel=0`} title="YouTube video" loading="lazy" allow="autoplay; encrypted-media; fullscreen; picture-in-picture" allowFullScreen className="absolute inset-0 h-full w-full border-0" />
+                          ) : (
+                            <button type="button" aria-label="Lire la vidéo" onClick={() => setPlaying((state) => ({ ...state, [key]: true }))} className="absolute inset-0 flex items-center justify-center bg-black/20 transition hover:bg-black/35 focus:outline-none focus:ring-2 focus:ring-white/80">
+                              {thumbnail && /* eslint-disable-next-line @next/next/no-img-element */ <img src={thumbnail} alt="" loading="lazy" className="absolute inset-0 h-full w-full object-cover" />}
+                              <span className="relative grid h-14 w-20 place-items-center rounded-2xl bg-[#ff0000]/80 text-white shadow-lg backdrop-blur-sm"><Play className="h-7 w-7 fill-current" /></span>
+                            </button>
+                          )}
+                        </article>
+                      );
+                      return (
+                        <article key={key} className="flex h-[410px] w-[82vw] max-w-[320px] shrink-0 snap-start flex-col overflow-hidden rounded-2xl border border-white/20 bg-transparent shadow-sm backdrop-blur-md md:w-[320px]">
+                          <div className="flex h-[144px] shrink-0 flex-col justify-between gap-2 border-b border-white/20 bg-transparent p-3">
+                            <div className="sr-only"><PlatformLogo platform={platform} /></div>
+                            <div className="min-h-0">
+                              <h3 className="line-clamp-2 text-base font-extrabold text-white">{item.title || `${platformLabel(platform)} ${i + 1}`}</h3>
+                              {item.artist && <p className="mt-1 truncate text-sm text-white/70">{item.artist}</p>}
+                              {item.releaseDate && <p className="mt-2 inline-flex items-center gap-1 text-xs font-bold text-white/50"><CalendarDays className="h-3.5 w-3.5" /> {new Date(item.releaseDate).toLocaleDateString('fr-FR')}</p>}
+                            </div>
+                          </div>
+                          <div className="h-[266px] shrink-0 bg-transparent p-2"><iframe src={src} title={`${platformLabel(platform)} ${item.title || i + 1}`} loading="lazy" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" allowFullScreen className="h-full w-full rounded-xl border-0" /></div>
+                        </article>
+                      );
+                    })}
                   </div>
                 </div>
-                <div className={isVideo ? 'relative aspect-video bg-black/80' : 'bg-transparent p-2'}>
-                  <iframe
-                    src={src}
-                    title={`${platformLabel(platform)} ${item.title || i + 1}`}
-                    loading="lazy"
-                    allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-                    allowFullScreen
-                    className={isVideo ? 'absolute inset-0 h-full w-full border-0' : 'h-[250px] w-full rounded-xl border-0'}
-                  />
-                </div>
-              </article>
+              </section>
             );
           })}
-          </div>
         </div>
       )}
     </div>

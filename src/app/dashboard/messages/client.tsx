@@ -26,7 +26,7 @@ function Avatar({ name, brand }: { name: string; brand?: boolean }) {
   return <div className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-gray-200 text-lg font-bold text-gray-600">{initial}</div>;
 }
 
-export function MessagesClient({ initial, conversation = [] }: { initial: Message[]; conversation?: PlatformMsg[] }) {
+export function MessagesClient({ initial, conversation = [], branded = false, organizationName = '' }: { initial: Message[]; conversation?: PlatformMsg[]; branded?: boolean; organizationName?: string }) {
   const [messages, setMessages] = useState(initial);
   const [thread, setThread] = useState(conversation);
   const [open, setOpen] = useState<string | null>(null);
@@ -74,7 +74,7 @@ export function MessagesClient({ initial, conversation = [] }: { initial: Messag
   if (open === EASYASSO) {
     return (
       <div>
-        <PageHeader title="Messagerie" subtitle="Vos messages et vos échanges avec l’équipe EasyAsso." />
+        <PageHeader title="Messagerie" subtitle={branded ? `Messages reçus depuis le site de ${organizationName}.` : 'Vos messages et vos échanges avec l’équipe EasyAsso.'} />
         <section className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-gray-200">
           <div className="flex items-center gap-3 border-b border-gray-100 p-4">
             <button onClick={() => setOpen(null)} className="grid h-9 w-9 place-items-center rounded-xl text-gray-600 transition hover:bg-gray-100"><ArrowLeft className="h-5 w-5" /></button>
@@ -106,7 +106,7 @@ export function MessagesClient({ initial, conversation = [] }: { initial: Messag
   if (openMsg) {
     return (
       <div>
-        <PageHeader title="Messagerie" subtitle="Vos messages et vos échanges avec l’équipe EasyAsso." />
+        <PageHeader title="Messagerie" subtitle={branded ? `Messages reçus depuis le site de ${organizationName}.` : 'Vos messages et vos échanges avec l’équipe EasyAsso.'} />
         <section className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-gray-200">
           <div className="flex items-center gap-3 border-b border-gray-100 p-4">
             <button onClick={() => setOpen(null)} className="grid h-9 w-9 place-items-center rounded-xl text-gray-600 transition hover:bg-gray-100"><ArrowLeft className="h-5 w-5" /></button>
@@ -132,10 +132,10 @@ export function MessagesClient({ initial, conversation = [] }: { initial: Messag
   const sortedMessages = [...messages].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   return (
     <div>
-      <PageHeader title="Messagerie" subtitle="Vos messages et vos échanges avec l’équipe EasyAsso." />
+      <PageHeader title="Messagerie" subtitle={branded ? `Messages reçus depuis le site de ${organizationName}.` : 'Vos messages et vos échanges avec l’équipe EasyAsso.'} />
       <div className="divide-y divide-gray-100 overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-gray-200">
-        {/* EasyAsso — pinned */}
-        <button onClick={() => openItem(EASYASSO)} className="flex w-full items-center gap-3 p-4 text-left transition hover:bg-gray-50">
+        {/* Platform support conversation is intentionally hidden for branded workspaces. */}
+        {!branded && <button onClick={() => openItem(EASYASSO)} className="flex w-full items-center gap-3 p-4 text-left transition hover:bg-gray-50">
           <Avatar name="EasyAsso" brand />
           <div className="min-w-0 flex-1">
             <div className="flex items-center justify-between gap-2">
@@ -145,7 +145,7 @@ export function MessagesClient({ initial, conversation = [] }: { initial: Messag
             <p className={`truncate text-sm ${easyassoUnread ? 'font-semibold text-gray-700' : 'text-gray-500'}`}>{lastThread ? `${lastThread.fromAdmin ? '' : 'Vous : '}${lastThread.body}` : 'Une question ? Écrivez à l’équipe.'}</p>
           </div>
           {easyassoUnread > 0 && <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-brand-600" />}
-        </button>
+        </button>}
 
         {/* Visitor messages */}
         {sortedMessages.map((m) => (

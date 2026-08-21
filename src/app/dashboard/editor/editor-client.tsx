@@ -141,7 +141,7 @@ export function EditorClient({ site: initial, canEdit, canPublish, siteUrl }: { 
   const fontHref = googleFontsHref((initial.theme as any)?.font);
 
   return (
-    <div className="fixed inset-0 z-30 flex flex-col bg-gray-100 lg:left-64">
+    <div className="vielusos-editor-surface fixed inset-0 z-30 flex flex-col bg-gray-100 lg:left-64">
       {fontHref && <link rel="stylesheet" href={fontHref} />}
       <style dangerouslySetInnerHTML={{ __html: brandCss((initial.theme as any)?.primary) }} />
       {/* Top bar */}

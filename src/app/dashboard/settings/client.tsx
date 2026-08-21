@@ -7,7 +7,7 @@ import { formatDate } from '@/lib/utils';
 import { canUpgradePlan, PLANS, type PlanId } from '@/lib/plans';
 import { ManualTransferButton } from '@/app/onboarding/manual-transfer-button';
 
-export function SettingsClient({ org, user, site, freeUrl, rootDomain, canDomain, categories }: any) {
+export function SettingsClient({ org, user, site, freeUrl, rootDomain, canDomain, categories, branded = false }: any) {
   const router = useRouter();
   const [name, setName] = useState(site.name);
   const [published, setPublished] = useState(!!site.published);
@@ -92,7 +92,7 @@ export function SettingsClient({ org, user, site, freeUrl, rootDomain, canDomain
 
   return (
     <div className="max-w-3xl">
-      <PageHeader title="Réglages" subtitle="Nom, adresse du site, nom de domaine et abonnement." />
+      <PageHeader title="Réglages" subtitle={branded ? 'Identité, coordonnées, domaine et mise en ligne.' : 'Nom, adresse du site, nom de domaine et abonnement.'} />
       {msg && <div className="mb-4 rounded-lg bg-green-50 px-4 py-2 text-sm text-green-700">{msg}</div>}
 
       {/* General */}
@@ -156,7 +156,7 @@ export function SettingsClient({ org, user, site, freeUrl, rootDomain, canDomain
             <div><label className="label">Pays légal</label><input className="input" value={profile.legalCountry} onChange={(e) => setProfileField('legalCountry', e.target.value)} placeholder="France, Belgique, Canada…" /></div>
             <div className="sm:col-span-2"><label className="label">Responsable de publication</label><input className="input" value={profile.publicationDirector} onChange={(e) => setProfileField('publicationDirector', e.target.value)} /></div>
           </div>
-          <label className="mt-4 flex cursor-pointer items-start gap-3 rounded-xl bg-brand-50 p-4"><input type="checkbox" className="mt-1 h-5 w-5" checked={profile.generateCgv} onChange={(e) => setProfileField('generateCgv', e.target.checked)} /><span><strong className="block text-gray-900">Générer mes CGV et mentions légales</strong><span className="text-sm text-gray-600">EasyAsso crée des documents détaillés à partir des informations légales ci-dessus. Vous pourrez ensuite les modifier.</span></span></label>
+          <label className="mt-4 flex cursor-pointer items-start gap-3 rounded-xl bg-brand-50 p-4"><input type="checkbox" className="mt-1 h-5 w-5" checked={profile.generateCgv} onChange={(e) => setProfileField('generateCgv', e.target.checked)} /><span><strong className="block text-gray-900">Générer mes CGV et mentions légales</strong><span className="text-sm text-gray-600">{branded ? 'Créez des documents détaillés à partir de vos informations légales, puis modifiez-les dans votre espace.' : 'EasyAsso crée des documents détaillés à partir des informations légales ci-dessus. Vous pourrez ensuite les modifier.'}</span></span></label>
         </div>
         <button onClick={saveProfile} className="btn btn-primary mt-5"><Save className="h-4 w-4" /> Enregistrer la fiche</button>
       </div>
@@ -175,7 +175,7 @@ export function SettingsClient({ org, user, site, freeUrl, rootDomain, canDomain
       {/* Custom domain */}
       <div className="card mb-6">
         <h2 className="mb-1 flex items-center gap-2 font-bold text-gray-900"><ShieldCheck className="h-5 w-5" /> Adresse personnalisée de l’association</h2>
-        <p className="text-sm text-gray-500">Cela change uniquement l’adresse du site de l’association. L’adresse principale EasyAsso reste toujours protégée.</p>
+        <p className="text-sm text-gray-500">{branded ? 'Cela change uniquement l’adresse publique de votre site. Votre adresse principale reste protégée.' : 'Cela change uniquement l’adresse du site de l’association. L’adresse principale EasyAsso reste toujours protégée.'}</p>
         {!canDomain ? (
           <p className="mt-3 text-sm text-amber-600">Vous n’avez pas la permission de gérer le domaine.</p>
         ) : (
@@ -206,7 +206,7 @@ export function SettingsClient({ org, user, site, freeUrl, rootDomain, canDomain
                   <input className="input" placeholder="mon-association.fr" value={domain} onChange={(e) => setDomain(e.target.value)} />
                   <button onClick={saveDomain} disabled={savingDomain || !domain.trim()} className="btn btn-primary shrink-0">{savingDomain ? 'Ajout…' : 'Continuer'}</button>
                 </div>
-                <p className="mt-2 text-xs text-gray-500">Ne saisissez pas easyasso.vercel.app : cette adresse est protégée automatiquement.</p>
+                <p className="mt-2 text-xs text-gray-500">{branded ? 'Votre adresse gratuite reste protégée automatiquement.' : 'Ne saisissez pas easyasso.vercel.app : cette adresse est protégée automatiquement.'}</p>
               </div>
             )}
             {site.customDomain && (
@@ -221,7 +221,7 @@ export function SettingsClient({ org, user, site, freeUrl, rootDomain, canDomain
                   {site.domainVerified ? (
                     <p>Tout est terminé. Les visiteurs peuvent utiliser cette adresse pour voir le site de l’association.</p>
                   ) : (
-                    <><p className="font-medium">Dernière étape</p><p className="mt-1">Ouvrez l’espace où cette adresse a été achetée, puis demandez à son assistance de la « diriger vers EasyAsso ». Si vous avez besoin des informations techniques, contactez le support EasyAsso : nous vous les fournirons selon votre fournisseur.</p></>
+                    <><p className="font-medium">Dernière étape</p><p className="mt-1">Ouvrez l’espace où cette adresse a été achetée, puis demandez à votre registrar de la diriger vers votre site. Les indications techniques dépendent de votre fournisseur.</p></>
                   )}
                 </div>
                 {!site.domainVerified && <button onClick={verify} disabled={verifying} className="btn btn-ghost mt-3 text-sm">{verifying ? 'Vérification…' : 'Vérifier si tout est prêt'}</button>}
@@ -231,8 +231,8 @@ export function SettingsClient({ org, user, site, freeUrl, rootDomain, canDomain
         )}
       </div>
 
-      {/* Billing */}
-      <div className="card mb-6">
+      {/* Billing: the VIELUSOS workspace is a lifetime complimentary account. */}
+      {!branded && <div className="card mb-6">
         <h2 className="mb-1 flex items-center gap-2 font-bold text-gray-900"><CreditCard className="h-5 w-5" /> Abonnement</h2>
         <div className="mt-2 flex items-center justify-between gap-4">
           <div>
@@ -283,7 +283,7 @@ export function SettingsClient({ org, user, site, freeUrl, rootDomain, canDomain
         <p className="mt-4 text-xs text-gray-500">
           Si vous êtes en essai ou en attente de paiement, choisissez une formule pour activer durablement votre site. Si vous êtes déjà actif, seuls les upgrades sont proposés pour éviter les doubles changements contradictoires.
         </p>
-      </div>
+      </div>}
 
       <div className="card border-2 border-gray-200">
         <h2 className="mb-1 flex items-center gap-2 font-bold text-gray-900"><Power className="h-5 w-5" /> Mise en ligne du site</h2>

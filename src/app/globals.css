@@ -122,6 +122,44 @@ body {
 }
 .label { @apply mb-1 block text-sm font-medium text-gray-700; }
 .card { @apply rounded-2xl bg-white p-5 shadow-sm ring-1 ring-gray-100; }
+
+/* Branded tenant workspace (used only by the VIELUSOS artist account). */
+.vielusos-dashboard-content .card {
+  background: rgba(11, 11, 16, .76);
+  color: #f7f7fb;
+  --tw-ring-color: rgba(255, 255, 255, .14);
+  backdrop-filter: blur(14px);
+}
+.vielusos-dashboard-content .text-gray-900,
+.vielusos-dashboard-content .text-gray-950 { color: #f7f7fb !important; }
+.vielusos-dashboard-content .text-gray-600,
+.vielusos-dashboard-content .text-gray-500,
+.vielusos-dashboard-content .text-gray-400,
+.vielusos-dashboard-content .text-gray-700 { color: rgba(247, 247, 251, .72) !important; }
+.vielusos-dashboard-content .bg-white { background: rgba(11, 11, 16, .82) !important; }
+.vielusos-dashboard-content .bg-gray-50,
+.vielusos-dashboard-content .bg-gray-100 { background: rgba(255, 255, 255, .06) !important; }
+.vielusos-dashboard-content input,
+.vielusos-dashboard-content textarea,
+.vielusos-dashboard-content select { background: rgba(255, 255, 255, .08); color: #f7f7fb; border-color: rgba(255,255,255,.18); }
+
+/* The visual editor is intentionally a light editing surface, even when the
+   selected tenant has a dark public theme. Keep its controls and canvas
+   readable instead of inheriting the tenant's white-on-dark dashboard text. */
+.vielusos-editor-surface { color: #111827; }
+.vielusos-editor-surface .text-gray-900,
+.vielusos-editor-surface .text-gray-950,
+.vielusos-editor-surface .text-gray-800,
+.vielusos-editor-surface .text-gray-700 { color: #1f2937 !important; }
+.vielusos-editor-surface .text-gray-600,
+.vielusos-editor-surface .text-gray-500,
+.vielusos-editor-surface .text-gray-400 { color: #6b7280 !important; }
+.vielusos-editor-surface .bg-white { background: #fff !important; }
+.vielusos-editor-surface .bg-gray-50 { background: #f9fafb !important; }
+.vielusos-editor-surface .bg-gray-100 { background: #f3f4f6 !important; }
+.vielusos-editor-surface input,
+.vielusos-editor-surface textarea,
+.vielusos-editor-surface select { background: #fff !important; color: #111827 !important; border-color: #d1d5db !important; }
 .badge { @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium; }
 
 .legal-content h2 { @apply mt-10 text-2xl font-extrabold tracking-tight text-gray-950; }

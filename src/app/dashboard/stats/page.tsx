@@ -4,12 +4,15 @@ import { PERMISSIONS } from '@/lib/permissions';
 import { orgOverview, monthlyDonations } from '@/lib/stats';
 import { formatEuros } from '@/lib/utils';
 import { PageHeader, Stat, BarChart } from '@/components/ui';
+import { isVielusosSite } from '@/lib/vielusos';
 
 export const dynamic = 'force-dynamic';
 
 export default async function StatsPage() {
   const ctx = await requirePermission(PERMISSIONS.STATS_VIEW);
   const orgId = ctx.organization!.id;
+  const site = await prisma.site.findUnique({ where: { organizationId: orgId }, select: { subdomain: true } });
+  const branded = isVielusosSite(site);
   const [o, monthly, byMethod, subs] = await Promise.all([
     orgOverview(orgId),
     monthlyDonations(orgId),
@@ -21,15 +24,15 @@ export default async function StatsPage() {
 
   return (
     <div>
-      <PageHeader title="Statistiques" subtitle="Analysez la performance de votre association." />
+      <PageHeader title="Statistiques" subtitle={branded ? 'Suivez la fréquentation et les performances de votre site.' : 'Analysez la performance de votre association.'} />
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Stat label="Dons collectés" value={formatEuros(o.totalDonationsCents)} accent="text-green-600" />
+        {!branded && <><Stat label="Dons collectés" value={formatEuros(o.totalDonationsCents)} accent="text-green-600" />
         <Stat label="Don moyen" value={formatEuros(avg)} />
-        <Stat label="Donateurs" value={String(o.donorCount)} />
+        <Stat label="Donateurs" value={String(o.donorCount)} /></>}
         <Stat label="Inscrits newsletter" value={String(subs)} />
       </div>
 
-      <div className="mt-6 grid gap-6 lg:grid-cols-3">
+      {!branded && <div className="mt-6 grid gap-6 lg:grid-cols-3">
         <div className="card lg:col-span-2">
           <h2 className="mb-4 font-bold text-gray-900">Évolution des dons (12 mois)</h2>
           <BarChart data={monthly} format={formatEuros} />
@@ -47,7 +50,7 @@ export default async function StatsPage() {
             </ul>
           )}
         </div>
-      </div>
+      </div>}
 
       <div className="mt-6 card">
         <h2 className="mb-1 font-bold text-gray-900">Audience du site</h2>

@@ -1,20 +1,24 @@
 import Link from 'next/link';
 import { requireOrg } from '@/lib/session';
+import { prisma } from '@/lib/prisma';
 import { orgOverview, monthlyDonations } from '@/lib/stats';
 import { formatEuros, formatDate } from '@/lib/utils';
 import { PageHeader, Stat, BarChart } from '@/components/ui';
 import { Trophy, ArrowRight, Sparkles, Fingerprint, LayoutTemplate } from 'lucide-react';
+import { isVielusosSite } from '@/lib/vielusos';
 
 export default async function DashboardHome() {
   const ctx = await requireOrg();
   const orgId = ctx.organization!.id;
+  const site = await prisma.site.findUnique({ where: { organizationId: orgId }, select: { subdomain: true } });
+  const branded = isVielusosSite(site);
   const [o, monthly] = await Promise.all([orgOverview(orgId), monthlyDonations(orgId)]);
 
   return (
     <div>
       <PageHeader
         title={`Bonjour ${ctx.user.name?.split(' ')[0] || ''} 👋`}
-        subtitle="Voici la situation de votre association en un coup d’œil."
+        subtitle={branded ? 'Votre espace de création, de publication et de suivi.' : 'Voici la situation de votre association en un coup d’œil.'}
       />
 
       {/* Magic generator hero */}
@@ -23,7 +27,7 @@ export default async function DashboardHome() {
           <div className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-white/20"><Sparkles className="h-6 w-6" /></div>
           <div>
             <h2 className="text-lg font-bold">Créez votre site en un clic ✨</h2>
-            <p className="text-sm text-brand-100">Décrivez votre association, ajoutez logo et photos : le site se génère tout seul.</p>
+            <p className="text-sm text-brand-100">{branded ? 'Décrivez votre univers, ajoutez vos visuels : votre site se génère tout seul.' : 'Décrivez votre association, ajoutez logo et photos : le site se génère tout seul.'}</p>
           </div>
         </div>
         <span className="btn bg-white px-5 text-brand-700 hover:bg-brand-50">Lancer le générateur</span>
@@ -36,13 +40,13 @@ export default async function DashboardHome() {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Stat label="Total des dons" value={formatEuros(o.totalDonationsCents)} hint={`${o.donationCount} don(s)`} accent="text-green-600" />
-        <Stat label="Donateurs" value={String(o.donorCount)} hint="dans votre CRM" />
+        {!branded && <Stat label="Total des dons" value={formatEuros(o.totalDonationsCents)} hint={`${o.donationCount} don(s)`} accent="text-green-600" />}
+        {!branded && <Stat label="Donateurs" value={String(o.donorCount)} hint="dans votre CRM" />}
         <Stat label="Solde comptable" value={formatEuros(o.balanceCents)} hint="recettes - dépenses" accent={o.balanceCents >= 0 ? 'text-gray-900' : 'text-red-600'} />
         <Stat label="Visites du site" value={String(o.pageviews)} hint="pages vues" />
       </div>
 
-      <div className="mt-6 grid gap-6 lg:grid-cols-3">
+      {!branded && <div className="mt-6 grid gap-6 lg:grid-cols-3">
         <div className="card lg:col-span-2">
           <h2 className="mb-4 font-bold text-gray-900">Dons des 12 derniers mois</h2>
           <BarChart data={monthly} format={formatEuros} />
@@ -68,9 +72,9 @@ export default async function DashboardHome() {
             </ol>
           )}
         </div>
-      </div>
+      </div>}
 
-      <div className="mt-6 card">
+      {!branded && <div className="mt-6 card">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="font-bold text-gray-900">Derniers dons</h2>
           <Link href="/dashboard/donations" className="flex items-center gap-1 text-sm font-medium text-brand-600">
@@ -99,7 +103,7 @@ export default async function DashboardHome() {
             </table>
           </div>
         )}
-      </div>
+      </div>}
     </div>
   );
 }

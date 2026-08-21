@@ -8,6 +8,7 @@ import { Slideshow } from './Slideshow';
 import { ContactForm } from './ContactForm';
 import { DonationBlock } from './DonationBlock';
 import { LeetchiBlock } from './LeetchiBlock';
+import { ShopCatalog, type ShopProduct } from './ShopCatalog';
 
 const CARD_ICONS: Record<string, any> = {
   Heart, Users, HandHeart, HandCoins, Star, Gift, Leaf, Home, BookOpen, Shield, Sparkles, Handshake,
@@ -15,7 +16,7 @@ const CARD_ICONS: Record<string, any> = {
 
 // Blocks that break out of the narrow text column
 const WIDE = new Set(['textimage', 'gallery', 'cards', 'contact', 'donation', 'leetchi']);
-const FULL = new Set(['banner', 'slideshow', 'cta']);
+const FULL = new Set(['banner', 'slideshow', 'cta', 'shop']);
 
 // The old default button colour was a fixed blue; on a themed site it should
 // follow the site's brand colour instead.
@@ -38,8 +39,8 @@ function Btn({ b, basePath = '' }: { b: ButtonConfig; basePath?: string }) {
   );
 }
 
-export function PublicBlock({ type, content, style, basePath = '', organizationId }: { type: string; content: any; style: BlockStyle; basePath?: string; organizationId?: string }) {
-  const inner = renderInner(type, content, style, basePath, organizationId);
+export function PublicBlock({ type, content, style, basePath = '', organizationId, products }: { type: string; content: any; style: BlockStyle; basePath?: string; organizationId?: string; products?: ShopProduct[] }) {
+  const inner = renderInner(type, content, style, basePath, organizationId, products);
   // Drop the old default sky-blue band (it also left white borders on the sides
   // of width-constrained blocks).
   const cleanBg = (bg?: string) => (bg && bg.toLowerCase() !== '#f1f5ff' ? bg : undefined);
@@ -54,7 +55,7 @@ export function PublicBlock({ type, content, style, basePath = '', organizationI
   );
 }
 
-function renderInner(type: string, content: any, style: BlockStyle, basePath: string, organizationId?: string) {
+function renderInner(type: string, content: any, style: BlockStyle, basePath: string, organizationId?: string, products?: ShopProduct[]) {
   switch (type) {
     case 'heading':
       return <h2 style={{ color: style.color, fontSize: style.fontSize ? `${style.fontSize}px` : undefined }} className="font-extrabold leading-tight">{content.text}</h2>;
@@ -200,6 +201,17 @@ function renderInner(type: string, content: any, style: BlockStyle, basePath: st
       return <DonationBlock content={content} organizationId={organizationId} />;
     case 'leetchi':
       return <LeetchiBlock content={content} />;
+    case 'shop':
+      return (
+        <ShopCatalog
+          products={products || []}
+          title={content.title}
+          intro={content.intro}
+          search={content.search !== false}
+          showCategories={content.showCategories !== false}
+          columns={content.columns || 4}
+        />
+      );
     default:
       return null;
   }

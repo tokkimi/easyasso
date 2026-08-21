@@ -49,7 +49,29 @@ export function siteMetadata(site: { name: string; header: unknown; footer: unkn
   };
 }
 
-export function RenderSite({ site, basePath, slug }: { site: SiteWithPages; basePath: string; slug?: string }) {
+// Active products for a tenant shop, newest first, shaped for the catalogue.
+async function loadShopProducts(organizationId: string) {
+  const rows = await prisma.product.findMany({
+    where: { organizationId, active: true },
+    orderBy: { createdAt: 'desc' },
+    take: 500,
+  });
+  return rows.map((p) => {
+    const images = Array.isArray(p.images) ? (p.images as string[]) : [];
+    return {
+      id: p.id,
+      name: p.name,
+      description: p.description,
+      priceCents: p.priceCents,
+      images: images.length ? images : p.imageUrl ? [p.imageUrl] : [],
+      category: p.category,
+      brand: p.brand,
+      stock: p.stock,
+    };
+  });
+}
+
+export async function RenderSite({ site, basePath, slug }: { site: SiteWithPages; basePath: string; slug?: string }) {
   if (!site) notFound();
   if (!site.published || !canShowPublicSite(site.organization)) return <SiteOffline />;
 
@@ -94,6 +116,12 @@ export function RenderSite({ site, basePath, slug }: { site: SiteWithPages; base
   const page = slug ? site.pages.find((p) => p.slug === slug) : site.pages.find((p) => p.isHome) || site.pages[0];
   if (!page) notFound();
 
+  // Load products only when the page actually shows a shop block, and only when
+  // the shop is enabled for this organization.
+  const shopEnabled = Boolean(profile.shopEnabled ?? profile.hasShop);
+  const hasShopBlock = page.blocks.some((b) => b.type === 'shop');
+  const products = hasShopBlock && shopEnabled ? await loadShopProducts(site.organizationId) : [];
+
   return (
     <div className="flex min-h-screen flex-col" style={themeStyle(theme)}>
       {fontHref && <link rel="stylesheet" href={fontHref} />}
@@ -103,7 +131,7 @@ export function RenderSite({ site, basePath, slug }: { site: SiteWithPages; base
         {page.blocks.length === 0 ? (
           <p className="py-20 text-center text-gray-400">Cette page est vide.</p>
         ) : (
-          page.blocks.map((b) => <PublicBlock key={b.id} type={b.type} content={b.content as any} style={b.style as any} basePath={basePath} organizationId={site.organizationId} />)
+          page.blocks.map((b) => <PublicBlock key={b.id} type={b.type} content={b.content as any} style={b.style as any} basePath={basePath} organizationId={site.organizationId} products={b.type === 'shop' ? products : undefined} />)
         )}
       </main>
       <PublicFooter footer={footer} orgId={site.organizationId} basePath={basePath} nav={nav} />

@@ -1,6 +1,6 @@
 'use client';
 import { useMemo, useRef, useState } from 'react';
-import { Plus, Trash2, Pencil, Save, X, Package, Eye, EyeOff, Star, ArrowLeft, ArrowRight, ImagePlus } from 'lucide-react';
+import { Plus, Trash2, Pencil, Save, X, Package, Eye, EyeOff, Star, ArrowLeft, ArrowRight, ImagePlus, ExternalLink, LayoutTemplate } from 'lucide-react';
 import { PageHeader } from '@/components/ui';
 
 type Product = {
@@ -27,13 +27,26 @@ function mainImage(p: Product) {
   return (p.images && p.images[0]) || p.imageUrl || '';
 }
 
-export function ShopClient({ enabled: initialEnabled, initial }: { enabled: boolean; initial: Product[] }) {
+export function ShopClient({ enabled: initialEnabled, initial, boutiqueUrl = '', hasBoutiquePage: initialHasPage = false }: { enabled: boolean; initial: Product[]; boutiqueUrl?: string; hasBoutiquePage?: boolean }) {
   const [enabled, setEnabled] = useState(initialEnabled);
   const [products, setProducts] = useState<Product[]>(initial);
   const [draft, setDraft] = useState<Draft | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [hasPage, setHasPage] = useState(initialHasPage);
+  const [creatingPage, setCreatingPage] = useState(false);
   const dragIndex = useRef<number | null>(null);
+
+  async function addBoutiquePage() {
+    setCreatingPage(true);
+    const res = await fetch('/api/shop/page', { method: 'POST' });
+    const data = await res.json().catch(() => ({}));
+    setCreatingPage(false);
+    if (!res.ok) { alert(data.error || 'Création impossible.'); return; }
+    setEnabled(true);
+    setHasPage(true);
+    alert('La page Boutique a été ajoutée à votre site 🎉');
+  }
 
   const categories = useMemo(() => Array.from(new Set(products.map((p) => p.category).filter(Boolean))) as string[], [products]);
 
@@ -131,6 +144,22 @@ export function ShopClient({ enabled: initialEnabled, initial }: { enabled: bool
 
       {enabled && (
         <div className="space-y-4">
+          {/* Ready-made shop page */}
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-brand-100 bg-brand-50/60 p-4">
+            <div className="flex items-center gap-3">
+              <div className="grid h-10 w-10 place-items-center rounded-xl bg-white text-brand-600 ring-1 ring-brand-100"><LayoutTemplate className="h-5 w-5" /></div>
+              <div>
+                <p className="font-bold text-gray-900">{hasPage ? 'Votre page Boutique est en ligne' : 'Ajouter une page Boutique à votre site'}</p>
+                <p className="text-sm text-gray-600">{hasPage ? 'Vos produits s’affichent avec catégories, recherche et tri, aux couleurs de votre site.' : 'Une page toute prête (catégories, recherche, grille) reliée à vos produits.'}</p>
+              </div>
+            </div>
+            {hasPage ? (
+              boutiqueUrl && <a href={boutiqueUrl} target="_blank" rel="noreferrer" className="btn btn-ghost"><ExternalLink className="h-4 w-4" /> Voir la page</a>
+            ) : (
+              <button onClick={addBoutiquePage} disabled={creatingPage} className="btn btn-primary"><Plus className="h-4 w-4" /> {creatingPage ? 'Création…' : 'Créer la page Boutique'}</button>
+            )}
+          </div>
+
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-extrabold text-gray-900">Vos produits {products.length > 0 && <span className="text-gray-400">({products.length})</span>}</h2>
             {!draft && <button onClick={startAdd} className="btn btn-primary"><Plus className="h-4 w-4" /> Ajouter un produit</button>}

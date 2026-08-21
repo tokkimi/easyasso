@@ -1,6 +1,7 @@
 import { requirePermission } from '@/lib/session';
 import { PERMISSIONS } from '@/lib/permissions';
 import { prisma } from '@/lib/prisma';
+import { siteUrlFor } from '@/lib/utils';
 import { ShopClient } from './client';
 
 export const dynamic = 'force-dynamic';
@@ -8,7 +9,12 @@ export const dynamic = 'force-dynamic';
 export default async function ShopPage() {
   const ctx = await requirePermission(PERMISSIONS.SITE_VIEW);
   const org = ctx.organization!;
-  const products = await prisma.product.findMany({ where: { organizationId: org.id }, orderBy: { order: 'asc' } });
+  const [products, site] = await Promise.all([
+    prisma.product.findMany({ where: { organizationId: org.id }, orderBy: { order: 'asc' } }),
+    prisma.site.findUnique({ where: { organizationId: org.id }, include: { pages: { select: { slug: true } } } }),
+  ]);
   const enabled = Boolean((org.profile as any)?.shopEnabled ?? (org.profile as any)?.hasShop);
-  return <ShopClient enabled={enabled} initial={JSON.parse(JSON.stringify(products))} />;
+  const boutiqueUrl = site ? `${siteUrlFor(site.subdomain, site.customDomain, site.domainVerified)}/boutique` : '';
+  const hasBoutiquePage = Boolean(site?.pages.some((p) => p.slug === 'boutique'));
+  return <ShopClient enabled={enabled} initial={JSON.parse(JSON.stringify(products))} boutiqueUrl={boutiqueUrl} hasBoutiquePage={hasBoutiquePage} />;
 }

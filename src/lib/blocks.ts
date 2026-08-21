@@ -39,7 +39,8 @@ export type BlockType =
   | 'cta'
   | 'contact'
   | 'donation'
-  | 'leetchi';
+  | 'leetchi'
+  | 'shop';
 
 export interface BlockStyle {
   align?: Align;
@@ -66,6 +67,7 @@ export const BLOCK_LIBRARY: {
   { type: 'contact', label: 'Contact complet', icon: 'Mail', description: 'Coordonnées + formulaire prêt à recevoir des messages', group: 'layouts' },
   { type: 'donation', label: 'Questionnaire de dons', icon: 'HandCoins', description: 'Montants, coordonnées donateur, Stripe, HelloAsso, virement et chèque', group: 'layouts' },
   { type: 'leetchi', label: 'Cagnotte Leetchi', icon: 'ExternalLink', description: 'Jauge de cagnotte + bouton pour participer', group: 'layouts' },
+  { type: 'shop', label: 'Boutique / Produits', icon: 'ShoppingBag', description: 'Catalogue avec catégories, recherche et grille de produits', group: 'layouts' },
   // Basic building blocks
   { type: 'heading', label: 'Titre', icon: 'Heading', description: 'Un grand titre', group: 'basics' },
   { type: 'text', label: 'Texte', icon: 'Type', description: 'Un paragraphe', group: 'basics' },
@@ -154,6 +156,8 @@ export function defaultContentFor(type: BlockType): Record<string, unknown> {
       return { title: 'Soutenez notre action', intro: 'Votre générosité nous permet de poursuivre nos missions.', cardEnabled: false, stripeUrl: '', helloAssoEnabled: false, helloAssoUrl: '', transferEnabled: false, iban: '', bic: '', accountHolder: '', bankName: '', chequeEnabled: false, chequePayable: '', chequeAddress: '' };
     case 'leetchi':
       return { title: 'Notre cagnotte Leetchi', intro: 'Suivez l’avancement de la collecte et participez en quelques clics.', url: '', embedUrl: '', embedCode: '', collectedEuros: '', goalEuros: '', buttonText: 'Participer à la cagnotte' };
+    case 'shop':
+      return { title: 'Notre boutique', intro: '', search: true, showCategories: true, columns: 4 };
     default:
       return {};
   }
@@ -177,6 +181,8 @@ export function defaultStyleFor(type: BlockType): BlockStyle {
     case 'donation':
     case 'leetchi':
       return { paddingY: 40 };
+    case 'shop':
+      return { paddingY: 28 };
     default:
       return { align: 'center', paddingY: 16 };
   }

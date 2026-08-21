@@ -74,11 +74,14 @@ export function VideoGrid({ content }: { content: any }) {
       {clean.length === 0 ? (
         <p className="py-10 text-center text-sm text-gray-400">Ajoutez des liens YouTube — les vidéos s’intègrent automatiquement.</p>
       ) : (
-        <div className="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="relative mt-5">
+          <button type="button" aria-label="Vidéo précédente" onClick={() => document.getElementById('video-rail')?.scrollBy({ left: -340, behavior: 'smooth' })} className="absolute left-1 top-1/2 z-10 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full bg-black/70 text-white shadow-lg backdrop-blur transition hover:bg-black focus:outline-none focus:ring-2 focus:ring-white/80"><ChevronLeft className="h-5 w-5" /></button>
+          <button type="button" aria-label="Vidéo suivante" onClick={() => document.getElementById('video-rail')?.scrollBy({ left: 340, behavior: 'smooth' })} className="absolute right-1 top-1/2 z-10 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full bg-black/70 text-white shadow-lg backdrop-blur transition hover:bg-black focus:outline-none focus:ring-2 focus:ring-white/80"><ChevronRight className="h-5 w-5" /></button>
+          <div id="video-rail" className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-12 pb-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {clean.map((v, i) => {
             const src = safePublicUrl(videoEmbed(v.url || ''));
             return (
-              <div key={i}>
+              <div key={i} className="w-[78vw] max-w-[320px] shrink-0 snap-start md:w-[320px]">
                 <div className="relative aspect-video w-full overflow-hidden rounded-2xl bg-black shadow-sm">
                   {src && <iframe src={src} className="absolute inset-0 h-full w-full" allowFullScreen title={v.title || `video-${i}`} />}
                 </div>
@@ -86,6 +89,10 @@ export function VideoGrid({ content }: { content: any }) {
               </div>
             );
           })}
+          </div>
+          <div className="mt-1 flex justify-center gap-1.5" aria-label="Indicateurs de défilement">
+            {Array.from({ length: Math.min(clean.length, 6) }).map((_, i) => <span key={i} className="h-1.5 w-1.5 rounded-full bg-white/60 ring-1 ring-black/20" />)}
+          </div>
         </div>
       )}
     </div>

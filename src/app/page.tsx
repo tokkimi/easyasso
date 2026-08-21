@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { Check, MousePointerClick, Palette, HandCoins, BarChart3, Globe, Sparkles, WandSparkles, FileText, ExternalLink, Gift, Recycle, Server, Gauge, Store, MessageSquareText, Music2, Youtube, Instagram } from 'lucide-react';
+import { Check, MousePointerClick, Palette, HandCoins, BarChart3, Globe, Sparkles, WandSparkles, FileText, ExternalLink, Gift, Recycle, Server, Gauge, Store, MessageSquareText, Music2 } from 'lucide-react';
 
 import { PLANS } from '@/lib/plans';
 import { LanguageSwitcher } from '@/components/language-provider';
@@ -47,25 +47,21 @@ const pricingFeatures = [
 ];
 
 const integrations = [
-  { key: 'spotify', label: 'Spotify', color: '#1DB954' },
-  { key: 'deezer', label: 'Deezer', color: '#A238FF' },
-  { key: 'soundcloud', label: 'SoundCloud', color: '#FF5500' },
-  { key: 'youtube', label: 'YouTube', color: '#FF0000' },
-  { key: 'apple', label: 'Apple Music', color: '#FA57C1' },
-  { key: 'instagram', label: 'Instagram', color: '#E1306C' },
-  { key: 'helloasso', label: 'HelloAsso', color: '#1677FF' },
-  { key: 'leetchi', label: 'Leetchi', color: '#F26A4B' },
-  { key: 'stripe', label: 'Stripe', color: '#635BFF' },
+  { key: 'spotify', label: 'Spotify' },
+  { key: 'deezer', label: 'Deezer' },
+  { key: 'soundcloud', label: 'SoundCloud' },
+  { key: 'youtube', label: 'YouTube' },
+  { key: 'apple', label: 'Apple Music' },
+  { key: 'instagram', label: 'Instagram' },
+  { key: 'helloasso', label: 'HelloAsso' },
+  { key: 'leetchi', label: 'Leetchi' },
+  { key: 'stripe', label: 'Stripe' },
 ];
 
 function IntegrationMark({ name }: { name: string }) {
-  if (name === 'spotify') return <svg viewBox="0 0 32 32" className="h-8 w-8" aria-hidden="true"><circle cx="16" cy="16" r="16" fill="currentColor" /><path d="M8.2 12.2c5.4-1.8 11.3-1 15.2 1.3M9.5 16c4.4-1.3 9-.8 12.2 1M10.7 19.5c3.2-.9 6.5-.5 9 .7" fill="none" stroke="white" strokeLinecap="round" strokeWidth="2.2" /></svg>;
-  if (name === 'deezer') return <svg viewBox="0 0 36 30" className="h-7 w-8" aria-hidden="true"><path fill="currentColor" opacity=".35" d="M0 20h7v7H0z" /><path fill="currentColor" opacity=".5" d="M8 13h7v14H8z" /><path fill="currentColor" opacity=".75" d="M16 6h7v21h-7z" /><path fill="currentColor" d="M24 0h7v27h-7z" /></svg>;
-  if (name === 'soundcloud') return <svg viewBox="0 0 44 28" className="h-7 w-9" aria-hidden="true"><path fill="currentColor" d="M31 27H11a11 11 0 0 1 0-22 12 12 0 0 1 21 5 8.5 8.5 0 0 1-1 17ZM3 15h2v10H3Zm5-6h2v18H8Zm5-4h2v22h-2Zm5-1h2v23h-2Zm5 2h2v21h-2Z" /></svg>;
-  if (name === 'youtube') return <Youtube className="h-8 w-8" aria-hidden="true" />;
-  if (name === 'instagram') return <Instagram className="h-8 w-8" aria-hidden="true" />;
-  if (name === 'apple') return <span className="text-3xl leading-none" aria-hidden="true">●</span>;
-  return <span className="grid h-8 min-w-8 place-items-center rounded-lg px-1 text-[11px] font-black leading-none" aria-hidden="true">{name === 'helloasso' ? 'ha' : name === 'leetchi' ? 'l' : 'S'}</span>;
+  const source = name === 'apple' ? 'applemusic' : name;
+  const extension = name === 'leetchi' ? 'png' : 'svg';
+  return <Image src={`/integrations/${source}.${extension}`} alt="" width={40} height={32} className="h-8 w-10 object-contain" />;
 }
 
 export default function LandingPage() {
@@ -206,7 +202,7 @@ export default function LandingPage() {
           <div className="flex w-max animate-easyasso-marquee items-center">
             {[...integrations, ...integrations].map((integration, index) => (
               <div key={`${integration.key}-${index}`} className="flex min-w-[150px] items-center justify-center gap-3 px-5 py-3 text-gray-800 sm:min-w-[175px]">
-                <span className="shrink-0" style={{ color: integration.color }}><IntegrationMark name={integration.key} /></span>
+                <span className="flex h-8 w-10 shrink-0 items-center justify-center"><IntegrationMark name={integration.key} /></span>
                 <span className="whitespace-nowrap text-sm font-extrabold sm:text-base">{integration.label}</span>
               </div>
             ))}

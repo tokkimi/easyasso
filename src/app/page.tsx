@@ -17,7 +17,7 @@ const features = [
 ];
 
 const steps = [
-  { n: '1', title: 'Créez votre compte', text: 'Renseignez le nom de votre association.' },
+  { n: '1', title: 'Créez votre compte', text: 'Renseignez le nom de votre projet (association, boutique…).' },
   { n: '2', title: 'Testez 3 jours gratuitement', text: 'Aucune carte bancaire à l’inscription.' },
   { n: '3', title: 'Votre site est en ligne', text: 'Une adresse est générée automatiquement pour vous.' },
   { n: '4', title: `Gardez EasyAsso dès ${MONTHLY} € / mois`, text: `${MONTHLY} €/mois, ${ANNUAL} €/an ou ${PRICE} € à vie — par carte ou virement, depuis votre tableau de bord.` },
@@ -33,7 +33,7 @@ const magicTools = [
 ];
 
 const atouts = [
-  { icon: Zap, title: 'Droit à l’essentiel', text: 'Un parcours simple qui va à ce qui compte : présenter l’association, collecter des dons, gérer le reste. Pas d’usine à gaz.' },
+  { icon: Zap, title: 'Droit à l’essentiel', text: 'Un parcours simple qui va à ce qui compte : présenter votre projet, vendre ou collecter des dons, gérer le reste. Pas d’usine à gaz.' },
   { icon: Clock, title: 'En ligne en quelques minutes', text: 'L’outil magique rédige et structure votre site à partir de quelques informations. Vous ajustez ensuite librement.' },
   { icon: Wallet, title: 'Un prix pensé pour les associations', text: `Dès ${MONTHLY} € par mois, ${ANNUAL} € par an, ou un paiement unique de ${PRICE} € à vie — loin des milliers d’euros d’une agence et d’un hébergement annuel.` },
   { icon: MousePointerClick, title: 'Autonomie totale', text: 'Vous créez, modifiez et gérez tout vous-même, sans dépendre d’un prestataire ni d’aucune compétence technique.' },
@@ -89,15 +89,15 @@ export default function LandingPage() {
         <div className="mx-auto max-w-6xl px-6">
           <div className="mx-auto max-w-3xl text-center">
             <span className="badge bg-indigo-100 text-indigo-700"><Sparkles className="mr-1 h-3.5 w-3.5" /> Découvrez l’outil magique</span>
-            <h2 className="mt-5 text-3xl font-extrabold tracking-tight text-gray-900 md:text-5xl">Votre association racontée avec justesse, votre site créé en quelques minutes</h2>
-            <p className="mt-5 text-lg leading-8 text-gray-600">Renseignez votre cause, votre histoire, vos actions et vos coordonnées. L’outil magique transforme ces informations en un véritable site complet, structuré et différent pour chaque association.</p>
+            <h2 className="mt-5 text-3xl font-extrabold tracking-tight text-gray-900 md:text-5xl">Votre projet raconté avec justesse, votre site créé en quelques minutes</h2>
+            <p className="mt-5 text-lg leading-8 text-gray-600">Renseignez votre activité, votre histoire, ce que vous faites et vos coordonnées. L’outil magique transforme ces informations en un véritable site complet, structuré et différent pour chaque projet.</p>
           </div>
 
           <div className="mt-12 grid items-center gap-10 lg:grid-cols-[0.9fr_1.1fr]">
             <div className="space-y-4">
               {[
-                ['1. Parlez-nous de votre association', 'Un questionnaire simple, prérempli avec les informations déjà enregistrées dans vos réglages.'],
-                ['2. Laissez la magie opérer', 'L’outil rédige des textes développés, choisit une structure adaptée à votre cause et compose toutes les pages.'],
+                ['1. Parlez-nous de votre projet', 'Un questionnaire simple, prérempli avec les informations déjà enregistrées dans vos réglages.'],
+                ['2. Laissez la magie opérer', 'L’outil rédige des textes développés, choisit une structure adaptée à votre activité et compose toutes les pages.'],
                 ['3. Gardez le contrôle', 'Tout est immédiatement modifiable dans l’éditeur visuel : textes, images, couleurs, boutons, pages, menu et pied de page.'],
               ].map(([title, text], index) => (
                 <div key={title} className="flex gap-4 rounded-2xl border border-indigo-100 bg-white p-5 shadow-sm">
@@ -215,9 +215,9 @@ export default function LandingPage() {
           <div className="mx-auto max-w-3xl text-center">
             <h2 className="text-3xl font-extrabold tracking-tight text-gray-900 md:text-4xl">Pourquoi Easy Asso</h2>
             <p className="mt-4 text-lg leading-8 text-gray-600">
-              Easy Asso est né d’une conviction simple : une association ne devrait pas avoir besoin du budget d’une agence pour exister en ligne.
-              Nous avons conçu un outil qui va droit à l’essentiel, à un prix pensé pour les petites structures, pour que chacune puisse se présenter,
-              collecter des dons et gérer son activité — sans compétence technique et sans y passer des semaines.
+              Easy Asso est né d’une conviction simple : une association, une boutique ou un porteur de projet ne devrait pas avoir besoin du budget d’une agence pour exister en ligne.
+              Nous avons conçu un outil qui va droit à l’essentiel, à un prix pensé pour les petites structures, pour que chacun puisse se présenter,
+              vendre ou collecter des dons et gérer son activité — sans compétence technique et sans y passer des semaines.
             </p>
           </div>
           <div className="mt-12 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -281,7 +281,7 @@ export default function LandingPage() {
       </section>
 
       <footer className="border-t border-gray-100 py-8 text-center text-sm text-gray-500">
-        <div>© {new Date().getFullYear()} Easy Asso · Une Digitale · Créé pour les associations</div>
+        <div>© {new Date().getFullYear()} Easy Asso · Une Digitale · Pour les associations, les boutiques et les créateurs</div>
         <nav className="mt-3 flex flex-wrap justify-center gap-4">
           <Link href="/cgv" className="hover:text-brand-700">CGV</Link>
           <Link href="/mentions-legales" className="hover:text-brand-700">Mentions légales</Link>

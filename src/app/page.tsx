@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { Check, MousePointerClick, Palette, HandCoins, Users, BarChart3, Globe, Sparkles, WandSparkles, FileText, RefreshCw, ExternalLink, Gift, Zap, Clock, Wallet, HeartHandshake, Recycle, Server, Gauge } from 'lucide-react';
 
 import { PLANS } from '@/lib/plans';
@@ -48,14 +49,18 @@ const eco = [
   { icon: FileText, title: 'Dématérialisé', text: 'Reçus, newsletters et dons en ligne : moins de papier et d’envois.' },
 ];
 
+const magicScreens = [
+  { src: '/home-showcase/magic-association.png', alt: 'Questionnaire magique pour association', title: 'Questionnaire association' },
+  { src: '/home-showcase/magic-shop.png', alt: 'Questionnaire magique pour boutique', title: 'Questionnaire boutique' },
+];
+
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-white">
       {/* Nav */}
       <header className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
         <Link href="/" aria-label="EasyAsso — accueil" className="shrink-0">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/easyasso-logo.png" alt="EasyAsso" className="h-14 w-auto sm:h-16" />
+          <Image src="/easyasso-logo.png" alt="EasyAsso" width={156} height={82} priority className="h-14 w-auto sm:h-16" />
         </Link>
         <nav className="flex items-center gap-3">
           <Link href="/login" className="btn btn-ghost">Connexion</Link>
@@ -125,24 +130,52 @@ export default function LandingPage() {
             </div>
           </div>
 
+          <div className="mt-12 rounded-[2rem] border border-indigo-100 bg-white p-5 shadow-sm">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <h3 className="text-2xl font-extrabold text-gray-900">Un questionnaire clair, pas un tunnel compliqué</h3>
+                <p className="mt-2 max-w-2xl text-sm leading-6 text-gray-600">Les utilisateurs voient tout de suite quoi remplir selon leur projet : association, boutique / commerce ou autre site. Logo, mission, offre, actualités, CGV et mentions légales restent guidés. Sur mobile, les aperçus restent petits et se parcourent au doigt.</p>
+              </div>
+              <span className="badge bg-brand-50 text-brand-700">Mini aperçu scrollable</span>
+            </div>
+            <div className="mt-6 flex gap-4 overflow-x-auto pb-4 [scrollbar-width:thin]">
+              {magicScreens.map((screen) => (
+                <figure key={screen.src} className="w-52 shrink-0 snap-start overflow-hidden rounded-2xl border border-gray-200 bg-gray-50 shadow-sm sm:w-60">
+                  <div className="relative h-72 w-full bg-white sm:h-80">
+                    <Image src={screen.src} alt={screen.alt} fill sizes="(max-width: 640px) 208px, 240px" className="object-cover object-top" />
+                  </div>
+                  <figcaption className="border-t border-gray-100 bg-white px-3 py-2 text-center text-xs font-bold text-gray-700">{screen.title}</figcaption>
+                </figure>
+              ))}
+            </div>
+          </div>
+
           <div className="mt-10 grid gap-6 rounded-3xl border border-gray-200 bg-white p-7 shadow-sm md:grid-cols-[1fr_auto] md:items-center">
             <div className="flex gap-4"><RefreshCw className="mt-1 h-6 w-6 shrink-0 text-brand-600" /><div><h3 className="text-lg font-bold text-gray-900">Un nouveau départ à chaque génération</h3><p className="mt-1 text-sm leading-6 text-gray-600">Lorsque vous recommencez, l’ancien site est entièrement remplacé. Aucun ancien texte, logo ou bloc ne vient polluer la nouvelle création.</p></div></div>
             <Link href="/register" className="btn btn-primary px-6 py-3">Essayer l’outil magique <Sparkles className="h-4 w-4" /></Link>
           </div>
 
-          <div className="mt-8 rounded-3xl border border-indigo-100 bg-white p-7 shadow-sm">
-            <div className="max-w-2xl">
-              <h3 className="text-2xl font-extrabold text-gray-900">Il prépare aussi les parties compliquées</h3>
-              <p className="mt-2 text-sm leading-6 text-gray-600">Pas besoin de savoir rédiger une page légale, construire un appel au don ou organiser les informations du tableau de bord : l’outil magique pose les bases, vous ajustez ensuite si besoin.</p>
+          <div className="mt-8 grid gap-6 rounded-3xl border border-indigo-100 bg-white p-7 shadow-sm lg:grid-cols-[1fr_0.92fr] lg:items-center">
+            <div>
+              <div className="max-w-2xl">
+                <h3 className="text-2xl font-extrabold text-gray-900">Il prépare aussi les parties compliquées</h3>
+                <p className="mt-2 text-sm leading-6 text-gray-600">Pas besoin de savoir rédiger une page légale, construire un appel au don ou organiser les informations du tableau de bord : l’outil magique pose les bases, vous ajustez ensuite si besoin.</p>
+              </div>
+              <div className="mt-6 grid gap-4 sm:grid-cols-2">
+                {magicTools.map((tool) => (
+                  <div key={tool.title} className="flex gap-4 rounded-2xl border border-gray-100 bg-gray-50 p-4">
+                    <tool.icon className="mt-1 h-5 w-5 shrink-0 text-brand-600" />
+                    <div><h4 className="font-bold text-gray-900">{tool.title}</h4><p className="mt-1 text-sm leading-6 text-gray-600">{tool.text}</p></div>
+                  </div>
+                ))}
+              </div>
             </div>
-            <div className="mt-6 grid gap-4 md:grid-cols-2">
-              {magicTools.map((tool) => (
-                <div key={tool.title} className="flex gap-4 rounded-2xl border border-gray-100 bg-gray-50 p-4">
-                  <tool.icon className="mt-1 h-5 w-5 shrink-0 text-brand-600" />
-                  <div><h4 className="font-bold text-gray-900">{tool.title}</h4><p className="mt-1 text-sm leading-6 text-gray-600">{tool.text}</p></div>
-                </div>
-              ))}
-            </div>
+            <figure className="overflow-hidden rounded-3xl border border-gray-200 bg-gray-950 p-2 shadow-xl shadow-indigo-100">
+              <div className="relative aspect-[16/9] w-full overflow-hidden rounded-2xl bg-white">
+                <Image src="/home-showcase/dashboard.webp" alt="Aperçu du tableau de bord EasyAsso" fill sizes="(max-width: 1024px) 100vw, 470px" className="object-cover object-top" />
+              </div>
+              <figcaption className="px-3 py-3 text-sm font-semibold text-white">Tableau de bord : dons, CRM, comptabilité, statistiques et édition du site au même endroit.</figcaption>
+            </figure>
           </div>
         </div>
       </section>

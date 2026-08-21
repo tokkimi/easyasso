@@ -1,4 +1,7 @@
-import { Play, Instagram, Music2, Youtube, CalendarDays } from 'lucide-react';
+'use client';
+
+import { useRef } from 'react';
+import { Play, Instagram, Music2, Youtube, CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react';
 import { safePublicUrl, videoEmbed } from '@/lib/render';
 
 export type Track = { title?: string; artist?: string; url?: string; thumbnail?: string; year?: string; source?: string };
@@ -265,22 +268,25 @@ export function OfficialPlayers({ content }: { content: any }) {
       {clean.length === 0 ? (
         <p className="py-10 text-center text-sm text-gray-400">Ajoutez des liens Spotify, SoundCloud, Deezer ou YouTube : les lecteurs officiels s’afficheront ici.</p>
       ) : (
-        <div className="mt-6 -mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div className="relative mt-6">
+          <button type="button" aria-label="Lecteur précédent" onClick={() => document.getElementById('official-player-rail')?.scrollBy({ left: -330, behavior: 'smooth' })} className="absolute left-1 top-1/2 z-10 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full bg-black/65 text-white shadow-lg backdrop-blur transition hover:bg-black/85 focus:outline-none focus:ring-2 focus:ring-white/80"><ChevronLeft className="h-5 w-5" /></button>
+          <button type="button" aria-label="Lecteur suivant" onClick={() => document.getElementById('official-player-rail')?.scrollBy({ left: 330, behavior: 'smooth' })} className="absolute right-1 top-1/2 z-10 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full bg-black/65 text-white shadow-lg backdrop-blur transition hover:bg-black/85 focus:outline-none focus:ring-2 focus:ring-white/80"><ChevronRight className="h-5 w-5" /></button>
+          <div id="official-player-rail" className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-12 pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {clean.map((item, i) => {
             const platform = detectPlatform(item.url, item.platform);
             const src = officialEmbed(item);
             const isVideo = platform === 'youtube';
             return (
-              <article key={`${item.url}-${i}`} className="w-[74vw] max-w-[300px] shrink-0 snap-start overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-gray-100 md:w-[300px]">
-                <div className="flex min-h-[82px] flex-col justify-between gap-2 border-b border-gray-100 p-3">
+              <article key={`${item.url}-${i}`} className="w-[74vw] max-w-[300px] shrink-0 snap-start overflow-hidden rounded-2xl border border-white/20 bg-transparent shadow-sm backdrop-blur-md md:w-[300px]">
+                <div className="flex min-h-[82px] flex-col justify-between gap-2 border-b border-white/20 bg-transparent p-3">
                   <PlatformLogo platform={platform} />
                   <div>
-                    {item.title && <h3 className="line-clamp-2 text-base font-extrabold text-gray-900">{item.title}</h3>}
-                    {item.artist && <p className="mt-1 truncate text-sm text-gray-500">{item.artist}</p>}
-                    {item.releaseDate && <p className="mt-2 inline-flex items-center gap-1 text-xs font-bold text-gray-400"><CalendarDays className="h-3.5 w-3.5" /> {new Date(item.releaseDate).toLocaleDateString('fr-FR')}</p>}
+                    {item.title && <h3 className="line-clamp-2 text-base font-extrabold text-white">{item.title}</h3>}
+                    {item.artist && <p className="mt-1 truncate text-sm text-white/70">{item.artist}</p>}
+                    {item.releaseDate && <p className="mt-2 inline-flex items-center gap-1 text-xs font-bold text-white/50"><CalendarDays className="h-3.5 w-3.5" /> {new Date(item.releaseDate).toLocaleDateString('fr-FR')}</p>}
                   </div>
                 </div>
-                <div className={isVideo ? 'relative aspect-video bg-black' : 'bg-gray-50 p-2'}>
+                <div className={isVideo ? 'relative aspect-video bg-black/80' : 'bg-transparent p-2'}>
                   <iframe
                     src={src}
                     title={`${platformLabel(platform)} ${item.title || i + 1}`}
@@ -293,6 +299,7 @@ export function OfficialPlayers({ content }: { content: any }) {
               </article>
             );
           })}
+          </div>
         </div>
       )}
     </div>

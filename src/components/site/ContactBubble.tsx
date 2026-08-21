@@ -37,11 +37,11 @@ export function ContactBubble({ name, slogan, logoUrl, email, phone, organizatio
   }
 
   const Avatar = (
-    <div className="h-12 w-12 shrink-0 overflow-hidden rounded-2xl bg-white/10">
+    <div className="h-10 w-10 shrink-0 overflow-hidden rounded-xl bg-white/10">
       {logoUrl
         // eslint-disable-next-line @next/next/no-img-element
         ? <img src={logoUrl} alt={name} className="h-full w-full object-cover" />
-        : <div className="grid h-full w-full place-items-center text-lg font-bold text-white/90">{initial}</div>}
+        : <div className="grid h-full w-full place-items-center text-base font-bold text-white/90">{initial}</div>}
     </div>
   );
 
@@ -49,8 +49,8 @@ export function ContactBubble({ name, slogan, logoUrl, email, phone, organizatio
     <div className="flex min-w-0 flex-1 items-center gap-3">
       {Avatar}
       <div className="min-w-0 text-left">
-        <p className="truncate font-bold text-white">{name}</p>
-        {slogan && <p className="truncate text-xs text-white/70">{slogan}</p>}
+        <p className="truncate text-sm font-bold text-white">{name}</p>
+        {slogan && <p className="truncate text-[11px] text-white/70">{slogan}</p>}
       </div>
       <span className="relative ml-auto flex h-3.5 w-3.5 shrink-0">
         <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-60" />
@@ -60,22 +60,22 @@ export function ContactBubble({ name, slogan, logoUrl, email, phone, organizatio
   );
 
   const Row = ({ icon: Icon, title, subtitle, ...rest }: any) => (
-    <button type="button" {...rest} className="flex w-full items-center gap-4 border-t border-white/10 px-5 py-4 text-left transition hover:bg-white/5 first:border-t-0">
-      <Icon className="h-6 w-6 shrink-0 text-white/80" strokeWidth={1.6} />
+    <button type="button" {...rest} className="flex w-full items-center gap-3 border-t border-white/10 px-4 py-3 text-left transition hover:bg-white/5 first:border-t-0">
+      <Icon className="h-5 w-5 shrink-0 text-white/80" strokeWidth={1.6} />
       <span className="min-w-0">
-        <span className="block text-lg font-semibold text-white">{title}</span>
-        {subtitle && <span className="block truncate text-sm text-white/60">{subtitle}</span>}
+        <span className="block text-base font-semibold text-white">{title}</span>
+        {subtitle && <span className="block truncate text-xs text-white/60">{subtitle}</span>}
       </span>
     </button>
   );
 
   return (
-    <div className="fixed bottom-4 right-4 z-[60] w-[min(92vw,22rem)] font-sans" data-no-translate>
+    <div className="fixed bottom-4 right-4 z-[60] w-[min(92vw,20rem)] font-sans" data-no-translate>
       {open && (
         <div className="mb-3 overflow-hidden rounded-3xl border border-white/15 bg-neutral-900/50 text-white shadow-2xl backdrop-blur-2xl">
-          <div className="flex items-start justify-between px-5 pb-4 pt-5">
-            <h3 className="max-w-[14rem] text-2xl font-bold leading-tight">{en ? 'How would you like to reach us?' : 'Comment souhaitez-vous nous joindre ?'}</h3>
-            <button type="button" aria-label={en ? 'Close' : 'Fermer'} onClick={() => { setOpen(false); setView('menu'); setState('idle'); }} className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white/10 text-white/80 transition hover:bg-white/20"><X className="h-5 w-5" /></button>
+          <div className="flex items-start justify-between px-4 pb-3 pt-4">
+            <h3 className="max-w-[12rem] text-lg font-bold leading-tight">{en ? 'How can we help?' : 'Comment nous joindre ?'}</h3>
+            <button type="button" aria-label={en ? 'Close' : 'Fermer'} onClick={() => { setOpen(false); setView('menu'); setState('idle'); }} className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-white/10 text-white/80 transition hover:bg-white/20"><X className="h-4 w-4" /></button>
           </div>
 
           {view === 'menu' && (
@@ -83,7 +83,7 @@ export function ContactBubble({ name, slogan, logoUrl, email, phone, organizatio
               {phone && <Row icon={Phone} title={en ? 'Call' : 'Appeler'} subtitle={phone} onClick={() => { window.location.href = `tel:${phone.replace(/\s+/g, '')}`; }} />}
               {phone && <Row icon={MessageSquare} title={en ? 'Send a text' : 'Envoyer un SMS'} subtitle={en ? 'Direct reply on mobile' : 'Réponse directe sur mobile'} onClick={() => { window.location.href = `sms:${phone.replace(/\s+/g, '')}`; }} />}
               {email && <Row icon={Mail} title={en ? 'Send an email' : 'Envoyer un courriel'} subtitle={email} onClick={() => { window.location.href = `mailto:${email}`; }} />}
-              {organizationId && <Row icon={MessagesSquare} title={en ? 'EasyAsso messaging' : 'Messagerie EasyAsso'} subtitle={en ? 'Write to us right here' : 'Écrivez-nous directement ici'} onClick={() => setView('message')} />}
+              {organizationId && <Row icon={MessagesSquare} title={en ? 'Messaging' : 'Messagerie'} subtitle={en ? 'Write to us right here' : 'Écrivez-nous directement ici'} onClick={() => setView('message')} />}
             </div>
           )}
 
@@ -110,12 +110,12 @@ export function ContactBubble({ name, slogan, logoUrl, email, phone, organizatio
             </div>
           )}
 
-          <div className="flex items-center gap-3 border-t border-white/10 bg-black/20 px-5 py-4">{Identity}</div>
+          <div className="flex items-center gap-3 border-t border-white/10 bg-black/20 px-4 py-3">{Identity}</div>
         </div>
       )}
 
       {!open && (
-        <button type="button" onClick={() => setOpen(true)} className="flex w-full items-center gap-3 rounded-3xl border border-white/15 bg-neutral-900/50 px-4 py-3 text-white shadow-2xl backdrop-blur-2xl transition hover:bg-neutral-900/60">
+        <button type="button" onClick={() => setOpen(true)} className="flex w-full items-center gap-3 rounded-3xl border border-white/15 bg-neutral-900/50 px-4 py-2.5 text-white shadow-2xl backdrop-blur-2xl transition hover:bg-neutral-900/60">
           {Identity}
         </button>
       )}

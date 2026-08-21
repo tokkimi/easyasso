@@ -5,6 +5,7 @@ import { DEFAULT_HEADER, DEFAULT_FOOTER, type HeaderConfig, type FooterConfig } 
 import { PublicBlock } from './PublicBlock';
 import { PublicHeader, PublicFooter } from './PublicChrome';
 import { ContactBubble } from './ContactBubble';
+import { CustomerAccessForm } from './CustomerAccessForm';
 import { PageViewTracker } from './PageViewTracker';
 import { themeStyle, brandCss } from '@/lib/render';
 import { googleFontsHref } from '@/lib/fonts';
@@ -102,7 +103,7 @@ export async function RenderSite({ site, basePath, slug }: { site: SiteWithPages
         {fontHref && <link rel="stylesheet" href={fontHref} />}
         <style dangerouslySetInnerHTML={{ __html: brandCss(theme.primary) }} />
         <PublicHeader header={header} nav={nav} basePath={basePath} />
-        <ClientAccessPage organizationName={site.name} locale={profile.language === 'en' ? 'en' : 'fr'} />
+        <ClientAccessPage organizationId={site.organizationId} organizationName={site.name} locale={profile.language === 'en' ? 'en' : 'fr'} />
         <PublicFooter footer={footer} orgId={site.organizationId} basePath={basePath} nav={nav} />
         {bubble}
       </div>
@@ -154,7 +155,7 @@ export async function RenderSite({ site, basePath, slug }: { site: SiteWithPages
   );
 }
 
-function ClientAccessPage({ organizationName, locale }: { organizationName: string; locale: 'fr' | 'en' }) {
+function ClientAccessPage({ organizationId, organizationName, locale }: { organizationId: string; organizationName: string; locale: 'fr' | 'en' }) {
   const en = locale === 'en';
   return (
     <main className="flex-1 bg-gray-50 px-4 py-12">
@@ -167,31 +168,10 @@ function ClientAccessPage({ organizationName, locale }: { organizationName: stri
         </h1>
         <p className="mx-auto mt-4 max-w-xl text-gray-600">
           {en
-            ? `Soon, customers of ${organizationName} will be able to find their orders, donations, favorites and messages here.`
-            : `Bientôt, les clients de ${organizationName} pourront retrouver ici leurs commandes, dons, favoris et messages.`}
+            ? `Use your email to sign in or create your customer profile on ${organizationName}'s website.`
+            : `Utilisez votre email pour vous connecter ou créer votre profil client sur le site de ${organizationName}.`}
         </p>
-        <div className="mt-8 rounded-2xl bg-gray-50 p-4 text-left">
-          <label className="text-sm font-bold text-gray-700" htmlFor="customer-email">
-            {en ? 'Email address' : 'Adresse email'}
-          </label>
-          <div className="mt-2 flex flex-col gap-2 sm:flex-row">
-            <input
-              id="customer-email"
-              type="email"
-              disabled
-              placeholder={en ? 'you@example.com' : 'vous@email.fr'}
-              className="input flex-1 bg-white disabled:opacity-70"
-            />
-            <button disabled className="rounded-xl bg-[var(--brand)] px-5 py-3 font-bold text-white opacity-70">
-              {en ? 'Receive my link' : 'Recevoir mon lien'}
-            </button>
-          </div>
-          <p className="mt-3 text-xs text-gray-500">
-            {en
-              ? 'This customer profile will be separate from the EasyAsso creator dashboard.'
-              : 'Ce profil client sera séparé du tableau de bord créateur EasyAsso.'}
-          </p>
-        </div>
+        <CustomerAccessForm organizationId={organizationId} organizationName={organizationName} locale={locale} />
       </section>
     </main>
   );

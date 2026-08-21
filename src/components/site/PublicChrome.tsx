@@ -9,7 +9,7 @@ interface NavItem { title: string; slug: string; isHome: boolean }
 const SOCIAL_LABELS = new Set(['facebook', 'instagram', 'linkedin', 'youtube', 'tiktok', 'x']);
 const isSocialColumn = (column: FooterConfig['columns'][number]) => column.links.length > 0 && column.links.every((link) => SOCIAL_LABELS.has(link.label.toLowerCase()));
 const logoFrameClass = 'inline-flex max-w-[220px] items-center rounded-xl bg-white/90 p-1.5 shadow-sm ring-1 ring-black/5 sm:max-w-[280px]';
-const headerLogoClass = 'max-h-12 w-auto max-w-full object-contain';
+const headerLogoClass = 'max-h-14 w-auto max-w-full object-contain';
 const footerLogoClass = 'max-h-16 w-auto max-w-full object-contain';
 
 function SocialMark({ label }: { label: string }) {
@@ -35,8 +35,8 @@ export function PublicHeader({
       style={{ background: header.background, color: header.textColor }}
       className={`public-header-shell ${header.sticky ? 'sticky top-0 z-40' : ''} border-b border-black/5 backdrop-blur`}
     >
-      <div className="relative mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-3">
-        <Link href={basePath || '/'} className="flex min-w-0 flex-1 items-center text-lg font-extrabold">
+      <div className="relative flex w-full items-center justify-between gap-3 px-3 py-3 sm:px-5 lg:px-8">
+        <Link href={basePath || '/'} className="flex min-w-0 flex-1 basis-0 items-center justify-start text-lg font-extrabold">
           {header.logoUrl ? (
             <span className={logoFrameClass}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -46,37 +46,39 @@ export function PublicHeader({
             <span className="truncate">{header.logoText}</span>
           )}
         </Link>
-        <div className="public-header-desktop items-center gap-4">
+        <div className="public-header-desktop min-w-0 flex-[2_1_0%] items-center justify-center gap-4">
           {header.showNav && (
-            <nav className="flex items-center gap-4 text-sm font-medium">
+            <nav className="flex min-w-0 items-center justify-center gap-2 text-center text-sm font-medium lg:gap-4">
               {nav.map((p) => (
-                <Link key={p.slug} href={link(p.slug, p.isHome)} className="opacity-80 hover:opacity-100">{p.title}</Link>
+                <Link key={p.slug} href={link(p.slug, p.isHome)} className="max-w-[10rem] break-words leading-tight opacity-80 hover:opacity-100">{p.title}</Link>
               ))}
             </nav>
           )}
+        </div>
+        <div className="flex flex-1 basis-0 items-center justify-end gap-3">
           {cta && (
             <a
               href={cta.href.startsWith('/') ? `${basePath}${cta.href}` : cta.href}
               style={cta.variant === 'solid'
                 ? { background: cta.color, color: '#fff' }
                 : { border: `2px solid ${cta.color}`, color: cta.color }}
-              className="rounded-lg px-4 py-2 text-sm font-semibold"
+              className="hidden rounded-lg px-4 py-2 text-sm font-semibold sm:inline-flex"
             >
               {cta.text}
             </a>
           )}
+          <Link
+            href={customerHref}
+            title="Connexion ou inscription client"
+            aria-label="Connexion ou inscription client"
+            className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-black/10 bg-white/85 text-current shadow-sm transition hover:bg-white"
+          >
+            <UserRound className="h-5 w-5" />
+          </Link>
+          <button type="button" onClick={() => setMenuOpen((open) => !open)} className="public-header-menu-button touch-target shrink-0 items-center justify-center rounded-lg border border-black/10 bg-white/80" aria-expanded={menuOpen} aria-label={menuOpen ? 'Fermer le menu' : 'Ouvrir le menu'}>
+            {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </button>
         </div>
-        <Link
-          href={customerHref}
-          title="Connexion ou inscription client"
-          aria-label="Connexion ou inscription client"
-          className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-black/10 bg-white/85 text-current shadow-sm transition hover:bg-white"
-        >
-          <UserRound className="h-5 w-5" />
-        </Link>
-        <button type="button" onClick={() => setMenuOpen((open) => !open)} className="public-header-menu-button touch-target shrink-0 items-center justify-center rounded-lg border border-black/10 bg-white/80" aria-expanded={menuOpen} aria-label={menuOpen ? 'Fermer le menu' : 'Ouvrir le menu'}>
-          {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-        </button>
         {menuOpen && (
           <div className="public-header-dropdown absolute left-3 right-3 top-[calc(100%+0.5rem)] z-50 rounded-2xl bg-white p-3 text-gray-900 shadow-2xl ring-1 ring-black/10">
             {header.showNav && <nav className="flex flex-col">{nav.map((p) => <Link key={p.slug} href={link(p.slug, p.isHome)} onClick={() => setMenuOpen(false)} className="rounded-xl px-4 py-3 text-base font-semibold hover:bg-gray-50">{p.title}</Link>)}</nav>}

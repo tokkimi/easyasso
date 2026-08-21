@@ -62,12 +62,16 @@ const translations: Record<string, string> = {
   'Créer le site de mon association': 'Create my association website', 'J’ai déjà un compte': 'I already have an account',
   'Paiement unique · Site illimité · Sans engagement': 'One-time payment · Unlimited website · No commitment',
   'Pensé pour les associations, simple pour tous': 'Built for associations, simple for everyone',
+  'Désormais ouvert à tous': 'Now open to everyone',
+  'Votre site internet,': 'Your website,',
   'Le site de votre association,': 'Your association website,', 'en ligne en': 'online in', 'quelques minutes': 'just a few minutes',
+  'Associations, boutiques, entreprises, créateurs : créez, éditez et gérez tout vous-même, sans aucune compétence technique. Dons, ventes, contacts, comptabilité et statistiques inclus. En totale autonomie.': 'Associations, shops, businesses and creators: create, edit and manage everything yourself, with no technical skills. Donations, sales, contacts, accounting and analytics included. Completely independently.',
   'Créez, éditez et gérez tout vous-même, sans aucune compétence technique. Dons, donateurs,': 'Create, edit and manage everything yourself, with no technical skills. Donations, donors,',
   'comptabilité et statistiques inclus. En totale autonomie.': 'accounting and analytics included. Completely independently.',
   'Commencer — 250 € une seule fois': 'Get started — €250 once',
-  'Commencer —': 'Get started —', '€ une seule fois': '€ once',
+  'Commencer — dès': 'Get started — from', 'Commencer —': 'Get started —', '€ / mois': '€/month', '€ une seule fois': '€ once',
   '3 jours gratuits, sans carte bancaire': '3-day free trial, no credit card required',
+  'Site illimité': 'Unlimited website', 'Sans engagement': 'No commitment',
   'Testez tout gratuitement pendant 3 jours. Payez seulement si EasyAsso vous convient.': 'Try everything free for 3 days. Pay only if EasyAsso works for you.',
   'Cliquez, écrivez, glissez. Ce que vous voyez est ce que vos visiteurs verront.': 'Click, write and arrange. What you see is what your visitors will see.',
   'Titres, textes, images, vidéos, réseaux sociaux, alignements et boutons configurables.': 'Configurable headings, copy, images, videos, social links, alignment and buttons.',
@@ -107,10 +111,15 @@ const translations: Record<string, string> = {
   'Votre association racontée avec justesse, votre site créé en quelques minutes': 'Your association told authentically, your website created in minutes',
   'Renseignez votre cause, votre histoire, vos actions et vos coordonnées. L’outil magique transforme ces informations en un véritable site complet, structuré et différent pour chaque association.': 'Share your cause, story, activities and contact details. The magic builder turns them into a complete, structured website uniquely crafted for each association.',
   '1. Précisez votre projet': '1. Define your project',
+  'Association, boutique / commerce ou autre site : EasyAsso adapte les questions et récupère les informations utiles.': 'Association, shop / commerce or another website: EasyAsso adapts the questions and collects the useful information.',
   'Association, boutique / commerce ou autre site : EasyAsso adapte les questions. Pour une boutique, vous indiquez l’univers, le type de produits, les marques, les catégories, le style et les informations utiles.': 'Association, shop / commerce or another website: EasyAsso adapts the questions. For a shop, you describe the universe, product type, brands, categories, style and useful information.',
+  '2. Laissez construire': '2. Let it build',
   '2. Laissez la magie construire': '2. Let the magic build',
+  'Pages, textes, boutique, appels au don, CGV et mentions légales : la base est préparée automatiquement.': 'Pages, copy, shop, donation appeals, terms and legal notices: the foundation is prepared automatically.',
   'L’outil prépare les pages, les textes, la boutique, les appels au don, les CGV, les mentions légales et les sections importantes selon les informations données.': 'The builder prepares pages, copy, the shop, donation appeals, terms, legal notices and important sections based on the information provided.',
+  '3. Ajustez simplement': '3. Adjust simply',
   '3. Ajustez tout simplement': '3. Adjust everything simply',
+  'Vous modifiez ensuite textes, images, couleurs, boutons, pages, produits, menus et footer dans l’éditeur visuel.': 'You then edit copy, images, colors, buttons, pages, products, menus and footer in the visual editor.',
   'Rien n’est figé : vous modifiez immédiatement les textes, images, couleurs, boutons, pages, menus, produits et footer dans l’éditeur visuel.': 'Nothing is locked: you immediately edit copy, images, colors, buttons, pages, menus, products and footer in the visual editor.',
   '1. Parlez-nous de votre association': '1. Tell us about your association',
   'Un questionnaire simple, prérempli avec les informations déjà enregistrées dans vos réglages.': 'A simple questionnaire, pre-filled with the information already saved in your settings.',
@@ -128,12 +137,18 @@ const translations: Record<string, string> = {
   'Questionnaire boutique': 'Shop questionnaire',
   'Questionnaires en aperçu scrollable': 'Scrollable questionnaire previews',
   'Type': 'Type',
+  'Association · Boutique · Autre': 'Association · Shop · Other',
   'Association · Boutique · Autre projet': 'Association · Shop · Other project',
+  'Contenus': 'Content',
+  'Site · dons · boutique · contact': 'Website · donations · shop · contact',
   'Exemple boutique': 'Shop example',
   'Bougies · bijoux · produits solidaires': 'Candles · jewelry · solidarity products',
   'Analyse': 'Analysis',
+  'Pas de copier-coller': 'No copy-paste',
+  'L’outil lit vos réponses, choisit les pages utiles et rédige des textes structurés.': 'The builder reads your answers, chooses useful pages and writes structured copy.',
   'Le générateur lit vos réponses, évite le copier-coller, choisit les pages utiles et transforme vos informations en textes structurés.': 'The generator reads your answers, avoids copy-and-paste, chooses useful pages and turns your information into structured copy.',
   'Résultat': 'Result',
+  'Un site prêt, mais chaque bloc reste modifiable dans l’éditeur visuel.': 'A ready website, while every block remains editable in the visual editor.',
   'Site vitrine, appel au don, boutique, contact, actualités, documents légaux et tableau de bord restent prêts à modifier.': 'Showcase website, donation appeal, shop, contact, news, legal documents and dashboard are ready to edit.',
   '7 pages et 31 sections prêtes': '7 pages and 31 sections ready',
   'Textes approfondis · navigation · appels à l’action · contact': 'Detailed copy · navigation · calls to action · contact',
@@ -171,6 +186,18 @@ const translations: Record<string, string> = {
   'Les vraies coordonnées, le formulaire de contact et les messages reçus arrivent dans l’espace utilisateur.': 'Real contact details, the contact form and received messages arrive in the user workspace.',
   'Tableau de bord : dons, CRM, comptabilité, statistiques et édition du site au même endroit.': 'Dashboard: donations, CRM, accounting, analytics and website editing in one place.',
   'Tableau de bord : boutique, dons, CRM, comptabilité, statistiques et édition du site au même endroit.': 'Dashboard: shop, donations, CRM, accounting, analytics and website editing in one place.',
+  'Trois formules, tout compris': 'Three all-inclusive plans',
+  'Choisissez ce qui vous convient : au mois, à l’année ou à vie. Mêmes fonctionnalités. Paiement par carte ou par virement.': 'Choose what suits you: monthly, yearly or lifetime. Same features. Payment by card or bank transfer.',
+  'Mensuel': 'Monthly', 'Annuel': 'Yearly', 'À vie': 'Lifetime',
+  'Sans engagement, résiliable à tout moment.': 'No commitment, cancel anytime.',
+  '2 mois offerts par rapport au mensuel.': 'Two months free compared with monthly billing.',
+  'Un seul paiement, plus jamais d’abonnement.': 'One payment, no subscription ever again.',
+  'Le plus tranquille': 'The most peaceful option',
+  'Choisir le mensuel —': 'Choose monthly —',
+  'Choisir l’annuel —': 'Choose yearly —',
+  'Choisir à vie —': 'Choose lifetime —',
+  'Vous pouvez tester gratuitement 3 jours avant de choisir, et changer de formule à tout moment avant de payer.': 'You can try everything free for 3 days before choosing, and change plans anytime before paying.',
+  'Pour les associations, les boutiques et les créateurs': 'For associations, shops and creators',
   'Ce que l’outil prépare pour vous': 'What the builder creates for you',
   'Une page d’accueil convaincante': 'A compelling homepage', 'Votre histoire et votre mission': 'Your story and mission',
   'Des pages dédiées à vos actions': 'Dedicated pages for your activities', 'Une présentation claire de votre impact': 'A clear presentation of your impact',
@@ -212,6 +239,9 @@ const translations: Record<string, string> = {
 };
 
 const reverse = Object.fromEntries(Object.entries(translations).map(([fr, en]) => [en, fr]));
+const normalizeForLookup = (value: string) => value.replace(/\s+/g, ' ').trim();
+const normalizedTranslations = Object.fromEntries(Object.entries(translations).map(([fr, en]) => [normalizeForLookup(fr), en]));
+const normalizedReverse = Object.fromEntries(Object.entries(reverse).map(([en, fr]) => [normalizeForLookup(en), fr]));
 const LocaleContext = createContext({ locale: 'fr' as Locale, setLocale: (_: Locale) => {}, t: (value: string) => value });
 
 function translateText(value: string, locale: Locale) {
@@ -219,16 +249,16 @@ function translateText(value: string, locale: Locale) {
   const trailing = value.match(/\s*$/)?.[0] || '';
   const clean = value.trim();
   const table = locale === 'en' ? translations : reverse;
-  let translated = table[clean];
-  // Partial matching is useful to translate French sentences containing a
-  // dynamic value. Never run it in reverse: "Continue" inside "Continuer"
-  // would otherwise become "Continuerr" after a DOM update.
-  if (!translated && locale === 'en' && clean.length > 8) {
-    let partial = clean;
-    for (const [source, target] of Object.entries(table)) {
-      if (source.length >= 8 && partial.includes(source)) partial = partial.replaceAll(source, target);
-    }
-    if (partial !== clean) translated = partial;
+  const normalizedTable = locale === 'en' ? normalizedTranslations : normalizedReverse;
+  let translated = table[clean] || normalizedTable[normalizeForLookup(clean)];
+
+  if (!translated && locale === 'en') {
+    const pricing = clean.match(/^(\d+)\s*€\s*\/\s*mois,\s*(\d+)\s*€\s*\/\s*an ou\s*(\d+)\s*€\s*à vie · Site illimité · Sans engagement$/);
+    if (pricing) translated = `${pricing[1]}€/month, ${pricing[2]}€/year or ${pricing[3]}€ lifetime · Unlimited website · No commitment`;
+    const keep = clean.match(/^Gardez EasyAsso dès\s*(\d+)\s*€\s*\/\s*mois$/);
+    if (keep) translated = `Keep EasyAsso from ${keep[1]}€/month`;
+    const keepText = clean.match(/^(\d+)\s*€\/mois,\s*(\d+)\s*€\/an ou\s*(\d+)\s*€\s*à vie — par carte ou virement, depuis votre tableau de bord\.$/);
+    if (keepText) translated = `${keepText[1]}€/month, ${keepText[2]}€/year or ${keepText[3]}€ lifetime — by card or bank transfer, from your dashboard.`;
   }
   return translated ? `${leading}${translated}${trailing}` : value;
 }
@@ -291,17 +321,21 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem('easyasso-language', next);
     document.cookie = `easyasso-language=${next};path=/;max-age=31536000;samesite=lax`;
     setLocaleState(next);
+    window.location.reload();
   };
   const value = useMemo(() => ({ locale, setLocale, t: (text: string) => locale === 'en' ? translations[text] || text : text }), [locale]);
-  return <LocaleContext.Provider value={value}>{children}{!isAssociationSite && <LanguageSwitcher />}</LocaleContext.Provider>;
+  return <LocaleContext.Provider value={value}>{children}{!isAssociationSite && pathname !== '/' && <LanguageSwitcher />}</LocaleContext.Provider>;
 }
 
 export function useLanguage() { return useContext(LocaleContext); }
 
-export function LanguageSwitcher() {
+export function LanguageSwitcher({ variant = 'floating' }: { variant?: 'floating' | 'inline' }) {
   const { locale, setLocale } = useContext(LocaleContext);
+  const className = variant === 'inline'
+    ? 'inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-3 py-2 text-sm font-bold text-gray-700 shadow-sm hover:border-brand-300 hover:text-brand-700'
+    : 'fixed bottom-4 right-4 z-[100] flex items-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-2 text-sm font-bold text-gray-700 shadow-lg hover:border-brand-300 hover:text-brand-700';
   return (
-    <button type="button" onClick={() => setLocale(locale === 'fr' ? 'en' : 'fr')} className="fixed bottom-4 right-4 z-[100] flex items-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-2 text-sm font-bold text-gray-700 shadow-lg hover:border-brand-300 hover:text-brand-700" aria-label={locale === 'fr' ? 'Switch to English' : 'Passer en français'} data-no-translate>
+    <button type="button" onClick={() => setLocale(locale === 'fr' ? 'en' : 'fr')} className={className} aria-label={locale === 'fr' ? 'Switch to English' : 'Passer en français'} data-no-translate>
       <Languages className="h-4 w-4" /> {locale === 'fr' ? 'EN' : 'FR'}
     </button>
   );

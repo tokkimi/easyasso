@@ -3,17 +3,11 @@ import Image from 'next/image';
 import { Check, MousePointerClick, Palette, HandCoins, BarChart3, Globe, Sparkles, WandSparkles, FileText, RefreshCw, ExternalLink, Gift, Zap, Clock, Wallet, HeartHandshake, Recycle, Server, Gauge, Store, MessageSquareText } from 'lucide-react';
 
 import { PLANS } from '@/lib/plans';
+import { LanguageSwitcher } from '@/components/language-provider';
 
 const PRICE = process.env.NEXT_PUBLIC_PRICE_EUR || '250';
 const ANNUAL = PLANS.annual.amountEur;
 const MONTHLY = PLANS.monthly.amountEur;
-
-const steps = [
-  { n: '1', title: 'Créez votre compte', text: 'Renseignez le nom de votre projet (association, boutique…).' },
-  { n: '2', title: 'Testez 3 jours gratuitement', text: 'Aucune carte bancaire à l’inscription.' },
-  { n: '3', title: 'Votre site est en ligne', text: 'Une adresse est générée automatiquement pour vous.' },
-  { n: '4', title: `Gardez EasyAsso dès ${MONTHLY} € / mois`, text: `${MONTHLY} €/mois, ${ANNUAL} €/an ou ${PRICE} € à vie — par carte ou virement, depuis votre tableau de bord.` },
-];
 
 const magicTools = [
   { icon: MousePointerClick, title: 'Éditeur visuel bloc par bloc', text: 'Pages, menus, textes, images, vidéos, boutons et couleurs restent modifiables directement.' },
@@ -60,6 +54,7 @@ export default function LandingPage() {
           <Image src="/easyasso-logo.png" alt="EasyAsso" width={156} height={82} priority className="h-14 w-auto sm:h-16" />
         </Link>
         <nav className="flex items-center gap-3">
+          <LanguageSwitcher variant="inline" />
           <Link href="/login" className="btn btn-ghost">Connexion</Link>
           <Link href="/register" className="btn btn-primary">Créer mon site</Link>
         </nav>
@@ -96,48 +91,48 @@ export default function LandingPage() {
           </div>
 
           <div className="mt-12 grid gap-6 lg:grid-cols-3 lg:items-stretch">
-            <div className="space-y-4">
+            <div className="grid gap-4 lg:h-[460px] lg:grid-rows-3">
               {[
-                ['1. Précisez votre projet', 'Association, boutique / commerce ou autre site : EasyAsso adapte les questions. Pour une boutique, vous indiquez l’univers, le type de produits, les marques, les catégories, le style et les informations utiles.'],
-                ['2. Laissez la magie construire', 'L’outil prépare les pages, les textes, la boutique, les appels au don, les CGV, les mentions légales et les sections importantes selon les informations données.'],
-                ['3. Ajustez tout simplement', 'Rien n’est figé : vous modifiez immédiatement les textes, images, couleurs, boutons, pages, menus, produits et footer dans l’éditeur visuel.'],
+                ['1. Précisez votre projet', 'Association, boutique / commerce ou autre site : EasyAsso adapte les questions et récupère les informations utiles.'],
+                ['2. Laissez construire', 'Pages, textes, boutique, appels au don, CGV et mentions légales : la base est préparée automatiquement.'],
+                ['3. Ajustez simplement', 'Vous modifiez ensuite textes, images, couleurs, boutons, pages, produits, menus et footer dans l’éditeur visuel.'],
               ].map(([title, text], index) => (
-                <div key={title} className="flex gap-4 rounded-2xl border border-indigo-100 bg-white p-5 shadow-sm">
+                <div key={title} className="flex min-h-0 gap-4 rounded-2xl border border-indigo-100 bg-white p-5 shadow-sm">
                   <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-indigo-600 text-white">{index === 0 ? <FileText className="h-5 w-5" /> : index === 1 ? <WandSparkles className="h-5 w-5" /> : <MousePointerClick className="h-5 w-5" />}</div>
                   <div><h3 className="font-bold text-gray-900">{title}</h3><p className="mt-1 text-sm leading-6 text-gray-600">{text}</p></div>
                 </div>
               ))}
             </div>
 
-            <div className="relative rounded-3xl border border-indigo-200 bg-white p-3 shadow-2xl shadow-indigo-200/60">
-              <div className="flex h-full min-h-[520px] flex-col rounded-2xl bg-gray-950 p-5 text-white">
+            <div className="relative h-full rounded-3xl border border-indigo-200 bg-white p-3 shadow-2xl shadow-indigo-200/60 lg:h-[460px]">
+              <div className="flex h-full flex-col rounded-2xl bg-gray-950 p-5 text-white">
                 <div className="flex items-center justify-between border-b border-white/10 pb-4">
-                  <div className="flex items-center gap-2 font-bold"><Sparkles className="h-5 w-5 text-violet-300" /> Générateur magique</div>
-                  <span className="rounded-full bg-green-400/15 px-3 py-1 text-xs font-semibold text-green-300">Aucune page générique copiée-collée</span>
+                  <div className="flex items-center gap-2 text-lg font-bold"><Sparkles className="h-5 w-5 text-violet-300" /> Générateur magique</div>
+                  <span className="rounded-full bg-green-400/15 px-3 py-1 text-[11px] font-semibold text-green-300">Pas de copier-coller</span>
                 </div>
-                <div className="mt-5 grid gap-3">
+                <div className="mt-4 grid flex-1 gap-3 text-sm">
                   <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
-                    <div className="rounded-xl bg-white/10 p-4"><p className="text-xs uppercase tracking-wider text-violet-200">Type</p><p className="mt-1 font-semibold">Association · Boutique · Autre projet</p></div>
-                    <div className="rounded-xl bg-white/10 p-4"><p className="text-xs uppercase tracking-wider text-violet-200">Exemple boutique</p><p className="mt-1 font-semibold">Bougies · bijoux · produits solidaires</p></div>
+                    <div className="rounded-xl bg-white/10 p-4"><p className="text-xs uppercase tracking-wider text-violet-200">Type</p><p className="mt-1 font-semibold">Association · Boutique · Autre</p></div>
+                    <div className="rounded-xl bg-white/10 p-4"><p className="text-xs uppercase tracking-wider text-violet-200">Contenus</p><p className="mt-1 font-semibold">Site · dons · boutique · contact</p></div>
                   </div>
-                  <div className="rounded-xl bg-white/10 p-4"><p className="text-xs uppercase tracking-wider text-violet-200">Analyse</p><p className="mt-1 text-sm leading-6 text-gray-200">Le générateur lit vos réponses, évite le copier-coller, choisit les pages utiles et transforme vos informations en textes structurés.</p></div>
-                  <div className="rounded-xl bg-white/10 p-4"><p className="text-xs uppercase tracking-wider text-violet-200">Résultat</p><p className="mt-1 text-sm leading-6 text-gray-200">Site vitrine, appel au don, boutique, contact, actualités, documents légaux et tableau de bord restent prêts à modifier.</p></div>
+                  <div className="rounded-xl bg-white/10 p-4"><p className="text-xs uppercase tracking-wider text-violet-200">Analyse</p><p className="mt-1 leading-6 text-gray-200">L’outil lit vos réponses, choisit les pages utiles et rédige des textes structurés.</p></div>
+                  <div className="rounded-xl bg-white/10 p-4"><p className="text-xs uppercase tracking-wider text-violet-200">Résultat</p><p className="mt-1 leading-6 text-gray-200">Un site prêt, mais chaque bloc reste modifiable dans l’éditeur visuel.</p></div>
                 </div>
-                <div className="mt-auto rounded-xl bg-gradient-to-r from-violet-500 to-indigo-500 p-4">
+                <div className="mt-3 rounded-xl bg-gradient-to-r from-violet-500 to-indigo-500 p-4">
                   <div className="flex items-center gap-3"><WandSparkles className="h-6 w-6" /><div><p className="font-bold">7 pages et 31 sections prêtes</p><p className="text-sm text-indigo-100">Textes approfondis · navigation · appels à l’action · contact</p></div></div>
                 </div>
               </div>
             </div>
 
-            <div className="relative">
+            <div className="relative flex h-full flex-col lg:h-[460px]">
               <span className="mb-3 inline-flex rounded-full bg-brand-50 px-3 py-1 text-xs font-semibold text-brand-700">Questionnaires en aperçu scrollable</span>
               <div className="pointer-events-none absolute -left-3 top-1/2 hidden -translate-y-1/2 flex-col gap-2 lg:flex"><span className="h-2 w-2 rounded-full bg-brand-600" /><span className="h-2 w-2 rounded-full bg-brand-300" /></div>
               <div className="pointer-events-none absolute -right-3 top-1/2 hidden -translate-y-1/2 flex-col gap-2 lg:flex"><span className="h-2 w-2 rounded-full bg-brand-300" /><span className="h-2 w-2 rounded-full bg-brand-600" /></div>
-              <div className="h-[520px] snap-y snap-mandatory overflow-y-auto rounded-[1.75rem] border border-indigo-100 bg-gradient-to-b from-indigo-50 to-white p-4 shadow-inner [scrollbar-width:thin]">
+              <div className="min-h-0 flex-1 snap-y snap-mandatory overflow-y-auto rounded-[1.75rem] border border-indigo-100 bg-gradient-to-b from-indigo-50 to-white p-4 shadow-inner [scrollbar-width:thin]">
                 <div className="space-y-5">
                   {magicScreens.map((screen) => (
                     <figure key={screen.src} className="snap-start overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-md">
-                      <div className="relative h-[430px] w-full overflow-hidden bg-white">
+                      <div className="relative h-[330px] w-full overflow-hidden bg-white">
                         <Image src={screen.src} alt={screen.alt} fill sizes="(max-width: 1024px) 92vw, 360px" className="object-cover object-top" />
                       </div>
                       <figcaption className="border-t border-gray-100 bg-white px-4 py-3 text-center text-sm font-extrabold text-gray-800">{screen.title}</figcaption>
@@ -208,19 +203,6 @@ export default function LandingPage() {
               plus lourde et émet davantage. Le numérique reste un usage à impact : nous cherchons à le réduire, pas à le nier.
             </p>
           </div>
-        </div>
-      </section>
-
-      {/* Steps */}
-      <section className="border-y border-gray-100 bg-gray-50 py-14">
-        <div className="mx-auto grid max-w-6xl gap-6 px-6 sm:grid-cols-2 lg:grid-cols-4">
-          {steps.map((s) => (
-            <div key={s.n} className="card">
-              <div className="grid h-10 w-10 place-items-center rounded-full bg-brand-600 text-lg font-bold text-white">{s.n}</div>
-              <h3 className="mt-4 font-bold text-gray-900">{s.title}</h3>
-              <p className="mt-1 text-sm text-gray-600">{s.text}</p>
-            </div>
-          ))}
         </div>
       </section>
 

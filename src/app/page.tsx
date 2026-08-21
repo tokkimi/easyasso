@@ -118,9 +118,6 @@ export default function LandingPage() {
                   <div className="rounded-xl bg-white/10 p-4"><p className="text-xs uppercase tracking-wider text-violet-200">Analyse</p><p className="mt-1 leading-6 text-gray-200">L’outil lit vos réponses, choisit les pages utiles et rédige des textes structurés.</p></div>
                   <div className="rounded-xl bg-white/10 p-4"><p className="text-xs uppercase tracking-wider text-violet-200">Résultat</p><p className="mt-1 leading-6 text-gray-200">Un site prêt, mais chaque bloc reste modifiable dans l’éditeur visuel.</p></div>
                 </div>
-                <div className="mt-3 rounded-xl bg-gradient-to-r from-violet-500 to-indigo-500 p-4">
-                  <div className="flex items-center gap-3"><WandSparkles className="h-6 w-6" /><div><p className="font-bold">7 pages et 31 sections prêtes</p><p className="text-sm text-indigo-100">Textes approfondis · navigation · appels à l’action · contact</p></div></div>
-                </div>
               </div>
             </div>
 

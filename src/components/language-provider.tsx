@@ -321,7 +321,6 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem('easyasso-language', next);
     document.cookie = `easyasso-language=${next};path=/;max-age=31536000;samesite=lax`;
     setLocaleState(next);
-    window.location.reload();
   };
   const value = useMemo(() => ({ locale, setLocale, t: (text: string) => locale === 'en' ? translations[text] || text : text }), [locale]);
   return <LocaleContext.Provider value={value}>{children}{!isAssociationSite && pathname !== '/' && <LanguageSwitcher />}</LocaleContext.Provider>;

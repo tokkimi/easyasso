@@ -43,7 +43,9 @@ function prepareLogoForGeneration(value: string): Promise<string> {
   });
 }
 
-export function GenerateClient({ orgName, profile, categories, welcome, initialLogo = '' }: { orgName: string; profile: any; categories: { id: string; name: string }[]; welcome: boolean; initialLogo?: string }) {
+type Preview = { id: string; name: string; preview: string; family: 'association' | 'shop' };
+
+export function GenerateClient({ orgName, profile, categories, previews = [], welcome, initialLogo = '' }: { orgName: string; profile: any; categories: { id: string; name: string }[]; previews?: Preview[]; welcome: boolean; initialLogo?: string }) {
   const [f, setF] = useState({
     name: orgName || '', year: profile.year || '', mission: profile.mission || '', functioning: profile.functioning || '', actions: profile.actions || '',
     siteType: (profile.siteType || (profile.hasShop && profile.isAssociation === false ? 'shop' : 'association')) as 'association' | 'shop' | 'other',
@@ -63,6 +65,7 @@ export function GenerateClient({ orgName, profile, categories, welcome, initialL
   const functioningLabel = isShop ? 'Que proposez-vous ? (votre offre)' : 'Comment fonctionne votre association ?';
   const actionsLabel = isShop ? 'Votre savoir-faire / vos gammes' : 'Vos actions / activités concrètes';
   const beneficiariesLabel = isShop ? 'Votre clientèle' : 'Public aidé / bénéficiaires';
+  const visualPreviews = previews.filter((p) => (isShop ? p.family === 'shop' : p.family === 'association'));
 
   async function generate() {
     if (!f.mission.trim()) return;
@@ -129,6 +132,21 @@ export function GenerateClient({ orgName, profile, categories, welcome, initialL
             </label>
           )}
           <p className="mt-2 text-xs text-gray-500">{isShop ? 'L’IA écrira un vrai site de boutique (univers, sélection, infos pratiques) — les produits s’ajoutent ensuite dans l’onglet Boutique.' : 'L’IA adapte les textes et les pages à votre type de projet.'}</p>
+
+          {visualPreviews.length > 0 && (
+            <div className="mt-3">
+              <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-gray-400">Aperçu des styles possibles</p>
+              <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                {visualPreviews.map((p) => (
+                  <div key={p.id} className="w-28 shrink-0" title={p.name}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={p.preview} alt={p.name} loading="lazy" className="h-20 w-28 rounded-lg object-cover ring-1 ring-gray-200" />
+                    <p className="mt-1 truncate text-[10px] text-gray-500">{p.name}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="grid gap-4 sm:grid-cols-3">

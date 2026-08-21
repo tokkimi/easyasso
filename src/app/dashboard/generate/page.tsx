@@ -10,6 +10,7 @@ export default async function GeneratePage({ searchParams }: { searchParams: Pro
   const ctx = await requirePermission(PERMISSIONS.SITE_EDIT);
   const { welcome } = await searchParams;
   const categories = TEMPLATES.map((t) => ({ id: t.id, name: t.name }));
+  const previews = TEMPLATES.map((t) => ({ id: t.id, name: t.name, preview: t.preview, family: t.family }));
   const site = await prisma.site.findUnique({
     where: { organizationId: ctx.organization!.id },
     select: { header: true, footer: true },
@@ -17,5 +18,5 @@ export default async function GeneratePage({ searchParams }: { searchParams: Pro
   const header = (site?.header as any) || {};
   const footer = (site?.footer as any) || {};
   const initialLogo = header.logoUrl || footer.logoUrl || '';
-  return <GenerateClient orgName={ctx.organization!.name} profile={(ctx.organization!.profile as any) || {}} categories={categories} welcome={!!welcome} initialLogo={initialLogo} />;
+  return <GenerateClient orgName={ctx.organization!.name} profile={(ctx.organization!.profile as any) || {}} categories={categories} previews={previews} welcome={!!welcome} initialLogo={initialLogo} />;
 }

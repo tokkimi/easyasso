@@ -22,6 +22,7 @@ const schema = z.object({
   legalName: z.string().max(300).optional().default(''),
   registrationNumber: z.string().max(120).optional().default(''),
   legalAddress: z.string().max(500).optional().default(''),
+  legalCountry: z.string().max(120).optional().default(''),
   publicationDirector: z.string().max(300).optional().default(''),
   facebook: z.string().url().or(z.literal('')).optional().default(''),
   instagram: z.string().url().or(z.literal('')).optional().default(''),

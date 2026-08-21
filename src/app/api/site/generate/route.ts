@@ -173,6 +173,7 @@ export async function POST(req: Request) {
       goodToKnow: input.goodToKnow || profile.goodToKnow || '',
       city: input.city || profile.city || '',
       email: input.email || profile.email || '',
+      legalCountry: b.legalCountry || profile.legalCountry || '',
       category: input.category || profile.category || '',
       donationCardEnabled: donation.cardEnabled,
       donationStripeUrl: donation.stripeUrl,

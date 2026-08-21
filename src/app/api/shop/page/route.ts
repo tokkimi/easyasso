@@ -22,7 +22,16 @@ export async function POST() {
     });
 
     const existing = site.pages.find((p) => p.slug === 'boutique');
-    if (existing) return NextResponse.json({ ok: true, slug: 'boutique', existed: true });
+    if (existing) {
+      await prisma.page.update({ where: { id: existing.id }, data: { showInNav: true } });
+      revalidatePath(`/s/${site.subdomain}`);
+      revalidatePath(`/s/${site.subdomain}/boutique`);
+      if (site.customDomain) {
+        revalidatePath(`/domain/${site.customDomain}`);
+        revalidatePath(`/domain/${site.customDomain}/boutique`);
+      }
+      return NextResponse.json({ ok: true, slug: 'boutique', existed: true });
+    }
 
     const order = site.pages.reduce((m, p) => Math.max(m, p.order), 0) + 1;
     await prisma.page.create({

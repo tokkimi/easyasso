@@ -16,7 +16,7 @@ export default function RegisterPage() {
     // Independent: you can be an association, have an online shop, both, or neither.
     isAssociation: true,
     hasShop: false,
-    phone: '', city: '', legalName: '', registrationNumber: '', legalAddress: '', publicationDirector: '',
+    phone: '', city: '', legalName: '', registrationNumber: '', legalAddress: '', legalCountry: 'France', publicationDirector: '',
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -115,6 +115,7 @@ export default function RegisterPage() {
                 <div><label className="label">{en ? 'Legal association name' : 'Nom légal de l’association'}</label><input className="input" value={form.legalName} onChange={(e) => setForm({ ...form, legalName: e.target.value })} placeholder={form.assoName || (en ? 'Official registered name' : 'Nom officiel déclaré')} /></div>
                 <div><label className="label">{en ? 'Registration number' : 'Numéro d’enregistrement'}</label><input className="input" value={form.registrationNumber} onChange={(e) => setForm({ ...form, registrationNumber: e.target.value })} placeholder={en ? 'Registration / charity number' : 'RNA, SIREN, SIRET…'} /></div>
                 <div><label className="label">{en ? 'Legal address' : 'Adresse légale / siège'}</label><textarea className="input" value={form.legalAddress} onChange={(e) => setForm({ ...form, legalAddress: e.target.value })} placeholder={en ? 'Full registered address' : 'Adresse complète du siège'} /></div>
+                <div><label className="label">{en ? 'Legal country' : 'Pays légal'}</label><input className="input" value={form.legalCountry} onChange={(e) => setForm({ ...form, legalCountry: e.target.value })} placeholder={en ? 'France, Belgium, Canada…' : 'France, Belgique, Canada…'} /></div>
                 <div className="grid gap-3 sm:grid-cols-2">
                   <div><label className="label">{en ? 'Phone' : 'Téléphone'}</label><input className="input" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></div>
                   <div><label className="label">{en ? 'City' : 'Ville'}</label><input className="input" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} /></div>

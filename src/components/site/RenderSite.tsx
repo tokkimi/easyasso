@@ -78,13 +78,14 @@ export async function RenderSite({ site, basePath, slug }: { site: SiteWithPages
 
   const header = { ...DEFAULT_HEADER, ...(site.header as any) } as HeaderConfig;
   const footer = { ...DEFAULT_FOOTER, ...(site.footer as any) } as FooterConfig;
-  const nav = site.pages.filter((p) => p.showInNav).map((p) => ({ title: p.title, slug: p.slug, isHome: p.isHome }));
+  const profile = (((site.organization as any)?.profile) || {}) as Record<string, any>;
+  const shopEnabled = Boolean(profile.shopEnabled ?? profile.hasShop);
+  const nav = site.pages.filter((p) => p.showInNav && (p.slug !== 'boutique' || shopEnabled)).map((p) => ({ title: p.title, slug: p.slug, isHome: p.isHome }));
   const theme = (site.theme as any) || {};
   const fontHref = googleFontsHref(theme.font);
 
   // Floating contact bubble — shown on every page of every site (opt-out via
   // footer.showContactBubble = false in the editor).
-  const profile = (((site.organization as any)?.profile) || {}) as Record<string, any>;
   const bubble = (footer as any).showContactBubble === false ? null : (
     <ContactBubble
       name={site.name}
@@ -127,12 +128,13 @@ export async function RenderSite({ site, basePath, slug }: { site: SiteWithPages
     );
   }
 
+  if (slug === 'boutique' && !shopEnabled) notFound();
+
   const page = slug ? site.pages.find((p) => p.slug === slug) : site.pages.find((p) => p.isHome) || site.pages[0];
   if (!page) notFound();
 
   // Load products only when the page actually shows a shop block, and only when
   // the shop is enabled for this organization.
-  const shopEnabled = Boolean(profile.shopEnabled ?? profile.hasShop);
   const shopReady = Boolean(profile.stripeConnectReady);
   const hasShopBlock = page.blocks.some((b) => b.type === 'shop');
   const products = hasShopBlock && shopEnabled ? await loadShopProducts(site.organizationId) : [];

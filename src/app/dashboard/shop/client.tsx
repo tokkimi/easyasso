@@ -77,8 +77,19 @@ export function ShopClient({ enabled: initialEnabled, initial, boutiqueUrl = '',
 
   async function toggleShop() {
     const next = !enabled;
+    const previousEnabled = enabled;
+    const previousHasPage = hasPage;
     setEnabled(next);
-    await fetch('/api/shop', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ enabled: next }) }).catch(() => setEnabled(!next));
+    setHasPage(next ? true : false);
+    const res = await fetch('/api/shop', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ enabled: next }) }).catch(() => null);
+    const data = await res?.json().catch(() => ({}));
+    if (!res || !res.ok) {
+      setEnabled(previousEnabled);
+      setHasPage(previousHasPage);
+      alert(data?.error || 'Impossible de modifier la boutique. Réessayez.');
+      return;
+    }
+    setHasPage(!!data.hasBoutiquePage);
   }
 
   function startAdd() { setEditingId(null); setDraft({ ...EMPTY }); }

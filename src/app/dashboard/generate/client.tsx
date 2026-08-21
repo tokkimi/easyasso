@@ -48,7 +48,7 @@ export function GenerateClient({ orgName, profile, categories, welcome, initialL
     name: orgName || '', year: profile.year || '', mission: profile.mission || '', functioning: profile.functioning || '', actions: profile.actions || '',
     siteType: (profile.siteType || (profile.hasShop && profile.isAssociation === false ? 'shop' : 'association')) as 'association' | 'shop' | 'other',
     hasShop: profile.hasShop ?? false,
-    language: profile.language || 'fr', beneficiaries: profile.beneficiaries || '', goodToKnow: profile.goodToKnow || '', slogan: profile.slogan || '', generateCgv: profile.generateCgv ?? true, news: '', city: profile.city || '', email: profile.email || '', category: profile.category || '',
+    language: profile.language || 'fr', beneficiaries: profile.beneficiaries || '', goodToKnow: profile.goodToKnow || '', slogan: profile.slogan || '', generateCgv: profile.generateCgv ?? true, news: '', city: profile.city || '', email: profile.email || '', legalCountry: profile.legalCountry || 'France', category: profile.category || '',
     donationCardEnabled: profile.donationCardEnabled ?? false, donationStripeUrl: profile.donationStripeUrl || '', donationHelloAssoEnabled: profile.donationHelloAssoEnabled ?? Boolean(profile.donationHelloAssoUrl), donationHelloAssoUrl: profile.donationHelloAssoUrl || '', donationTransferEnabled: profile.donationTransferEnabled ?? false, donationIban: profile.donationIban || '', donationBic: profile.donationBic || '', donationAccountHolder: profile.donationAccountHolder || '', donationBankName: profile.donationBankName || '', donationChequeEnabled: profile.donationChequeEnabled ?? false, donationChequePayable: profile.donationChequePayable || '', donationChequeAddress: profile.donationChequeAddress || '',
     leetchiEnabled: profile.leetchiEnabled ?? Boolean(profile.leetchiUrl), leetchiUrl: profile.leetchiUrl || '', leetchiEmbedUrl: profile.leetchiEmbedUrl || '', leetchiEmbedCode: profile.leetchiEmbedCode || '', leetchiCollectedEuros: profile.leetchiCollectedEuros || '', leetchiGoalEuros: profile.leetchiGoalEuros || '',
   });
@@ -160,6 +160,13 @@ export function GenerateClient({ orgName, profile, categories, welcome, initialL
         </Field>
 
         <label className="flex cursor-pointer items-start gap-3 rounded-xl bg-brand-50 p-4"><input type="checkbox" className="mt-1 h-5 w-5" checked={f.generateCgv} onChange={(e) => setF((current) => ({ ...current, generateCgv: e.target.checked }))} /><span><strong className="block text-gray-900">Générer mes CGV et mentions légales</strong><span className="text-sm text-gray-600">EasyAsso crée des documents détaillés et modifiables avec les informations légales enregistrées dans Réglages.</span></span></label>
+
+        {f.generateCgv && (
+          <Field label="Pays légal pour les CGV / mentions">
+            <input className="input" value={f.legalCountry} onChange={(e) => set('legalCountry', e.target.value)} placeholder="France, Belgique, Canada…" />
+            <p className="mt-1 text-xs text-gray-400">Utilisé pour adapter les documents au pays déclaré dans vos coordonnées légales.</p>
+          </Field>
+        )}
 
         <Field label="Actualités à publier (optionnel)">
           <textarea className="input min-h-[90px]" value={f.news} onChange={(e) => set('news', e.target.value)}

@@ -24,6 +24,7 @@ const schema = z.object({
   legalName: z.string().trim().optional().default(''),
   registrationNumber: z.string().trim().optional().default(''),
   legalAddress: z.string().trim().optional().default(''),
+  legalCountry: z.string().trim().optional().default('France'),
   publicationDirector: z.string().trim().optional().default(''),
 });
 
@@ -34,7 +35,7 @@ export async function POST(req: Request) {
   if (!parsed.success) {
     return NextResponse.json({ error: 'Champs invalides', details: parsed.error.flatten() }, { status: 400 });
   }
-  const { name, assoName, email, password, language, plan, isAssociation, hasShop, phone, city, legalName, registrationNumber, legalAddress, publicationDirector } = parsed.data;
+  const { name, assoName, email, password, language, plan, isAssociation, hasShop, phone, city, legalName, registrationNumber, legalAddress, legalCountry, publicationDirector } = parsed.data;
   const lower = email.toLowerCase();
 
   const existing = await prisma.user.findUnique({ where: { email: lower } });
@@ -55,6 +56,7 @@ export async function POST(req: Request) {
     legalName: legalName || assoName,
     registrationNumber,
     legalAddress,
+    legalCountry,
     publicationDirector: publicationDirector || name,
   });
   await sendVerificationEmail(lower, language).catch((error) => console.error('Verification email failed', error));

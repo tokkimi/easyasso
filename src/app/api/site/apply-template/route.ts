@@ -13,6 +13,11 @@ export async function POST(req: Request) {
     if (!template) return NextResponse.json({ error: 'Modèle introuvable' }, { status: 404 });
     const site = await prisma.site.findUniqueOrThrow({ where: { organizationId: ctx.org.id } });
     await applyTemplateToSite(site.id, template, ctx.org.name, (ctx.org.profile as Record<string, unknown>) || {});
+    // Picking a shop template turns the shop on so the Boutique page works.
+    if (template.family === 'shop') {
+      const profile = (ctx.org.profile as Record<string, any>) || {};
+      await prisma.organization.update({ where: { id: ctx.org.id }, data: { profile: { ...profile, hasShop: true, shopEnabled: true } } });
+    }
     return NextResponse.json({ ok: true });
   } catch (e) { return handleApiError(e); }
 }

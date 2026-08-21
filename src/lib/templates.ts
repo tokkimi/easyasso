@@ -250,7 +250,7 @@ function seed(list: BlockSeed[]) {
 }
 
 export interface BuiltTemplate {
-  id: string; name: string; category: string; tagline: string; preview: string;
+  id: string; name: string; category: string; family: 'association' | 'shop'; tagline: string; preview: string;
   theme: any; header: any; footer: any;
   pages: { title: string; slug: string; isHome: boolean; showInNav: boolean; blocks: any[] }[];
 }
@@ -321,7 +321,7 @@ function build(d: TemplateDef): BuiltTemplate {
   const donateBtn = { text: 'Faire un don', href: '/don', color: d.primary, variant: 'solid', align: 'center' };
   const headerDark = d.headerBg !== '#ffffff';
   return {
-    id: d.id, name: d.name, category: d.category, tagline: d.tagline,
+    id: d.id, name: d.name, category: d.category, family: 'association', tagline: d.tagline,
     preview: img(1, 800, 500),
     theme: { primary: d.primary, secondary: d.footerBg, background: '#ffffff', text: '#1f2937', font: d.font },
     header: {
@@ -384,7 +384,151 @@ function build(d: TemplateDef): BuiltTemplate {
   };
 }
 
-export const TEMPLATES: BuiltTemplate[] = DEFS.map(build);
+// ---------------------------------------------------------------------------
+// Shop / e-commerce templates (family: 'shop'). Complete, distinct layouts.
+// Product photos are placeholders (the merchant replaces them and the catalogue
+// is filled from the Boutique tab); we use picsum seeds so they always load.
+// ---------------------------------------------------------------------------
+interface ShopDef {
+  id: string; name: string; category: string; tagline: string;
+  layout: 'grid' | 'luxe' | 'artisan' | 'concept';
+  font: string; primary: string; headerBg: string; headerText: string; footerBg: string; footerText: string; ctaBg: string;
+  heroTitle: string; heroSubtitle: string;
+  aboutTitle: string; aboutText: string; storyText: string;
+  cards: Card[];
+}
+
+const SHOP_DEFS: ShopDef[] = [
+  {
+    id: 'shop-minimal', name: 'Boutique Minimaliste', category: 'Boutique', tagline: 'Épurée, moderne — met les produits en avant',
+    layout: 'grid', font: 'sans', primary: '#111827', headerBg: '#ffffff', headerText: '#111827', footerBg: '#111827', footerText: '#e5e7eb', ctaBg: '#f9fafb',
+    heroTitle: 'Notre nouvelle collection', heroSubtitle: 'Des pièces choisies avec soin, livrées chez vous.',
+    aboutTitle: 'Notre maison', aboutText: 'Nous sélectionnons chaque produit pour sa qualité, son style et sa durabilité. Une sélection resserrée, pensée pour durer, loin de la surconsommation.',
+    storyText: 'Née d’une passion simple : proposer moins mais mieux. Chaque référence est testée, choisie et présentée avec exigence.',
+    cards: [
+      { icon: 'Sparkles', title: 'Qualité choisie', text: 'Des matières et des finitions sélectionnées une à une.' },
+      { icon: 'Gift', title: 'Emballage soigné', text: 'Chaque commande préparée avec attention.' },
+      { icon: 'Shield', title: 'Paiement sécurisé', text: 'Carte bancaire via Stripe, en toute sécurité.' },
+    ],
+  },
+  {
+    id: 'shop-luxe', name: 'Boutique Élégante', category: 'Boutique', tagline: 'Luxe, sérif raffiné — pour marques premium',
+    layout: 'luxe', font: 'playfair', primary: '#b08d57', headerBg: '#0b0b0c', headerText: '#f5f5f4', footerBg: '#0b0b0c', footerText: '#d6d3d1', ctaBg: '#faf8f5',
+    heroTitle: 'L’élégance, sans compromis', heroSubtitle: 'Une sélection d’exception, pour celles et ceux qui aiment le beau.',
+    aboutTitle: 'La Maison', aboutText: 'Depuis nos débuts, nous cultivons un art du détail : matières nobles, savoir-faire et pièces intemporelles. Chaque création raconte une histoire de raffinement.',
+    storyText: 'Un héritage d’exigence et de goût. Nous travaillons avec des artisans qui partagent notre amour de l’excellence.',
+    cards: [
+      { icon: 'Star', title: 'Pièces d’exception', text: 'Des créations rares, choisies pour leur singularité.' },
+      { icon: 'Shield', title: 'Authenticité garantie', text: 'Chaque article vérifié et certifié.' },
+      { icon: 'Gift', title: 'Écrin sur mesure', text: 'Un emballage à la hauteur de vos pièces.' },
+    ],
+  },
+  {
+    id: 'shop-artisan', name: 'Boutique Créateur', category: 'Boutique', tagline: 'Chaleureuse, artisanale — fait main & créateurs',
+    layout: 'artisan', font: 'poppins', primary: '#c2410c', headerBg: '#fffaf5', headerText: '#7c2d12', footerBg: '#7c2d12', footerText: '#fed7aa', ctaBg: '#fff7ed',
+    heroTitle: 'Fait main, avec amour', heroSubtitle: 'Des créations uniques, imaginées et fabriquées dans notre atelier.',
+    aboutTitle: 'Notre atelier', aboutText: 'Chaque pièce est imaginée, façonnée et finie à la main. Nous privilégions les matières naturelles et les circuits courts, pour des objets qui ont une âme.',
+    storyText: 'Une aventure de créateur, commencée sur un coin de table. Aujourd’hui encore, chaque commande est préparée à la main, avec soin.',
+    cards: [
+      { icon: 'Heart', title: 'Fait main', text: 'Des créations uniques, jamais deux fois les mêmes.' },
+      { icon: 'Leaf', title: 'Matières naturelles', text: 'Des matériaux choisis, durables et responsables.' },
+      { icon: 'Handshake', title: 'Sur mesure', text: 'Une demande particulière ? Écrivez-nous.' },
+    ],
+  },
+  {
+    id: 'shop-concept', name: 'Boutique Concept', category: 'Boutique', tagline: 'Bold, moderne — streetwear & concept store',
+    layout: 'concept', font: 'montserrat', primary: '#7c3aed', headerBg: '#0f172a', headerText: '#f8fafc', footerBg: '#0f172a', footerText: '#e2e8f0', ctaBg: '#f5f3ff',
+    heroTitle: 'La sélection du moment', heroSubtitle: 'Les pièces qui font la différence. Nouveautés chaque semaine.',
+    aboutTitle: 'Le concept', aboutText: 'Un concept store qui rassemble les marques et les pièces qui comptent. Nous dénichons pour vous le meilleur du style, entre exclusivités et incontournables.',
+    storyText: 'Plus qu’une boutique, une communauté. Nous partageons une culture, un style et une envie d’aller de l’avant.',
+    cards: [
+      { icon: 'Sparkles', title: 'Nouveautés chaque semaine', text: 'Une sélection qui bouge en permanence.' },
+      { icon: 'Star', title: 'Éditions limitées', text: 'Des pièces rares, en quantité limitée.' },
+      { icon: 'Gift', title: 'Livraison offerte', text: 'Dès un certain montant d’achat.' },
+    ],
+  },
+];
+
+function shopHome(d: ShopDef): BlockSeed[] {
+  const simg = (seed: string | number, w = 1200, h = 700) => `https://picsum.photos/seed/${d.id}-${seed}/${w}/${h}`;
+  const shopBlock = (title: string): BlockSeed => ({ type: 'shop', content: { title, intro: '', search: false, showCategories: true, columns: 4 } });
+  const cards: BlockSeed = { type: 'cards', content: { columns: 3, items: d.cards } };
+  const shopCta = { text: 'Découvrir la boutique', href: '/boutique', color: '#ffffff', variant: 'solid', align: 'center' };
+  const banner = (h: number, overlay: number, seed = 'hero'): BlockSeed => ({ type: 'banner', content: { image: simg(seed, 1600, 760), title: d.heroTitle, subtitle: d.heroSubtitle, overlay, height: h, button: shopCta } });
+  const about = (side: 'left' | 'right'): BlockSeed => ({ type: 'textimage', content: { title: d.aboutTitle, text: d.aboutText, image: simg('about', 900, 700), imageSide: side, button: { text: 'La boutique', href: '/boutique', color: d.primary, variant: 'outline', align: side === 'right' ? 'left' : 'right' } } });
+  const story = (side: 'left' | 'right'): BlockSeed => ({ type: 'textimage', content: { title: 'Notre histoire', text: d.storyText, image: simg('story', 900, 700), imageSide: side } });
+  const gallery: BlockSeed = { type: 'gallery', content: { columns: 4, images: [simg('g1', 600, 600), simg('g2', 600, 600), simg('g3', 600, 600), simg('g4', 600, 600)] } };
+  const cta: BlockSeed = { type: 'cta', content: { title: 'Prêt à craquer ?', text: 'Parcourez notre sélection et commandez en quelques clics.', button: { text: 'Voir la boutique', href: '/boutique', color: d.primary, variant: 'solid', align: 'center' } }, style: { background: d.ctaBg, paddingY: 48 } };
+
+  switch (d.layout) {
+    case 'luxe':
+      return seed([banner(560, 45, 'hero'), { type: 'heading', content: { text: d.aboutTitle }, style: { align: 'center', fontSize: 34, paddingY: 24 } }, { type: 'text', content: { text: d.aboutText }, style: { align: 'center', fontSize: 19, paddingY: 8 } }, shopBlock('Notre sélection'), story('right'), cta]);
+    case 'artisan':
+      return seed([banner(480, 40, 'hero'), about('right'), gallery, shopBlock('Nos créations'), cards, cta]);
+    case 'concept':
+      return seed([banner(560, 55, 'hero'), cards, shopBlock('La sélection'), story('left'), cta]);
+    case 'grid':
+    default:
+      return seed([banner(460, 35, 'hero'), shopBlock('Nos produits'), about('right'), cards, cta]);
+  }
+}
+
+function buildShop(d: ShopDef): BuiltTemplate {
+  const simg = (seed: string | number, w = 1400, h = 720) => `https://picsum.photos/seed/${d.id}-${seed}/${w}/${h}`;
+  const headerDark = d.headerBg !== '#ffffff' && d.headerBg !== '#fffaf5';
+  return {
+    id: d.id, name: d.name, category: d.category, family: 'shop', tagline: d.tagline,
+    preview: simg('hero', 800, 500),
+    theme: { primary: d.primary, secondary: d.footerBg, background: '#ffffff', text: '#1f2937', font: d.font },
+    header: {
+      logoText: 'Votre boutique', showNav: true, sticky: true,
+      background: d.headerBg, textColor: d.headerText,
+      cta: { text: 'Boutique', href: '/boutique', color: headerDark ? '#ffffff' : d.primary, variant: 'solid', align: 'right' },
+    },
+    footer: {
+      logoText: 'Votre boutique', text: d.tagline,
+      showNewsletter: true, newsletterTitle: 'Recevez nos nouveautés',
+      showCgv: true, cgvContent: 'Conditions générales de vente à compléter.',
+      showMentions: true, mentionsContent: 'Mentions légales à compléter.',
+      allRightsText: `© ${new Date().getFullYear()} Votre boutique. Tous droits réservés.`,
+      background: d.footerBg, textColor: d.footerText,
+      columns: [
+        { title: 'Boutique', links: [{ label: 'Accueil', href: '/' }, { label: 'Boutique', href: '/boutique' }] },
+        { title: 'Aide', links: [{ label: 'À propos', href: '/a-propos' }, { label: 'Contact', href: '/contact' }] },
+      ],
+    },
+    pages: [
+      { title: 'Accueil', slug: 'accueil', isHome: true, showInNav: true, blocks: shopHome(d) },
+      {
+        title: 'Boutique', slug: 'boutique', isHome: false, showInNav: true,
+        blocks: seed([
+          { type: 'banner', content: { image: simg('shop', 1600, 500), title: 'Notre boutique', subtitle: 'Découvrez toute notre sélection.', overlay: 40, height: 340, button: { text: '', href: '', color: '#ffffff', variant: 'solid', align: 'center' } } },
+          { type: 'shop', content: { title: '', intro: '', search: true, showCategories: true, columns: 4 } },
+        ]),
+      },
+      {
+        title: 'À propos', slug: 'a-propos', isHome: false, showInNav: true,
+        blocks: seed([
+          { type: 'heading', content: { text: d.aboutTitle } },
+          { type: 'text', content: { text: d.aboutText } },
+          { type: 'textimage', content: { title: 'Notre histoire', text: d.storyText, image: simg('about2', 900, 700), imageSide: 'left' } },
+          { type: 'cards', content: { columns: 3, items: d.cards } },
+        ]),
+      },
+      {
+        title: 'Contact', slug: 'contact', isHome: false, showInNav: true,
+        blocks: seed([
+          { type: 'heading', content: { text: 'Nous contacter' } },
+          { type: 'text', content: { text: 'Une question sur un article, une commande ou une demande sur mesure ? Écrivez-nous — nous répondons vite.' } },
+          { type: 'contact', content: { title: 'Écrivez-nous', intro: 'Nous vous répondrons rapidement.', email: '', phone: '', address: '', buttonText: 'Envoyer', successText: 'Merci, votre message a bien été envoyé.' } },
+          { type: 'social', content: { social: { align: 'center', instagram: '', facebook: '' } } },
+        ]),
+      },
+    ],
+  };
+}
+
+export const TEMPLATES: BuiltTemplate[] = [...DEFS.map(build), ...SHOP_DEFS.map(buildShop)];
 
 export function getTemplate(id: string): BuiltTemplate | undefined {
   return TEMPLATES.find((t) => t.id === id);

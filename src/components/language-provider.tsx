@@ -289,6 +289,7 @@ function translateText(value: string, locale: Locale) {
   const leading = value.match(/^\s*/)?.[0] || '';
   const trailing = value.match(/\s*$/)?.[0] || '';
   const clean = value.trim();
+  if (locale === 'fr' && clean === 'Email') return value;
   const table = locale === 'en' ? translations : reverse;
   const normalizedTable = locale === 'en' ? normalizedTranslations : normalizedReverse;
   let translated = table[clean] || normalizedTable[normalizeForLookup(clean)];

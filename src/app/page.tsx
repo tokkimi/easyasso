@@ -90,8 +90,8 @@ export default function LandingPage() {
             <p className="mt-5 text-lg leading-8 text-gray-600">Renseignez votre activité, votre histoire, ce que vous faites et vos coordonnées. L’outil magique transforme ces informations en un véritable site complet, structuré et différent pour chaque projet.</p>
           </div>
 
-          <div className="mt-12 grid gap-6 lg:grid-cols-3 lg:items-stretch">
-            <div className="grid gap-4 lg:h-[460px] lg:grid-rows-3">
+          <div className="mt-12 grid min-w-0 gap-6 lg:grid-cols-3 lg:items-stretch">
+            <div className="grid min-w-0 gap-4 lg:h-[460px] lg:grid-rows-3">
               {[
                 ['1. Précisez votre projet', 'Association, boutique / commerce ou autre site : EasyAsso adapte les questions et récupère les informations utiles.'],
                 ['2. Laissez construire', 'Pages, textes, boutique, appels au don, CGV et mentions légales : la base est préparée automatiquement.'],
@@ -104,7 +104,7 @@ export default function LandingPage() {
               ))}
             </div>
 
-            <div className="relative h-full rounded-3xl border border-indigo-200 bg-white p-3 shadow-2xl shadow-indigo-200/60 lg:h-[460px]">
+            <div className="relative min-w-0 rounded-3xl border border-indigo-200 bg-white p-3 shadow-2xl shadow-indigo-200/60 lg:h-[460px]">
               <div className="flex h-full flex-col rounded-2xl bg-gray-950 p-5 text-white">
                 <div className="flex items-center justify-between border-b border-white/10 pb-4">
                   <div className="flex items-center gap-2 text-lg font-bold"><Sparkles className="h-5 w-5 text-violet-300" /> Générateur magique</div>
@@ -121,15 +121,15 @@ export default function LandingPage() {
               </div>
             </div>
 
-            <div className="relative flex flex-col lg:h-[460px]">
+            <div className="relative flex min-w-0 flex-col lg:h-[460px]">
               <span className="mb-3 inline-flex rounded-full bg-brand-50 px-3 py-1 text-xs font-semibold text-brand-700">Questionnaires en aperçu scrollable</span>
               <div className="pointer-events-none absolute -left-3 top-1/2 hidden -translate-y-1/2 flex-col gap-2 lg:flex"><span className="h-2 w-2 rounded-full bg-brand-600" /><span className="h-2 w-2 rounded-full bg-brand-300" /></div>
               <div className="pointer-events-none absolute -right-3 top-1/2 hidden -translate-y-1/2 flex-col gap-2 lg:flex"><span className="h-2 w-2 rounded-full bg-brand-300" /><span className="h-2 w-2 rounded-full bg-brand-600" /></div>
-              <div className="h-[390px] snap-x snap-mandatory overflow-x-auto overflow-y-hidden rounded-[1.75rem] border border-indigo-100 bg-gradient-to-b from-indigo-50 to-white p-4 shadow-inner [scrollbar-width:thin] lg:min-h-0 lg:flex-1 lg:snap-y lg:overflow-x-hidden lg:overflow-y-auto">
-                <div className="flex h-full gap-4 lg:block lg:h-auto lg:space-y-5">
+              <div className="-mx-6 snap-x snap-mandatory overflow-x-auto overflow-y-hidden px-6 pb-3 [scrollbar-width:none] [-webkit-overflow-scrolling:touch] [&::-webkit-scrollbar]:hidden lg:mx-0 lg:h-[390px] lg:flex-1 lg:snap-y lg:overflow-x-hidden lg:overflow-y-auto lg:rounded-[1.75rem] lg:border lg:border-indigo-100 lg:bg-gradient-to-b lg:from-indigo-50 lg:to-white lg:p-4 lg:shadow-inner lg:[scrollbar-width:thin]">
+                <div className="flex w-max gap-4 lg:block lg:w-auto lg:space-y-5">
                   {magicScreens.map((screen) => (
-                    <figure key={screen.src} className="h-full min-w-[82vw] max-w-[360px] snap-center overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-md lg:h-auto lg:min-w-0 lg:max-w-none lg:snap-start">
-                      <div className="relative h-[330px] w-full overflow-hidden bg-white">
+                    <figure key={screen.src} className="w-[min(78vw,320px)] shrink-0 snap-center overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-md lg:w-auto lg:snap-start">
+                      <div className="relative h-[300px] w-full overflow-hidden bg-white lg:h-[330px]">
                         <Image src={screen.src} alt={screen.alt} fill sizes="(max-width: 1024px) 92vw, 360px" className="object-cover object-top" />
                       </div>
                       <figcaption className="border-t border-gray-100 bg-white px-4 py-3 text-center text-sm font-extrabold text-gray-800">{screen.title}</figcaption>
@@ -157,9 +157,9 @@ export default function LandingPage() {
               <figcaption className="mx-auto mt-3 max-w-2xl text-center text-sm font-semibold text-gray-700">Tableau de bord : boutique, dons, CRM, comptabilité, statistiques et édition du site au même endroit.</figcaption>
             </figure>
 
-            <div className="-mx-5 mt-8 flex snap-x gap-3 overflow-x-auto px-5 pb-2 sm:mx-auto sm:grid sm:max-w-5xl sm:grid-cols-2 sm:gap-4 sm:overflow-visible sm:px-0 lg:grid-cols-4">
+            <div className="-mx-5 mt-8 flex snap-x snap-mandatory gap-3 overflow-x-auto px-5 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mx-auto sm:grid sm:max-w-5xl sm:grid-cols-2 sm:gap-4 sm:overflow-visible sm:px-0 lg:grid-cols-4">
               {magicTools.map((tool) => (
-                <div key={tool.title} className="flex min-w-[44vw] snap-start flex-col rounded-2xl border border-gray-100 bg-gray-50 p-4 sm:min-w-0">
+                <div key={tool.title} className="flex w-[calc((100vw-3.75rem)/2)] shrink-0 snap-start flex-col rounded-2xl border border-gray-100 bg-gray-50 p-3 sm:w-auto sm:min-w-0 sm:p-4">
                   <tool.icon className="h-5 w-5 shrink-0 text-brand-600" />
                   <h4 className="mt-3 text-sm font-extrabold leading-5 text-gray-900">{tool.title}</h4>
                   <p className="mt-2 text-xs leading-5 text-gray-600">{tool.text}</p>

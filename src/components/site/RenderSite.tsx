@@ -96,6 +96,19 @@ export async function RenderSite({ site, basePath, slug }: { site: SiteWithPages
     />
   );
 
+  if (slug === 'client') {
+    return (
+      <div className="flex min-h-screen flex-col" style={themeStyle(theme)}>
+        {fontHref && <link rel="stylesheet" href={fontHref} />}
+        <style dangerouslySetInnerHTML={{ __html: brandCss(theme.primary) }} />
+        <PublicHeader header={header} nav={nav} basePath={basePath} />
+        <ClientAccessPage organizationName={site.name} locale={profile.language === 'en' ? 'en' : 'fr'} />
+        <PublicFooter footer={footer} orgId={site.organizationId} basePath={basePath} nav={nav} />
+        {bubble}
+      </div>
+    );
+  }
+
   if (slug === 'cgv' || slug === 'mentions-legales') {
     const isCgv = slug === 'cgv';
     return (
@@ -138,6 +151,49 @@ export async function RenderSite({ site, basePath, slug }: { site: SiteWithPages
       <PublicFooter footer={footer} orgId={site.organizationId} basePath={basePath} nav={nav} />
       {bubble}
     </div>
+  );
+}
+
+function ClientAccessPage({ organizationName, locale }: { organizationName: string; locale: 'fr' | 'en' }) {
+  const en = locale === 'en';
+  return (
+    <main className="flex-1 bg-gray-50 px-4 py-12">
+      <section className="mx-auto max-w-2xl rounded-[2rem] bg-white p-6 text-center shadow-sm ring-1 ring-gray-200 md:p-10">
+        <p className="text-sm font-bold uppercase tracking-[0.2em] text-[var(--brand)]">
+          {en ? 'Customer area' : 'Espace client'}
+        </p>
+        <h1 className="mt-3 text-3xl font-black text-gray-900 md:text-4xl">
+          {en ? 'Sign in or create your customer account' : 'Connexion ou inscription client'}
+        </h1>
+        <p className="mx-auto mt-4 max-w-xl text-gray-600">
+          {en
+            ? `Soon, customers of ${organizationName} will be able to find their orders, donations, favorites and messages here.`
+            : `Bientôt, les clients de ${organizationName} pourront retrouver ici leurs commandes, dons, favoris et messages.`}
+        </p>
+        <div className="mt-8 rounded-2xl bg-gray-50 p-4 text-left">
+          <label className="text-sm font-bold text-gray-700" htmlFor="customer-email">
+            {en ? 'Email address' : 'Adresse email'}
+          </label>
+          <div className="mt-2 flex flex-col gap-2 sm:flex-row">
+            <input
+              id="customer-email"
+              type="email"
+              disabled
+              placeholder={en ? 'you@example.com' : 'vous@email.fr'}
+              className="input flex-1 bg-white disabled:opacity-70"
+            />
+            <button disabled className="rounded-xl bg-[var(--brand)] px-5 py-3 font-bold text-white opacity-70">
+              {en ? 'Receive my link' : 'Recevoir mon lien'}
+            </button>
+          </div>
+          <p className="mt-3 text-xs text-gray-500">
+            {en
+              ? 'This customer profile will be separate from the EasyAsso creator dashboard.'
+              : 'Ce profil client sera séparé du tableau de bord créateur EasyAsso.'}
+          </p>
+        </div>
+      </section>
+    </main>
   );
 }
 

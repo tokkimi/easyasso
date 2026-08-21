@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import Link from 'next/link';
-import { Menu, X, Facebook, Instagram, Linkedin, Youtube, Music2 } from 'lucide-react';
+import { Menu, X, Facebook, Instagram, Linkedin, Youtube, Music2, UserRound } from 'lucide-react';
 import type { HeaderConfig, FooterConfig, ButtonConfig } from '@/lib/blocks';
 import { NewsletterForm } from './NewsletterForm';
 
@@ -29,6 +29,7 @@ export function PublicHeader({
   const [menuOpen, setMenuOpen] = useState(false);
   const cta: ButtonConfig | undefined = header.cta;
   const link = (slug: string, isHome: boolean) => (isHome ? basePath || '/' : `${basePath}/${slug}`);
+  const customerHref = basePath === '#' ? '#client' : `${basePath || ''}/client`;
   return (
     <header
       style={{ background: header.background, color: header.textColor }}
@@ -65,6 +66,14 @@ export function PublicHeader({
             </a>
           )}
         </div>
+        <Link
+          href={customerHref}
+          title="Connexion ou inscription client"
+          aria-label="Connexion ou inscription client"
+          className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-black/10 bg-white/85 text-current shadow-sm transition hover:bg-white"
+        >
+          <UserRound className="h-5 w-5" />
+        </Link>
         <button type="button" onClick={() => setMenuOpen((open) => !open)} className="public-header-menu-button touch-target shrink-0 items-center justify-center rounded-lg border border-black/10 bg-white/80" aria-expanded={menuOpen} aria-label={menuOpen ? 'Fermer le menu' : 'Ouvrir le menu'}>
           {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </button>

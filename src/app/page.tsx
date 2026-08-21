@@ -95,12 +95,12 @@ export default function LandingPage() {
             <p className="mt-5 text-lg leading-8 text-gray-600">Renseignez votre activité, votre histoire, ce que vous faites et vos coordonnées. L’outil magique transforme ces informations en un véritable site complet, structuré et différent pour chaque projet.</p>
           </div>
 
-          <div className="mt-12 grid items-center gap-10 lg:grid-cols-[0.9fr_1.1fr]">
+          <div className="mt-12 grid gap-6 lg:grid-cols-3 lg:items-stretch">
             <div className="space-y-4">
               {[
-                ['1. Parlez-nous de votre projet', 'Un questionnaire simple, prérempli avec les informations déjà enregistrées dans vos réglages.'],
-                ['2. Laissez la magie opérer', 'L’outil rédige des textes développés, choisit une structure adaptée à votre activité et compose toutes les pages.'],
-                ['3. Gardez le contrôle', 'Tout est immédiatement modifiable dans l’éditeur visuel : textes, images, couleurs, boutons, pages, menu et pied de page.'],
+                ['1. Précisez votre projet', 'Association, boutique / commerce ou autre site : EasyAsso adapte les questions. Pour une boutique, vous indiquez l’univers, le type de produits, les marques, les catégories, le style et les informations utiles.'],
+                ['2. Laissez la magie construire', 'L’outil prépare les pages, les textes, la boutique, les appels au don, les CGV, les mentions légales et les sections importantes selon les informations données.'],
+                ['3. Ajustez tout simplement', 'Rien n’est figé : vous modifiez immédiatement les textes, images, couleurs, boutons, pages, menus, produits et footer dans l’éditeur visuel.'],
               ].map(([title, text], index) => (
                 <div key={title} className="flex gap-4 rounded-2xl border border-indigo-100 bg-white p-5 shadow-sm">
                   <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-indigo-600 text-white">{index === 0 ? <FileText className="h-5 w-5" /> : index === 1 ? <WandSparkles className="h-5 w-5" /> : <MousePointerClick className="h-5 w-5" />}</div>
@@ -110,42 +110,36 @@ export default function LandingPage() {
             </div>
 
             <div className="relative rounded-3xl border border-indigo-200 bg-white p-3 shadow-2xl shadow-indigo-200/60">
-              <div className="rounded-2xl bg-gray-950 p-5 text-white">
+              <div className="flex h-full min-h-[520px] flex-col rounded-2xl bg-gray-950 p-5 text-white">
                 <div className="flex items-center justify-between border-b border-white/10 pb-4">
                   <div className="flex items-center gap-2 font-bold"><Sparkles className="h-5 w-5 text-violet-300" /> Générateur magique</div>
                   <span className="rounded-full bg-green-400/15 px-3 py-1 text-xs font-semibold text-green-300">Aucune page générique copiée-collée</span>
                 </div>
-                <div className="mt-5 grid gap-3 sm:grid-cols-2">
-                  <div className="rounded-xl bg-white/10 p-4"><p className="text-xs uppercase tracking-wider text-violet-200">Cause</p><p className="mt-1 font-semibold">Protection animale</p></div>
-                  <div className="rounded-xl bg-white/10 p-4"><p className="text-xs uppercase tracking-wider text-violet-200">Création</p><p className="mt-1 font-semibold">2018 · Nantes</p></div>
-                  <div className="rounded-xl bg-white/10 p-4 sm:col-span-2"><p className="text-xs uppercase tracking-wider text-violet-200">Mission</p><p className="mt-1 text-sm leading-6 text-gray-200">Recueillir, soigner et replacer les animaux abandonnés tout en sensibilisant les familles à une adoption responsable.</p></div>
+                <div className="mt-5 grid gap-3">
+                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+                    <div className="rounded-xl bg-white/10 p-4"><p className="text-xs uppercase tracking-wider text-violet-200">Type</p><p className="mt-1 font-semibold">Association · Boutique · Autre projet</p></div>
+                    <div className="rounded-xl bg-white/10 p-4"><p className="text-xs uppercase tracking-wider text-violet-200">Exemple boutique</p><p className="mt-1 font-semibold">Bougies · bijoux · produits solidaires</p></div>
+                  </div>
+                  <div className="rounded-xl bg-white/10 p-4"><p className="text-xs uppercase tracking-wider text-violet-200">Analyse</p><p className="mt-1 text-sm leading-6 text-gray-200">Le générateur lit vos réponses, évite le copier-coller, choisit les pages utiles et transforme vos informations en textes structurés.</p></div>
+                  <div className="rounded-xl bg-white/10 p-4"><p className="text-xs uppercase tracking-wider text-violet-200">Résultat</p><p className="mt-1 text-sm leading-6 text-gray-200">Site vitrine, appel au don, boutique, contact, actualités, documents légaux et tableau de bord restent prêts à modifier.</p></div>
                 </div>
-                <div className="mt-4 rounded-xl bg-gradient-to-r from-violet-500 to-indigo-500 p-4">
+                <div className="mt-auto rounded-xl bg-gradient-to-r from-violet-500 to-indigo-500 p-4">
                   <div className="flex items-center gap-3"><WandSparkles className="h-6 w-6" /><div><p className="font-bold">7 pages et 31 sections prêtes</p><p className="text-sm text-indigo-100">Textes approfondis · navigation · appels à l’action · contact</p></div></div>
                 </div>
               </div>
             </div>
-          </div>
 
-          <div className="mt-12 grid gap-8 rounded-[2rem] border border-indigo-100 bg-white p-6 shadow-sm lg:grid-cols-[0.9fr_1.1fr] lg:items-center lg:p-8">
-            <div>
-              <span className="badge bg-brand-50 text-brand-700">Aperçu scrollable</span>
-              <h3 className="mt-4 text-3xl font-extrabold leading-tight text-gray-900">Un questionnaire clair, pas un tunnel compliqué</h3>
-              <p className="mt-4 text-base leading-8 text-gray-600">Les utilisateurs voient tout de suite quoi remplir selon leur projet : association, boutique / commerce ou autre site. Logo, mission, offre, actualités, CGV et mentions légales restent guidés.</p>
-              <p className="mt-3 text-sm leading-6 text-gray-500">À droite, faites défiler les captures pour voir les deux versions du questionnaire. Sur mobile, le défilement se fait naturellement au doigt.</p>
-              <div className="mt-6 grid gap-3 text-sm text-gray-700 sm:grid-cols-2 lg:grid-cols-1">
-                <div className="rounded-2xl bg-indigo-50 p-4"><strong className="text-gray-900">Association</strong><span className="mt-1 block text-gray-600">Cause, mission, fonctionnement, dons, CGV et actualités.</span></div>
-                <div className="rounded-2xl bg-violet-50 p-4"><strong className="text-gray-900">Boutique / commerce</strong><span className="mt-1 block text-gray-600">Univers de marque, offre, logo, pages et boutique prête à remplir.</span></div>
-              </div>
-            </div>
             <div className="relative">
+              <span className="mb-3 inline-flex rounded-full bg-brand-50 px-3 py-1 text-xs font-semibold text-brand-700">Questionnaires en aperçu scrollable</span>
               <div className="pointer-events-none absolute -left-3 top-1/2 hidden -translate-y-1/2 flex-col gap-2 lg:flex"><span className="h-2 w-2 rounded-full bg-brand-600" /><span className="h-2 w-2 rounded-full bg-brand-300" /></div>
               <div className="pointer-events-none absolute -right-3 top-1/2 hidden -translate-y-1/2 flex-col gap-2 lg:flex"><span className="h-2 w-2 rounded-full bg-brand-300" /><span className="h-2 w-2 rounded-full bg-brand-600" /></div>
-              <div className="max-h-[540px] snap-y snap-mandatory overflow-y-auto rounded-[1.75rem] border border-indigo-100 bg-gradient-to-b from-indigo-50 to-white p-4 shadow-inner [scrollbar-width:thin] sm:max-h-[620px]">
+              <div className="h-[520px] snap-y snap-mandatory overflow-y-auto rounded-[1.75rem] border border-indigo-100 bg-gradient-to-b from-indigo-50 to-white p-4 shadow-inner [scrollbar-width:thin]">
                 <div className="space-y-5">
                   {magicScreens.map((screen) => (
                     <figure key={screen.src} className="snap-start overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-md">
-                      <Image src={screen.src} alt={screen.alt} width={760} height={980} sizes="(max-width: 1024px) 92vw, 560px" className="h-auto w-full" />
+                      <div className="relative h-[430px] w-full overflow-hidden bg-white">
+                        <Image src={screen.src} alt={screen.alt} fill sizes="(max-width: 1024px) 92vw, 360px" className="object-cover object-top" />
+                      </div>
                       <figcaption className="border-t border-gray-100 bg-white px-4 py-3 text-center text-sm font-extrabold text-gray-800">{screen.title}</figcaption>
                     </figure>
                   ))}

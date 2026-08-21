@@ -271,8 +271,8 @@ export function OfficialPlayers({ content }: { content: any }) {
             const src = officialEmbed(item);
             const isVideo = platform === 'youtube';
             return (
-              <article key={`${item.url}-${i}`} className="w-[82vw] max-w-[380px] shrink-0 snap-start overflow-hidden rounded-3xl bg-white shadow-sm ring-1 ring-gray-100 md:w-[360px]">
-                <div className="flex min-h-[96px] flex-col justify-between gap-3 border-b border-gray-100 p-4">
+              <article key={`${item.url}-${i}`} className="w-[74vw] max-w-[300px] shrink-0 snap-start overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-gray-100 md:w-[300px]">
+                <div className="flex min-h-[82px] flex-col justify-between gap-2 border-b border-gray-100 p-3">
                   <PlatformLogo platform={platform} />
                   <div>
                     {item.title && <h3 className="line-clamp-2 text-base font-extrabold text-gray-900">{item.title}</h3>}
@@ -280,14 +280,14 @@ export function OfficialPlayers({ content }: { content: any }) {
                     {item.releaseDate && <p className="mt-2 inline-flex items-center gap-1 text-xs font-bold text-gray-400"><CalendarDays className="h-3.5 w-3.5" /> {new Date(item.releaseDate).toLocaleDateString('fr-FR')}</p>}
                   </div>
                 </div>
-                <div className={isVideo ? 'relative aspect-video bg-black' : 'bg-gray-50 p-3'}>
+                <div className={isVideo ? 'relative aspect-video bg-black' : 'bg-gray-50 p-2'}>
                   <iframe
                     src={src}
                     title={`${platformLabel(platform)} ${item.title || i + 1}`}
                     loading="lazy"
                     allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
                     allowFullScreen
-                    className={isVideo ? 'absolute inset-0 h-full w-full border-0' : 'h-[352px] w-full rounded-2xl border-0'}
+                    className={isVideo ? 'absolute inset-0 h-full w-full border-0' : 'h-[250px] w-full rounded-xl border-0'}
                   />
                 </div>
               </article>

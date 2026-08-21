@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { Check, MousePointerClick, Palette, HandCoins, BarChart3, Globe, Sparkles, WandSparkles, FileText, ExternalLink, Gift, Zap, Clock, Wallet, HeartHandshake, Recycle, Server, Gauge, Store, MessageSquareText } from 'lucide-react';
+import { Check, MousePointerClick, Palette, HandCoins, BarChart3, Globe, Sparkles, WandSparkles, FileText, ExternalLink, Gift, Recycle, Server, Gauge, Store, MessageSquareText } from 'lucide-react';
 
 import { PLANS } from '@/lib/plans';
 import { LanguageSwitcher } from '@/components/language-provider';
@@ -24,15 +24,6 @@ const magicTools = [
   { icon: MessageSquareText, title: 'Contact et messagerie', text: 'Les vraies coordonnées, le formulaire de contact et les messages reçus arrivent dans l’espace utilisateur.' },
 ];
 
-const atouts = [
-  { icon: Zap, title: 'Droit à l’essentiel', text: 'Un parcours simple qui va à ce qui compte : présenter votre projet, vendre ou collecter des dons, gérer le reste. Pas d’usine à gaz.' },
-  { icon: Clock, title: 'En ligne en quelques minutes', text: 'L’outil magique rédige et structure votre site à partir de quelques informations. Vous ajustez ensuite librement.' },
-  { icon: Wallet, title: 'Un prix pensé pour les associations', text: `Dès ${MONTHLY} € par mois, ${ANNUAL} € par an, ou un paiement unique de ${PRICE} € à vie — loin des milliers d’euros d’une agence et d’un hébergement annuel.` },
-  { icon: MousePointerClick, title: 'Autonomie totale', text: 'Vous créez, modifiez et gérez tout vous-même, sans dépendre d’un prestataire ni d’aucune compétence technique.' },
-  { icon: HandCoins, title: 'Vraiment tout-en-un', text: 'Site, dons, reçus fiscaux, CRM donateurs, comptabilité, statistiques et référencement réunis au même endroit.' },
-  { icon: HeartHandshake, title: 'Accessible à toutes', text: 'Pensé pour les petites structures sans budget : une présence professionnelle ne devrait pas être réservée à celles qui peuvent se l’offrir.' },
-];
-
 const eco = [
   { icon: Recycle, title: 'Mutualisé', text: 'Une infrastructure partagée plutôt qu’un site sur-mesure par association.' },
   { icon: Server, title: 'Pages en cache', text: 'Servies depuis un CDN : moins de calcul à chaque visite.' },
@@ -43,6 +34,15 @@ const eco = [
 const magicScreens = [
   { src: '/home-showcase/magic-association.png', alt: 'Questionnaire magique pour association', title: 'Questionnaire association' },
   { src: '/home-showcase/magic-shop.png', alt: 'Questionnaire magique pour boutique', title: 'Questionnaire boutique' },
+];
+
+const pricingFeatures = [
+  'Éditeur visuel complet',
+  'Adresse EasyAsso incluse avec l’hébergement',
+  'Domaine personnalisé connectable s’il est acheté séparément',
+  'Boutique, dons, reçus & campagnes',
+  'Stripe, HelloAsso & Leetchi inclus',
+  'CRM donateurs, comptabilité & statistiques',
 ];
 
 export default function LandingPage() {
@@ -121,14 +121,14 @@ export default function LandingPage() {
               </div>
             </div>
 
-            <div className="relative flex h-full flex-col lg:h-[460px]">
+            <div className="relative flex flex-col lg:h-[460px]">
               <span className="mb-3 inline-flex rounded-full bg-brand-50 px-3 py-1 text-xs font-semibold text-brand-700">Questionnaires en aperçu scrollable</span>
               <div className="pointer-events-none absolute -left-3 top-1/2 hidden -translate-y-1/2 flex-col gap-2 lg:flex"><span className="h-2 w-2 rounded-full bg-brand-600" /><span className="h-2 w-2 rounded-full bg-brand-300" /></div>
               <div className="pointer-events-none absolute -right-3 top-1/2 hidden -translate-y-1/2 flex-col gap-2 lg:flex"><span className="h-2 w-2 rounded-full bg-brand-300" /><span className="h-2 w-2 rounded-full bg-brand-600" /></div>
-              <div className="min-h-0 flex-1 snap-y snap-mandatory overflow-y-auto rounded-[1.75rem] border border-indigo-100 bg-gradient-to-b from-indigo-50 to-white p-4 shadow-inner [scrollbar-width:thin]">
-                <div className="space-y-5">
+              <div className="h-[390px] snap-x snap-mandatory overflow-x-auto overflow-y-hidden rounded-[1.75rem] border border-indigo-100 bg-gradient-to-b from-indigo-50 to-white p-4 shadow-inner [scrollbar-width:thin] lg:min-h-0 lg:flex-1 lg:snap-y lg:overflow-x-hidden lg:overflow-y-auto">
+                <div className="flex h-full gap-4 lg:block lg:h-auto lg:space-y-5">
                   {magicScreens.map((screen) => (
-                    <figure key={screen.src} className="snap-start overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-md">
+                    <figure key={screen.src} className="h-full min-w-[82vw] max-w-[360px] snap-center overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-md lg:h-auto lg:min-w-0 lg:max-w-none lg:snap-start">
                       <div className="relative h-[330px] w-full overflow-hidden bg-white">
                         <Image src={screen.src} alt={screen.alt} fill sizes="(max-width: 1024px) 92vw, 360px" className="object-cover object-top" />
                       </div>
@@ -152,7 +152,7 @@ export default function LandingPage() {
 
             <figure className="mx-auto mt-7 max-w-3xl">
               <div className="relative aspect-[16/9] w-full overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-xl shadow-indigo-100/70">
-                <Image src="/home-showcase/dashboard.webp" alt="Aperçu du tableau de bord EasyAsso" fill sizes="(max-width: 768px) 92vw, 760px" className="object-cover object-top" />
+                <Image src="/home-showcase/dashboard.webp" alt="Aperçu du tableau de bord EasyAsso" fill sizes="(max-width: 768px) 92vw, 760px" className="object-contain object-center" />
               </div>
               <figcaption className="mx-auto mt-3 max-w-2xl text-center text-sm font-semibold text-gray-700">Tableau de bord : boutique, dons, CRM, comptabilité, statistiques et édition du site au même endroit.</figcaption>
             </figure>
@@ -202,34 +202,11 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Pourquoi Easy Asso */}
-      <section className="border-t border-gray-100 bg-gray-50 py-16">
-        <div className="mx-auto max-w-6xl px-6">
-          <div className="mx-auto max-w-3xl text-center">
-            <h2 className="text-3xl font-extrabold tracking-tight text-gray-900 md:text-4xl">Pourquoi Easy Asso</h2>
-            <p className="mt-4 text-lg leading-8 text-gray-600">
-              Easy Asso est né d’une conviction simple : une association, une boutique ou un porteur de projet ne devrait pas avoir besoin du budget d’une agence pour exister en ligne.
-              Nous avons conçu un outil qui va droit à l’essentiel, à un prix pensé pour les petites structures, pour que chacun puisse se présenter,
-              vendre ou collecter des dons et gérer son activité — sans compétence technique et sans y passer des semaines.
-            </p>
-          </div>
-          <div className="mt-12 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {atouts.map((a) => (
-              <div key={a.title} className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-                <div className="grid h-11 w-11 place-items-center rounded-xl bg-brand-50 text-brand-700"><a.icon className="h-5 w-5" /></div>
-                <h3 className="mt-4 text-lg font-bold text-gray-900">{a.title}</h3>
-                <p className="mt-1 text-sm leading-6 text-gray-600">{a.text}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* Pricing */}
       <section className="mx-auto max-w-5xl px-6 pb-20">
         <div className="mx-auto max-w-2xl text-center">
           <h2 className="text-3xl font-extrabold tracking-tight text-gray-900 md:text-4xl">Trois formules, tout compris</h2>
-          <p className="mt-3 text-lg text-gray-600">Choisissez ce qui vous convient : au mois, à l’année ou à vie. Mêmes fonctionnalités. Paiement par carte ou par virement.</p>
+          <p className="mt-3 text-lg text-gray-600">Tous les outils sont inclus dans chaque formule. Seule la durée change : mensuel, annuel ou accès à vie. L’adresse EasyAsso et l’hébergement sont inclus ; un domaine personnalisé peut être connecté s’il est acheté séparément.</p>
         </div>
         <div className="mt-10 grid gap-6 md:grid-cols-3">
           {/* Monthly */}
@@ -238,7 +215,7 @@ export default function LandingPage() {
             <div className="mt-3 text-5xl font-extrabold text-gray-900">{MONTHLY} €<span className="text-lg font-medium text-gray-500"> / mois</span></div>
             <p className="mt-1 text-gray-500">Sans engagement, résiliable à tout moment.</p>
             <ul className="mt-6 flex-1 space-y-2 text-left text-gray-700">
-              {['Éditeur visuel complet', 'Sous-domaine offert + domaine perso', 'Dons, reçus & campagnes', 'CRM donateurs & équipe', 'Comptabilité & statistiques'].map((i) => (
+              {pricingFeatures.map((i) => (
                 <li key={i} className="flex items-center gap-2"><Check className="h-5 w-5 text-green-600" /> {i}</li>
               ))}
             </ul>
@@ -248,9 +225,9 @@ export default function LandingPage() {
           <div className="flex flex-col rounded-3xl border border-gray-200 bg-white p-8 shadow-sm">
             <p className="text-sm font-bold uppercase tracking-wide text-brand-700">Annuel</p>
             <div className="mt-3 text-5xl font-extrabold text-gray-900">{ANNUAL} €<span className="text-lg font-medium text-gray-500"> / an</span></div>
-            <p className="mt-1 text-gray-500">2 mois offerts par rapport au mensuel.</p>
+            <p className="mt-1 text-gray-500">Même outil complet, réglé une fois pour l’année.</p>
             <ul className="mt-6 flex-1 space-y-2 text-left text-gray-700">
-              {['Éditeur visuel complet', 'Sous-domaine offert + domaine perso', 'Dons, reçus & campagnes', 'CRM donateurs & équipe', 'Comptabilité & statistiques', 'Support Stripe, HelloAsso & Leetchi'].map((i) => (
+              {pricingFeatures.map((i) => (
                 <li key={i} className="flex items-center gap-2"><Check className="h-5 w-5 text-green-600" /> {i}</li>
               ))}
             </ul>
@@ -263,7 +240,7 @@ export default function LandingPage() {
             <div className="mt-3 text-5xl font-extrabold">{PRICE} €<span className="text-lg font-medium text-brand-100"> une fois</span></div>
             <p className="mt-1 text-brand-100">Un seul paiement, plus jamais d’abonnement.</p>
             <ul className="mt-6 flex-1 space-y-2 text-left">
-              {['Tout ce qui est inclus dans l’annuel', 'Aucun renouvellement à gérer', 'Hébergé à vie', 'Toutes les mises à jour incluses'].map((i) => (
+              {pricingFeatures.map((i) => (
                 <li key={i} className="flex items-center gap-2"><Check className="h-5 w-5 text-brand-200" /> {i}</li>
               ))}
             </ul>

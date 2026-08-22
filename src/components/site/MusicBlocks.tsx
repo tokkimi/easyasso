@@ -233,7 +233,12 @@ function platformLabel(platform: string) {
 
 function PlatformLogo({ platform }: { platform: string }) {
   if (platform === 'youtube') {
-    return <span className="inline-flex items-center text-[#ff0000]" aria-label="YouTube"><span className="grid h-7 w-10 place-items-center rounded-lg bg-[#ff0000] text-white"><Play className="h-4 w-4 fill-current" /></span></span>;
+    return (
+      <span className="inline-flex items-center gap-2 font-black text-[#ff0000]" aria-label="YouTube">
+        <span className="grid h-7 w-10 place-items-center rounded-lg bg-[#ff0000] text-white"><Play className="h-4 w-4 fill-current" /></span>
+        YouTube
+      </span>
+    );
   }
   if (platform === 'spotify') {
     return (

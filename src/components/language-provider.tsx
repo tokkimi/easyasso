@@ -354,6 +354,7 @@ function translateTree(root: Node, locale: Locale) {
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const [locale, setLocaleState] = useState<Locale>('fr');
   const [forceFrench, setForceFrench] = useState(false);
+  const [isVielusosDomain, setIsVielusosDomain] = useState(false);
   const pathname = usePathname();
   const isAssociationSite = pathname.startsWith('/s/') || pathname.startsWith('/domain/') || pathname.startsWith('/theme-preview/');
   useEffect(() => {
@@ -363,6 +364,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   }, []);
   useEffect(() => {
     const hostname = window.location.hostname.toLowerCase();
+    setIsVielusosDomain(hostname === 'vielusos.com' || hostname === 'www.vielusos.com');
     const vielusosAdmin = (hostname === 'vielusos.com' || hostname === 'www.vielusos.com') && ['/admin', '/login', '/forgot-password', '/reset-password', '/verify-email'].some((path) => pathname === path || pathname.startsWith(`${path}/`));
     const locked = vielusosAdmin || Boolean(document.querySelector('[data-dashboard-locale="fr"]'));
     setForceFrench(locked);
@@ -402,7 +404,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     setLocaleState(next);
   };
   const value = useMemo(() => ({ locale, setLocale, t: (text: string) => locale === 'en' ? translations[text] || text : text }), [locale]);
-  return <LocaleContext.Provider value={value}>{children}{!isAssociationSite && pathname !== '/' && !forceFrench && <LanguageSwitcher />}</LocaleContext.Provider>;
+  return <LocaleContext.Provider value={value}>{children}{!isAssociationSite && !isVielusosDomain && pathname !== '/' && !forceFrench && <LanguageSwitcher />}</LocaleContext.Provider>;
 }
 
 export function useLanguage() { return useContext(LocaleContext); }

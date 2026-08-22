@@ -7,7 +7,7 @@ import { NewsletterForm } from './NewsletterForm';
 import { LanguageSwitcher, useLanguage } from '@/components/language-provider';
 
 interface NavItem { title: string; slug: string; isHome: boolean }
-const SOCIAL_LABELS = new Set(['facebook', 'instagram', 'linkedin', 'youtube', 'tiktok', 'x']);
+const SOCIAL_LABELS = new Set(['facebook', 'instagram', 'linkedin', 'youtube', 'spotify', 'tiktok', 'x', 'twitter']);
 const isSocialColumn = (column: FooterConfig['columns'][number]) => column.links.length > 0 && column.links.every((link) => SOCIAL_LABELS.has(link.label.toLowerCase()));
 const logoFrameClass = 'inline-flex max-w-[220px] items-center rounded-xl bg-transparent p-0.5 sm:max-w-[280px]';
 const headerLogoClass = 'max-h-11 w-auto max-w-full object-contain sm:max-h-12';
@@ -16,7 +16,7 @@ const footerLogoClass = 'max-h-16 w-auto max-w-full object-contain';
 function SocialMark({ label }: { label: string }) {
   const key = label.toLowerCase();
   const asset = key === 'instagram' || key === 'youtube' || key === 'spotify' ? `/integrations/${key}.svg` : '';
-  if (asset) return <img src={asset} alt="" className="h-[18px] w-[18px] object-contain" />;
+  if (asset) return <img src={asset} alt="" className="h-[18px] w-[18px] object-contain brightness-0 invert" />;
   if (key === 'tiktok') return <svg viewBox="0 0 24 24" aria-hidden="true" className="h-[18px] w-[18px] fill-current"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.9 2.9 0 1 1-2-2.76v-3.5a6.34 6.34 0 1 0 5.45 6.26V8.73a8.16 8.16 0 0 0 4.77 1.52V6.8c-.34 0-.67-.04-1-.11Z" /></svg>;
   if (key === 'facebook') return <Facebook className="h-[18px] w-[18px]" />;
   if (key === 'linkedin') return <Linkedin className="h-[18px] w-[18px]" />;

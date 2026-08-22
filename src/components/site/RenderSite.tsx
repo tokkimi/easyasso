@@ -155,6 +155,7 @@ export async function RenderSite({ site, basePath, slug }: { site: SiteWithPages
   return (
     <div className={`flex min-h-screen flex-col ${vielusos ? 'vielusos-site' : ''}`} style={publicSiteStyle(theme, vielusos)}>
       {fontHref && <link rel="stylesheet" href={fontHref} />}
+      {vielusos && <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&display=swap" />}
       <style dangerouslySetInnerHTML={{ __html: `${brandCss(theme.primary)}${vielusosCss(vielusos)}` }} />
       <PageViewTracker organizationId={site.organizationId} path={page.slug} />
       <PublicHeader header={publicHeader} nav={nav} basePath={basePath} />
@@ -232,9 +233,9 @@ function VielusosHero({ title, config }: { title: string; config?: HeaderConfig[
       <div className="relative flex h-full items-center justify-center px-6 text-center">
         <div className="flex max-w-xl flex-col items-center">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          {config?.showLogo !== false && <img src={VIELUSOS_BRAND.logoUrl} alt="" className="mb-4 h-20 w-20 object-contain opacity-95 md:h-28 md:w-28" />}
-          {config?.showName !== false && <p className="text-lg font-black uppercase tracking-[0.32em] text-white md:text-2xl">{title.toUpperCase()}</p>}
-          {config?.showTagline !== false && <h1 className="mt-2 text-sm font-black uppercase tracking-[0.18em] text-white/85 md:text-lg">𝐏𝐎𝐖𝐄𝐑 𝐎𝐅 𝐄𝐌𝐎𝐓𝐈𝐎𝐍</h1>}
+          {config?.showLogo !== false && <img src={VIELUSOS_BRAND.logoUrl} alt="" className="mb-5 h-32 w-32 object-contain opacity-95 drop-shadow-[0_0_18px_rgba(255,255,255,.18)] md:h-44 md:w-44" />}
+          {config?.showName !== false && <p className="text-4xl font-light uppercase leading-none tracking-[0.32em] text-white md:text-6xl" style={{ fontFamily: '"Cormorant Garamond", "Times New Roman", serif' }}>{title.toUpperCase()}</p>}
+          {config?.showTagline !== false && <h1 className="mt-5 text-lg font-light uppercase tracking-[0.24em] text-white/85 md:text-2xl" style={{ fontFamily: '"Cormorant Garamond", "Times New Roman", serif' }}>POWER OF EMOTION</h1>}
         </div>
       </div>
     </section>

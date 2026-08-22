@@ -47,7 +47,7 @@ export function PublicBlock({ type, content, style, basePath = '', organizationI
   // of width-constrained blocks).
   const cleanBg = (bg?: string) => (bg && bg.toLowerCase() !== '#f1f5ff' ? bg : undefined);
   if (FULL.has(type)) {
-    return <div style={blockWrapperStyle({ ...style, background: type === 'cta' ? cleanBg(style.background) : undefined })} className="w-full">{inner}</div>;
+    return <div style={blockWrapperStyle({ ...style, paddingY: type === 'html' ? 0 : style.paddingY, background: type === 'cta' ? cleanBg(style.background) : undefined })} className="w-full">{inner}</div>;
   }
   const maxW = WIDE.has(type) ? 'max-w-5xl' : 'max-w-3xl';
   return (

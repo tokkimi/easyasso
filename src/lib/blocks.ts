@@ -195,6 +195,7 @@ export function defaultStyleFor(type: BlockType): BlockStyle {
       return { align: 'left', color: '#374151', fontSize: 18, paddingY: 12 };
     case 'banner':
     case 'slideshow':
+    case 'html':
       return { paddingY: 0 };
     case 'textimage':
     case 'gallery':

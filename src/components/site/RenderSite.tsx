@@ -13,6 +13,7 @@ import { canShowPublicSite } from '@/lib/plan';
 import { isVielusosSite, VIELUSOS_BRAND } from '@/lib/vielusos';
 import { VIELUSOS_SITE_CSS } from '@/lib/vielusos';
 import { VielusosHero } from './VielusosHero';
+import { VielusosBio } from './VielusosBio';
 
 type SiteWithPages = NonNullable<Awaited<ReturnType<typeof loadSiteBySubdomain>>>;
 
@@ -176,9 +177,9 @@ export async function RenderSite({ site, basePath, slug }: { site: SiteWithPages
       <PageViewTracker organizationId={site.organizationId} path={page.slug} />
       <PublicHeader header={publicHeader} nav={nav} basePath={basePath} />
       {vielusos && page.isHome && <VielusosHero title={site.name} config={(header as any).vielusosHero} />}
-      {vielusos && (page.slug === 'bio' || page.slug === 'about') && <VielusosBio blocks={page.blocks as any[]} config={(header as any).vielusosBio} />}
+      {vielusos && (page.slug === 'bio' || page.slug === 'about' || page.slug === 'a-propos') && <VielusosBio blocks={page.blocks as any[]} config={(header as any).vielusosBio} />}
       <main className="flex-1 py-8">
-        {vielusos && (page.slug === 'bio' || page.slug === 'about') ? null : page.blocks.length === 0 ? (
+        {vielusos && (page.slug === 'bio' || page.slug === 'about' || page.slug === 'a-propos') ? null : page.blocks.length === 0 ? (
           <p className="py-20 text-center text-gray-400">Cette page est vide.</p>
         ) : (
           page.blocks.map((b) => <PublicBlock key={b.id} type={b.type} content={b.content as any} style={b.style as any} basePath={basePath} organizationId={site.organizationId} products={b.type === 'shop' ? products : undefined} shopReady={b.type === 'shop' ? shopReady : undefined} />)
@@ -187,46 +188,6 @@ export async function RenderSite({ site, basePath, slug }: { site: SiteWithPages
       <PublicFooter footer={publicFooter} orgId={site.organizationId} basePath={basePath} nav={nav} />
       {bubble}
     </div>
-  );
-}
-
-function VielusosBio({ blocks, config }: { blocks: any[]; config?: HeaderConfig['vielusosBio'] }) {
-  const copy = blocks
-    .flatMap((block) => {
-      const content = (block?.content || {}) as Record<string, unknown>;
-      return [content.text, content.body, content.description, content.subtitle];
-    })
-    .filter((value): value is string => typeof value === 'string' && value.trim().length > 40)
-    .filter((value) => !/(association|associatif|bénévole|bénévoles|don|adhérent|public accompagné|partenaires)/i.test(value))
-    .map((value) => value.trim())
-    .slice(0, 2);
-
-  return (
-    <section className="relative overflow-hidden border-y border-white/10 bg-black/35 px-5 py-12 md:px-12 md:py-20">
-      <div className="mx-auto grid max-w-6xl gap-8 md:grid-cols-[1.05fr_.95fr] md:items-center">
-        <div>
-          <p className="text-xs font-black uppercase tracking-[0.32em] text-white/55">{config?.eyebrow || 'VIELUSOS · ARTISTE'}</p>
-          <h2 className="mt-3 text-4xl font-black uppercase tracking-tight text-white md:text-6xl">{config?.title || 'À PROPOS'}</h2>
-          <div className="mt-6 space-y-5 text-base leading-8 text-white/70 md:text-lg">
-            {(config?.paragraphs?.filter(Boolean).length ? config.paragraphs : copy).length > 0 ? (config?.paragraphs?.filter(Boolean).length ? config.paragraphs : copy).map((text, index) => <p key={index}>{text}</p>) : (
-              <>
-                <p>VIELUSOS creates dark, cinematic music driven by a constant tension between fragility, power and light. Every release is conceived as a scene: an atmosphere, a voice, an image and an emotion that lingers after listening.</p>
-                <p>Moving between introspective productions and rawer impulses, the project builds its world through contrast. Textures, silence and melody shape a distinctive signature where visual storytelling meets sound.</p>
-                <p className="text-white/55">PRODUCTION · WRITING · ART DIRECTION</p>
-              </>
-            )}
-          </div>
-        </div>
-        <div className="grid grid-cols-2 gap-3 md:gap-4">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={config?.images?.[0] || '/vielusos/profile.jpg'} alt="VIELUSOS" className="col-span-2 aspect-[16/9] w-full rounded-2xl object-cover object-center shadow-2xl ring-1 ring-white/15" />
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={config?.images?.[1] || '/vielusos/profile-2.png'} alt="" className="aspect-square w-full rounded-2xl object-cover shadow-xl ring-1 ring-white/15" />
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={config?.images?.[2] || '/vielusos/angel-in-hell.png'} alt="" className="aspect-square w-full rounded-2xl object-cover shadow-xl ring-1 ring-white/15" />
-        </div>
-      </div>
-    </section>
   );
 }
 

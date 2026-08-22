@@ -252,8 +252,14 @@ export interface HeaderConfig {
   };
   vielusosBio?: {
     eyebrow?: string;
+    eyebrowFr?: string;
+    eyebrowEn?: string;
     title?: string;
+    titleFr?: string;
+    titleEn?: string;
     paragraphs?: string[];
+    paragraphsFr?: string[];
+    paragraphsEn?: string[];
     images?: string[];
   };
   cta?: ButtonConfig;

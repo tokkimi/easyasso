@@ -11,6 +11,7 @@ import { BLOCK_LIBRARY, type BlockType, type ButtonConfig } from '@/lib/blocks';
 import { PublicBlock } from '@/components/site/PublicBlock';
 import { PublicHeader, PublicFooter } from '@/components/site/PublicChrome';
 import { VielusosHero } from '@/components/site/VielusosHero';
+import { VielusosBio } from '@/components/site/VielusosBio';
 import { themeStyle, brandCss } from '@/lib/render';
 import { VIELUSOS_BRAND, VIELUSOS_SITE_CSS } from '@/lib/vielusos';
 import { googleFontsHref } from '@/lib/fonts';
@@ -247,6 +248,11 @@ export function EditorClient({ site: initial, canEdit, canPublish, siteUrl, bran
             </div>
             {branded && active?.isHome && <VielusosHero title={initial.name} config={header.vielusosHero} />}
             <main className="flex-1 py-8">
+            {branded && active && ['bio', 'about', 'a-propos'].includes(active.slug) ? (
+              <div onClick={() => { setTab('header'); setSelectedBlock(null); setMobileInspector(true); }} className="cursor-pointer hover:ring-1 hover:ring-brand-200">
+                <VielusosBio blocks={active.blocks} config={header.vielusosBio} />
+              </div>
+            ) : <>
             {active?.blocks.length === 0 && (
               <div className="py-16 text-center text-gray-400">
                 <p>Page vide.</p>
@@ -274,6 +280,7 @@ export function EditorClient({ site: initial, canEdit, canPublish, siteUrl, bran
                 <button onClick={() => setShowPalette(true)} className="btn btn-ghost mx-auto text-sm"><Plus className="h-4 w-4" /> Ajouter un bloc</button>
               </div>
             )}
+            </>}
             </main>
             {/* Live footer preview (click to edit) */}
             <div
@@ -880,11 +887,15 @@ function HeaderEditor({ value, branded = false, onChange }: { value: any; brande
         <Toggle checked={h.vielusosHero?.showTagline ?? true} onChange={(v) => set({ vielusosHero: { ...(h.vielusosHero || {}), showTagline: v } })} label="Afficher POWER OF EMOTION" />
       </div>
       <div className="space-y-3 border-t border-gray-100 pt-3">
-        <p className="text-sm font-semibold text-gray-700">Bio et images VIELUSOS</p>
-        <Field label="Petit titre"><input className="input" value={h.vielusosBio?.eyebrow || ''} onChange={(e) => set({ vielusosBio: { ...(h.vielusosBio || {}), eyebrow: e.target.value } })} placeholder="VIELUSOS · ARTISTE" /></Field>
-        <Field label="Titre"><input className="input" value={h.vielusosBio?.title || ''} onChange={(e) => set({ vielusosBio: { ...(h.vielusosBio || {}), title: e.target.value } })} placeholder="À PROPOS" /></Field>
-        <Field label="Bio en anglais"><textarea className="input min-h-32" value={(h.vielusosBio?.paragraphs || []).join('\n\n')} onChange={(e) => set({ vielusosBio: { ...(h.vielusosBio || {}), paragraphs: e.target.value.split(/\n\s*\n/) } })} /></Field>
-        {[0, 1, 2].map((index) => <Field key={index} label={`Image ${index + 1}`}><input className="input" value={h.vielusosBio?.images?.[index] || ''} onChange={(e) => { const images = [...(h.vielusosBio?.images || [])]; images[index] = e.target.value; set({ vielusosBio: { ...(h.vielusosBio || {}), images } }); }} /></Field>)}
+        <p className="text-sm font-semibold text-gray-700">Page « À propos » VIELUSOS</p>
+        <p className="rounded-xl bg-gray-50 p-3 text-xs leading-5 text-gray-600">Ces champs pilotent directement la section visible sur la page À propos. La version française et la version anglaise restent séparées : VIELUSOS peut écrire et refaire sa bio sans toucher au code.</p>
+        <Field label="Petit titre (français)"><input className="input" value={h.vielusosBio?.eyebrowFr || h.vielusosBio?.eyebrow || ''} onChange={(e) => set({ vielusosBio: { ...(h.vielusosBio || {}), eyebrowFr: e.target.value } })} placeholder="VIELUSOS · ARTISTE" /></Field>
+        <Field label="Petit titre (anglais)"><input className="input" value={h.vielusosBio?.eyebrowEn || ''} onChange={(e) => set({ vielusosBio: { ...(h.vielusosBio || {}), eyebrowEn: e.target.value } })} placeholder="VIELUSOS · ARTIST" /></Field>
+        <Field label="Titre (français)"><input className="input" value={h.vielusosBio?.titleFr || h.vielusosBio?.title || ''} onChange={(e) => set({ vielusosBio: { ...(h.vielusosBio || {}), titleFr: e.target.value } })} placeholder="À PROPOS" /></Field>
+        <Field label="Titre (anglais)"><input className="input" value={h.vielusosBio?.titleEn || ''} onChange={(e) => set({ vielusosBio: { ...(h.vielusosBio || {}), titleEn: e.target.value } })} placeholder="ABOUT" /></Field>
+        <Field label="Bio en français"><textarea className="input min-h-40" value={(h.vielusosBio?.paragraphsFr || []).join('\n\n')} onChange={(e) => set({ vielusosBio: { ...(h.vielusosBio || {}), paragraphsFr: e.target.value.split(/\n\s*\n/) } })} placeholder="Écrivez la bio française ici. Séparez les paragraphes par une ligne vide." /></Field>
+        <Field label="Bio en anglais"><textarea className="input min-h-40" value={(h.vielusosBio?.paragraphsEn || h.vielusosBio?.paragraphs || []).join('\n\n')} onChange={(e) => set({ vielusosBio: { ...(h.vielusosBio || {}), paragraphsEn: e.target.value.split(/\n\s*\n/) } })} placeholder="Write the English biography here. Separate paragraphs with a blank line." /></Field>
+        {[0, 1, 2].map((index) => <ImageInput key={index} label={`Image ${index + 1}`} value={h.vielusosBio?.images?.[index] || ''} onChange={(value) => { const images = [...(h.vielusosBio?.images || [])]; images[index] = value; set({ vielusosBio: { ...(h.vielusosBio || {}), images } }); }} />)}
       </div>
     </div>
   );

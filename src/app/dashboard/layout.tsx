@@ -1,5 +1,7 @@
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
+import type { Metadata } from 'next';
+import { headers } from 'next/headers';
 import { Clock } from 'lucide-react';
 import { requireOrg, planAccess } from '@/lib/session';
 import { prisma } from '@/lib/prisma';
@@ -8,6 +10,23 @@ import { isPlatformAdmin } from '@/lib/platform-admin';
 import { Sidebar } from './sidebar';
 import { EmailVerificationBanner } from './email-verification-banner';
 import { isVielusosSite, VIELUSOS_BRAND } from '@/lib/vielusos';
+
+export async function generateMetadata(): Promise<Metadata> {
+  const host = (await headers()).get('host')?.split(':')[0].toLowerCase();
+  const vielusos = host === 'vielusos.com' || host === 'www.vielusos.com';
+  if (!vielusos) return { title: 'Tableau de bord' };
+  return {
+    title: { absolute: 'VIELUSOS · Administration' },
+    description: 'Administration du site officiel VIELUSOS.',
+    applicationName: 'VIELUSOS',
+    manifest: '/vielusos.webmanifest',
+    icons: {
+      icon: [{ url: '/vielusos/logo.png', type: 'image/png' }],
+      apple: [{ url: '/vielusos/logo.png', type: 'image/png' }],
+    },
+    robots: { index: false, follow: false },
+  };
+}
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const ctx = await requireOrg();

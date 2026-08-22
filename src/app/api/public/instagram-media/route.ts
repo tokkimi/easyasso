@@ -13,7 +13,8 @@ function allowedMediaUrl(value: unknown): string {
   try {
     const url = new URL(value);
     const host = url.hostname.toLowerCase();
-    return url.protocol === 'https:' && (host.endsWith('.cdninstagram.com') || host.endsWith('.fbcdn.net')) ? url.toString() : '';
+    const officialContentHost = host.startsWith('scontent-') && (host.endsWith('.cdninstagram.com') || host.endsWith('.fbcdn.net'));
+    return url.protocol === 'https:' && officialContentHost ? url.toString() : '';
   } catch {
     return '';
   }

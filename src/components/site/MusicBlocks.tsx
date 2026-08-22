@@ -373,13 +373,20 @@ function InstagramMediaCard({ code, eager, position }: { code: string; eager: bo
   useEffect(() => {
     const controller = new AbortController();
     const delay = eager ? position * 180 : 900 + position * 180;
-    const timer = window.setTimeout(() => {
-      fetch(`/api/public/instagram-media?code=${encodeURIComponent(code)}&v=4`, { signal: controller.signal })
-        .then((response) => response.ok ? response.json() : { media: [] })
-        .then((payload) => setMedia(Array.isArray(payload.media) ? payload.media : []))
-        .catch(() => {});
-    }, delay);
-    return () => { window.clearTimeout(timer); controller.abort(); };
+    let retryTimer: number | undefined;
+    const load = async (attempt = 0) => {
+      try {
+        const response = await fetch(`/api/public/instagram-media?code=${encodeURIComponent(code)}&v=8-${attempt}`, { signal: controller.signal });
+        const payload = response.ok ? await response.json() : { media: [] };
+        const loaded = Array.isArray(payload.media) ? payload.media : [];
+        if (loaded.length) setMedia(loaded);
+        else if (attempt < 3) retryTimer = window.setTimeout(() => load(attempt + 1), 700 * (attempt + 1));
+      } catch {
+        if (!controller.signal.aborted && attempt < 3) retryTimer = window.setTimeout(() => load(attempt + 1), 700 * (attempt + 1));
+      }
+    };
+    const timer = window.setTimeout(() => load(), delay);
+    return () => { window.clearTimeout(timer); if (retryTimer) window.clearTimeout(retryTimer); controller.abort(); };
   }, [code, eager, position]);
 
   const item = media[active];

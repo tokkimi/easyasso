@@ -193,7 +193,7 @@ export function defaultContentFor(type: BlockType): Record<string, unknown> {
     case 'players':
       return { title: 'Dernières sorties', intro: 'Écoutez les sons directement depuis les plateformes officielles.', sort: 'newest', items: [] };
     case 'instagram':
-      return { title: 'Sur Instagram', username: '', url: '', count: 6, postUrls: [], embedCode: '', posts: [] };
+      return { title: 'Sur Instagram', username: '', url: '', count: 6, postUrls: [] };
     default:
       return {};
   }

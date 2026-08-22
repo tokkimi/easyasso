@@ -366,9 +366,6 @@ export function InstagramPreview({ content }: { content: any }) {
   const profileUrl = safePublicUrl(content?.url || (username ? `https://instagram.com/${username}` : ''));
   const count = Math.max(1, Math.min(20, Number(content?.count) || 6));
   const embeds = (Array.isArray(content?.postUrls) ? content.postUrls : []).map(instaEmbedUrl).filter(Boolean).slice(0, count);
-  const embedCode = typeof content?.embedCode === 'string' ? content.embedCode.trim() : '';
-  // Legacy: manually uploaded post images.
-  const images: { image?: string; url?: string }[] = Array.isArray(content?.posts) ? content.posts.filter((p: any) => p?.image).slice(0, count) : [];
 
   if (content?.variant === 'vielusos') {
     return (
@@ -404,30 +401,13 @@ export function InstagramPreview({ content }: { content: any }) {
         <span className="grid h-7 w-7 place-items-center rounded-lg bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-600"><Instagram className="h-4 w-4 text-white" /></span>
       </div>
 
-      {embedCode ? (
-        <div className="mt-6">
-          <iframe title="Instagram" srcDoc={embedCode} sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox" className="min-h-[560px] w-full rounded-2xl border-0 bg-transparent" />
-        </div>
-      ) : embeds.length > 0 ? (
+      {embeds.length > 0 ? (
         <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {embeds.map((src: string, i: number) => (
             <div key={i} className="relative aspect-square overflow-hidden rounded-2xl bg-gray-100">
               <iframe src={src} title={`instagram-${i}`} loading="lazy" scrolling="no" className="absolute left-0 top-[-64px] h-[760px] w-full border-0" />
             </div>
           ))}
-        </div>
-      ) : images.length > 0 ? (
-        <div className="mt-6 grid grid-cols-3 gap-2">
-          {images.map((p, i) => {
-            const href = safePublicUrl(p.url || profileUrl || '');
-            const cell = (
-              <div className="aspect-square w-full overflow-hidden rounded-xl bg-gray-100">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                {p.image && <img src={p.image} alt="" loading="lazy" className="h-full w-full object-cover" />}
-              </div>
-            );
-            return href ? <a key={i} href={href} target="_blank" rel="noreferrer">{cell}</a> : <div key={i}>{cell}</div>;
-          })}
         </div>
       ) : (
         <p className="mt-6 text-center text-sm text-gray-400">Ajoutez les liens de vos posts Instagram — ils s’afficheront ici en direct.</p>

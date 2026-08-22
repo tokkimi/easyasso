@@ -798,7 +798,7 @@ function InstagramEditor({ c, onContent }: { c: any; onContent: (v: any) => void
       <Field label="Titre du bloc"><input className="input" value={c.title || ''} onChange={(e) => onContent({ ...c, title: e.target.value })} placeholder="Sur Instagram" /></Field>
       <div className="grid gap-3 sm:grid-cols-2">
         <Field label="Nom d’utilisateur"><input className="input" value={c.username || ''} onChange={(e) => onContent({ ...c, username: e.target.value })} placeholder="oddymatt_music" /></Field>
-        <Field label="Nombre de posts affichés"><input className="input" type="number" min={1} max={12} value={c.count || 6} onChange={(e) => onContent({ ...c, count: Math.max(1, Math.min(12, +e.target.value || 6)) })} /></Field>
+        <Field label="Nombre de posts affichés"><input className="input" type="number" min={1} max={20} value={c.count || 6} onChange={(e) => onContent({ ...c, count: Math.max(1, Math.min(20, +e.target.value || 6)) })} /></Field>
       </div>
       <Field label="Lien du profil (optionnel)"><input className="input" type="url" value={c.url || ''} onChange={(e) => onContent({ ...c, url: e.target.value })} placeholder="https://instagram.com/…" /></Field>
 
@@ -813,13 +813,9 @@ function InstagramEditor({ c, onContent }: { c: any; onContent: (v: any) => void
             </div>
           ))}
         </div>
-        {postUrls.length < 12 && <button type="button" onClick={() => onContent({ ...c, postUrls: [...postUrls, ''] })} className="btn btn-ghost mt-2 text-sm"><Plus className="h-4 w-4" /> Ajouter un post</button>}
+        {postUrls.length < 20 && <button type="button" onClick={() => onContent({ ...c, postUrls: [...postUrls, ''] })} className="btn btn-ghost mt-2 text-sm"><Plus className="h-4 w-4" /> Ajouter un post officiel</button>}
       </div>
-
-      <Field label="Ou : code d’intégration d’un widget (flux auto — LightWidget, Behold…)">
-        <textarea className="input min-h-24 font-mono text-xs" value={c.embedCode || ''} onChange={(e) => onContent({ ...c, embedCode: e.target.value })} placeholder="<iframe src='https://lightwidget.com/…'></iframe>" />
-        <p className="mt-1 text-xs text-gray-400">Pour un flux Instagram automatique (derniers posts en continu), collez ici le code fourni par un service de widget gratuit.</p>
-      </Field>
+      <p className="rounded-xl bg-green-50 p-3 text-xs leading-5 text-green-800">Seuls les liens officiels Instagram sont acceptés. Les images importées, captures et widgets tiers ne sont jamais utilisés.</p>
     </>
   );
 }

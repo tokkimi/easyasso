@@ -17,7 +17,7 @@ export function middleware(req: NextRequest) {
   // Public files must keep their real path on custom domains. Rewriting an
   // image or video request to /domain/<host>/... makes Next render a page and
   // returns a 404 instead of the asset.
-  if (/\.[a-z0-9]{2,8}$/i.test(req.nextUrl.pathname)) return NextResponse.next();
+  if (/\.[a-z0-9]{2,16}$/i.test(req.nextUrl.pathname)) return NextResponse.next();
 
   if (isVielusosHost && req.nextUrl.pathname === '/admin') {
     const url = req.nextUrl.clone();

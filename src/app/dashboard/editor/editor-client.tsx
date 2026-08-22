@@ -876,8 +876,13 @@ function HeaderEditor({ value, branded = false, onChange }: { value: any; brande
         {h.showCta !== false && <ButtonEditor value={h.cta} onChange={(cta) => set({ cta })} />}
       </div>
       <div className="space-y-3 border-t border-gray-100 pt-3">
-        <p className="text-sm font-semibold text-gray-700">Réseaux sociaux dans le header</p>
-        {['instagram', 'youtube', 'spotify', 'tiktok', 'facebook', 'x'].map((name) => <Field key={name} label={name.toUpperCase()}><input className="input" type="url" value={h.social?.[name] || ''} onChange={(e) => set({ social: { ...(h.social || {}), [name]: e.target.value } })} /></Field>)}
+        <p className="text-sm font-semibold text-gray-700">Réseaux et plateformes du header</p>
+        <p className="rounded-xl bg-gray-50 p-3 text-xs leading-5 text-gray-600">Chaque lien est modifiable ou supprimable ici. Les mêmes plateformes et leurs logos officiels sont repris automatiquement dans le footer.</p>
+        {[
+          ['instagram', 'Instagram'], ['tiktok', 'TikTok'], ['spotify', 'Spotify'], ['deezer', 'Deezer'],
+          ['soundcloud', 'SoundCloud'], ['applemusic', 'Apple Music'], ['youtubemusic', 'YouTube Music'],
+          ['shotgun', 'Shotgun'], ['amazonmusic', 'Amazon Music'], ['youtube', 'YouTube'], ['beatport', 'Beatport'],
+        ].map(([name, label]) => <Field key={name} label={label}><input className="input" type="url" value={h.social?.[name] || ''} onChange={(e) => set({ social: { ...(h.social || {}), [name]: e.target.value } })} placeholder={`Lien ${label}`} /></Field>)}
       </div>
       <div className="space-y-3 border-t border-gray-100 pt-3">
         <p className="text-sm font-semibold text-gray-700">Bannière vidéo VIELUSOS</p>

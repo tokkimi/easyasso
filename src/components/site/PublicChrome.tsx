@@ -7,16 +7,29 @@ import { NewsletterForm } from './NewsletterForm';
 import { LanguageSwitcher, useLanguage } from '@/components/language-provider';
 
 interface NavItem { title: string; slug: string; isHome: boolean }
-const SOCIAL_LABELS = new Set(['facebook', 'instagram', 'linkedin', 'youtube', 'spotify', 'tiktok', 'x', 'twitter']);
-const isSocialColumn = (column: FooterConfig['columns'][number]) => column.links.length > 0 && column.links.every((link) => SOCIAL_LABELS.has(link.label.toLowerCase()));
+const SOCIAL_LABELS = new Set(['facebook', 'instagram', 'linkedin', 'youtube', 'youtubemusic', 'spotify', 'deezer', 'soundcloud', 'applemusic', 'amazonmusic', 'beatport', 'shotgun', 'tiktok', 'x', 'twitter']);
+const socialKey = (label: string) => label.toLowerCase().replace(/[^a-z0-9]/g, '');
+const isSocialColumn = (column: FooterConfig['columns'][number]) => column.links.length > 0 && column.links.every((link) => SOCIAL_LABELS.has(socialKey(link.label)));
 const logoFrameClass = 'inline-flex max-w-[220px] items-center rounded-xl bg-transparent p-0.5 sm:max-w-[280px]';
 const headerLogoClass = 'max-h-11 w-auto max-w-full object-contain sm:max-h-12';
 const footerLogoClass = 'max-h-16 w-auto max-w-full object-contain';
 
 function SocialMark({ label }: { label: string }) {
-  const key = label.toLowerCase();
-  const asset = key === 'instagram' || key === 'youtube' || key === 'spotify' ? `/integrations/${key}.svg` : '';
+  const key = socialKey(label);
+  const assets: Record<string, string> = {
+    instagram: '/integrations/instagram.svg',
+    youtube: '/integrations/youtube.svg',
+    youtubemusic: 'https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/youtubemusic.svg',
+    spotify: '/integrations/spotify.svg',
+    deezer: '/integrations/deezer.svg',
+    soundcloud: '/integrations/soundcloud.svg',
+    applemusic: '/integrations/applemusic.svg',
+    amazonmusic: 'https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/amazonmusic.svg',
+    beatport: 'https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/beatport.svg',
+  };
+  const asset = assets[key] || '';
   if (asset) return <img src={asset} alt="" className="h-[18px] w-[18px] object-contain brightness-0 invert" />;
+  if (key === 'shotgun') return <img src="https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/9e/a0/59/9ea0590d-68e5-d649-ca93-e31becb08410/AppIcon-0-0-1x_U007emarketing-0-11-0-85-220.png/128x128bb.jpg" alt="" className="h-[18px] w-[18px] rounded-[4px] object-contain" />;
   if (key === 'tiktok') return <svg viewBox="0 0 24 24" aria-hidden="true" className="h-[18px] w-[18px] fill-current"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.9 2.9 0 1 1-2-2.76v-3.5a6.34 6.34 0 1 0 5.45 6.26V8.73a8.16 8.16 0 0 0 4.77 1.52V6.8c-.34 0-.67-.04-1-.11Z" /></svg>;
   if (key === 'facebook') return <Facebook className="h-[18px] w-[18px]" />;
   if (key === 'linkedin') return <Linkedin className="h-[18px] w-[18px]" />;
@@ -60,7 +73,7 @@ export function PublicHeader({
           )}
         </div>
         <div className="flex flex-1 basis-0 items-center justify-end gap-2.5">
-          {socials.map(([name, href]) => <a key={name} href={href} target="_blank" rel="noreferrer" aria-label={name} className="hidden h-8 w-8 items-center justify-center text-white/80 drop-shadow-[0_0_6px_rgba(255,255,255,.35)] transition hover:text-white lg:inline-flex"><SocialMark label={name} /></a>)}
+          {socials.map(([name, href]) => <a key={name} href={href} target="_blank" rel="noreferrer" aria-label={name} title={name} className="hidden h-7 w-7 shrink-0 items-center justify-center text-white/80 drop-shadow-[0_0_6px_rgba(255,255,255,.35)] transition hover:text-white lg:inline-flex"><SocialMark label={name} /></a>)}
           <span className="hidden sm:inline-flex"><LanguageSwitcher variant="inline" /></span>
           {header.showCta !== false && cta && (
             <a

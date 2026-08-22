@@ -14,7 +14,7 @@ export function MusicTracks({ content }: { content: any }) {
   const clean = tracks.filter((t) => t && (t.title || t.thumbnail || t.url));
 
   return (
-    <div className="mx-auto w-full max-w-6xl px-4 pt-10">
+    <div className="mx-auto w-full max-w-6xl px-4 pt-6">
       {content?.title && <h2 className="text-2xl font-extrabold uppercase tracking-tight md:text-3xl">{content.title}</h2>}
       {clean.length === 0 ? (
         <p className="py-10 text-center text-sm text-gray-400">Ajoutez vos sons — leurs pochettes s’afficheront automatiquement.</p>
@@ -44,7 +44,7 @@ export function MusicTracks({ content }: { content: any }) {
             return (
               <div key={i} className="w-60 shrink-0 snap-start overflow-hidden rounded-3xl bg-white shadow-sm ring-1 ring-gray-100">
                 <div className="aspect-square w-full overflow-hidden bg-gray-100">
-                  {t.thumbnail && /* eslint-disable-next-line @next/next/no-img-element */ <img src={t.thumbnail} alt="" loading="lazy" className="h-full w-full object-contain" />}
+                  {t.thumbnail && /* eslint-disable-next-line @next/next/no-img-element */ <img src={t.thumbnail} alt="" loading="lazy" className="h-full w-full object-cover" />}
                 </div>
                 <div className="p-4">
                   {t.year && <p className="text-xs font-bold tracking-widest text-[var(--brand)]">{t.year}</p>}
@@ -92,9 +92,26 @@ export function VideoGrid({ content }: { content: any }) {
                   {playing[i] && src ? (
                     <iframe src={`${src}${src.includes('?') ? '&' : '?'}autoplay=1&modestbranding=1&rel=0`} className="absolute inset-0 h-full w-full border-0" allow="autoplay; encrypted-media; picture-in-picture" allowFullScreen title={`YouTube video ${i + 1}`} />
                   ) : (
-                    <button type="button" aria-label="Lire la vidéo" onClick={() => setPlaying((state) => ({ ...state, [i]: true }))} className="absolute inset-0 flex items-center justify-center bg-black/35 transition hover:bg-black/45 focus:outline-none focus:ring-2 focus:ring-white/80">
+                    <button
+                      type="button"
+                      aria-label="Lire la vidéo"
+                      onClick={() => setPlaying((state) => ({ ...state, [i]: true }))}
+                      className="absolute inset-0 overflow-hidden bg-black text-white transition hover:bg-black focus:outline-none focus:ring-2 focus:ring-white/80"
+                    >
                       {thumbnail && /* eslint-disable-next-line @next/next/no-img-element */ <img src={thumbnail} alt="" loading="lazy" className="absolute inset-0 h-full w-full object-cover" />}
-                      <span className="relative grid h-14 w-20 place-items-center rounded-2xl bg-black/50 shadow-lg backdrop-blur-sm transition hover:bg-black/60">{youtubeMark}</span>
+                      <span className="absolute inset-0 bg-black/30" aria-hidden="true" />
+
+                      <span className="absolute inset-0 z-10 flex flex-col items-center justify-center px-4 text-center">
+                        <span className="text-[clamp(2.2rem,8vw,4rem)] font-black uppercase tracking-[0.32em] leading-none text-white drop-shadow-[0_3px_14px_rgba(0,0,0,0.9)]">
+                          VIELUSOS
+                        </span>
+                        <span className="mt-3 text-[clamp(0.65rem,2vw,0.95rem)] font-semibold uppercase tracking-[0.28em] text-white/90 drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">
+                          POWER OF EMOTION
+                        </span>
+                        <span className="mt-6 grid h-14 w-20 place-items-center rounded-2xl bg-black/50 shadow-lg backdrop-blur-sm transition hover:bg-black/60">
+                          {youtubeMark}
+                        </span>
+                      </span>
                     </button>
                   )}
                 </div>

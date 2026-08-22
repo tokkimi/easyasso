@@ -22,7 +22,7 @@ function allowedMediaUrl(value: unknown): string {
 async function officialPosterFallback(code: string) {
   const response = await fetch(`https://www.instagram.com/p/${code}/`, {
     headers: { 'User-Agent': 'Mozilla/5.0', 'Accept-Language': 'fr-FR,fr;q=0.9' },
-    next: { revalidate: 1800 },
+    cache: 'no-store',
   });
   const html = await response.text();
   const image = allowedMediaUrl(html.match(/<meta\s+property="og:image"\s+content="([^"]+)"/i)?.[1]?.replaceAll('&amp;', '&'));
@@ -34,13 +34,16 @@ export async function GET(request: NextRequest) {
   if (!/^[A-Za-z0-9_-]{5,30}$/.test(code)) return NextResponse.json({ media: [] }, { status: 400 });
 
   try {
-    const response = await fetch(`https://www.instagram.com/p/${code}/embed`, {
-      headers: { 'User-Agent': 'Mozilla/5.0', 'Accept-Language': 'fr-FR,fr;q=0.9' },
-      next: { revalidate: 1800 },
-    });
-    if (!response.ok) throw new Error(`Instagram returned ${response.status}`);
-    const html = await response.text();
-    const match = html.match(/"contextJSON":"((?:\\.|[^"\\])*)"/);
+    let match: RegExpMatchArray | null = null;
+    for (const kind of ['p', 'reel']) {
+      const response = await fetch(`https://www.instagram.com/${kind}/${code}/embed?omitscript=true`, {
+        headers: { 'User-Agent': 'Mozilla/5.0', 'Accept-Language': 'fr-FR,fr;q=0.9' },
+        cache: 'no-store',
+      });
+      if (!response.ok) continue;
+      match = (await response.text()).match(/"contextJSON":"((?:\\.|[^"\\])*)"/);
+      if (match) break;
+    }
     if (!match) {
       const media = await officialPosterFallback(code);
       if (!media.length) throw new Error('Instagram media payload missing');

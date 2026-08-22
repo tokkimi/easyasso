@@ -31,6 +31,8 @@ export type BlockType =
   | 'spacer'
   | 'html'
   | 'event'
+  | 'stats'
+  | 'events'
   // Rich, ready-made layout blocks
   | 'banner'
   | 'textimage'
@@ -66,6 +68,8 @@ export const BLOCK_LIBRARY: {
   // Ready-made layouts (shown first — the easy way)
   { type: 'banner', label: 'Bannière photo', icon: 'GalleryThumbnails', description: 'Grande photo + titre + bouton', group: 'layouts' },
   { type: 'event', label: 'Prochain événement', icon: 'CalendarDays', description: 'Affiche complète, date, lieu et billetterie', group: 'layouts' },
+  { type: 'events', label: 'Dates précédentes', icon: 'CalendarRange', description: 'Historique des concerts et événements', group: 'layouts' },
+  { type: 'stats', label: 'Chiffres clés', icon: 'BarChart3', description: 'Statistiques et audience en cartes', group: 'layouts' },
   { type: 'textimage', label: 'Texte + image', icon: 'PanelsTopLeft', description: 'Un texte à côté d’une image', group: 'layouts' },
   { type: 'gallery', label: 'Galerie photos', icon: 'GalleryHorizontalEnd', description: 'Plusieurs photos en grille', group: 'layouts' },
   { type: 'slideshow', label: 'Diaporama', icon: 'Images', description: 'Photos qui défilent', group: 'layouts' },
@@ -122,6 +126,10 @@ export function defaultContentFor(type: BlockType): Record<string, unknown> {
       };
     case 'event':
       return { eyebrow: 'Live', title: 'Next date', image: '', day: '', month: '', eventName: '', venue: '', city: '', time: '', buttonText: 'Tickets', buttonUrl: '' };
+    case 'events':
+      return { eyebrow: 'Live', title: 'Previous dates', items: [{ date: '', name: '', location: '' }] };
+    case 'stats':
+      return { eyebrow: 'VIELUSOS by the numbers', title: 'A sound that resonates.', intro: 'An audience that keeps growing.', items: [{ value: '1M+', label: 'Streams' }], platforms: '' };
     case 'banner':
       return {
         image: PH('banner', 1600, 700),
@@ -201,6 +209,8 @@ export function defaultStyleFor(type: BlockType): BlockStyle {
     case 'slideshow':
     case 'html':
     case 'event':
+    case 'events':
+    case 'stats':
       return { paddingY: 0 };
     case 'textimage':
     case 'gallery':

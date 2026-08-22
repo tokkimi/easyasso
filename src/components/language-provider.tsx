@@ -284,6 +284,11 @@ const translations: Record<string, string> = {
   'Une page toute prête (catégories, recherche, grille) reliée à vos produits.': 'A ready-made page (categories, search, grid) connected to your products.',
   'Protection animale': 'Animal welfare', 'Environnement': 'Environment', 'Santé & handicap': 'Health & disability', 'Culture & patrimoine': 'Culture & heritage',
   'Club sportif': 'Sports club', 'Humanitaire': 'Humanitarian aid', 'Solidarité locale': 'Local solidarity', 'Aînés': 'Older people', 'Enfance & éducation': 'Children & education',
+  'VIELUSOS en chiffres': 'VIELUSOS by the numbers', 'Un son qui résonne.': 'A sound that resonates.', 'Une audience qui ne cesse de grandir.': 'An audience that keeps growing.',
+  'Prochaine date': 'Next date', 'Dates précédentes': 'Previous dates', 'Événement suivant': 'Next event', 'Billets': 'Tickets',
+  'Espace client': 'Customer area', 'Connexion ou création de votre compte client': 'Sign in or create your customer account',
+  'Adresse email': 'Email address', 'Connexion / inscription client': 'Sign in / create my customer account',
+  'Comment nous joindre ?': 'How can we help?', 'Appeler': 'Call', 'Envoyer un SMS': 'Send a text', 'Envoyer un courriel': 'Send an email', 'Messagerie': 'Messaging',
 };
 
 const reverse = Object.fromEntries(Object.entries(translations).map(([fr, en]) => [en, fr]));
@@ -291,6 +296,8 @@ const normalizeForLookup = (value: string) => value.replace(/\s+/g, ' ').trim();
 const normalizedTranslations = Object.fromEntries(Object.entries(translations).map(([fr, en]) => [normalizeForLookup(fr), en]));
 const normalizedReverse = Object.fromEntries(Object.entries(reverse).map(([en, fr]) => [normalizeForLookup(en), fr]));
 const LocaleContext = createContext({ locale: 'fr' as Locale, setLocale: (_: Locale) => {}, t: (value: string) => value });
+const originalText = new WeakMap<Text, { source: string; rendered: string }>();
+const originalAttributes = new WeakMap<Element, Record<string, { source: string; rendered: string }>>();
 
 function translateText(value: string, locale: Locale) {
   const leading = value.match(/^\s*/)?.[0] || '';
@@ -318,14 +325,27 @@ function translateTree(root: Node, locale: Locale) {
   while (walker.nextNode()) nodes.push(walker.currentNode as Text);
   nodes.forEach((node) => {
     if (node.parentElement?.closest('[data-no-translate], script, style')) return;
-    const next = translateText(node.nodeValue || '', locale);
+    const current = node.nodeValue || '';
+    let record = originalText.get(node);
+    if (!record || current !== record.rendered) record = { source: current, rendered: current };
+    const next = translateText(record.source, locale);
+    record.rendered = next;
+    originalText.set(node, record);
     if (next !== node.nodeValue) node.nodeValue = next;
   });
   if (root instanceof Element) {
     [root, ...Array.from(root.querySelectorAll('[placeholder],[title],[aria-label]'))].forEach((element) => {
       ['placeholder', 'title', 'aria-label'].forEach((attr) => {
         const value = element.getAttribute(attr);
-        if (value) element.setAttribute(attr, translateText(value, locale));
+        if (!value) return;
+        const records = originalAttributes.get(element) || {};
+        let record = records[attr];
+        if (!record || value !== record.rendered) record = { source: value, rendered: value };
+        const next = translateText(record.source, locale);
+        record.rendered = next;
+        records[attr] = record;
+        originalAttributes.set(element, records);
+        if (next !== value) element.setAttribute(attr, next);
       });
     });
   }
@@ -356,7 +376,6 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     return () => window.removeEventListener('easyasso-language-change', onProfileLanguage);
   }, [pathname]);
   useEffect(() => {
-    if (isAssociationSite) return;
     document.documentElement.lang = locale;
     translateTree(document.body, locale);
     const observer = new MutationObserver((changes) => changes.forEach((change) => {
@@ -365,7 +384,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     }));
     observer.observe(document.body, { childList: true, subtree: true, characterData: true });
     return () => observer.disconnect();
-  }, [locale, isAssociationSite]);
+  }, [locale, pathname]);
   const setLocale = (next: Locale) => {
     localStorage.setItem('easyasso-language', next);
     document.cookie = `easyasso-language=${next};path=/;max-age=31536000;samesite=lax`;

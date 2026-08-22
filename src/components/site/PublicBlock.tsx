@@ -18,7 +18,7 @@ const CARD_ICONS: Record<string, any> = {
 
 // Blocks that break out of the narrow text column
 const WIDE = new Set(['textimage', 'gallery', 'cards', 'contact', 'donation', 'leetchi', 'streaming', 'instagram']);
-const FULL = new Set(['banner', 'slideshow', 'cta', 'shop', 'tracks', 'videos', 'players', 'html', 'event']);
+const FULL = new Set(['banner', 'slideshow', 'cta', 'shop', 'tracks', 'videos', 'players', 'html', 'event', 'events', 'stats']);
 
 // The old default button colour was a fixed blue; on a themed site it should
 // follow the site's brand colour instead.
@@ -113,6 +113,10 @@ function renderInner(type: string, content: any, style: BlockStyle, basePath: st
       return <LocalizedEmbed html={content.html || ''} htmlEn={content.htmlEn || ''} height={content.height} />;
     case 'event':
       return <EventShowcase content={content} />;
+    case 'events':
+      return <EventHistory content={content} />;
+    case 'stats':
+      return <StatsShowcase content={content} />;
 
     // ---- Rich layouts ----
     case 'banner': {
@@ -250,4 +254,18 @@ function EventShowcase({ content }: { content: any }) {
       </div>
     </section>
   );
+}
+
+function SectionHeading({ eyebrow, title, intro }: { eyebrow?: string; title?: string; intro?: string }) {
+  return <div><p className="text-[10px] font-semibold uppercase tracking-[0.5em] text-white/45">{eyebrow}</p>{title && <h2 className="mt-4 text-white">{title}</h2>}{intro && <p className="mt-4 max-w-2xl text-sm leading-7 text-white/50">{intro}</p>}</div>;
+}
+
+function StatsShowcase({ content }: { content: any }) {
+  const items = Array.isArray(content.items) ? content.items : [];
+  return <section className="px-5 py-14 text-white md:px-12 md:py-20"><div className="mx-auto max-w-7xl"><SectionHeading eyebrow={content.eyebrow} title={content.title} intro={content.intro} /><div className="mt-10 grid overflow-hidden rounded-3xl border border-white/15 sm:grid-cols-2 lg:grid-cols-3">{items.map((item: any, index: number) => <div key={index} className="min-h-36 border-b border-white/10 p-6 last:border-b-0 sm:border-r lg:min-h-40"><p className="text-4xl font-semibold tracking-tight md:text-5xl">{item.value}</p><p className="mt-6 max-w-[14rem] text-[10px] font-semibold uppercase leading-5 tracking-[0.25em] text-white/45">{item.label}</p></div>)}</div>{content.platforms && <p className="mt-5 text-center text-[9px] font-semibold uppercase tracking-[0.22em] text-white/35">{content.platforms}</p>}</div></section>;
+}
+
+function EventHistory({ content }: { content: any }) {
+  const items = Array.isArray(content.items) ? content.items : [];
+  return <section className="px-5 py-14 text-white md:px-12 md:py-20"><div className="mx-auto max-w-7xl"><SectionHeading eyebrow={content.eyebrow} title={content.title} /><div className="mt-10 grid gap-3 md:grid-cols-3">{items.map((item: any, index: number) => <article key={index} className="rounded-2xl border border-white/15 bg-black/20 p-6 backdrop-blur-sm"><p className="text-[9px] font-semibold uppercase tracking-[0.22em] text-white/40">{item.date}</p><h3 className="mt-5 text-xl font-light uppercase tracking-[0.08em] text-white" style={{ fontFamily: '"Cormorant Garamond", "Times New Roman", serif' }}>{item.name}</h3><p className="mt-3 text-[9px] font-semibold uppercase tracking-[0.2em] text-white/40">{item.location}</p></article>)}</div></div></section>;
 }

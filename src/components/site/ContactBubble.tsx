@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Phone, MessageSquare, Mail, MessagesSquare, X, Send, CheckCircle2 } from 'lucide-react';
+import { useLanguage } from '@/components/language-provider';
 
 type Props = {
   name: string;
@@ -15,7 +16,8 @@ type Props = {
 };
 
 export function ContactBubble({ name, slogan, sloganEn, logoUrl, email, phone, organizationId, locale }: Props) {
-  const en = locale === 'en';
+  const { locale: activeLocale } = useLanguage();
+  const en = activeLocale === 'en' || (!activeLocale && locale === 'en');
   const [open, setOpen] = useState(false);
   const [view, setView] = useState<'menu' | 'message'>('menu');
   const [form, setForm] = useState({ name: '', email: '', message: '', website: '' });

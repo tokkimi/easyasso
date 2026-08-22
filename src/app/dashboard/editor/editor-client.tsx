@@ -5,7 +5,7 @@ import {
   Type, Heading, Image as ImageIcon, Video, MousePointerClick, Share2, Columns, MoveVertical, Code,
   PanelTop, PanelBottom, Palette, Files, ChevronLeft, Check,
   GalleryThumbnails, PanelsTopLeft, GalleryHorizontalEnd, Images, LayoutGrid, Megaphone, SlidersHorizontal, X, Mail, HandCoins, ExternalLink,
-  ShoppingBag, Music2, Youtube, Music, Instagram, ListMusic, Loader2, CalendarDays,
+  ShoppingBag, Music2, Youtube, Music, Instagram, ListMusic, Loader2, CalendarDays, CalendarRange, BarChart3,
 } from 'lucide-react';
 import { BLOCK_LIBRARY, type BlockType, type ButtonConfig } from '@/lib/blocks';
 import { PublicBlock } from '@/components/site/PublicBlock';
@@ -17,7 +17,7 @@ import { ColorGrid, AlignPicker, Field, Toggle, ImageInput } from './controls';
 const ICONS: Record<string, any> = {
   Heading, Type, Image: ImageIcon, Video, MousePointerClick, Share2, Columns, MoveVertical, Code,
   GalleryThumbnails, PanelsTopLeft, GalleryHorizontalEnd, Images, LayoutGrid, Megaphone, Mail, HandCoins, ExternalLink,
-  ShoppingBag, Music2, Youtube, Music, Instagram, ListMusic, CalendarDays,
+  ShoppingBag, Music2, Youtube, Music, Instagram, ListMusic, CalendarDays, CalendarRange, BarChart3,
 };
 
 const CARD_ICON_CHOICES = ['Heart', 'Users', 'HandHeart', 'HandCoins', 'Star', 'Gift', 'Leaf', 'Home', 'BookOpen', 'Shield', 'Sparkles', 'Handshake'];
@@ -486,6 +486,26 @@ function BlockInspector({ block, onContent, onStyle, onDelete }: { block: Block;
           <Field label="Horaire / artiste"><input className="input" value={c.time || ''} onChange={(e) => onContent({ ...c, time: e.target.value })} /></Field>
           <Field label="Texte du bouton"><input className="input" value={c.buttonText || ''} onChange={(e) => onContent({ ...c, buttonText: e.target.value })} /></Field>
           <Field label="Lien billetterie"><input className="input" type="url" value={c.buttonUrl || ''} onChange={(e) => onContent({ ...c, buttonUrl: e.target.value })} /></Field>
+        </>
+      )}
+
+      {block.type === 'stats' && (
+        <>
+          <Field label="Petit titre"><input className="input" value={c.eyebrow || ''} onChange={(e) => onContent({ ...c, eyebrow: e.target.value })} /></Field>
+          <Field label="Titre"><input className="input" value={c.title || ''} onChange={(e) => onContent({ ...c, title: e.target.value })} /></Field>
+          <Field label="Introduction"><input className="input" value={c.intro || ''} onChange={(e) => onContent({ ...c, intro: e.target.value })} /></Field>
+          {(c.items || []).map((item: any, index: number) => <div key={index} className="space-y-2 rounded-xl border border-gray-200 p-3"><input className="input" value={item.value || ''} onChange={(e) => { const items = [...c.items]; items[index] = { ...item, value: e.target.value }; onContent({ ...c, items }); }} placeholder="3.5M+" /><input className="input" value={item.label || ''} onChange={(e) => { const items = [...c.items]; items[index] = { ...item, label: e.target.value }; onContent({ ...c, items }); }} placeholder="Streams Spotify" /><button type="button" onClick={() => onContent({ ...c, items: c.items.filter((_: any, i: number) => i !== index) })} className="text-xs text-red-500">Retirer</button></div>)}
+          <button type="button" onClick={() => onContent({ ...c, items: [...(c.items || []), { value: '', label: '' }] })} className="btn btn-ghost w-full text-sm"><Plus className="h-4 w-4" /> Ajouter un chiffre</button>
+          <Field label="Plateformes"><input className="input" value={c.platforms || ''} onChange={(e) => onContent({ ...c, platforms: e.target.value })} /></Field>
+        </>
+      )}
+
+      {block.type === 'events' && (
+        <>
+          <Field label="Petit titre"><input className="input" value={c.eyebrow || ''} onChange={(e) => onContent({ ...c, eyebrow: e.target.value })} /></Field>
+          <Field label="Titre"><input className="input" value={c.title || ''} onChange={(e) => onContent({ ...c, title: e.target.value })} /></Field>
+          {(c.items || []).map((item: any, index: number) => <div key={index} className="space-y-2 rounded-xl border border-gray-200 p-3"><input className="input" value={item.date || ''} onChange={(e) => { const items = [...c.items]; items[index] = { ...item, date: e.target.value }; onContent({ ...c, items }); }} placeholder="February 27, 2026" /><input className="input" value={item.name || ''} onChange={(e) => { const items = [...c.items]; items[index] = { ...item, name: e.target.value }; onContent({ ...c, items }); }} placeholder="Nom de l’événement" /><input className="input" value={item.location || ''} onChange={(e) => { const items = [...c.items]; items[index] = { ...item, location: e.target.value }; onContent({ ...c, items }); }} placeholder="Lieu" /><button type="button" onClick={() => onContent({ ...c, items: c.items.filter((_: any, i: number) => i !== index) })} className="text-xs text-red-500">Retirer</button></div>)}
+          <button type="button" onClick={() => onContent({ ...c, items: [...(c.items || []), { date: '', name: '', location: '' }] })} className="btn btn-ghost w-full text-sm"><Plus className="h-4 w-4" /> Ajouter une date</button>
         </>
       )}
 

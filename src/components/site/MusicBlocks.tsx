@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Play, Instagram, Music2, Youtube, CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react';
 import { safePublicUrl, videoEmbed } from '@/lib/render';
 
@@ -361,11 +361,57 @@ function instaEmbedUrl(url: string): string {
   const m = String(url).match(/instagram\.com\/(?:[^/]+\/)?(p|reel|tv)\/([A-Za-z0-9_-]+)/);
   return m ? `https://www.instagram.com/${m[1]}/${m[2]}/embed` : '';
 }
+function instaPostCode(url: string): string {
+  return String(url).match(/instagram\.com\/(?:[^/]+\/)?(?:p|reel|tv)\/([A-Za-z0-9_-]+)/)?.[1] || '';
+}
+type InstagramMedia = { type: 'image' | 'video'; src: string; poster?: string; width: number; height: number };
+function InstagramMediaCard({ code, eager }: { code: string; eager: boolean }) {
+  const [media, setMedia] = useState<InstagramMedia[]>([]);
+  const [active, setActive] = useState(0);
+  const touchStart = useRef<number | null>(null);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    fetch(`/api/public/instagram-media?code=${encodeURIComponent(code)}`, { signal: controller.signal })
+      .then((response) => response.ok ? response.json() : { media: [] })
+      .then((payload) => setMedia(Array.isArray(payload.media) ? payload.media : []))
+      .catch(() => {});
+    return () => controller.abort();
+  }, [code]);
+
+  const item = media[active];
+  const move = (direction: number) => setActive((current) => (current + direction + media.length) % media.length);
+  return (
+    <article
+      className="relative aspect-[4/5] w-[calc((100%-0.75rem)/2)] shrink-0 snap-start overflow-hidden rounded-2xl bg-black/30 shadow-[0_18px_50px_rgba(0,0,0,.3)] md:w-[calc((100%-3rem)/5)]"
+      onTouchStart={(event) => { touchStart.current = event.touches[0]?.clientX ?? null; }}
+      onTouchEnd={(event) => {
+        if (touchStart.current === null || media.length < 2) return;
+        const distance = (event.changedTouches[0]?.clientX ?? touchStart.current) - touchStart.current;
+        if (Math.abs(distance) > 35) move(distance < 0 ? 1 : -1);
+        touchStart.current = null;
+      }}
+    >
+      {!item && <div className="absolute inset-0 animate-pulse bg-white/[0.035]" />}
+      {item?.type === 'video' ? (
+        <video key={item.src} src={item.src} poster={item.poster} controls playsInline preload={eager ? 'metadata' : 'none'} className="absolute inset-0 h-full w-full bg-black object-cover" />
+      ) : item ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={item.src} alt="" loading={eager ? 'eager' : 'lazy'} referrerPolicy="no-referrer" className="absolute inset-0 h-full w-full object-cover" />
+      ) : null}
+      {media.length > 1 && <>
+        <button type="button" aria-label="Média précédent" onClick={() => move(-1)} className="absolute left-2 top-1/2 z-[2] grid h-8 w-8 -translate-y-1/2 place-items-center rounded-full bg-black/65 text-white shadow-[0_0_16px_rgba(255,255,255,.18)]"><ChevronLeft className="h-5 w-5" /></button>
+        <button type="button" aria-label="Média suivant" onClick={() => move(1)} className="absolute right-2 top-1/2 z-[2] grid h-8 w-8 -translate-y-1/2 place-items-center rounded-full bg-black/65 text-white shadow-[0_0_16px_rgba(255,255,255,.18)]"><ChevronRight className="h-5 w-5" /></button>
+      </>}
+    </article>
+  );
+}
 export function InstagramPreview({ content }: { content: any }) {
   const username = String(content?.username || '').replace(/^@/, '');
   const profileUrl = safePublicUrl(content?.url || (username ? `https://instagram.com/${username}` : ''));
   const count = Math.max(1, Math.min(20, Number(content?.count) || 6));
   const embeds = (Array.isArray(content?.postUrls) ? content.postUrls : []).map(instaEmbedUrl).filter(Boolean).slice(0, count);
+  const postCodes = (Array.isArray(content?.postUrls) ? content.postUrls : []).map(instaPostCode).filter(Boolean).slice(0, count);
 
   if (content?.variant === 'vielusos') {
     return (
@@ -383,11 +429,7 @@ export function InstagramPreview({ content }: { content: any }) {
             <button type="button" aria-label="Publication Instagram précédente" onClick={() => document.getElementById('vielusos-instagram-rail')?.scrollBy({ left: -window.innerWidth * 0.75, behavior: 'smooth' })} className="absolute left-1 top-1/2 z-10 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full border border-white/30 bg-black/55 text-white/90 shadow-[0_0_22px_rgba(255,255,255,.18)] backdrop-blur-md transition hover:border-white/60 hover:bg-black/80 hover:shadow-[0_0_28px_rgba(255,255,255,.32)] focus:outline-none focus:ring-2 focus:ring-white/70"><ChevronLeft className="h-5 w-5" /></button>
             <button type="button" aria-label="Publication Instagram suivante" onClick={() => document.getElementById('vielusos-instagram-rail')?.scrollBy({ left: window.innerWidth * 0.75, behavior: 'smooth' })} className="absolute right-1 top-1/2 z-10 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full border border-white/30 bg-black/55 text-white/90 shadow-[0_0_22px_rgba(255,255,255,.18)] backdrop-blur-md transition hover:border-white/60 hover:bg-black/80 hover:shadow-[0_0_28px_rgba(255,255,255,.32)] focus:outline-none focus:ring-2 focus:ring-white/70"><ChevronRight className="h-5 w-5" /></button>
             <div id="vielusos-instagram-rail" className="flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-              {embeds.map((src: string, i: number) => (
-                <article key={src} className="relative aspect-[4/5] w-[calc((100%-0.75rem)/2)] shrink-0 snap-start overflow-hidden rounded-2xl bg-black/30 shadow-[0_18px_50px_rgba(0,0,0,.3)] md:w-[calc((100%-3rem)/5)]">
-                  <iframe src={src} title={`Publication Instagram officielle ${i + 1}`} loading={i < 5 ? 'eager' : 'lazy'} scrolling="no" allow="autoplay; encrypted-media; fullscreen; picture-in-picture" allowFullScreen className="absolute left-0 top-[-56px] h-[calc(100%+220px)] w-full border-0 bg-transparent [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" />
-                </article>
-              ))}
+              {postCodes.map((code: string, i: number) => <InstagramMediaCard key={code} code={code} eager={i < 5} />)}
             </div>
           </div>
         ) : <p className="mt-6 text-sm text-white/45">Ajoutez les liens de chaque post dans l’éditeur.</p>}

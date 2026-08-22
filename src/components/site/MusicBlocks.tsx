@@ -365,24 +365,46 @@ export function InstagramPreview({ content }: { content: any }) {
   // Legacy: manually uploaded post images.
   const images: { image?: string; url?: string }[] = Array.isArray(content?.posts) ? content.posts.filter((p: any) => p?.image).slice(0, count) : [];
 
+  if (content?.variant === 'vielusos') {
+    return (
+      <section className="mx-auto w-full max-w-7xl px-5 py-10 md:px-12 md:py-14">
+        <div className="flex items-center gap-3" aria-label="Instagram">
+          <span className="grid h-7 w-7 place-items-center rounded-lg bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-600"><Instagram className="h-4 w-4 text-white" /></span>
+          <span className="text-[9px] font-semibold uppercase tracking-[0.42em] text-white/45">Social</span>
+        </div>
+        <div className="mt-3 flex items-end justify-between gap-4">
+          <h2 className="text-white">{content?.title || 'Instagram'}</h2>
+          {profileUrl && <a href={profileUrl} target="_blank" rel="noreferrer" className="shrink-0 rounded-full border border-white/25 px-4 py-2 text-[9px] font-bold uppercase tracking-[0.2em] text-white/75 hover:bg-white/10">@{username}</a>}
+        </div>
+        {embeds.length > 0 ? (
+          <div className="mt-7 flex snap-x snap-mandatory gap-3 overflow-x-auto pb-4 [scrollbar-width:thin] [scrollbar-color:rgba(255,255,255,.22)_transparent]">
+            {embeds.map((src: string, i: number) => (
+              <article key={i} className="w-[calc(50vw-1.75rem)] min-w-[158px] max-w-[300px] shrink-0 snap-start overflow-hidden rounded-2xl border border-white/15 bg-white shadow-[0_18px_50px_rgba(0,0,0,.3)]">
+                <iframe src={src} title={`Instagram ${i + 1}`} loading="lazy" scrolling="yes" allow="autoplay; encrypted-media; fullscreen; picture-in-picture" allowFullScreen className="block h-[430px] w-full border-0 bg-white sm:h-[560px]" />
+              </article>
+            ))}
+          </div>
+        ) : <p className="mt-6 text-sm text-white/45">Ajoutez les liens de chaque post dans l’éditeur.</p>}
+      </section>
+    );
+  }
+
   return (
-    <div className="mx-auto w-full max-w-7xl px-5 py-14 md:px-12 md:py-20">
-      <div className="mb-3 flex items-center gap-3" aria-label="Instagram">
+    <div className="mx-auto w-full max-w-5xl px-4">
+      <div className="mb-3 flex items-center" aria-label="Instagram">
         <span className="grid h-7 w-7 place-items-center rounded-lg bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-600"><Instagram className="h-4 w-4 text-white" /></span>
-        <span className="text-[10px] font-semibold uppercase tracking-[0.45em] text-white/45">Social</span>
       </div>
-      <h2 className="mt-4 text-white">{content?.title || 'Instagram'}</h2>
 
       {embedCode ? (
         <div className="mt-6">
           <iframe title="Instagram" srcDoc={embedCode} sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox" className="min-h-[560px] w-full rounded-2xl border-0 bg-transparent" />
         </div>
       ) : embeds.length > 0 ? (
-        <div className="mt-10 flex snap-x snap-mandatory gap-5 overflow-x-auto pb-5 [scrollbar-width:thin] [scrollbar-color:rgba(255,255,255,.25)_transparent]">
+        <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {embeds.map((src: string, i: number) => (
-            <article key={i} className="w-[88vw] max-w-[540px] shrink-0 snap-center overflow-hidden rounded-3xl border border-white/15 bg-white shadow-[0_24px_80px_rgba(0,0,0,.35)] sm:w-[520px]">
-              <iframe src={src} title={`Instagram ${i + 1}`} loading="lazy" scrolling="yes" allow="autoplay; encrypted-media; fullscreen; picture-in-picture" allowFullScreen className="block h-[720px] w-full border-0 bg-white sm:h-[790px]" />
-            </article>
+            <div key={i} className="relative aspect-square overflow-hidden rounded-2xl bg-gray-100">
+              <iframe src={src} title={`instagram-${i}`} loading="lazy" scrolling="no" className="absolute left-0 top-[-64px] h-[760px] w-full border-0" />
+            </div>
           ))}
         </div>
       ) : images.length > 0 ? (

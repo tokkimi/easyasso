@@ -266,7 +266,7 @@ function vielusosCss(enabled: boolean): string {
 .vielusos-site .public-block-shell .bg-white { background: rgba(10,10,15,.68) !important; }
 .vielusos-site .public-block-shell .ring-gray-100 { --tw-ring-color: rgba(255,255,255,.18) !important; }
 .vielusos-site .public-header-shell, .vielusos-site .public-footer-shell { background: #0b0b10 !important; }
-.vielusos-site main h2 { font-family: "Cormorant Garamond", "Times New Roman", serif !important; font-size: clamp(2.75rem, 6vw, 4.5rem) !important; line-height: .95 !important; font-weight: 300 !important; letter-spacing: .22em !important; text-transform: uppercase !important; }
+.vielusos-site main h2 { font-family: "Cormorant Garamond", "Times New Roman", serif !important; font-size: clamp(1.75rem, 3vw, 2.5rem) !important; line-height: 1 !important; font-weight: 300 !important; letter-spacing: .18em !important; text-transform: uppercase !important; }
 `;
 }
 

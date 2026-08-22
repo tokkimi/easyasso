@@ -18,7 +18,7 @@ const CARD_ICONS: Record<string, any> = {
 
 // Blocks that break out of the narrow text column
 const WIDE = new Set(['textimage', 'gallery', 'cards', 'contact', 'donation', 'leetchi', 'streaming', 'instagram']);
-const FULL = new Set(['banner', 'slideshow', 'cta', 'shop', 'tracks', 'videos', 'players', 'html']);
+const FULL = new Set(['banner', 'slideshow', 'cta', 'shop', 'tracks', 'videos', 'players', 'html', 'event']);
 
 // The old default button colour was a fixed blue; on a themed site it should
 // follow the site's brand colour instead.
@@ -111,6 +111,8 @@ function renderInner(type: string, content: any, style: BlockStyle, basePath: st
       return <div style={{ height: content.height || 40 }} />;
     case 'html':
       return <LocalizedEmbed html={content.html || ''} htmlEn={content.htmlEn || ''} height={content.height} />;
+    case 'event':
+      return <EventShowcase content={content} />;
 
     // ---- Rich layouts ----
     case 'banner': {
@@ -222,4 +224,30 @@ function renderInner(type: string, content: any, style: BlockStyle, basePath: st
     default:
       return null;
   }
+}
+
+function EventShowcase({ content }: { content: any }) {
+  const image = safePublicUrl(content.image, { allowDataImage: true });
+  const href = safePublicUrl(content.buttonUrl);
+  return (
+    <section className="relative overflow-hidden px-5 py-14 text-white md:px-12 md:py-24">
+      <div className="mx-auto max-w-7xl">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.55em] text-white/45">{content.eyebrow || 'Live'}</p>
+        <h2 className="mt-5 text-5xl font-light uppercase tracking-[0.22em] md:text-7xl" style={{ fontFamily: '"Cormorant Garamond", "Times New Roman", serif' }}>{content.title || 'Next date'}</h2>
+        <div className="mt-10 grid gap-8 lg:grid-cols-[minmax(0,1.55fr)_minmax(260px,.55fr)] lg:items-center">
+          <div className="overflow-hidden rounded-[1.75rem] border border-white/15 bg-black/30 p-2 shadow-[0_30px_100px_rgba(0,0,0,.5)]">
+            {image ? <img src={image} alt={content.eventName || ''} className="h-auto max-h-[760px] w-full rounded-[1.35rem] object-contain" /> : <div className="grid aspect-[16/10] place-items-center rounded-[1.35rem] border border-dashed border-white/20 text-sm text-white/40">Ajoutez l’affiche dans l’éditeur</div>}
+          </div>
+          <div className="lg:pl-4">
+            <p className="text-7xl font-semibold leading-none tracking-tight md:text-8xl">{content.day}</p>
+            <p className="mt-3 text-[11px] font-semibold uppercase tracking-[0.32em] text-white/50">{content.month}</p>
+            <h3 className="mt-8 text-3xl font-light uppercase tracking-[0.08em] md:text-4xl" style={{ fontFamily: '"Cormorant Garamond", "Times New Roman", serif' }}>{content.eventName}</h3>
+            <p className="mt-4 text-xs font-semibold uppercase leading-6 tracking-[0.22em] text-white/45">{content.venue}{content.city && <><br />{content.city}</>}</p>
+            {content.time && <p className="mt-6 inline-flex rounded-full border border-white/20 px-5 py-3 text-[11px] font-bold uppercase tracking-[0.24em] text-white/85">{content.time}</p>}
+            {href && <div><a href={href} target="_blank" rel="noreferrer" className="mt-5 inline-flex rounded-full border border-white/45 px-7 py-3 text-[11px] font-bold uppercase tracking-[0.28em] transition hover:bg-white hover:text-black">{content.buttonText || 'Tickets'}</a></div>}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
 }

@@ -5,7 +5,7 @@ import {
   Type, Heading, Image as ImageIcon, Video, MousePointerClick, Share2, Columns, MoveVertical, Code,
   PanelTop, PanelBottom, Palette, Files, ChevronLeft, Check,
   GalleryThumbnails, PanelsTopLeft, GalleryHorizontalEnd, Images, LayoutGrid, Megaphone, SlidersHorizontal, X, Mail, HandCoins, ExternalLink,
-  ShoppingBag, Music2, Youtube, Music, Instagram, ListMusic, Loader2,
+  ShoppingBag, Music2, Youtube, Music, Instagram, ListMusic, Loader2, CalendarDays,
 } from 'lucide-react';
 import { BLOCK_LIBRARY, type BlockType, type ButtonConfig } from '@/lib/blocks';
 import { PublicBlock } from '@/components/site/PublicBlock';
@@ -17,7 +17,7 @@ import { ColorGrid, AlignPicker, Field, Toggle, ImageInput } from './controls';
 const ICONS: Record<string, any> = {
   Heading, Type, Image: ImageIcon, Video, MousePointerClick, Share2, Columns, MoveVertical, Code,
   GalleryThumbnails, PanelsTopLeft, GalleryHorizontalEnd, Images, LayoutGrid, Megaphone, Mail, HandCoins, ExternalLink,
-  ShoppingBag, Music2, Youtube, Music, Instagram, ListMusic,
+  ShoppingBag, Music2, Youtube, Music, Instagram, ListMusic, CalendarDays,
 };
 
 const CARD_ICON_CHOICES = ['Heart', 'Users', 'HandHeart', 'HandCoins', 'Star', 'Gift', 'Leaf', 'Home', 'BookOpen', 'Shield', 'Sparkles', 'Handshake'];
@@ -472,6 +472,21 @@ function BlockInspector({ block, onContent, onStyle, onDelete }: { block: Block;
 
       {block.type === 'html' && (
         <Field label="Code HTML / intégration (HelloAsso, carte…)"><textarea className="input min-h-[140px] font-mono text-xs" value={c.html || ''} onChange={(e) => onContent({ ...c, html: e.target.value })} /></Field>
+      )}
+
+      {block.type === 'event' && (
+        <>
+          <Field label="Petit titre"><input className="input" value={c.eyebrow || ''} onChange={(e) => onContent({ ...c, eyebrow: e.target.value })} placeholder="Live" /></Field>
+          <Field label="Grand titre"><input className="input" value={c.title || ''} onChange={(e) => onContent({ ...c, title: e.target.value })} placeholder="Next date" /></Field>
+          <ImageInput label="Affiche de l’événement" value={c.image} onChange={(image) => onContent({ ...c, image })} />
+          <div className="grid grid-cols-2 gap-3"><Field label="Jour"><input className="input" value={c.day || ''} onChange={(e) => onContent({ ...c, day: e.target.value })} /></Field><Field label="Mois / année"><input className="input" value={c.month || ''} onChange={(e) => onContent({ ...c, month: e.target.value })} /></Field></div>
+          <Field label="Nom de l’événement"><input className="input" value={c.eventName || ''} onChange={(e) => onContent({ ...c, eventName: e.target.value })} /></Field>
+          <Field label="Lieu"><input className="input" value={c.venue || ''} onChange={(e) => onContent({ ...c, venue: e.target.value })} /></Field>
+          <Field label="Ville"><input className="input" value={c.city || ''} onChange={(e) => onContent({ ...c, city: e.target.value })} /></Field>
+          <Field label="Horaire / artiste"><input className="input" value={c.time || ''} onChange={(e) => onContent({ ...c, time: e.target.value })} /></Field>
+          <Field label="Texte du bouton"><input className="input" value={c.buttonText || ''} onChange={(e) => onContent({ ...c, buttonText: e.target.value })} /></Field>
+          <Field label="Lien billetterie"><input className="input" type="url" value={c.buttonUrl || ''} onChange={(e) => onContent({ ...c, buttonUrl: e.target.value })} /></Field>
+        </>
       )}
 
       {block.type === 'banner' && (

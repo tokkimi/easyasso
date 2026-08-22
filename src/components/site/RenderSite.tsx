@@ -273,11 +273,11 @@ function ClientAccessPage({ organizationId, organizationName, locale, branded = 
   const en = locale === 'en';
   return (
     <main className={`flex-1 px-4 py-12 ${branded ? 'bg-transparent' : 'bg-gray-50'}`}>
-      <section className={`mx-auto max-w-2xl rounded-[2rem] p-6 text-center shadow-sm md:p-10 ${branded ? 'bg-[#0b0b10]/80 text-[#f7f7fb] ring-1 ring-white/15 backdrop-blur-xl' : 'bg-white ring-1 ring-gray-200'}`}>
+      <section className={`mx-auto max-w-2xl rounded-3xl p-5 text-center shadow-sm sm:p-7 md:rounded-[2rem] md:p-10 ${branded ? 'bg-[#0b0b10]/55 text-[#f7f7fb] ring-1 ring-white/15 backdrop-blur-xl' : 'bg-white ring-1 ring-gray-200'}`}>
         <p className={`text-sm font-bold uppercase tracking-[0.2em] ${branded ? 'text-[#d33f5c]' : 'text-[var(--brand)]'}`}>
           {branded ? 'Vielusos · espace client' : en ? 'Customer area' : 'Espace client'}
         </p>
-        <h1 className={`mt-3 text-3xl font-black md:text-4xl ${branded ? 'text-white' : 'text-gray-900'}`}>
+        <h1 className={`mt-3 text-2xl font-black sm:text-3xl md:text-4xl ${branded ? 'text-white' : 'text-gray-900'}`}>
           {en ? 'Sign in or create your customer account' : 'Connexion ou inscription client'}
         </h1>
         <p className={`mx-auto mt-4 max-w-xl ${branded ? 'text-white/65' : 'text-gray-600'}`}>

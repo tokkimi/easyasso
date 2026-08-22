@@ -55,7 +55,7 @@ export function CustomerAccessForm({
   }
 
   return (
-    <form onSubmit={submit} className={`mt-8 rounded-2xl p-4 text-left ${branded ? 'bg-white/10 ring-1 ring-white/10' : 'bg-gray-50'}`}>
+    <form onSubmit={submit} className={`mt-8 rounded-2xl p-4 text-left sm:p-6 ${branded ? 'bg-transparent ring-1 ring-white/15 backdrop-blur-md' : 'bg-gray-50'}`}>
       <div className="grid gap-3 sm:grid-cols-2">
         <label className={`text-sm font-bold ${branded ? 'text-white/85' : 'text-gray-700'}`}>
           {en ? 'Name' : 'Nom'}

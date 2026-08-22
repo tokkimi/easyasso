@@ -31,6 +31,7 @@ export function PublicHeader({
   const { t } = useLanguage();
   const cta: ButtonConfig | undefined = header.cta;
   const socials = Object.entries(header.social || {}).filter((entry): entry is [string, string] => Boolean(entry[1]));
+  const brandedHeader = header.logoUrl?.includes('/vielusos/') || header.background?.toLowerCase() === '#0b0b10';
   const link = (slug: string, isHome: boolean) => (isHome ? basePath || '/' : `${basePath}/${slug}`);
   const customerHref = basePath === '#' ? '#client' : `${basePath || ''}/client`;
   return (
@@ -60,7 +61,7 @@ export function PublicHeader({
         </div>
         <div className="flex flex-1 basis-0 items-center justify-end gap-3">
           {socials.map(([name, href]) => <a key={name} href={href} target="_blank" rel="noreferrer" aria-label={name} className="hidden text-white/80 drop-shadow-[0_0_6px_rgba(255,255,255,.55)] transition hover:text-white lg:inline-flex"><SocialMark label={name} /></a>)}
-          <LanguageSwitcher variant="inline" />
+          <span className="hidden sm:inline-flex"><LanguageSwitcher variant="inline" /></span>
           {header.showCta !== false && cta && (
             <a
               href={cta.href.startsWith('/') ? `${basePath}${cta.href}` : cta.href}
@@ -80,13 +81,17 @@ export function PublicHeader({
           >
             <UserRound className="h-5 w-5" />
           </Link>
-          <button type="button" onClick={() => setMenuOpen((open) => !open)} className="public-header-menu-button touch-target shrink-0 items-center justify-center rounded-lg border border-black/10 bg-white/80" aria-expanded={menuOpen} aria-label={menuOpen ? 'Fermer le menu' : 'Ouvrir le menu'}>
+          <button type="button" onClick={() => setMenuOpen((open) => !open)} className={`public-header-menu-button touch-target shrink-0 items-center justify-center rounded-xl border ${brandedHeader ? 'border-white/20 bg-transparent text-white hover:bg-white/10' : 'border-black/10 bg-white/80'}`} aria-expanded={menuOpen} aria-label={menuOpen ? 'Fermer le menu' : 'Ouvrir le menu'}>
             {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>
         </div>
         {menuOpen && (
-          <div className="public-header-dropdown absolute left-3 right-3 top-[calc(100%+0.5rem)] z-50 rounded-2xl bg-white p-3 text-gray-900 shadow-2xl ring-1 ring-black/10">
-            {header.showNav && <nav className="flex flex-col">{nav.map((p) => <Link key={p.slug} href={link(p.slug, p.isHome)} onClick={() => setMenuOpen(false)} className="rounded-xl px-4 py-3 text-base font-semibold hover:bg-gray-50">{t(p.title)}</Link>)}</nav>}
+          <div className={`public-header-dropdown absolute left-3 right-3 top-[calc(100%+0.5rem)] z-50 rounded-2xl p-3 shadow-2xl backdrop-blur-2xl ${brandedHeader ? 'border border-white/15 bg-[#0b0b10]/75 text-white shadow-black/60' : 'bg-white text-gray-900 ring-1 ring-black/10'}`}>
+            {header.showNav && <nav className="flex flex-col">{nav.map((p) => <Link key={p.slug} href={link(p.slug, p.isHome)} onClick={() => setMenuOpen(false)} className={`rounded-xl px-4 py-3 text-base font-semibold ${brandedHeader ? 'border-b border-white/10 hover:bg-white/10' : 'hover:bg-gray-50'}`}>{t(p.title)}</Link>)}</nav>}
+            <div className={`mt-3 flex flex-wrap items-center gap-3 px-2 pt-3 ${brandedHeader ? 'border-t border-white/10' : 'border-t border-gray-100'}`}>
+              {socials.map(([name, href]) => <a key={name} href={href} target="_blank" rel="noreferrer" aria-label={name} className={`grid h-10 w-10 place-items-center rounded-full border ${brandedHeader ? 'border-white/20 text-white/80 hover:bg-white/10 hover:text-white' : 'border-gray-200 text-gray-600'}`}><SocialMark label={name} /></a>)}
+              <LanguageSwitcher variant="inline" />
+            </div>
             {header.showCta !== false && cta && <a href={cta.href.startsWith('/') ? `${basePath}${cta.href}` : cta.href} onClick={() => setMenuOpen(false)} style={{ background: cta.color, color: '#fff' }} className="mt-2 flex min-h-11 items-center justify-center rounded-xl px-4 text-sm font-bold">{cta.text}</a>}
           </div>
         )}

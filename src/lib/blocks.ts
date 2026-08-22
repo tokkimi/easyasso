@@ -30,6 +30,7 @@ export type BlockType =
   | 'columns'
   | 'spacer'
   | 'html'
+  | 'event'
   // Rich, ready-made layout blocks
   | 'banner'
   | 'textimage'
@@ -64,6 +65,7 @@ export const BLOCK_LIBRARY: {
 }[] = [
   // Ready-made layouts (shown first — the easy way)
   { type: 'banner', label: 'Bannière photo', icon: 'GalleryThumbnails', description: 'Grande photo + titre + bouton', group: 'layouts' },
+  { type: 'event', label: 'Prochain événement', icon: 'CalendarDays', description: 'Affiche complète, date, lieu et billetterie', group: 'layouts' },
   { type: 'textimage', label: 'Texte + image', icon: 'PanelsTopLeft', description: 'Un texte à côté d’une image', group: 'layouts' },
   { type: 'gallery', label: 'Galerie photos', icon: 'GalleryHorizontalEnd', description: 'Plusieurs photos en grille', group: 'layouts' },
   { type: 'slideshow', label: 'Diaporama', icon: 'Images', description: 'Photos qui défilent', group: 'layouts' },
@@ -118,6 +120,8 @@ export function defaultContentFor(type: BlockType): Record<string, unknown> {
         htmlEn: '',
         height: 680,
       };
+    case 'event':
+      return { eyebrow: 'Live', title: 'Next date', image: '', day: '', month: '', eventName: '', venue: '', city: '', time: '', buttonText: 'Tickets', buttonUrl: '' };
     case 'banner':
       return {
         image: PH('banner', 1600, 700),
@@ -196,6 +200,7 @@ export function defaultStyleFor(type: BlockType): BlockStyle {
     case 'banner':
     case 'slideshow':
     case 'html':
+    case 'event':
       return { paddingY: 0 };
     case 'textimage':
     case 'gallery':

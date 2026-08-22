@@ -6,6 +6,11 @@ export function middleware(req: NextRequest) {
   const host = (req.headers.get('host') || '').split(':')[0].toLowerCase();
   const root = (process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'localhost').split(':')[0].toLowerCase();
 
+  // Public files must keep their real path on custom domains. Rewriting an
+  // image or video request to /domain/<host>/... makes Next render a page and
+  // returns a 404 instead of the asset.
+  if (/\.[a-z0-9]{2,8}$/i.test(req.nextUrl.pathname)) return NextResponse.next();
+
   const isRoot =
     host === root ||
     host === `www.${root}` ||

@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
   try {
     let match: RegExpMatchArray | null = null;
     for (const kind of ['p', 'reel']) {
-      const response = await fetch(`https://www.instagram.com/${kind}/${code}/embed?omitscript=true`, {
+      const response = await fetch(`https://www.instagram.com/${kind}/${code}/embed`, {
         headers: { 'User-Agent': 'Mozilla/5.0', 'Accept-Language': 'fr-FR,fr;q=0.9' },
         cache: 'no-store',
       });

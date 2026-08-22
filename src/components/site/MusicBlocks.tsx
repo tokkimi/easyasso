@@ -374,7 +374,7 @@ function InstagramMediaCard({ code, eager, position }: { code: string; eager: bo
     const controller = new AbortController();
     const delay = eager ? position * 180 : 900 + position * 180;
     const timer = window.setTimeout(() => {
-      fetch(`/api/public/instagram-media?code=${encodeURIComponent(code)}&v=3`, { signal: controller.signal })
+      fetch(`/api/public/instagram-media?code=${encodeURIComponent(code)}&v=4`, { signal: controller.signal })
         .then((response) => response.ok ? response.json() : { media: [] })
         .then((payload) => setMedia(Array.isArray(payload.media) ? payload.media : []))
         .catch(() => {});

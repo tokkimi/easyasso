@@ -285,7 +285,7 @@ export function EditorClient({ site: initial, canEdit, canPublish, siteUrl }: { 
               </div>
             )}
             {tab === 'header' && <HeaderEditor value={header} onChange={(h) => { setHeader(h); saveSite({ header: h }); }} />}
-            {tab === 'footer' && <FooterEditor value={footer} onChange={(f) => { setFooter(f); saveSite({ footer: f }); }} />}
+            {tab === 'footer' && <FooterEditor value={footer} pages={pages} onChange={(f) => { setFooter(f); saveSite({ footer: f }); }} />}
           </aside>
         )}
       </div>
@@ -304,7 +304,7 @@ export function EditorClient({ site: initial, canEdit, canPublish, siteUrl }: { 
               <div className="text-sm text-gray-600"><p>Sélectionnez une partie de la page ou ajoutez un bloc.</p><button onClick={() => { setMobileInspector(false); setShowPalette(true); }} className="btn btn-primary mt-4 w-full"><Plus className="h-4 w-4" /> Ajouter un bloc</button></div>
             )}
             {tab === 'header' && <HeaderEditor value={header} onChange={(h) => { setHeader(h); saveSite({ header: h }); }} />}
-            {tab === 'footer' && <FooterEditor value={footer} onChange={(f) => { setFooter(f); saveSite({ footer: f }); }} />}
+            {tab === 'footer' && <FooterEditor value={footer} pages={pages} onChange={(f) => { setFooter(f); saveSite({ footer: f }); }} />}
           </aside>
         </div>
       )}
@@ -820,13 +820,32 @@ function HeaderEditor({ value, onChange }: { value: any; onChange: (v: any) => v
       <Field label="Couleur du texte"><ColorGrid value={h.textColor} onChange={(c) => set({ textColor: c })} /></Field>
       <div className="border-t border-gray-100 pt-3">
         <p className="mb-2 text-sm font-semibold text-gray-700">Bouton d’action</p>
-        <ButtonEditor value={h.cta} onChange={(cta) => set({ cta })} />
+        <Toggle checked={h.showCta ?? true} onChange={(v) => set({ showCta: v })} label="Afficher le bouton du header" />
+        {h.showCta !== false && <ButtonEditor value={h.cta} onChange={(cta) => set({ cta })} />}
+      </div>
+      <div className="space-y-3 border-t border-gray-100 pt-3">
+        <p className="text-sm font-semibold text-gray-700">Réseaux sociaux dans le header</p>
+        {['instagram', 'youtube', 'spotify', 'tiktok', 'facebook', 'x'].map((name) => <Field key={name} label={name.toUpperCase()}><input className="input" type="url" value={h.social?.[name] || ''} onChange={(e) => set({ social: { ...(h.social || {}), [name]: e.target.value } })} /></Field>)}
+      </div>
+      <div className="space-y-3 border-t border-gray-100 pt-3">
+        <p className="text-sm font-semibold text-gray-700">Bannière vidéo VIELUSOS</p>
+        <Field label="URL de la vidéo"><input className="input" value={h.vielusosHero?.videoUrl || ''} onChange={(e) => set({ vielusosHero: { ...(h.vielusosHero || {}), videoUrl: e.target.value } })} placeholder="/vielusos/banner.mp4" /></Field>
+        <Toggle checked={h.vielusosHero?.showLogo ?? true} onChange={(v) => set({ vielusosHero: { ...(h.vielusosHero || {}), showLogo: v } })} label="Afficher le logo central" />
+        <Toggle checked={h.vielusosHero?.showName ?? true} onChange={(v) => set({ vielusosHero: { ...(h.vielusosHero || {}), showName: v } })} label="Afficher VIELUSOS" />
+        <Toggle checked={h.vielusosHero?.showTagline ?? true} onChange={(v) => set({ vielusosHero: { ...(h.vielusosHero || {}), showTagline: v } })} label="Afficher POWER OF EMOTION" />
+      </div>
+      <div className="space-y-3 border-t border-gray-100 pt-3">
+        <p className="text-sm font-semibold text-gray-700">Bio et images VIELUSOS</p>
+        <Field label="Petit titre"><input className="input" value={h.vielusosBio?.eyebrow || ''} onChange={(e) => set({ vielusosBio: { ...(h.vielusosBio || {}), eyebrow: e.target.value } })} placeholder="VIELUSOS · ARTISTE" /></Field>
+        <Field label="Titre"><input className="input" value={h.vielusosBio?.title || ''} onChange={(e) => set({ vielusosBio: { ...(h.vielusosBio || {}), title: e.target.value } })} placeholder="À PROPOS" /></Field>
+        <Field label="Bio en anglais"><textarea className="input min-h-32" value={(h.vielusosBio?.paragraphs || []).join('\n\n')} onChange={(e) => set({ vielusosBio: { ...(h.vielusosBio || {}), paragraphs: e.target.value.split(/\n\s*\n/) } })} /></Field>
+        {[0, 1, 2].map((index) => <Field key={index} label={`Image ${index + 1}`}><input className="input" value={h.vielusosBio?.images?.[index] || ''} onChange={(e) => { const images = [...(h.vielusosBio?.images || [])]; images[index] = e.target.value; set({ vielusosBio: { ...(h.vielusosBio || {}), images } }); }} /></Field>)}
       </div>
     </div>
   );
 }
 
-function FooterEditor({ value, onChange }: { value: any; onChange: (v: any) => void }) {
+function FooterEditor({ value, pages, onChange }: { value: any; pages: Page[]; onChange: (v: any) => void }) {
   const f = value; const set = (patch: any) => onChange({ ...f, ...patch });
   return (
     <div className="space-y-4">
@@ -841,9 +860,18 @@ function FooterEditor({ value, onChange }: { value: any; onChange: (v: any) => v
       <ImageInput label="Logo (image)" value={f.logoUrl} onChange={(logoUrl) => set({ logoUrl })} kind="logo" />
       <Field label="Texte de présentation"><textarea className="input min-h-[70px]" value={f.text || ''} onChange={(e) => set({ text: e.target.value })} /></Field>
       <Field label="Texte “tous droits réservés”"><input className="input" value={f.allRightsText || ''} onChange={(e) => set({ allRightsText: e.target.value })} /></Field>
+      <div className="space-y-2 border-t border-gray-100 pt-3">
+        <p className="text-sm font-semibold text-gray-700">Pages affichées dans le footer</p>
+        {pages.map((page) => {
+          const selected: string[] = Array.isArray(f.pageSlugs) ? f.pageSlugs : pages.filter((item) => item.showInNav).map((item) => item.slug);
+          return <Toggle key={page.slug} checked={selected.includes(page.slug)} onChange={(checked) => set({ pageSlugs: checked ? [...selected, page.slug] : selected.filter((slug) => slug !== page.slug) })} label={page.title} />;
+        })}
+        <p className="text-xs text-gray-500">Seules les pages encore présentes sur le site peuvent être sélectionnées. Les CGV se règlent séparément ci-dessous.</p>
+      </div>
       <div className="border-t border-gray-100 pt-3">
         <Toggle checked={f.showContactBubble ?? true} onChange={(v) => set({ showContactBubble: v })} label="Bulle de contact flottante" />
         <p className="mt-1 text-xs text-gray-500">Affiche en bas de chaque page une bulle « en ligne » avec le logo, le nom, le slogan et les moyens de contact (appel, SMS, e-mail, messagerie).</p>
+        {f.showContactBubble !== false && <div className="mt-3 space-y-3"><Field label="Texte de la bulle (français)"><input className="input" value={f.contactBubbleText || ''} onChange={(e) => set({ contactBubbleText: e.target.value })} /></Field><Field label="Texte de la bulle (anglais)"><input className="input" value={f.contactBubbleTextEn || ''} onChange={(e) => set({ contactBubbleTextEn: e.target.value })} /></Field><Field label="E-mail de la bulle"><input className="input" type="email" value={f.contactBubbleEmail || ''} onChange={(e) => set({ contactBubbleEmail: e.target.value })} /></Field><Field label="Téléphone de la bulle"><input className="input" type="tel" value={f.contactBubblePhone || ''} onChange={(e) => set({ contactBubblePhone: e.target.value })} /></Field></div>}
       </div>
       <div className="border-t border-gray-100 pt-3">
         <Toggle checked={f.showNewsletter ?? true} onChange={(v) => set({ showNewsletter: v })} label="Bloc newsletter" />

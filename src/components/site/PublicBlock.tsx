@@ -10,6 +10,7 @@ import { DonationBlock } from './DonationBlock';
 import { LeetchiBlock } from './LeetchiBlock';
 import { ShopCatalog, type ShopProduct } from './ShopCatalog';
 import { MusicTracks, VideoGrid, StreamingLinks, OfficialPlayers, InstagramPreview } from './MusicBlocks';
+import { LocalizedEmbed } from './LocalizedEmbed';
 
 const CARD_ICONS: Record<string, any> = {
   Heart, Users, HandHeart, HandCoins, Star, Gift, Leaf, Home, BookOpen, Shield, Sparkles, Handshake,
@@ -17,7 +18,7 @@ const CARD_ICONS: Record<string, any> = {
 
 // Blocks that break out of the narrow text column
 const WIDE = new Set(['textimage', 'gallery', 'cards', 'contact', 'donation', 'leetchi', 'streaming', 'instagram']);
-const FULL = new Set(['banner', 'slideshow', 'cta', 'shop', 'tracks', 'videos', 'players']);
+const FULL = new Set(['banner', 'slideshow', 'cta', 'shop', 'tracks', 'videos', 'players', 'html']);
 
 // The old default button colour was a fixed blue; on a themed site it should
 // follow the site's brand colour instead.
@@ -109,14 +110,7 @@ function renderInner(type: string, content: any, style: BlockStyle, basePath: st
     case 'spacer':
       return <div style={{ height: content.height || 40 }} />;
     case 'html':
-      return (
-        <iframe
-          title="Intégration externe"
-          srcDoc={content.html || ''}
-          sandbox="allow-forms allow-popups allow-popups-to-escape-sandbox allow-scripts"
-          className="min-h-[420px] w-full rounded-xl border-0 bg-transparent"
-        />
-      );
+      return <LocalizedEmbed html={content.html || ''} htmlEn={content.htmlEn || ''} height={content.height} />;
 
     // ---- Rich layouts ----
     case 'banner': {

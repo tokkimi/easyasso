@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { Menu, X, Facebook, Instagram, Linkedin, Youtube, Music2, UserRound } from 'lucide-react';
 import type { HeaderConfig, FooterConfig, ButtonConfig } from '@/lib/blocks';
 import { NewsletterForm } from './NewsletterForm';
+import { LanguageSwitcher, useLanguage } from '@/components/language-provider';
 
 interface NavItem { title: string; slug: string; isHome: boolean }
 const SOCIAL_LABELS = new Set(['facebook', 'instagram', 'linkedin', 'youtube', 'tiktok', 'x']);
@@ -18,7 +19,7 @@ function SocialMark({ label }: { label: string }) {
   if (key === 'instagram') return <Instagram className="h-6 w-6" />;
   if (key === 'linkedin') return <Linkedin className="h-6 w-6" />;
   if (key === 'youtube') return <Youtube className="h-6 w-6" />;
-  if (key === 'tiktok') return <Music2 className="h-6 w-6" />;
+  if (key === 'tiktok' || key === 'spotify') return <Music2 className="h-6 w-6" />;
   if (key === 'x') return <span className="text-xl font-black leading-none">𝕏</span>;
   return null;
 }
@@ -27,7 +28,9 @@ export function PublicHeader({
   header, nav, basePath,
 }: { header: HeaderConfig; nav: NavItem[]; basePath: string }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const { t } = useLanguage();
   const cta: ButtonConfig | undefined = header.cta;
+  const socials = Object.entries(header.social || {}).filter((entry): entry is [string, string] => Boolean(entry[1]));
   const link = (slug: string, isHome: boolean) => (isHome ? basePath || '/' : `${basePath}/${slug}`);
   const customerHref = basePath === '#' ? '#client' : `${basePath || ''}/client`;
   return (
@@ -50,13 +53,15 @@ export function PublicHeader({
           {header.showNav && (
             <nav className="flex min-w-0 items-center justify-center gap-2 text-center text-sm font-medium lg:gap-4">
               {nav.map((p) => (
-                <Link key={p.slug} href={link(p.slug, p.isHome)} className="max-w-[10rem] break-words leading-tight opacity-80 hover:opacity-100">{p.title}</Link>
+                <Link key={p.slug} href={link(p.slug, p.isHome)} className="max-w-[10rem] break-words leading-tight opacity-80 hover:opacity-100">{t(p.title)}</Link>
               ))}
             </nav>
           )}
         </div>
         <div className="flex flex-1 basis-0 items-center justify-end gap-3">
-          {cta && (
+          {socials.map(([name, href]) => <a key={name} href={href} target="_blank" rel="noreferrer" aria-label={name} className="hidden text-white/80 drop-shadow-[0_0_6px_rgba(255,255,255,.55)] transition hover:text-white lg:inline-flex"><SocialMark label={name} /></a>)}
+          <LanguageSwitcher variant="inline" />
+          {header.showCta !== false && cta && (
             <a
               href={cta.href.startsWith('/') ? `${basePath}${cta.href}` : cta.href}
               style={cta.variant === 'solid'
@@ -71,7 +76,7 @@ export function PublicHeader({
             href={customerHref}
             title="Connexion ou inscription client"
             aria-label="Connexion ou inscription client"
-            className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-black/10 bg-white/85 text-current shadow-sm transition hover:bg-white"
+            className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-current/25 bg-transparent text-current transition hover:border-current/60"
           >
             <UserRound className="h-5 w-5" />
           </Link>
@@ -81,8 +86,8 @@ export function PublicHeader({
         </div>
         {menuOpen && (
           <div className="public-header-dropdown absolute left-3 right-3 top-[calc(100%+0.5rem)] z-50 rounded-2xl bg-white p-3 text-gray-900 shadow-2xl ring-1 ring-black/10">
-            {header.showNav && <nav className="flex flex-col">{nav.map((p) => <Link key={p.slug} href={link(p.slug, p.isHome)} onClick={() => setMenuOpen(false)} className="rounded-xl px-4 py-3 text-base font-semibold hover:bg-gray-50">{p.title}</Link>)}</nav>}
-            {cta && <a href={cta.href.startsWith('/') ? `${basePath}${cta.href}` : cta.href} onClick={() => setMenuOpen(false)} style={{ background: cta.color, color: '#fff' }} className="mt-2 flex min-h-11 items-center justify-center rounded-xl px-4 text-sm font-bold">{cta.text}</a>}
+            {header.showNav && <nav className="flex flex-col">{nav.map((p) => <Link key={p.slug} href={link(p.slug, p.isHome)} onClick={() => setMenuOpen(false)} className="rounded-xl px-4 py-3 text-base font-semibold hover:bg-gray-50">{t(p.title)}</Link>)}</nav>}
+            {header.showCta !== false && cta && <a href={cta.href.startsWith('/') ? `${basePath}${cta.href}` : cta.href} onClick={() => setMenuOpen(false)} style={{ background: cta.color, color: '#fff' }} className="mt-2 flex min-h-11 items-center justify-center rounded-xl px-4 text-sm font-bold">{cta.text}</a>}
           </div>
         )}
       </div>
@@ -93,8 +98,18 @@ export function PublicHeader({
 export function PublicFooter({
   footer, orgId, basePath, nav,
 }: { footer: FooterConfig; orgId: string; basePath: string; nav: NavItem[] }) {
+  const { t } = useLanguage();
+  const normalize = (value: string) => value.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/g, '');
+  const footerHref = (href: string, label: string) => {
+    if (!href.startsWith('/')) return href;
+    const slug = href.replace(/^\/+|\/+$/g, '');
+    const page = nav.find((item) => item.slug === slug) || nav.find((item) => normalize(item.title) === normalize(label));
+    return page ? (page.isHome ? basePath || '/' : `${basePath}/${page.slug}`) : basePath || '/';
+  };
+  const selectedPages = nav.filter((page) => !footer.pageSlugs || footer.pageSlugs.includes(page.slug));
+  const socialColumns = (footer.columns || []).filter(isSocialColumn);
   return (
-    <footer style={{ background: footer.background, color: footer.textColor }} className="public-footer-shell mt-10">
+    <footer style={{ background: footer.background, color: footer.textColor, paddingBottom: 'env(safe-area-inset-bottom)' }} className="public-footer-shell mt-0">
       <div className="public-footer-grid mx-auto grid max-w-5xl gap-8 px-4 py-12">
         <div>
           <div className="text-lg font-extrabold">
@@ -105,17 +120,22 @@ export function PublicFooter({
               </span>
             ) : footer.logoText}
           </div>
-          <p className="mt-3 text-sm opacity-80">{footer.text}</p>
+          <p className="mt-3 text-sm opacity-80">{t(footer.text)}</p>
         </div>
 
-        {footer.columns?.map((col, i) => (
+        {selectedPages.length > 0 && <div>
+          <p className="text-sm font-bold uppercase tracking-wide opacity-90">{t('Pages')}</p>
+          <ul className="mt-3 space-y-2 text-sm opacity-80">{selectedPages.map((page) => <li key={page.slug}><a href={page.isHome ? basePath || '/' : `${basePath}/${page.slug}`} className="hover:opacity-100">{t(page.title)}</a></li>)}</ul>
+        </div>}
+
+        {socialColumns.map((col, i) => (
           <div key={i}>
-            <p className="text-sm font-bold uppercase tracking-wide opacity-90">{col.title}</p>
+            <p className="text-sm font-bold uppercase tracking-wide opacity-90">{t(col.title)}</p>
             <ul className={`mt-3 text-sm opacity-80 ${isSocialColumn(col) ? 'flex flex-wrap gap-2' : 'space-y-2'}`}>
               {col.links.map((l, j) => (
                 <li key={j}>
-                  <a href={l.href.startsWith('/') ? `${basePath}${l.href}` : l.href} target={isSocialColumn(col) ? '_blank' : undefined} rel={isSocialColumn(col) ? 'noreferrer' : undefined} title={l.label} aria-label={l.label} className={isSocialColumn(col) ? 'grid h-11 w-11 place-items-center rounded-xl border border-current/20 transition hover:bg-white/10 hover:opacity-100' : 'hover:opacity-100'}>
-                    {isSocialColumn(col) ? <SocialMark label={l.label} /> : l.label}
+                  <a href={footerHref(l.href, l.label)} target={isSocialColumn(col) ? '_blank' : undefined} rel={isSocialColumn(col) ? 'noreferrer' : undefined} title={t(l.label)} aria-label={t(l.label)} className={isSocialColumn(col) ? 'grid h-11 w-11 place-items-center rounded-xl border border-current/20 transition hover:bg-white/10 hover:opacity-100' : 'hover:opacity-100'}>
+                    {isSocialColumn(col) ? <SocialMark label={l.label} /> : t(l.label)}
                   </a>
                 </li>
               ))}
@@ -125,7 +145,7 @@ export function PublicFooter({
 
         {footer.showNewsletter && (
           <div>
-            <p className="text-sm font-bold uppercase tracking-wide opacity-90">{footer.newsletterTitle}</p>
+            <p className="text-sm font-bold uppercase tracking-wide opacity-90">{t(footer.newsletterTitle)}</p>
             <div className="mt-3"><NewsletterForm orgId={orgId} /></div>
           </div>
         )}
@@ -133,10 +153,10 @@ export function PublicFooter({
 
       <div className="border-t border-white/10">
         <div className="public-footer-bottom mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-2 px-4 py-4 text-xs opacity-70">
-          <span>{footer.allRightsText}</span>
+          <span>{t(footer.allRightsText)}</span>
           <div className="flex gap-4">
             {footer.showCgv && <a href={`${basePath}/cgv`} className="hover:opacity-100">CGV</a>}
-            {footer.showMentions && <a href={`${basePath}/mentions-legales`} className="hover:opacity-100">Mentions légales</a>}
+            {footer.showMentions && <a href={`${basePath}/mentions-legales`} className="hover:opacity-100">{t('Mentions légales')}</a>}
           </div>
         </div>
       </div>

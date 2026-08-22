@@ -6,6 +6,7 @@ import { Phone, MessageSquare, Mail, MessagesSquare, X, Send, CheckCircle2 } fro
 type Props = {
   name: string;
   slogan?: string;
+  sloganEn?: string;
   logoUrl?: string;
   email?: string;
   phone?: string;
@@ -13,7 +14,7 @@ type Props = {
   locale?: 'fr' | 'en';
 };
 
-export function ContactBubble({ name, slogan, logoUrl, email, phone, organizationId, locale }: Props) {
+export function ContactBubble({ name, slogan, sloganEn, logoUrl, email, phone, organizationId, locale }: Props) {
   const en = locale === 'en';
   const [open, setOpen] = useState(false);
   const [view, setView] = useState<'menu' | 'message'>('menu');
@@ -50,7 +51,7 @@ export function ContactBubble({ name, slogan, logoUrl, email, phone, organizatio
       {Avatar}
       <div className="min-w-0 text-left">
         <p className="truncate text-sm font-bold text-white">{name}</p>
-        {slogan && <p className="truncate text-[11px] text-white/70">{slogan}</p>}
+        {(en ? sloganEn || slogan : slogan) && <p className="truncate text-[11px] text-white/70">{en ? sloganEn || slogan : slogan}</p>}
       </div>
       <span className="relative ml-auto flex h-3.5 w-3.5 shrink-0">
         <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-60" />

@@ -86,10 +86,10 @@ export async function RenderSite({ site, basePath, slug }: { site: SiteWithPages
   const profile = (((site.organization as any)?.profile) || {}) as Record<string, any>;
   const vielusos = isVielusosSite(site);
   const publicHeader = vielusos
-    ? { ...header, logoUrl: VIELUSOS_BRAND.logoUrl, logoText: site.name, background: VIELUSOS_BRAND.surface, textColor: '#f7f7fb' }
+    ? { ...header, logoUrl: VIELUSOS_BRAND.logoUrl, logoText: site.name.toUpperCase(), background: VIELUSOS_BRAND.surface, textColor: '#f7f7fb' }
     : header;
   const publicFooter = vielusos
-    ? { ...footer, logoUrl: VIELUSOS_BRAND.logoUrl, logoText: site.name, background: VIELUSOS_BRAND.surface, textColor: '#f7f7fb' }
+    ? { ...footer, logoUrl: VIELUSOS_BRAND.logoUrl, logoText: site.name.toUpperCase(), background: VIELUSOS_BRAND.surface, textColor: '#f7f7fb' }
     : footer;
   const shopEnabled = Boolean(profile.shopEnabled ?? profile.hasShop);
   const nav = site.pages.filter((p) => p.showInNav && (p.slug !== 'boutique' || shopEnabled)).map((p) => ({ title: p.title, slug: p.slug, isHome: p.isHome }));
@@ -101,10 +101,11 @@ export async function RenderSite({ site, basePath, slug }: { site: SiteWithPages
   const bubble = (footer as any).showContactBubble === false ? null : (
     <ContactBubble
       name={site.name}
-      slogan={publicFooter.text}
+      slogan={(footer as any).contactBubbleText || publicFooter.text}
+      sloganEn={(footer as any).contactBubbleTextEn}
       logoUrl={(publicHeader as any).logoUrl || (publicFooter as any).logoUrl}
-      email={profile.email}
-      phone={profile.phone}
+      email={(footer as any).contactBubbleEmail || profile.email}
+      phone={(footer as any).contactBubblePhone || profile.phone}
       organizationId={site.organizationId}
       locale={profile.language === 'en' ? 'en' : 'fr'}
     />
@@ -157,8 +158,8 @@ export async function RenderSite({ site, basePath, slug }: { site: SiteWithPages
       <style dangerouslySetInnerHTML={{ __html: `${brandCss(theme.primary)}${vielusosCss(vielusos)}` }} />
       <PageViewTracker organizationId={site.organizationId} path={page.slug} />
       <PublicHeader header={publicHeader} nav={nav} basePath={basePath} />
-      {vielusos && page.isHome && <VielusosHero title={site.name} />}
-      {vielusos && (page.slug === 'bio' || page.slug === 'about') && <VielusosBio blocks={page.blocks as any[]} />}
+      {vielusos && page.isHome && <VielusosHero title={site.name} config={(header as any).vielusosHero} />}
+      {vielusos && (page.slug === 'bio' || page.slug === 'about') && <VielusosBio blocks={page.blocks as any[]} config={(header as any).vielusosBio} />}
       <main className="flex-1 py-8">
         {vielusos && (page.slug === 'bio' || page.slug === 'about') ? null : page.blocks.length === 0 ? (
           <p className="py-20 text-center text-gray-400">Cette page est vide.</p>
@@ -172,7 +173,7 @@ export async function RenderSite({ site, basePath, slug }: { site: SiteWithPages
   );
 }
 
-function VielusosBio({ blocks }: { blocks: any[] }) {
+function VielusosBio({ blocks, config }: { blocks: any[]; config?: HeaderConfig['vielusosBio'] }) {
   const copy = blocks
     .flatMap((block) => {
       const content = (block?.content || {}) as Record<string, unknown>;
@@ -187,32 +188,32 @@ function VielusosBio({ blocks }: { blocks: any[] }) {
     <section className="relative overflow-hidden border-y border-white/10 bg-black/35 px-5 py-12 md:px-12 md:py-20">
       <div className="mx-auto grid max-w-6xl gap-8 md:grid-cols-[1.05fr_.95fr] md:items-center">
         <div>
-          <p className="text-xs font-black uppercase tracking-[0.32em] text-white/55">Vielusos · artiste</p>
-          <h2 className="mt-3 text-4xl font-black uppercase tracking-tight text-white md:text-6xl">À propos</h2>
+          <p className="text-xs font-black uppercase tracking-[0.32em] text-white/55">{config?.eyebrow || 'VIELUSOS · ARTISTE'}</p>
+          <h2 className="mt-3 text-4xl font-black uppercase tracking-tight text-white md:text-6xl">{config?.title || 'À PROPOS'}</h2>
           <div className="mt-6 space-y-5 text-base leading-8 text-white/70 md:text-lg">
-            {copy.length > 0 ? copy.map((text, index) => <p key={index}>{text}</p>) : (
+            {(config?.paragraphs?.filter(Boolean).length ? config.paragraphs : copy).length > 0 ? (config?.paragraphs?.filter(Boolean).length ? config.paragraphs : copy).map((text, index) => <p key={index}>{text}</p>) : (
               <>
-                <p>Vielusos développe une musique sombre et cinématographique, portée par une tension constante entre fragilité, puissance et lumière. Chaque sortie est pensée comme une scène : une atmosphère, une voix, une image et une émotion qui restent après l’écoute.</p>
-                <p>Entre productions introspectives et élans plus bruts, son univers avance par contrastes. Les textures, les silences et les mélodies construisent une signature reconnaissable, à la croisée du récit visuel et de la création sonore.</p>
-                <p className="text-white/55">Production · écriture · direction artistique</p>
+                <p>VIELUSOS creates dark, cinematic music driven by a constant tension between fragility, power and light. Every release is conceived as a scene: an atmosphere, a voice, an image and an emotion that lingers after listening.</p>
+                <p>Moving between introspective productions and rawer impulses, the project builds its world through contrast. Textures, silence and melody shape a distinctive signature where visual storytelling meets sound.</p>
+                <p className="text-white/55">PRODUCTION · WRITING · ART DIRECTION</p>
               </>
             )}
           </div>
         </div>
         <div className="grid grid-cols-2 gap-3 md:gap-4">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/vielusos/profile.jpg" alt="Vielusos" className="col-span-2 aspect-[16/9] w-full rounded-2xl object-cover object-center shadow-2xl ring-1 ring-white/15" />
+          <img src={config?.images?.[0] || '/vielusos/profile.jpg'} alt="VIELUSOS" className="col-span-2 aspect-[16/9] w-full rounded-2xl object-cover object-center shadow-2xl ring-1 ring-white/15" />
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/vielusos/profile-2.png" alt="" className="aspect-square w-full rounded-2xl object-cover shadow-xl ring-1 ring-white/15" />
+          <img src={config?.images?.[1] || '/vielusos/profile-2.png'} alt="" className="aspect-square w-full rounded-2xl object-cover shadow-xl ring-1 ring-white/15" />
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/vielusos/angel-in-hell.png" alt="" className="aspect-square w-full rounded-2xl object-cover shadow-xl ring-1 ring-white/15" />
+          <img src={config?.images?.[2] || '/vielusos/angel-in-hell.png'} alt="" className="aspect-square w-full rounded-2xl object-cover shadow-xl ring-1 ring-white/15" />
         </div>
       </div>
     </section>
   );
 }
 
-function VielusosHero({ title }: { title: string }) {
+function VielusosHero({ title, config }: { title: string; config?: HeaderConfig['vielusosHero'] }) {
   return (
     <section className="relative isolate aspect-video w-full overflow-hidden bg-[#08080c]" aria-label={title}>
       <video
@@ -225,15 +226,15 @@ function VielusosHero({ title }: { title: string }) {
         poster={VIELUSOS_BRAND.backgroundUrl}
         aria-hidden="true"
       >
-        <source src="/vielusos/banner.mp4" type="video/mp4" />
+        <source src={config?.videoUrl || '/vielusos/banner.mp4'} type="video/mp4" />
       </video>
       <div className="absolute inset-0 bg-gradient-to-b from-black/45 via-black/20 to-[#08080c]" aria-hidden="true" />
-      <div className="relative flex h-full items-end px-6 pb-8 md:px-12 md:pb-12">
-        <div className="max-w-xl">
+      <div className="relative flex h-full items-center justify-center px-6 text-center">
+        <div className="flex max-w-xl flex-col items-center">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={VIELUSOS_BRAND.logoUrl} alt="" className="mb-5 h-16 w-16 object-contain opacity-90 md:h-20 md:w-20" />
-          <p className="text-xs font-black uppercase tracking-[0.32em] text-white/65">{title}</p>
-          <h1 className="mt-2 text-3xl font-black uppercase tracking-tight text-white md:text-5xl">𝐏𝐎𝐖𝐄𝐑 𝐎𝐅 𝐄𝐌𝐎𝐓𝐈𝐎𝐍</h1>
+          {config?.showLogo !== false && <img src={VIELUSOS_BRAND.logoUrl} alt="" className="mb-4 h-20 w-20 object-contain opacity-95 md:h-28 md:w-28" />}
+          {config?.showName !== false && <p className="text-lg font-black uppercase tracking-[0.32em] text-white md:text-2xl">{title.toUpperCase()}</p>}
+          {config?.showTagline !== false && <h1 className="mt-2 text-sm font-black uppercase tracking-[0.18em] text-white/85 md:text-lg">𝐏𝐎𝐖𝐄𝐑 𝐎𝐅 𝐄𝐌𝐎𝐓𝐈𝐎𝐍</h1>}
         </div>
       </div>
     </section>

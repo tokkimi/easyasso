@@ -113,7 +113,11 @@ export function defaultContentFor(type: BlockType): Record<string, unknown> {
     case 'spacer':
       return { height: 40 };
     case 'html':
-      return { html: '<!-- Collez ici un code d’intégration (HelloAsso, carte, formulaire) -->' };
+      return {
+        html: '<!-- Collez ici le code d’intégration en français -->',
+        htmlEn: '',
+        height: 680,
+      };
     case 'banner':
       return {
         image: PH('banner', 1600, 700),
@@ -222,6 +226,20 @@ export interface HeaderConfig {
   sticky: boolean;
   background: string;
   textColor: string;
+  showCta?: boolean;
+  social?: Record<string, string>;
+  vielusosHero?: {
+    videoUrl?: string;
+    showLogo?: boolean;
+    showName?: boolean;
+    showTagline?: boolean;
+  };
+  vielusosBio?: {
+    eyebrow?: string;
+    title?: string;
+    paragraphs?: string[];
+    images?: string[];
+  };
   cta?: ButtonConfig;
 }
 
@@ -239,6 +257,12 @@ export interface FooterConfig {
   background: string;
   textColor: string;
   columns: { title: string; links: { label: string; href: string }[] }[];
+  pageSlugs?: string[];
+  showContactBubble?: boolean;
+  contactBubbleText?: string;
+  contactBubbleTextEn?: string;
+  contactBubbleEmail?: string;
+  contactBubblePhone?: string;
 }
 
 export const DEFAULT_HEADER: HeaderConfig = {
@@ -247,6 +271,7 @@ export const DEFAULT_HEADER: HeaderConfig = {
   sticky: true,
   background: '#ffffff',
   textColor: '#1f2937',
+  showCta: true,
   cta: { text: 'Faire un don', href: '/don', color: '#1b5df5', variant: 'solid', align: 'right' },
 };
 

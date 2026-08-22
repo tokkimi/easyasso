@@ -22,6 +22,7 @@ export async function loadSiteBySubdomain(subdomain: string) {
     },
   });
 }
+
 export async function loadSiteByDomain(domain: string) {
   return prisma.site.findFirst({
     where: { customDomain: domain, domainVerified: true },
@@ -37,20 +38,34 @@ export async function loadSiteByDomain(domain: string) {
 // without the EasyAsso suffix.
 export function siteMetadata(site: { name: string; header: unknown; footer: unknown } | null): Metadata {
   if (!site) return { title: 'Easy Asso' };
+
   const footer = (site.footer as any) || {};
   const header = (site.header as any) || {};
-  const raw = typeof footer.text === 'string' && footer.text.trim() ? footer.text.trim() : `Le site de ${site.name}.`;
+  const raw =
+    typeof footer.text === 'string' && footer.text.trim()
+      ? footer.text.trim()
+      : `Le site de ${site.name}.`;
+
   const description = raw.slice(0, 300);
   const image = header.logoUrl || footer.logoUrl;
+
   return {
     title: { absolute: site.name },
     description,
-    // Each published site uses its own uploaded logo for the browser tab and
-    // home-screen shortcut. Fall back to EasyAsso's default only when no logo
-    // was provided by the site owner.
-    icons: image ? { icon: [{ url: image }], apple: [{ url: image }] } : undefined,
-    openGraph: { title: site.name, description, type: 'website', images: image ? [{ url: image }] : undefined },
-    twitter: { card: 'summary', title: site.name, description },
+    icons: image
+      ? { icon: [{ url: image }], apple: [{ url: image }] }
+      : undefined,
+    openGraph: {
+      title: site.name,
+      description,
+      type: 'website',
+      images: image ? [{ url: image }] : undefined,
+    },
+    twitter: {
+      card: 'summary',
+      title: site.name,
+      description,
+    },
   };
 }
 
@@ -61,8 +76,10 @@ async function loadShopProducts(organizationId: string) {
     orderBy: { createdAt: 'desc' },
     take: 500,
   });
+
   return rows.map((p) => {
     const images = Array.isArray(p.images) ? (p.images as string[]) : [];
+
     return {
       id: p.id,
       name: p.name,
@@ -76,109 +93,415 @@ async function loadShopProducts(organizationId: string) {
   });
 }
 
-export async function RenderSite({ site, basePath, slug }: { site: SiteWithPages; basePath: string; slug?: string }) {
-  if (!site) notFound();
-  if (!site.published || !canShowPublicSite(site.organization)) return <SiteOffline />;
+/* ============================================================
+   VIELUSOS VIDEO OVERLAY
+   ============================================================ */
 
-  const header = { ...DEFAULT_HEADER, ...(site.header as any) } as HeaderConfig;
-  const footer = { ...DEFAULT_FOOTER, ...(site.footer as any) } as FooterConfig;
-  const profile = (((site.organization as any)?.profile) || {}) as Record<string, any>;
-  const shopEnabled = Boolean(profile.shopEnabled ?? profile.hasShop);
-  const nav = site.pages.filter((p) => p.showInNav && (p.slug !== 'boutique' || shopEnabled)).map((p) => ({ title: p.title, slug: p.slug, isHome: p.isHome }));
-  const theme = (site.theme as any) || {};
-  const fontHref = googleFontsHref(theme.font);
-
-  // Floating contact bubble — shown on every page of every site (opt-out via
-  // footer.showContactBubble = false in the editor).
-  const bubble = (footer as any).showContactBubble === false ? null : (
-    <ContactBubble
-      name={site.name}
-      slogan={footer.text}
-      logoUrl={(header as any).logoUrl || (footer as any).logoUrl}
-      email={profile.email}
-      phone={profile.phone}
-      organizationId={site.organizationId}
-      locale={profile.language === 'en' ? 'en' : 'fr'}
-    />
-  );
-
-  if (slug === 'client') {
-    return (
-      <div className="flex min-h-screen flex-col" style={themeStyle(theme)}>
-        {fontHref && <link rel="stylesheet" href={fontHref} />}
-        <style dangerouslySetInnerHTML={{ __html: brandCss(theme.primary) }} />
-        <PublicHeader header={header} nav={nav} basePath={basePath} />
-        <ClientAccessPage organizationId={site.organizationId} organizationName={site.name} locale={profile.language === 'en' ? 'en' : 'fr'} />
-        <PublicFooter footer={footer} orgId={site.organizationId} basePath={basePath} nav={nav} />
-        {bubble}
-      </div>
-    );
-  }
-
-  if (slug === 'cgv' || slug === 'mentions-legales') {
-    const isCgv = slug === 'cgv';
-    return (
-      <div className="min-h-screen" style={themeStyle(theme)}>
-        {fontHref && <link rel="stylesheet" href={fontHref} />}
-        <style dangerouslySetInnerHTML={{ __html: brandCss(theme.primary) }} />
-        <PublicHeader header={header} nav={nav} basePath={basePath} />
-        <main className="mx-auto max-w-3xl px-4 py-12">
-          <h1 className="text-3xl font-extrabold">{isCgv ? 'Conditions générales' : 'Mentions légales'}</h1>
-          <p className="mt-4 whitespace-pre-wrap leading-relaxed text-gray-600">{isCgv ? footer.cgvContent : footer.mentionsContent}</p>
-        </main>
-        <PublicFooter footer={footer} orgId={site.organizationId} basePath={basePath} nav={nav} />
-        {bubble}
-      </div>
-    );
-  }
-
-  if (slug === 'boutique' && !shopEnabled) notFound();
-
-  const page = slug ? site.pages.find((p) => p.slug === slug) : site.pages.find((p) => p.isHome) || site.pages[0];
-  if (!page) notFound();
-
-  // Load products only when the page actually shows a shop block, and only when
-  // the shop is enabled for this organization.
-  const shopReady = Boolean(profile.stripeConnectReady);
-  const hasShopBlock = page.blocks.some((b) => b.type === 'shop');
-  const products = hasShopBlock && shopEnabled ? await loadShopProducts(site.organizationId) : [];
-
+function VielusosVideoOverlay({ logoUrl }: { logoUrl?: string }) {
   return (
-    <div className="flex min-h-screen flex-col" style={themeStyle(theme)}>
-      {fontHref && <link rel="stylesheet" href={fontHref} />}
-      <PageViewTracker organizationId={site.organizationId} path={page.slug} />
-      <PublicHeader header={header} nav={nav} basePath={basePath} />
-      <main className="flex-1 py-8">
-        {page.blocks.length === 0 ? (
-          <p className="py-20 text-center text-gray-400">Cette page est vide.</p>
-        ) : (
-          page.blocks.map((b) => <PublicBlock key={b.id} type={b.type} content={b.content as any} style={b.style as any} basePath={basePath} organizationId={site.organizationId} products={b.type === 'shop' ? products : undefined} shopReady={b.type === 'shop' ? shopReady : undefined} />)
+    <div
+      className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center px-6 text-center text-white"
+      aria-hidden="true"
+    >
+      <div className="flex flex-col items-center justify-center">
+
+        {/* Logo central */}
+        {logoUrl && (
+          <img
+            src={logoUrl}
+            alt=""
+            className="mb-4 max-h-20 w-auto max-w-[170px] object-contain drop-shadow-[0_2px_12px_rgba(0,0,0,0.9)] sm:mb-5 sm:max-h-24 sm:max-w-[210px]"
+          />
         )}
-      </main>
-      <PublicFooter footer={footer} orgId={site.organizationId} basePath={basePath} nav={nav} />
-      {bubble}
+
+        {/* VIELUSOS */}
+        <div
+          className="text-3xl font-medium uppercase leading-none tracking-[0.30em] drop-shadow-[0_2px_10px_rgba(0,0,0,0.95)] sm:text-4xl md:text-5xl"
+          style={{
+            fontFamily: 'Georgia, "Times New Roman", serif',
+          }}
+        >
+          VIELUSOS
+        </div>
+
+        {/* POWER OF EMOTION */}
+        <div
+          className="mt-3 text-[9px] font-bold uppercase leading-none tracking-[0.24em] drop-shadow-[0_2px_8px_rgba(0,0,0,0.95)] sm:mt-4 sm:text-[11px] md:text-xs"
+          style={{
+            fontFamily: 'Georgia, "Times New Roman", serif',
+          }}
+        >
+          POWER OF EMOTION
+        </div>
+
+      </div>
     </div>
   );
 }
 
-function ClientAccessPage({ organizationId, organizationName, locale }: { organizationId: string; organizationName: string; locale: 'fr' | 'en' }) {
+export async function RenderSite({
+  site,
+  basePath,
+  slug,
+}: {
+  site: SiteWithPages;
+  basePath: string;
+  slug?: string;
+}) {
+  if (!site) notFound();
+
+  if (!site.published || !canShowPublicSite(site.organization)) {
+    return <SiteOffline />;
+  }
+
+  const header = {
+    ...DEFAULT_HEADER,
+    ...(site.header as any),
+  } as HeaderConfig;
+
+  const footer = {
+    ...DEFAULT_FOOTER,
+    ...(site.footer as any),
+  } as FooterConfig;
+
+  const profile = (((site.organization as any)?.profile) || {}) as Record<string, any>;
+
+  const shopEnabled = Boolean(
+    profile.shopEnabled ?? profile.hasShop
+  );
+
+  const nav = site.pages
+    .filter(
+      (p) =>
+        p.showInNav &&
+        (p.slug !== 'boutique' || shopEnabled)
+    )
+    .map((p) => ({
+      title: p.title,
+      slug: p.slug,
+      isHome: p.isHome,
+    }));
+
+  const theme = (site.theme as any) || {};
+  const fontHref = googleFontsHref(theme.font);
+
+  /*
+   * Branding spécial uniquement pour Vielusos.
+   * Tous les autres sites restent inchangés.
+   */
+  const isVielusos =
+    site.name.trim().toLowerCase() === 'vielusos';
+
+  // Floating contact bubble — shown on every page of every site (opt-out via
+  // footer.showContactBubble = false in the editor).
+  const bubble =
+    (footer as any).showContactBubble === false
+      ? null
+      : (
+        <ContactBubble
+          name={site.name}
+          slogan={footer.text}
+          logoUrl={
+            (header as any).logoUrl ||
+            (footer as any).logoUrl
+          }
+          email={profile.email}
+          phone={profile.phone}
+          organizationId={site.organizationId}
+          locale={
+            profile.language === 'en'
+              ? 'en'
+              : 'fr'
+          }
+        />
+      );
+
+  if (slug === 'client') {
+    return (
+      <div
+        className="flex min-h-screen flex-col"
+        style={themeStyle(theme)}
+      >
+        {fontHref && (
+          <link
+            rel="stylesheet"
+            href={fontHref}
+          />
+        )}
+
+        <style
+          dangerouslySetInnerHTML={{
+            __html: brandCss(theme.primary),
+          }}
+        />
+
+        <PublicHeader
+          header={header}
+          nav={nav}
+          basePath={basePath}
+        />
+
+        <ClientAccessPage
+          organizationId={site.organizationId}
+          organizationName={site.name}
+          locale={
+            profile.language === 'en'
+              ? 'en'
+              : 'fr'
+          }
+        />
+
+        <PublicFooter
+          footer={footer}
+          orgId={site.organizationId}
+          basePath={basePath}
+          nav={nav}
+        />
+
+        {bubble}
+      </div>
+    );
+  }
+
+  if (
+    slug === 'cgv' ||
+    slug === 'mentions-legales'
+  ) {
+    const isCgv = slug === 'cgv';
+
+    return (
+      <div
+        className="min-h-screen"
+        style={themeStyle(theme)}
+      >
+        {fontHref && (
+          <link
+            rel="stylesheet"
+            href={fontHref}
+          />
+        )}
+
+        <style
+          dangerouslySetInnerHTML={{
+            __html: brandCss(theme.primary),
+          }}
+        />
+
+        <PublicHeader
+          header={header}
+          nav={nav}
+          basePath={basePath}
+        />
+
+        <main className="mx-auto max-w-3xl px-4 py-12">
+          <h1 className="text-3xl font-extrabold">
+            {isCgv
+              ? 'Conditions générales'
+              : 'Mentions légales'}
+          </h1>
+
+          <p className="mt-4 whitespace-pre-wrap leading-relaxed text-gray-600">
+            {isCgv
+              ? footer.cgvContent
+              : footer.mentionsContent}
+          </p>
+        </main>
+
+        <PublicFooter
+          footer={footer}
+          orgId={site.organizationId}
+          basePath={basePath}
+          nav={nav}
+        />
+
+        {bubble}
+      </div>
+    );
+  }
+
+  if (
+    slug === 'boutique' &&
+    !shopEnabled
+  ) {
+    notFound();
+  }
+
+  const page = slug
+    ? site.pages.find((p) => p.slug === slug)
+    : site.pages.find((p) => p.isHome) ||
+      site.pages[0];
+
+  if (!page) notFound();
+
+  // Load products only when the page actually shows a shop block, and only when
+  // the shop is enabled for this organization.
+  const shopReady =
+    Boolean(profile.stripeConnectReady);
+
+  const hasShopBlock =
+    page.blocks.some(
+      (b) => b.type === 'shop'
+    );
+
+  const products =
+    hasShopBlock && shopEnabled
+      ? await loadShopProducts(
+          site.organizationId
+        )
+      : [];
+
+  return (
+    <div
+      className="flex min-h-screen flex-col"
+      style={themeStyle(theme)}
+    >
+      {fontHref && (
+        <link
+          rel="stylesheet"
+          href={fontHref}
+        />
+      )}
+
+      <PageViewTracker
+        organizationId={site.organizationId}
+        path={page.slug}
+      />
+
+      <PublicHeader
+        header={header}
+        nav={nav}
+        basePath={basePath}
+      />
+
+      <main className="flex-1 py-8">
+
+        {page.blocks.length === 0 ? (
+
+          <p className="py-20 text-center text-gray-400">
+            Cette page est vide.
+          </p>
+
+        ) : (
+
+          page.blocks.map((b) => {
+
+            /*
+             * Rendu normal du bloc.
+             * On ne modifie PAS le composant vidéo lui-même.
+             */
+            const block = (
+              <PublicBlock
+                key={b.id}
+                type={b.type}
+                content={b.content as any}
+                style={b.style as any}
+                basePath={basePath}
+                organizationId={site.organizationId}
+                products={
+                  b.type === 'shop'
+                    ? products
+                    : undefined
+                }
+                shopReady={
+                  b.type === 'shop'
+                    ? shopReady
+                    : undefined
+                }
+              />
+            );
+
+            /*
+             * Tous les sites et tous les blocs non vidéo
+             * restent exactement comme avant.
+             */
+            if (
+              !isVielusos ||
+              b.type !== 'video'
+            ) {
+              return block;
+            }
+
+            /*
+             * VIELUSOS :
+             * on conserve la vidéo originale et on place
+             * simplement le branding par-dessus.
+             */
+            return (
+              <div
+                key={`vielusos-video-${b.id}`}
+                className="relative w-full overflow-hidden"
+              >
+                {block}
+
+                <VielusosVideoOverlay
+                  logoUrl={
+                    (header as any).logoUrl ||
+                    (footer as any).logoUrl
+                  }
+                />
+              </div>
+            );
+          })
+
+        )}
+
+      </main>
+
+      <PublicFooter
+        footer={footer}
+        orgId={site.organizationId}
+        basePath={basePath}
+        nav={nav}
+      />
+
+      {bubble}
+
+    </div>
+  );
+}
+
+function ClientAccessPage({
+  organizationId,
+  organizationName,
+  locale,
+}: {
+  organizationId: string;
+  organizationName: string;
+  locale: 'fr' | 'en';
+}) {
   const en = locale === 'en';
+
   return (
     <main className="flex-1 bg-gray-50 px-4 py-12">
+
       <section className="mx-auto max-w-2xl rounded-[2rem] bg-white p-6 text-center shadow-sm ring-1 ring-gray-200 md:p-10">
+
         <p className="text-sm font-bold uppercase tracking-[0.2em] text-[var(--brand)]">
-          {en ? 'Customer area' : 'Espace client'}
+          {en
+            ? 'Customer area'
+            : 'Espace client'}
         </p>
+
         <h1 className="mt-3 text-3xl font-black text-gray-900 md:text-4xl">
-          {en ? 'Sign in or create your customer account' : 'Connexion ou inscription client'}
+          {en
+            ? 'Sign in or create your customer account'
+            : 'Connexion ou inscription client'}
         </h1>
+
         <p className="mx-auto mt-4 max-w-xl text-gray-600">
           {en
             ? `Use your email to sign in or create your customer profile on ${organizationName}'s website.`
             : `Utilisez votre email pour vous connecter ou créer votre profil client sur le site de ${organizationName}.`}
         </p>
-        <CustomerAccessForm organizationId={organizationId} organizationName={organizationName} locale={locale} />
+
+        <CustomerAccessForm
+          organizationId={organizationId}
+          organizationName={organizationName}
+          locale={locale}
+        />
+
       </section>
+
     </main>
   );
 }
@@ -186,13 +509,23 @@ function ClientAccessPage({ organizationId, organizationName, locale }: { organi
 function SiteOffline() {
   return (
     <main className="grid min-h-screen place-items-center bg-gray-50 px-4 py-12 text-center">
+
       <section className="w-full max-w-lg rounded-[2rem] bg-white p-8 shadow-sm ring-1 ring-gray-200">
-        <p className="text-sm font-bold uppercase tracking-[0.2em] text-brand-600">Site hors ligne</p>
-        <h1 className="mt-3 text-3xl font-black text-gray-900">Ce site est temporairement indisponible.</h1>
+
+        <p className="text-sm font-bold uppercase tracking-[0.2em] text-brand-600">
+          Site hors ligne
+        </p>
+
+        <h1 className="mt-3 text-3xl font-black text-gray-900">
+          Ce site est temporairement indisponible.
+        </h1>
+
         <p className="mt-4 text-gray-600">
           L’association doit finaliser son activation pour remettre son site en ligne.
         </p>
+
       </section>
+
     </main>
   );
 }

@@ -5,11 +5,31 @@ import { NextResponse, type NextRequest } from 'next/server';
 export function middleware(req: NextRequest) {
   const host = (req.headers.get('host') || '').split(':')[0].toLowerCase();
   const root = (process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'localhost').split(':')[0].toLowerCase();
+  const isVielusosHost = host === 'vielusos.com' || host === 'www.vielusos.com';
+
+  if (host === 'vielusos.com') {
+    const canonical = req.nextUrl.clone();
+    canonical.protocol = 'https:';
+    canonical.hostname = 'www.vielusos.com';
+    return NextResponse.redirect(canonical, 308);
+  }
 
   // Public files must keep their real path on custom domains. Rewriting an
   // image or video request to /domain/<host>/... makes Next render a page and
   // returns a 404 instead of the asset.
   if (/\.[a-z0-9]{2,8}$/i.test(req.nextUrl.pathname)) return NextResponse.next();
+
+  if (isVielusosHost && req.nextUrl.pathname === '/admin') {
+    const url = req.nextUrl.clone();
+    url.pathname = '/login';
+    url.searchParams.set('vielusos', '1');
+    url.searchParams.set('callbackUrl', '/dashboard');
+    return NextResponse.rewrite(url);
+  }
+
+  if (isVielusosHost && ['/dashboard', '/login', '/forgot-password', '/reset-password', '/verify-email'].some((path) => req.nextUrl.pathname === path || req.nextUrl.pathname.startsWith(`${path}/`))) {
+    return NextResponse.next();
+  }
 
   const isRoot =
     host === root ||

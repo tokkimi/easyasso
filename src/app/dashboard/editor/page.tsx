@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { PERMISSIONS } from '@/lib/permissions';
 import { siteUrlFor } from '@/lib/utils';
 import { EditorClient } from './editor-client';
+import { isVielusosSite } from '@/lib/vielusos';
 
 export const dynamic = 'force-dynamic';
 
@@ -20,6 +21,7 @@ export default async function EditorPage() {
       canEdit={ctx.permissions.has(PERMISSIONS.SITE_EDIT)}
       canPublish={ctx.permissions.has(PERMISSIONS.SITE_PUBLISH)}
       siteUrl={siteUrlFor(site.subdomain, site.customDomain, site.domainVerified)}
+      branded={isVielusosSite(site)}
     />
   );
 }

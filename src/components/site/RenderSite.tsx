@@ -11,6 +11,8 @@ import { themeStyle, brandCss } from '@/lib/render';
 import { googleFontsHref } from '@/lib/fonts';
 import { canShowPublicSite } from '@/lib/plan';
 import { isVielusosSite, VIELUSOS_BRAND } from '@/lib/vielusos';
+import { VIELUSOS_SITE_CSS } from '@/lib/vielusos';
+import { VielusosHero } from './VielusosHero';
 
 type SiteWithPages = NonNullable<Awaited<ReturnType<typeof loadSiteBySubdomain>>>;
 
@@ -24,8 +26,9 @@ export async function loadSiteBySubdomain(subdomain: string) {
   });
 }
 export async function loadSiteByDomain(domain: string) {
+  const apex = domain.replace(/^www\./i, '');
   return prisma.site.findFirst({
-    where: { customDomain: domain, domainVerified: true },
+    where: { customDomain: { in: [domain, apex, `www.${apex}`] }, domainVerified: true },
     include: {
       organization: { select: { planStatus: true, trialEndsAt: true, profile: true } },
       pages: { orderBy: { order: 'asc' }, include: { blocks: { orderBy: { order: 'asc' } } } },
@@ -115,7 +118,7 @@ export async function RenderSite({ site, basePath, slug }: { site: SiteWithPages
     return (
       <div className={`flex min-h-screen flex-col ${vielusos ? 'vielusos-site' : ''}`} style={publicSiteStyle(theme, vielusos)}>
         {fontHref && <link rel="stylesheet" href={fontHref} />}
-        <style dangerouslySetInnerHTML={{ __html: `${brandCss(theme.primary)}${vielusosCss(vielusos)}` }} />
+        <style dangerouslySetInnerHTML={{ __html: `${brandCss(theme.primary)}${vielusos ? VIELUSOS_SITE_CSS : ''}` }} />
         <PublicHeader header={publicHeader} nav={nav} basePath={basePath} />
         <ClientAccessPage organizationId={site.organizationId} organizationName={site.name} locale={profile.language === 'en' ? 'en' : 'fr'} branded={vielusos} />
         <PublicFooter footer={publicFooter} orgId={site.organizationId} basePath={basePath} nav={nav} />
@@ -129,7 +132,7 @@ export async function RenderSite({ site, basePath, slug }: { site: SiteWithPages
     return (
       <div className={`min-h-screen ${vielusos ? 'vielusos-site' : ''}`} style={publicSiteStyle(theme, vielusos)}>
         {fontHref && <link rel="stylesheet" href={fontHref} />}
-        <style dangerouslySetInnerHTML={{ __html: `${brandCss(theme.primary)}${vielusosCss(vielusos)}` }} />
+        <style dangerouslySetInnerHTML={{ __html: `${brandCss(theme.primary)}${vielusos ? VIELUSOS_SITE_CSS : ''}` }} />
         <PublicHeader header={publicHeader} nav={nav} basePath={basePath} />
         <main className="mx-auto max-w-3xl px-4 py-12">
           <h1 className="text-3xl font-extrabold">{isCgv ? 'Conditions générales' : 'Mentions légales'}</h1>
@@ -156,7 +159,7 @@ export async function RenderSite({ site, basePath, slug }: { site: SiteWithPages
     <div className={`flex min-h-screen flex-col ${vielusos ? 'vielusos-site' : ''}`} style={publicSiteStyle(theme, vielusos)}>
       {fontHref && <link rel="stylesheet" href={fontHref} />}
       {vielusos && <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&family=Montserrat:wght@300;400;500&display=swap" />}
-      <style dangerouslySetInnerHTML={{ __html: `${brandCss(theme.primary)}${vielusosCss(vielusos)}` }} />
+      <style dangerouslySetInnerHTML={{ __html: `${brandCss(theme.primary)}${vielusos ? VIELUSOS_SITE_CSS : ''}` }} />
       <PageViewTracker organizationId={site.organizationId} path={page.slug} />
       <PublicHeader header={publicHeader} nav={nav} basePath={basePath} />
       {vielusos && page.isHome && <VielusosHero title={site.name} config={(header as any).vielusosHero} />}
@@ -214,34 +217,6 @@ function VielusosBio({ blocks, config }: { blocks: any[]; config?: HeaderConfig[
   );
 }
 
-function VielusosHero({ title, config }: { title: string; config?: HeaderConfig['vielusosHero'] }) {
-  return (
-    <section className="relative isolate aspect-video w-full overflow-hidden bg-[#08080c]" aria-label={title}>
-      <video
-        className="absolute inset-0 h-full w-full object-contain opacity-80"
-        autoPlay
-        muted
-        loop
-        playsInline
-        preload="metadata"
-        poster={VIELUSOS_BRAND.backgroundUrl}
-        aria-hidden="true"
-      >
-        <source src={config?.videoUrl || '/vielusos/banner.mp4'} type="video/mp4" />
-      </video>
-      <div className="absolute inset-0 bg-gradient-to-b from-black/45 via-black/20 to-[#08080c]" aria-hidden="true" />
-      <div className="relative flex h-full items-center justify-center px-6 text-center">
-        <div className="flex max-w-xl flex-col items-center">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          {config?.showLogo !== false && <img src={VIELUSOS_BRAND.logoUrl} alt="" className="mb-5 h-32 w-32 object-contain opacity-95 drop-shadow-[0_0_18px_rgba(255,255,255,.18)] md:h-44 md:w-44" />}
-          {config?.showName !== false && <p className="text-4xl font-light uppercase leading-none tracking-[0.32em] text-white md:text-6xl" style={{ fontFamily: '"Cormorant Garamond", "Times New Roman", serif' }}>{title.toUpperCase()}</p>}
-          {config?.showTagline !== false && <h1 className="mt-5 text-lg font-light uppercase tracking-[0.24em] text-white/85 md:text-2xl" style={{ fontFamily: '"Cormorant Garamond", "Times New Roman", serif' }}>POWER OF EMOTION</h1>}
-        </div>
-      </div>
-    </section>
-  );
-}
-
 function publicSiteStyle(theme: any, vielusos: boolean): React.CSSProperties {
   const base = themeStyle(theme);
   if (!vielusos) return base;
@@ -255,24 +230,6 @@ function publicSiteStyle(theme: any, vielusos: boolean): React.CSSProperties {
     backgroundAttachment: 'fixed',
     color: '#f7f7fb',
   };
-}
-
-function vielusosCss(enabled: boolean): string {
-  if (!enabled) return '';
-  return `
-.vielusos-site main { background: transparent; font-family: "Montserrat", "Helvetica Neue", Arial, sans-serif; font-weight: 300; }
-.vielusos-site .public-block-shell .text-gray-900, .vielusos-site .public-block-shell .text-gray-950 { color: #f7f7fb !important; }
-.vielusos-site .public-block-shell .text-gray-600, .vielusos-site .public-block-shell .text-gray-500 { color: rgba(247,247,251,.72) !important; }
-.vielusos-site .public-block-shell .bg-white { background: rgba(10,10,15,.68) !important; }
-.vielusos-site .public-block-shell .ring-gray-100 { --tw-ring-color: rgba(255,255,255,.18) !important; }
-.vielusos-site .public-header-shell, .vielusos-site .public-footer-shell { background: #0b0b10 !important; }
-.vielusos-site main h2 { font-family: "Cormorant Garamond", "Times New Roman", serif !important; font-size: clamp(1.75rem, 3vw, 2.5rem) !important; line-height: 1 !important; font-weight: 300 !important; letter-spacing: .18em !important; text-transform: uppercase !important; }
-.vielusos-site .vielusos-fluid { max-width: none !important; }
-.vielusos-site .vielusos-media-shell { padding-left: clamp(1.25rem, 4vw, 3rem) !important; padding-right: clamp(1.25rem, 4vw, 3rem) !important; }
-@media (min-width: 768px) {
-  .vielusos-site .vielusos-player-card, .vielusos-site .vielusos-video-card { width: calc((100% - 3rem) / 4) !important; max-width: none !important; }
-}
-`;
 }
 
 function ClientAccessPage({ organizationId, organizationName, locale, branded = false }: { organizationId: string; organizationName: string; locale: 'fr' | 'en'; branded?: boolean }) {

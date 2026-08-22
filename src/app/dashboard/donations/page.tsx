@@ -2,12 +2,16 @@ import { requirePermission } from '@/lib/session';
 import { prisma } from '@/lib/prisma';
 import { PERMISSIONS } from '@/lib/permissions';
 import { DonationsClient } from './client';
+import { redirect } from 'next/navigation';
+import { isVielusosSite } from '@/lib/vielusos';
 
 export const dynamic = 'force-dynamic';
 
 export default async function DonationsPage() {
   const ctx = await requirePermission(PERMISSIONS.DONATIONS_VIEW);
   const orgId = ctx.organization!.id;
+  const site = await prisma.site.findUnique({ where: { organizationId: orgId }, select: { subdomain: true } });
+  if (isVielusosSite(site)) redirect('/dashboard');
   const [donations, donors, campaigns] = await Promise.all([
     prisma.donation.findMany({ where: { organizationId: orgId }, include: { donor: true, campaign: true }, orderBy: { donatedAt: 'desc' } }),
     prisma.donor.findMany({ where: { organizationId: orgId }, orderBy: { lastName: 'asc' } }),

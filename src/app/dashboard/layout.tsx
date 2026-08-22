@@ -23,6 +23,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   return (
     <div
+      data-dashboard-locale={vielusos ? 'fr' : undefined}
       className={`min-h-screen lg:flex ${vielusos ? 'vielusos-dashboard' : 'bg-gray-50'}`}
       style={vielusos ? {
         backgroundColor: VIELUSOS_BRAND.surface,

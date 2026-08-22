@@ -372,7 +372,7 @@ export function InstagramPreview({ content }: { content: any }) {
 
   if (content?.variant === 'vielusos') {
     return (
-      <section className="vielusos-fluid mx-auto w-full max-w-7xl px-5 py-10 md:px-12 md:py-14">
+      <section className="vielusos-fluid mx-auto w-full max-w-7xl px-6 py-10 md:px-16 md:py-14 lg:px-20">
         <div className="flex items-center gap-3" aria-label="Instagram">
           <span className="grid h-7 w-7 place-items-center rounded-lg bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-600"><Instagram className="h-4 w-4 text-white" /></span>
           <span className="text-[9px] font-semibold uppercase tracking-[0.42em] text-white/45">Social</span>
@@ -387,8 +387,8 @@ export function InstagramPreview({ content }: { content: any }) {
             <button type="button" aria-label="Publication Instagram suivante" onClick={() => document.getElementById('vielusos-instagram-rail')?.scrollBy({ left: window.innerWidth * 0.75, behavior: 'smooth' })} className="absolute right-1 top-1/2 z-10 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full border border-white/30 bg-black/55 text-white/90 shadow-[0_0_22px_rgba(255,255,255,.18)] backdrop-blur-md transition hover:border-white/60 hover:bg-black/80 hover:shadow-[0_0_28px_rgba(255,255,255,.32)] focus:outline-none focus:ring-2 focus:ring-white/70"><ChevronRight className="h-5 w-5" /></button>
             <div id="vielusos-instagram-rail" className="flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               {embeds.map((src: string, i: number) => (
-                <article key={i} className="relative aspect-[4/5] w-[calc((100%-0.75rem)/2)] shrink-0 snap-start overflow-hidden rounded-2xl border border-white/15 bg-black/55 shadow-[0_18px_50px_rgba(0,0,0,.3)] md:w-[calc((100%-3rem)/5)]">
-                  <iframe src={src} title={`Instagram ${i + 1}`} loading="lazy" scrolling="no" allow="autoplay; encrypted-media; fullscreen; picture-in-picture" allowFullScreen className="absolute left-0 top-[-52px] h-[calc(100%+190px)] w-full border-0 bg-white" />
+                <article key={i} className="h-[430px] w-[calc((100%-0.75rem)/2)] shrink-0 snap-start overflow-hidden rounded-2xl border border-white/15 bg-white shadow-[0_18px_50px_rgba(0,0,0,.3)] md:h-[520px] md:w-[calc((100%-3rem)/5)]">
+                  <iframe src={src} title={`Publication Instagram officielle ${i + 1}`} loading="lazy" scrolling="yes" allow="autoplay; encrypted-media; fullscreen; picture-in-picture" allowFullScreen className="h-full w-full border-0 bg-white" />
                 </article>
               ))}
             </div>

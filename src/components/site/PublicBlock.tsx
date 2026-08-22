@@ -241,9 +241,9 @@ function EventShowcase({ content }: { content: any }) {
       <div className="vielusos-fluid mx-auto max-w-7xl">
         <p className="text-[10px] font-semibold uppercase tracking-[0.55em] text-white/45">{content.eyebrow || 'Live'}</p>
         <h2 className="mt-5 text-5xl font-light uppercase tracking-[0.22em] md:text-7xl" style={{ fontFamily: '"Cormorant Garamond", "Times New Roman", serif' }}>{content.title || 'Next date'}</h2>
-        <div className="mt-10 grid gap-8 lg:grid-cols-[minmax(0,1.55fr)_minmax(260px,.55fr)] lg:items-center">
-          <div className="overflow-hidden rounded-[1.75rem] border border-white/15 bg-black/30 p-2 shadow-[0_30px_100px_rgba(0,0,0,.5)]">
-            {image ? <img src={image} alt={content.eventName || ''} className="h-auto max-h-[760px] w-full rounded-[1.35rem] object-contain" /> : <div className="grid aspect-[16/10] place-items-center rounded-[1.35rem] border border-dashed border-white/20 text-sm text-white/40">Ajoutez l’affiche dans l’éditeur</div>}
+        <div className="mt-10 grid gap-8 lg:grid-cols-[minmax(0,1.25fr)_minmax(260px,.75fr)] lg:items-center">
+          <div className="mx-auto w-full max-w-[760px] overflow-hidden rounded-[1.75rem] border border-white/15 bg-black/30 p-2 shadow-[0_30px_100px_rgba(0,0,0,.5)]">
+            {image ? <img src={image} alt={content.eventName || ''} className="mx-auto h-auto max-h-[520px] w-full rounded-[1.35rem] object-contain" /> : <div className="grid aspect-[16/10] place-items-center rounded-[1.35rem] border border-dashed border-white/20 text-sm text-white/40">Ajoutez l’affiche dans l’éditeur</div>}
           </div>
           <div className="lg:pl-4">
             <p className="text-7xl font-semibold leading-none tracking-tight md:text-8xl">{content.day}</p>

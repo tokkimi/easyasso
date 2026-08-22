@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import Link from 'next/link';
-import { Menu, X, Facebook, Instagram, Linkedin, Youtube, Music2, UserRound } from 'lucide-react';
+import { Menu, X, Facebook, Linkedin, UserRound } from 'lucide-react';
 import type { HeaderConfig, FooterConfig, ButtonConfig } from '@/lib/blocks';
 import { NewsletterForm } from './NewsletterForm';
 import { LanguageSwitcher, useLanguage } from '@/components/language-provider';
@@ -10,17 +10,17 @@ interface NavItem { title: string; slug: string; isHome: boolean }
 const SOCIAL_LABELS = new Set(['facebook', 'instagram', 'linkedin', 'youtube', 'tiktok', 'x']);
 const isSocialColumn = (column: FooterConfig['columns'][number]) => column.links.length > 0 && column.links.every((link) => SOCIAL_LABELS.has(link.label.toLowerCase()));
 const logoFrameClass = 'inline-flex max-w-[220px] items-center rounded-xl bg-transparent p-0.5 sm:max-w-[280px]';
-const headerLogoClass = 'max-h-14 w-auto max-w-full object-contain';
+const headerLogoClass = 'max-h-11 w-auto max-w-full object-contain sm:max-h-12';
 const footerLogoClass = 'max-h-16 w-auto max-w-full object-contain';
 
 function SocialMark({ label }: { label: string }) {
   const key = label.toLowerCase();
-  if (key === 'facebook') return <Facebook className="h-6 w-6" />;
-  if (key === 'instagram') return <Instagram className="h-6 w-6" />;
-  if (key === 'linkedin') return <Linkedin className="h-6 w-6" />;
-  if (key === 'youtube') return <Youtube className="h-6 w-6" />;
-  if (key === 'tiktok' || key === 'spotify') return <Music2 className="h-6 w-6" />;
-  if (key === 'x') return <span className="text-xl font-black leading-none">𝕏</span>;
+  const asset = key === 'instagram' || key === 'youtube' || key === 'spotify' ? `/integrations/${key}.svg` : '';
+  if (asset) return <img src={asset} alt="" className="h-[18px] w-[18px] object-contain" />;
+  if (key === 'tiktok') return <svg viewBox="0 0 24 24" aria-hidden="true" className="h-[18px] w-[18px] fill-current"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.9 2.9 0 1 1-2-2.76v-3.5a6.34 6.34 0 1 0 5.45 6.26V8.73a8.16 8.16 0 0 0 4.77 1.52V6.8c-.34 0-.67-.04-1-.11Z" /></svg>;
+  if (key === 'facebook') return <Facebook className="h-[18px] w-[18px]" />;
+  if (key === 'linkedin') return <Linkedin className="h-[18px] w-[18px]" />;
+  if (key === 'x' || key === 'twitter') return <span className="text-base font-medium leading-none">𝕏</span>;
   return null;
 }
 
@@ -59,8 +59,8 @@ export function PublicHeader({
             </nav>
           )}
         </div>
-        <div className="flex flex-1 basis-0 items-center justify-end gap-3">
-          {socials.map(([name, href]) => <a key={name} href={href} target="_blank" rel="noreferrer" aria-label={name} className="hidden text-white/80 drop-shadow-[0_0_6px_rgba(255,255,255,.55)] transition hover:text-white lg:inline-flex"><SocialMark label={name} /></a>)}
+        <div className="flex flex-1 basis-0 items-center justify-end gap-2.5">
+          {socials.map(([name, href]) => <a key={name} href={href} target="_blank" rel="noreferrer" aria-label={name} className="hidden h-8 w-8 items-center justify-center text-white/80 drop-shadow-[0_0_6px_rgba(255,255,255,.35)] transition hover:text-white lg:inline-flex"><SocialMark label={name} /></a>)}
           <span className="hidden sm:inline-flex"><LanguageSwitcher variant="inline" /></span>
           {header.showCta !== false && cta && (
             <a

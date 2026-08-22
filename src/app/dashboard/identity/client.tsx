@@ -6,7 +6,7 @@ import { PageHeader } from '@/components/ui';
 import { ColorGrid, ImageInput, Field } from '../editor/controls';
 import { FONTS, fontById } from '@/lib/fonts';
 
-export function IdentityClient({ theme: t0, header: h0, footer: f0 }: { theme: any; header: any; footer: any }) {
+export function IdentityClient({ theme: t0, header: h0, footer: f0, branded = false }: { theme: any; header: any; footer: any; branded?: boolean }) {
   const router = useRouter();
   const [theme, setTheme] = useState<any>({ primary: '#1b5df5', secondary: '#0f766e', background: '#ffffff', text: '#1f2937', font: 'sans', ...t0 });
   const [logo, setLogo] = useState<string>(h0.logoUrl || f0.logoUrl || '');
@@ -42,7 +42,7 @@ export function IdentityClient({ theme: t0, header: h0, footer: f0 }: { theme: a
         <div className="space-y-6">
           <div className="card">
             <h2 className="mb-3 font-bold text-gray-900">Logo</h2>
-            <p className="mb-3 text-sm text-gray-500">Importez le logo de votre association. Il s’applique automatiquement à l’en-tête et au pied de page.</p>
+            <p className="mb-3 text-sm text-gray-500">{branded ? 'Importez le logo de votre projet. Il s’applique automatiquement à l’en-tête et au pied de page.' : 'Importez le logo de votre association. Il s’applique automatiquement à l’en-tête et au pied de page.'}</p>
             <ImageInput value={logo} onChange={setL} kind="logo" />
           </div>
 
@@ -76,12 +76,12 @@ export function IdentityClient({ theme: t0, header: h0, footer: f0 }: { theme: a
           <div className="overflow-hidden rounded-2xl ring-1 ring-gray-200" style={{ background: theme.background, color: theme.text, fontFamily: fontStack }}>
             <div className="flex items-center justify-between border-b border-black/5 px-4 py-3">
               <div className="flex items-center gap-2 font-extrabold">
-                {logo ? <img src={logo} alt="" className="max-h-12 max-w-44 rounded-lg bg-white/90 p-1 object-contain shadow-sm ring-1 ring-black/5" /> : <span>Votre association</span>}
+                {logo ? <img src={logo} alt="" className="max-h-12 max-w-44 rounded-lg bg-white/90 p-1 object-contain shadow-sm ring-1 ring-black/5" /> : <span>{branded ? 'VIELUSOS' : 'Votre association'}</span>}
               </div>
-              <span className="rounded-lg px-3 py-1.5 text-sm font-semibold text-white" style={{ background: theme.primary }}>Faire un don</span>
+              <span className="rounded-lg px-3 py-1.5 text-sm font-semibold text-white" style={{ background: theme.primary }}>{branded ? 'Écouter' : 'Faire un don'}</span>
             </div>
             <div className="p-6">
-              <h3 className="text-2xl font-extrabold">Ensemble, changeons les choses</h3>
+              <h3 className="text-2xl font-extrabold">{branded ? 'Power of emotion' : 'Ensemble, changeons les choses'}</h3>
               <p className="mt-2 text-sm opacity-80">Voici à quoi ressemblent vos textes, votre police et vos couleurs sur le site.</p>
               <div className="mt-4 flex gap-2">
                 <span className="rounded-lg px-4 py-2 text-sm font-semibold text-white" style={{ background: theme.primary }}>Bouton plein</span>

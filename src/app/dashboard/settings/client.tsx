@@ -30,7 +30,7 @@ export function SettingsClient({ org, user, site, freeUrl, rootDomain, canDomain
     const res = await fetch('/api/site', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ customDomain: domain }) });
     const data = await res.json();
     setSavingDomain(false);
-    setMsg(res.ok ? 'Le domaine de votre association a bien été ajouté. Suivez maintenant les étapes ci-dessous.' : (data.error || 'Impossible d’ajouter ce domaine.'));
+    setMsg(res.ok ? (branded ? 'Le domaine de votre site a bien été ajouté. Suivez maintenant les étapes ci-dessous.' : 'Le domaine de votre association a bien été ajouté. Suivez maintenant les étapes ci-dessous.') : (data.error || 'Impossible d’ajouter ce domaine.'));
     if (res.ok) router.refresh();
     setTimeout(() => setMsg(''), 5000);
   }
@@ -46,7 +46,7 @@ export function SettingsClient({ org, user, site, freeUrl, rootDomain, canDomain
   const setProfileField = (key: string, value: any) => setProfile((current: any) => ({ ...current, [key]: value }));
   async function saveProfile() {
     const res = await fetch('/api/organization/profile', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(profile) });
-    setMsg(res.ok ? 'Fiche de l’association enregistrée. Le générateur sera automatiquement prérempli.' : 'Impossible d’enregistrer ces informations.');
+    setMsg(res.ok ? (branded ? 'Profil artistique enregistré.' : 'Fiche de l’association enregistrée. Le générateur sera automatiquement prérempli.') : 'Impossible d’enregistrer ces informations.');
     if (res.ok) {
       localStorage.setItem('easyasso-language', profile.language);
       document.cookie = `easyasso-language=${profile.language};path=/;max-age=31536000;samesite=lax`;
@@ -98,7 +98,7 @@ export function SettingsClient({ org, user, site, freeUrl, rootDomain, canDomain
       {/* General */}
       <div className="card mb-6">
         <h2 className="mb-3 font-bold text-gray-900">Général</h2>
-        <label className="label">Nom de l’association / du site</label>
+        <label className="label">{branded ? 'Nom du site' : 'Nom de l’association / du site'}</label>
         <div className="flex gap-2">
           <input className="input" value={name} onChange={(e) => setName(e.target.value)} />
           <button onClick={saveName} className="btn btn-primary shrink-0">Enregistrer</button>
@@ -119,27 +119,27 @@ export function SettingsClient({ org, user, site, freeUrl, rootDomain, canDomain
       </div>
 
       <div className="card mb-6">
-        <h2 className="mb-1 flex items-center gap-2 font-bold text-gray-900"><Building2 className="h-5 w-5" /> Fiche de l’association</h2>
-        <p className="mb-5 text-sm text-gray-500">Ces informations sont conservées et préremplissent automatiquement le générateur magique.</p>
-        <div className="mb-4 max-w-xs"><label className="label">Langue de votre espace</label><select className="input" value={profile.language} onChange={(e) => setProfileField('language', e.target.value)}><option value="fr">Français</option><option value="en">English</option></select></div>
+        <h2 className="mb-1 flex items-center gap-2 font-bold text-gray-900"><Building2 className="h-5 w-5" /> {branded ? 'Profil artistique' : 'Fiche de l’association'}</h2>
+        <p className="mb-5 text-sm text-gray-500">{branded ? 'Ces informations décrivent votre projet et alimentent les coordonnées du site.' : 'Ces informations sont conservées et préremplissent automatiquement le générateur magique.'}</p>
+        {!branded && <div className="mb-4 max-w-xs"><label className="label">Langue de votre espace</label><select className="input" value={profile.language} onChange={(e) => setProfileField('language', e.target.value)}><option value="fr">Français</option><option value="en">English</option></select></div>}
         <div className="grid gap-4 sm:grid-cols-3">
-          <div><label className="label">Année de création</label><input className="input" value={profile.year} onChange={(e) => setProfileField('year', e.target.value)} placeholder="2015" /></div>
-          <div className="sm:col-span-2"><label className="label">Cause / type d’association</label><select className="input" value={profile.category} onChange={(e) => setProfileField('category', e.target.value)}><option value="">Choisir une cause</option>{categories.map((category: any) => <option key={category.id} value={category.id}>{category.name}</option>)}</select></div>
+          <div><label className="label">{branded ? 'Année de début du projet' : 'Année de création'}</label><input className="input" value={profile.year} onChange={(e) => setProfileField('year', e.target.value)} placeholder="2015" /></div>
+          {!branded && <div className="sm:col-span-2"><label className="label">Cause / type d’association</label><select className="input" value={profile.category} onChange={(e) => setProfileField('category', e.target.value)}><option value="">Choisir une cause</option>{categories.map((category: any) => <option key={category.id} value={category.id}>{category.name}</option>)}</select></div>}
         </div>
-        <div className="mt-4"><label className="label">Mission et raison d’être</label><textarea className="input min-h-[110px]" value={profile.mission} onChange={(e) => setProfileField('mission', e.target.value)} placeholder="Pourquoi l’association existe, son histoire, ses valeurs et ce qu’elle veut changer." /></div>
+        <div className="mt-4"><label className="label">{branded ? 'Présentation et univers artistique' : 'Mission et raison d’être'}</label><textarea className="input min-h-[110px]" value={profile.mission} onChange={(e) => setProfileField('mission', e.target.value)} placeholder={branded ? 'Présentez le projet, son histoire, ses influences et son univers.' : 'Pourquoi l’association existe, son histoire, ses valeurs et ce qu’elle veut changer.'} /></div>
         <div className="mt-4"><label className="label">Slogan court affiché dans le footer</label><input className="input" maxLength={180} value={profile.slogan} onChange={(e) => setProfileField('slogan', e.target.value)} placeholder="Ex. Ensemble, faisons grandir demain." /><p className="mt-1 text-xs text-gray-500">Une phrase courte, différente de la description de votre cause.</p></div>
-        <div className="mt-4"><label className="label">Fonctionnement</label><textarea className="input min-h-[90px]" value={profile.functioning} onChange={(e) => setProfileField('functioning', e.target.value)} placeholder="Équipe, bénévoles, adhérents, financement, fréquence et zone d’intervention." /></div>
-        <div className="mt-4"><label className="label">Actions concrètes</label><textarea className="input min-h-[90px]" value={profile.actions} onChange={(e) => setProfileField('actions', e.target.value)} placeholder="Programmes, activités, permanences et événements." /></div>
-        <div className="mt-4"><label className="label">Public accompagné</label><textarea className="input min-h-[70px]" value={profile.beneficiaries} onChange={(e) => setProfileField('beneficiaries', e.target.value)} placeholder="Qui bénéficie des actions et quels sont ses besoins ?" /></div>
-        <div className="mt-4"><label className="label">Informations importantes</label><textarea className="input min-h-[80px]" value={profile.goodToKnow} onChange={(e) => setProfileField('goodToKnow', e.target.value)} placeholder="Adhésion, horaires, reçus fiscaux, partenaires, chiffres clés…" /></div>
+        <div className="mt-4"><label className="label">{branded ? 'Équipe et fonctionnement du projet' : 'Fonctionnement'}</label><textarea className="input min-h-[90px]" value={profile.functioning} onChange={(e) => setProfileField('functioning', e.target.value)} placeholder={branded ? 'Équipe, collaborations, production et direction artistique.' : 'Équipe, bénévoles, adhérents, financement, fréquence et zone d’intervention.'} /></div>
+        <div className="mt-4"><label className="label">{branded ? 'Sorties, concerts et activités' : 'Actions concrètes'}</label><textarea className="input min-h-[90px]" value={profile.actions} onChange={(e) => setProfileField('actions', e.target.value)} placeholder={branded ? 'Sorties musicales, concerts, clips et actualités.' : 'Programmes, activités, permanences et événements.'} /></div>
+        <div className="mt-4"><label className="label">{branded ? 'Public et audience' : 'Public accompagné'}</label><textarea className="input min-h-[70px]" value={profile.beneficiaries} onChange={(e) => setProfileField('beneficiaries', e.target.value)} placeholder={branded ? 'Décrivez votre public et votre communauté.' : 'Qui bénéficie des actions et quels sont ses besoins ?'} /></div>
+        <div className="mt-4"><label className="label">Informations importantes</label><textarea className="input min-h-[80px]" value={profile.goodToKnow} onChange={(e) => setProfileField('goodToKnow', e.target.value)} placeholder={branded ? 'Dates, liens, contacts professionnels et informations utiles…' : 'Adhésion, horaires, reçus fiscaux, partenaires, chiffres clés…'} /></div>
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
           <div><label className="label">Ville / territoire</label><input className="input" value={profile.city} onChange={(e) => setProfileField('city', e.target.value)} /></div>
-          <div><label className="label">E-mail public</label><input type="email" className="input" value={profile.email} onChange={(e) => setProfileField('email', e.target.value)} placeholder="contact@association.fr" /></div>
+          <div><label className="label">E-mail public</label><input type="email" className="input" value={profile.email} onChange={(e) => setProfileField('email', e.target.value)} placeholder={branded ? 'contact@vielusos.com' : 'contact@association.fr'} /></div>
           <div><label className="label">Téléphone public</label><input className="input" value={profile.phone} onChange={(e) => setProfileField('phone', e.target.value)} placeholder="01 23 45 67 89" /></div>
         </div>
         <div className="mt-6 border-t border-gray-100 pt-5">
           <h3 className="font-bold text-gray-900">Réseaux sociaux</h3>
-          <p className="mb-3 text-sm text-gray-500">Ajoutez uniquement les comptes officiels de l’association.</p>
+          <p className="mb-3 text-sm text-gray-500">Ajoutez uniquement les comptes officiels {branded ? 'du projet' : 'de l’association'}.</p>
           <div className="grid gap-3 sm:grid-cols-2">
             {(['facebook', 'instagram', 'linkedin', 'youtube', 'tiktok', 'twitter'] as const).map((network) => (
               <div key={network}><label className="label capitalize">{network === 'twitter' ? 'X (Twitter)' : network}</label><input className="input" type="url" value={profile[network]} onChange={(e) => setProfileField(network, e.target.value)} placeholder={network === 'twitter' ? 'https://x.com/...' : `https://${network}.com/...`} /></div>
@@ -151,14 +151,14 @@ export function SettingsClient({ org, user, site, freeUrl, rootDomain, canDomain
           <p className="mb-3 text-sm text-gray-500">Elles servent à générer automatiquement les mentions légales et les conditions d’utilisation.</p>
           <div className="grid gap-3 sm:grid-cols-2">
             <div><label className="label">Nom légal complet</label><input className="input" value={profile.legalName} onChange={(e) => setProfileField('legalName', e.target.value)} /></div>
-            <div><label className="label">Numéro RNA / SIREN / enregistrement</label><input className="input" value={profile.registrationNumber} onChange={(e) => setProfileField('registrationNumber', e.target.value)} /></div>
-            <div className="sm:col-span-2"><label className="label">Adresse du siège social</label><input className="input" value={profile.legalAddress} onChange={(e) => setProfileField('legalAddress', e.target.value)} /></div>
+            <div><label className="label">{branded ? 'SIREN / numéro d’enregistrement' : 'Numéro RNA / SIREN / enregistrement'}</label><input className="input" value={profile.registrationNumber} onChange={(e) => setProfileField('registrationNumber', e.target.value)} /></div>
+            <div className="sm:col-span-2"><label className="label">{branded ? 'Adresse légale' : 'Adresse du siège social'}</label><input className="input" value={profile.legalAddress} onChange={(e) => setProfileField('legalAddress', e.target.value)} /></div>
             <div><label className="label">Pays légal</label><input className="input" value={profile.legalCountry} onChange={(e) => setProfileField('legalCountry', e.target.value)} placeholder="France, Belgique, Canada…" /></div>
             <div className="sm:col-span-2"><label className="label">Responsable de publication</label><input className="input" value={profile.publicationDirector} onChange={(e) => setProfileField('publicationDirector', e.target.value)} /></div>
           </div>
           <label className="mt-4 flex cursor-pointer items-start gap-3 rounded-xl bg-brand-50 p-4"><input type="checkbox" className="mt-1 h-5 w-5" checked={profile.generateCgv} onChange={(e) => setProfileField('generateCgv', e.target.checked)} /><span><strong className="block text-gray-900">Générer mes CGV et mentions légales</strong><span className="text-sm text-gray-600">{branded ? 'Créez des documents détaillés à partir de vos informations légales, puis modifiez-les dans votre espace.' : 'EasyAsso crée des documents détaillés à partir des informations légales ci-dessus. Vous pourrez ensuite les modifier.'}</span></span></label>
         </div>
-        <button onClick={saveProfile} className="btn btn-primary mt-5"><Save className="h-4 w-4" /> Enregistrer la fiche</button>
+        <button onClick={saveProfile} className="btn btn-primary mt-5"><Save className="h-4 w-4" /> {branded ? 'Enregistrer le profil' : 'Enregistrer la fiche'}</button>
       </div>
 
       {/* Address */}
@@ -174,7 +174,7 @@ export function SettingsClient({ org, user, site, freeUrl, rootDomain, canDomain
 
       {/* Custom domain */}
       <div className="card mb-6">
-        <h2 className="mb-1 flex items-center gap-2 font-bold text-gray-900"><ShieldCheck className="h-5 w-5" /> Adresse personnalisée de l’association</h2>
+        <h2 className="mb-1 flex items-center gap-2 font-bold text-gray-900"><ShieldCheck className="h-5 w-5" /> {branded ? 'Adresse personnalisée du site' : 'Adresse personnalisée de l’association'}</h2>
         <p className="text-sm text-gray-500">{branded ? 'Cela change uniquement l’adresse publique de votre site. Votre adresse principale reste protégée.' : 'Cela change uniquement l’adresse du site de l’association. L’adresse principale EasyAsso reste toujours protégée.'}</p>
         {!canDomain ? (
           <p className="mt-3 text-sm text-amber-600">Vous n’avez pas la permission de gérer le domaine.</p>
@@ -184,7 +184,7 @@ export function SettingsClient({ org, user, site, freeUrl, rootDomain, canDomain
               <button type="button" onClick={() => setDomainChoice('connect')} className={`rounded-xl border p-4 text-left transition ${domainChoice === 'connect' ? 'border-brand-500 bg-brand-50' : 'border-gray-200 hover:border-gray-300'}`}>
                 <Link2 className="mb-2 h-5 w-5 text-brand-600" />
                 <span className="block font-semibold text-gray-900">J’ai déjà une adresse</span>
-                <span className="mt-1 block text-sm text-gray-500">Par exemple mon-association.fr</span>
+                <span className="mt-1 block text-sm text-gray-500">Par exemple {branded ? 'vielusos.com' : 'mon-association.fr'}</span>
               </button>
               <button type="button" onClick={() => setDomainChoice('buy')} className={`rounded-xl border p-4 text-left transition ${domainChoice === 'buy' ? 'border-brand-500 bg-brand-50' : 'border-gray-200 hover:border-gray-300'}`}>
                 <ShoppingCart className="mb-2 h-5 w-5 text-brand-600" />
@@ -201,9 +201,9 @@ export function SettingsClient({ org, user, site, freeUrl, rootDomain, canDomain
             )}
             {domainChoice === 'connect' && (
               <div className="mt-4 rounded-xl border border-gray-200 p-4">
-                <label className="label">Quelle adresse appartient à l’association ?</label>
+                <label className="label">{branded ? 'Quelle adresse souhaitez-vous relier au site ?' : 'Quelle adresse appartient à l’association ?'}</label>
                 <div className="flex gap-2">
-                  <input className="input" placeholder="mon-association.fr" value={domain} onChange={(e) => setDomain(e.target.value)} />
+                  <input className="input" placeholder={branded ? 'vielusos.com' : 'mon-association.fr'} value={domain} onChange={(e) => setDomain(e.target.value)} />
                   <button onClick={saveDomain} disabled={savingDomain || !domain.trim()} className="btn btn-primary shrink-0">{savingDomain ? 'Ajout…' : 'Continuer'}</button>
                 </div>
                 <p className="mt-2 text-xs text-gray-500">{branded ? 'Votre adresse gratuite reste protégée automatiquement.' : 'Ne saisissez pas easyasso.vercel.app : cette adresse est protégée automatiquement.'}</p>
@@ -219,7 +219,7 @@ export function SettingsClient({ org, user, site, freeUrl, rootDomain, canDomain
                 </div>
                 <div className="mt-3 text-sm text-gray-600">
                   {site.domainVerified ? (
-                    <p>Tout est terminé. Les visiteurs peuvent utiliser cette adresse pour voir le site de l’association.</p>
+                    <p>{branded ? 'Tout est terminé. Les visiteurs peuvent utiliser cette adresse pour voir le site.' : 'Tout est terminé. Les visiteurs peuvent utiliser cette adresse pour voir le site de l’association.'}</p>
                   ) : (
                     <><p className="font-medium">Dernière étape</p><p className="mt-1">Ouvrez l’espace où cette adresse a été achetée, puis demandez à votre registrar de la diriger vers votre site. Les indications techniques dépendent de votre fournisseur.</p></>
                   )}

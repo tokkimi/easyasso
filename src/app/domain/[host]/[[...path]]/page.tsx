@@ -8,7 +8,9 @@ export const revalidate = 60;
 
 export async function generateMetadata({ params }: { params: Promise<{ host: string }> }): Promise<Metadata> {
   const { host } = await params;
-  const site = await prisma.site.findFirst({ where: { customDomain: decodeURIComponent(host), domainVerified: true }, select: { name: true, header: true, footer: true } });
+  const domain = decodeURIComponent(host);
+  const apex = domain.replace(/^www\./i, '');
+  const site = await prisma.site.findFirst({ where: { customDomain: { in: [domain, apex, `www.${apex}`] }, domainVerified: true }, select: { name: true, header: true, footer: true } });
   return siteMetadata(site);
 }
 

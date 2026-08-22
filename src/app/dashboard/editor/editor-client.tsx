@@ -10,7 +10,9 @@ import {
 import { BLOCK_LIBRARY, type BlockType, type ButtonConfig } from '@/lib/blocks';
 import { PublicBlock } from '@/components/site/PublicBlock';
 import { PublicHeader, PublicFooter } from '@/components/site/PublicChrome';
+import { VielusosHero } from '@/components/site/VielusosHero';
 import { themeStyle, brandCss } from '@/lib/render';
+import { VIELUSOS_BRAND, VIELUSOS_SITE_CSS } from '@/lib/vielusos';
 import { googleFontsHref } from '@/lib/fonts';
 import { ColorGrid, AlignPicker, Field, Toggle, ImageInput } from './controls';
 
@@ -32,7 +34,7 @@ async function api(url: string, method: string, body?: any) {
   return res.json();
 }
 
-export function EditorClient({ site: initial, canEdit, canPublish, siteUrl }: { site: Site; canEdit: boolean; canPublish: boolean; siteUrl: string }) {
+export function EditorClient({ site: initial, canEdit, canPublish, siteUrl, branded = false }: { site: Site; canEdit: boolean; canPublish: boolean; siteUrl: string; branded?: boolean }) {
   const [pages, setPages] = useState<Page[]>(initial.pages);
   const [activeId, setActiveId] = useState<string>(initial.pages[0]?.id);
   const [selectedBlock, setSelectedBlock] = useState<string | null>(null);
@@ -75,8 +77,16 @@ export function EditorClient({ site: initial, canEdit, canPublish, siteUrl }: { 
 
   async function addBlock(type: BlockType) {
     const created = await api('/api/blocks', 'POST', { pageId: activeId, type });
-    setPages((ps) => ps.map((p) => p.id === activeId ? { ...p, blocks: [...p.blocks, created] } : p));
-    setSelectedBlock(created.id);
+    const artistDefaults: Partial<Record<BlockType, any>> = {
+      banner: { title: 'Nouveau projet', subtitle: 'Présentez votre univers, une sortie ou une actualité.', button: { text: 'Découvrir', href: '#', variant: 'solid', color: VIELUSOS_BRAND.accent } },
+      cards: { title: 'À découvrir', cards: [{ title: 'Musique', text: 'Présentez vos dernières sorties.' }, { title: 'Univers', text: 'Partagez votre direction artistique.' }, { title: 'Actualités', text: 'Annoncez vos prochaines dates.' }] },
+      cta: { title: 'Suivez VIELUSOS', text: 'Découvrez les dernières sorties et les prochaines dates.', button: { text: 'Écouter', href: '#', variant: 'solid', color: VIELUSOS_BRAND.accent } },
+      contact: { title: 'Contact', intro: 'Pour toute demande professionnelle, écrivez-nous.', email: '', phone: '', address: '', buttonText: 'Envoyer' },
+    };
+    const adjusted = branded && artistDefaults[type] ? { ...created, content: artistDefaults[type] } : created;
+    if (adjusted !== created) await api(`/api/blocks/${created.id}`, 'PATCH', { content: adjusted.content });
+    setPages((ps) => ps.map((p) => p.id === activeId ? { ...p, blocks: [...p.blocks, adjusted] } : p));
+    setSelectedBlock(adjusted.id);
     setShowPalette(false);
     flash('Bloc ajouté');
   }
@@ -139,11 +149,14 @@ export function EditorClient({ site: initial, canEdit, canPublish, siteUrl }: { 
   const width = device === 'mobile' ? 390 : 900;
 
   const fontHref = googleFontsHref((initial.theme as any)?.font);
+  const previewHeader = branded ? { ...header, logoUrl: VIELUSOS_BRAND.logoUrl, logoText: initial.name.toUpperCase(), background: VIELUSOS_BRAND.surface, textColor: '#f7f7fb' } : header;
+  const previewFooter = branded ? { ...footer, logoUrl: VIELUSOS_BRAND.logoUrl, logoText: initial.name.toUpperCase(), background: VIELUSOS_BRAND.surface, textColor: '#f7f7fb' } : footer;
 
   return (
     <div className="vielusos-editor-surface fixed inset-0 z-30 flex flex-col bg-gray-100 lg:left-64">
       {fontHref && <link rel="stylesheet" href={fontHref} />}
-      <style dangerouslySetInnerHTML={{ __html: brandCss((initial.theme as any)?.primary) }} />
+      {branded && <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&family=Montserrat:wght@300;400;500&display=swap" />}
+      <style dangerouslySetInnerHTML={{ __html: `${brandCss((initial.theme as any)?.primary)}${branded ? VIELUSOS_SITE_CSS : ''}` }} />
       {/* Top bar */}
       <div className="flex items-center justify-between gap-2 border-b border-gray-200 bg-white px-2 py-2 sm:px-3">
         <a href="/dashboard" className="touch-target flex shrink-0 items-center gap-1 text-sm text-gray-500 hover:text-gray-900">
@@ -222,16 +235,18 @@ export function EditorClient({ site: initial, canEdit, canPublish, siteUrl }: { 
             <div><p className="text-xs font-bold uppercase tracking-wide text-brand-600">Vous modifiez</p><p className="font-extrabold text-gray-900">{tab === 'header' ? 'L’en-tête du site' : tab === 'footer' ? 'Le pied de page' : `La page « ${active?.title || ''} »`}</p></div>
             <p className="text-xs text-gray-500">Touchez ou cliquez sur un élément pour ouvrir ses réglages.</p>
           </div>
-          <div className="mx-auto overflow-hidden rounded-xl shadow-sm ring-1 ring-gray-200 transition-all" style={{ maxWidth: width, ...themeStyle(initial.theme) }}>
+          <div className={`mx-auto overflow-hidden rounded-xl shadow-sm ring-1 ring-gray-200 transition-all ${branded ? 'vielusos-site' : ''}`} style={{ maxWidth: width, ...themeStyle(initial.theme), ...(branded ? { backgroundColor: VIELUSOS_BRAND.surface, backgroundImage: `linear-gradient(rgba(8,8,12,.72),rgba(8,8,12,.72)),url(${VIELUSOS_BRAND.backgroundUrl})`, backgroundSize: 'cover', color: '#f7f7fb' } : {}) }}>
             {/* Live header preview (click to edit) */}
             <div
               onClick={() => { setTab('header'); setSelectedBlock(null); setMobileInspector(true); }}
               className={`cursor-pointer ${tab === 'header' ? 'ring-2 ring-brand-500' : 'hover:ring-1 hover:ring-brand-200'}`}
             >
               <div className="pointer-events-none">
-                <PublicHeader header={header as any} nav={pages.filter((p) => p.showInNav).map((p) => ({ title: p.title, slug: p.slug, isHome: p.isHome }))} basePath="#" />
+                <PublicHeader header={previewHeader as any} nav={pages.filter((p) => p.showInNav).map((p) => ({ title: p.title, slug: p.slug, isHome: p.isHome }))} basePath="#" />
               </div>
             </div>
+            {branded && active?.isHome && <VielusosHero title={initial.name} config={header.vielusosHero} />}
+            <main className="flex-1 py-8">
             {active?.blocks.length === 0 && (
               <div className="py-16 text-center text-gray-400">
                 <p>Page vide.</p>
@@ -259,13 +274,14 @@ export function EditorClient({ site: initial, canEdit, canPublish, siteUrl }: { 
                 <button onClick={() => setShowPalette(true)} className="btn btn-ghost mx-auto text-sm"><Plus className="h-4 w-4" /> Ajouter un bloc</button>
               </div>
             )}
+            </main>
             {/* Live footer preview (click to edit) */}
             <div
               onClick={() => { setTab('footer'); setSelectedBlock(null); setMobileInspector(true); }}
               className={`cursor-pointer ${tab === 'footer' ? 'ring-2 ring-brand-500' : 'hover:ring-1 hover:ring-brand-200'}`}
             >
               <div className="pointer-events-none">
-                <PublicFooter footer={footer as any} orgId={(initial as any).organizationId || 'preview'} basePath="#" nav={pages.filter((p) => p.showInNav).map((p) => ({ title: p.title, slug: p.slug, isHome: p.isHome }))} />
+                <PublicFooter footer={previewFooter as any} orgId={(initial as any).organizationId || 'preview'} basePath="#" nav={pages.filter((p) => p.showInNav).map((p) => ({ title: p.title, slug: p.slug, isHome: p.isHome }))} />
               </div>
             </div>
           </div>
@@ -275,7 +291,7 @@ export function EditorClient({ site: initial, canEdit, canPublish, siteUrl }: { 
         {canEdit && (
           <aside className="hidden w-72 shrink-0 overflow-y-auto border-l border-gray-200 bg-white p-4 lg:block">
             {tab === 'blocks' && block && (
-              <BlockInspector block={block} onContent={(c) => updateContent(block.id, c)} onStyle={(s) => updateStyle(block.id, s)} onDelete={() => deleteBlock(block.id)} />
+              <BlockInspector block={block} branded={branded} onContent={(c) => updateContent(block.id, c)} onStyle={(s) => updateStyle(block.id, s)} onDelete={() => deleteBlock(block.id)} />
             )}
             {tab === 'blocks' && !block && (
               <div className="text-sm text-gray-500">
@@ -284,7 +300,7 @@ export function EditorClient({ site: initial, canEdit, canPublish, siteUrl }: { 
                 <button onClick={() => setShowPalette(true)} className="btn btn-primary mt-4 w-full"><Plus className="h-4 w-4" /> Ajouter un bloc</button>
               </div>
             )}
-            {tab === 'header' && <HeaderEditor value={header} onChange={(h) => { setHeader(h); saveSite({ header: h }); }} />}
+            {tab === 'header' && <HeaderEditor value={header} branded={branded} onChange={(h) => { setHeader(h); saveSite({ header: h }); }} />}
             {tab === 'footer' && <FooterEditor value={footer} pages={pages} onChange={(f) => { setFooter(f); saveSite({ footer: f }); }} />}
           </aside>
         )}
@@ -299,11 +315,11 @@ export function EditorClient({ site: initial, canEdit, canPublish, siteUrl }: { 
               <span className="flex items-center gap-2 font-bold text-gray-900"><SlidersHorizontal className="h-5 w-5 text-brand-600" /> Modifier</span>
               <button onClick={() => setMobileInspector(false)} className="touch-target grid place-items-center rounded-lg bg-gray-100" aria-label="Fermer"><X className="h-5 w-5" /></button>
             </div>
-            {tab === 'blocks' && block && <BlockInspector block={block} onContent={(c) => updateContent(block.id, c)} onStyle={(s) => updateStyle(block.id, s)} onDelete={() => { deleteBlock(block.id); setMobileInspector(false); }} />}
+            {tab === 'blocks' && block && <BlockInspector block={block} branded={branded} onContent={(c) => updateContent(block.id, c)} onStyle={(s) => updateStyle(block.id, s)} onDelete={() => { deleteBlock(block.id); setMobileInspector(false); }} />}
             {tab === 'blocks' && !block && (
               <div className="text-sm text-gray-600"><p>Sélectionnez une partie de la page ou ajoutez un bloc.</p><button onClick={() => { setMobileInspector(false); setShowPalette(true); }} className="btn btn-primary mt-4 w-full"><Plus className="h-4 w-4" /> Ajouter un bloc</button></div>
             )}
-            {tab === 'header' && <HeaderEditor value={header} onChange={(h) => { setHeader(h); saveSite({ header: h }); }} />}
+            {tab === 'header' && <HeaderEditor value={header} branded={branded} onChange={(h) => { setHeader(h); saveSite({ header: h }); }} />}
             {tab === 'footer' && <FooterEditor value={footer} pages={pages} onChange={(f) => { setFooter(f); saveSite({ footer: f }); }} />}
           </aside>
         </div>
@@ -318,7 +334,7 @@ export function EditorClient({ site: initial, canEdit, canPublish, siteUrl }: { 
 
             <p className="mb-2 text-xs font-bold uppercase tracking-wide text-brand-600">Essentiels</p>
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-              {BLOCK_LIBRARY.filter((b) => b.type === 'donation' || b.type === 'contact').map((b) => {
+              {BLOCK_LIBRARY.filter((b) => branded ? b.type === 'contact' : b.type === 'donation' || b.type === 'contact').map((b) => {
                 const Icon = ICONS[b.icon] || Type;
                 return (
                   <button key={b.type} onClick={() => addBlock(b.type)} className="flex items-start gap-3 rounded-xl border border-brand-200 bg-brand-50 p-3 text-left hover:border-brand-500 hover:bg-brand-100">
@@ -331,7 +347,7 @@ export function EditorClient({ site: initial, canEdit, canPublish, siteUrl }: { 
 
             <p className="mb-2 mt-5 text-xs font-bold uppercase tracking-wide text-brand-600">Mises en page prêtes</p>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-              {BLOCK_LIBRARY.filter((b) => b.group === 'layouts' && b.type !== 'donation' && b.type !== 'contact').map((b) => {
+              {BLOCK_LIBRARY.filter((b) => b.group === 'layouts' && b.type !== 'donation' && b.type !== 'contact' && (!branded || b.type !== 'leetchi')).map((b) => {
                 const Icon = ICONS[b.icon] || Type;
                 return (
                   <button key={b.type} onClick={() => addBlock(b.type)} className="flex flex-col items-start gap-1 rounded-xl border border-gray-200 p-3 text-left hover:border-brand-400 hover:bg-brand-50">
@@ -345,7 +361,7 @@ export function EditorClient({ site: initial, canEdit, canPublish, siteUrl }: { 
 
             <p className="mb-2 mt-5 text-xs font-bold uppercase tracking-wide text-gray-400">Blocs simples</p>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-              {BLOCK_LIBRARY.filter((b) => b.group === 'basics').map((b) => {
+              {BLOCK_LIBRARY.filter((b) => b.group === 'basics' && (!branded || (b.type !== 'donation' && b.type !== 'leetchi'))).map((b) => {
                 const Icon = ICONS[b.icon] || Type;
                 return (
                   <button key={b.type} onClick={() => addBlock(b.type)} className="flex flex-col items-start gap-1 rounded-xl border border-gray-200 p-3 text-left hover:border-brand-400 hover:bg-brand-50">
@@ -364,7 +380,7 @@ export function EditorClient({ site: initial, canEdit, canPublish, siteUrl }: { 
 }
 
 // ------------------------- Block inspector -------------------------
-function BlockInspector({ block, onContent, onStyle, onDelete }: { block: Block; onContent: (c: any) => void; onStyle: (s: any) => void; onDelete: () => void }) {
+function BlockInspector({ block, branded = false, onContent, onStyle, onDelete }: { block: Block; branded?: boolean; onContent: (c: any) => void; onStyle: (s: any) => void; onDelete: () => void }) {
   const c = block.content || {};
   const s = block.style || {};
   return (
@@ -404,14 +420,14 @@ function BlockInspector({ block, onContent, onStyle, onDelete }: { block: Block;
         <>
           <Field label="Titre"><input className="input" value={c.title || ''} onChange={(e) => onContent({ ...c, title: e.target.value })} /></Field>
           <Field label="Introduction"><textarea className="input min-h-20" value={c.intro || ''} onChange={(e) => onContent({ ...c, intro: e.target.value })} /></Field>
-          <Field label="E-mail de l’association"><input className="input" type="email" value={c.email || ''} onChange={(e) => onContent({ ...c, email: e.target.value })} /></Field>
+          <Field label={branded ? 'E-mail public' : 'E-mail de l’association'}><input className="input" type="email" value={c.email || ''} onChange={(e) => onContent({ ...c, email: e.target.value })} /></Field>
           <Field label="Téléphone"><input className="input" value={c.phone || ''} onChange={(e) => onContent({ ...c, phone: e.target.value })} /></Field>
           <Field label="Adresse"><textarea className="input min-h-20" value={c.address || ''} onChange={(e) => onContent({ ...c, address: e.target.value })} /></Field>
           <Field label="Texte du bouton"><input className="input" value={c.buttonText || ''} onChange={(e) => onContent({ ...c, buttonText: e.target.value })} /></Field>
         </>
       )}
 
-      {block.type === 'donation' && (
+      {!branded && block.type === 'donation' && (
         <>
           <Field label="Titre"><input className="input" value={c.title || ''} onChange={(e) => onContent({ ...c, title: e.target.value })} /></Field>
           <Field label="Introduction"><textarea className="input min-h-20" value={c.intro || ''} onChange={(e) => onContent({ ...c, intro: e.target.value })} /></Field>
@@ -426,7 +442,7 @@ function BlockInspector({ block, onContent, onStyle, onDelete }: { block: Block;
         </>
       )}
 
-      {block.type === 'leetchi' && (
+      {!branded && block.type === 'leetchi' && (
         <>
           <Field label="Titre"><input className="input" value={c.title || ''} onChange={(e) => onContent({ ...c, title: e.target.value })} /></Field>
           <Field label="Introduction"><textarea className="input min-h-20" value={c.intro || ''} onChange={(e) => onContent({ ...c, intro: e.target.value })} /></Field>
@@ -842,13 +858,12 @@ function SocialEditor({ value, onChange }: { value?: any; onChange: (s: any) => 
 }
 
 // ------------------------- Header / Footer editors -------------------------
-function HeaderEditor({ value, onChange }: { value: any; onChange: (v: any) => void }) {
+function HeaderEditor({ value, branded = false, onChange }: { value: any; branded?: boolean; onChange: (v: any) => void }) {
   const h = value; const set = (patch: any) => onChange({ ...h, ...patch });
   return (
     <div className="space-y-4">
       <h3 className="font-bold text-gray-900">En-tête</h3>
-      <Field label="Texte du logo"><input className="input" value={h.logoText || ''} onChange={(e) => set({ logoText: e.target.value })} /></Field>
-      <ImageInput label="Logo (image, optionnel)" value={h.logoUrl} onChange={(logoUrl) => set({ logoUrl })} kind="logo" />
+      {branded ? <p className="rounded-xl bg-gray-50 p-3 text-sm text-gray-600">Le logo officiel VIELUSOS est utilisé dans l’en-tête.</p> : <><Field label="Texte du logo"><input className="input" value={h.logoText || ''} onChange={(e) => set({ logoText: e.target.value })} /></Field><ImageInput label="Logo (image, optionnel)" value={h.logoUrl} onChange={(logoUrl) => set({ logoUrl })} kind="logo" /></>}
       <Toggle checked={h.showNav ?? true} onChange={(v) => set({ showNav: v })} label="Afficher le menu" />
       <Toggle checked={h.sticky ?? true} onChange={(v) => set({ sticky: v })} label="En-tête fixe au défilement" />
       <Field label="Couleur de fond"><ColorGrid value={h.background} onChange={(c) => set({ background: c })} /></Field>

@@ -5,7 +5,7 @@ import { Plus, Download, Trash2, X, TrendingUp, TrendingDown } from 'lucide-reac
 import { PageHeader, Stat, EmptyState } from '@/components/ui';
 import { formatEuros, formatDate } from '@/lib/utils';
 
-export function AccountingClient({ transactions, categories, donationsTotal, canEdit, canExport }: any) {
+export function AccountingClient({ transactions, categories, donationsTotal, canEdit, canExport, branded = false }: any) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [catOpen, setCatOpen] = useState(false);
@@ -15,7 +15,7 @@ export function AccountingClient({ transactions, categories, donationsTotal, can
 
   const txIncome = transactions.filter((t: any) => t.kind === 'INCOME').reduce((s: number, t: any) => s + t.amountCents, 0);
   const expense = transactions.filter((t: any) => t.kind === 'EXPENSE').reduce((s: number, t: any) => s + t.amountCents, 0);
-  const income = txIncome + donationsTotal;
+  const income = txIncome + (branded ? 0 : donationsTotal);
   const balance = income - expense;
 
   async function add(e: React.FormEvent) {
@@ -32,7 +32,7 @@ export function AccountingClient({ transactions, categories, donationsTotal, can
 
   return (
     <div>
-      <PageHeader title="Comptabilité" subtitle="Recettes, dépenses, catégories et solde de votre association."
+      <PageHeader title="Comptabilité" subtitle={branded ? 'Recettes, dépenses, catégories et solde de votre activité.' : 'Recettes, dépenses, catégories et solde de votre association.'}
         action={
           <div className="flex gap-2">
             {canExport && <a href="/api/export?type=accounting" className="btn btn-ghost"><Download className="h-4 w-4" /> Export comptable</a>}
@@ -41,7 +41,7 @@ export function AccountingClient({ transactions, categories, donationsTotal, can
         } />
 
       <div className="mb-6 grid gap-4 sm:grid-cols-3">
-        <Stat label="Recettes (dons inclus)" value={formatEuros(income)} accent="text-green-600" hint={`dont ${formatEuros(donationsTotal)} de dons`} />
+        <Stat label={branded ? 'Recettes' : 'Recettes (dons inclus)'} value={formatEuros(income)} accent="text-green-600" hint={branded ? undefined : `dont ${formatEuros(donationsTotal)} de dons`} />
         <Stat label="Dépenses" value={formatEuros(expense)} accent="text-red-600" />
         <Stat label="Solde" value={formatEuros(balance)} accent={balance >= 0 ? 'text-gray-900' : 'text-red-600'} />
       </div>
@@ -55,7 +55,7 @@ export function AccountingClient({ transactions, categories, donationsTotal, can
       </div>
 
       {transactions.length === 0 ? (
-        <EmptyState title="Aucune opération enregistrée" text="Les dons sont comptés automatiquement dans les recettes. Ajoutez vos autres recettes et dépenses ici.">
+        <EmptyState title="Aucune opération enregistrée" text={branded ? 'Ajoutez ici les recettes et les dépenses liées à votre activité.' : 'Les dons sont comptés automatiquement dans les recettes. Ajoutez vos autres recettes et dépenses ici.'}>
           {canEdit && <button onClick={() => setOpen(true)} className="btn btn-primary"><Plus className="h-4 w-4" /> Ajouter une opération</button>}
         </EmptyState>
       ) : (

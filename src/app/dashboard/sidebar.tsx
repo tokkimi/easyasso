@@ -41,11 +41,11 @@ export function Sidebar({
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={brandLogoUrl || '/easyasso-logo.png'} alt={branded ? orgName : 'EasyAsso'} className="h-14 w-auto object-contain" />
         <p className={`mt-2 truncate text-sm font-medium ${branded ? 'text-white/85' : 'text-gray-900'}`}>{orgName}</p>
-        {branded && <p className="mt-1 text-[10px] font-black uppercase tracking-[0.24em] text-[#d33f5c]">Artist workspace</p>}
+        {branded && <p className="mt-1 text-[10px] font-black uppercase tracking-[0.24em] text-[#d33f5c]">Espace artiste</p>}
       </div>
 
       <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
-        {NAV.filter((n) => has(n.perm) && (!branded || !['/dashboard/donations', '/dashboard/themes', '/dashboard/donors'].includes(n.href))).map((n) => {
+        {NAV.filter((n) => has(n.perm) && (!branded || !['/dashboard/generate', '/dashboard/themes', '/dashboard/donations', '/dashboard/campaigns', '/dashboard/donors'].includes(n.href))).map((n) => {
           const active = n.href === '/dashboard' ? pathname === n.href : pathname.startsWith(n.href);
           return (
             <Link

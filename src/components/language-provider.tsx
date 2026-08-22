@@ -353,6 +353,7 @@ function translateTree(root: Node, locale: Locale) {
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const [locale, setLocaleState] = useState<Locale>('fr');
+  const [forceFrench, setForceFrench] = useState(false);
   const pathname = usePathname();
   const isAssociationSite = pathname.startsWith('/s/') || pathname.startsWith('/domain/') || pathname.startsWith('/theme-preview/');
   useEffect(() => {
@@ -362,6 +363,14 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   }, []);
   useEffect(() => {
     if (!pathname.startsWith('/dashboard')) return;
+    const locked = Boolean(document.querySelector('[data-dashboard-locale="fr"]'));
+    setForceFrench(locked);
+    if (locked) {
+      localStorage.setItem('easyasso-language', 'fr');
+      document.cookie = 'easyasso-language=fr;path=/;max-age=31536000;samesite=lax';
+      setLocaleState('fr');
+      return;
+    }
     fetch('/api/organization/profile').then((response) => response.ok ? response.json() : null).then((profile) => {
       if (profile?.language === 'fr' || profile?.language === 'en') {
         localStorage.setItem('easyasso-language', profile.language);
@@ -391,7 +400,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     setLocaleState(next);
   };
   const value = useMemo(() => ({ locale, setLocale, t: (text: string) => locale === 'en' ? translations[text] || text : text }), [locale]);
-  return <LocaleContext.Provider value={value}>{children}{!isAssociationSite && pathname !== '/' && <LanguageSwitcher />}</LocaleContext.Provider>;
+  return <LocaleContext.Provider value={value}>{children}{!isAssociationSite && pathname !== '/' && !forceFrench && <LanguageSwitcher />}</LocaleContext.Provider>;
 }
 
 export function useLanguage() { return useContext(LocaleContext); }
@@ -400,7 +409,7 @@ export function LanguageSwitcher({ variant = 'floating' }: { variant?: 'floating
   const { locale, setLocale } = useContext(LocaleContext);
   const className = variant === 'inline'
     ? 'inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-3 py-2 text-sm font-bold text-gray-700 shadow-sm hover:border-brand-300 hover:text-brand-700'
-    : 'fixed bottom-4 right-4 z-[100] flex items-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-2 text-sm font-bold text-gray-700 shadow-lg hover:border-brand-300 hover:text-brand-700';
+    : 'language-switcher fixed bottom-4 right-4 z-[100] flex items-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-2 text-sm font-bold text-gray-700 shadow-lg hover:border-brand-300 hover:text-brand-700';
   return (
     <button type="button" onClick={() => setLocale(locale === 'fr' ? 'en' : 'fr')} className={className} aria-label={locale === 'fr' ? 'Switch to English' : 'Passer en français'} data-no-translate>
       <Languages className="h-4 w-4" /> {locale === 'fr' ? 'EN' : 'FR'}

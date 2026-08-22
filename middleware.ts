@@ -21,13 +21,11 @@ export function middleware(req: NextRequest) {
 
   if (isVielusosHost && req.nextUrl.pathname === '/admin') {
     const url = req.nextUrl.clone();
-    url.pathname = '/login';
-    url.searchParams.set('vielusos', '1');
-    url.searchParams.set('callbackUrl', '/dashboard');
+    url.pathname = '/vielusos-admin';
     return NextResponse.rewrite(url);
   }
 
-  if (isVielusosHost && ['/dashboard', '/login', '/forgot-password', '/reset-password', '/verify-email'].some((path) => req.nextUrl.pathname === path || req.nextUrl.pathname.startsWith(`${path}/`))) {
+  if (isVielusosHost && ['/dashboard', '/vielusos-admin', '/login', '/forgot-password', '/reset-password', '/verify-email'].some((path) => req.nextUrl.pathname === path || req.nextUrl.pathname.startsWith(`${path}/`))) {
     return NextResponse.next();
   }
 

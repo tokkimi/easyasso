@@ -19,6 +19,16 @@ function allowedMediaUrl(value: unknown): string {
   }
 }
 
+async function officialPosterFallback(code: string) {
+  const response = await fetch(`https://www.instagram.com/p/${code}/`, {
+    headers: { 'User-Agent': 'Mozilla/5.0', 'Accept-Language': 'fr-FR,fr;q=0.9' },
+    next: { revalidate: 1800 },
+  });
+  const html = await response.text();
+  const image = allowedMediaUrl(html.match(/<meta\s+property="og:image"\s+content="([^"]+)"/i)?.[1]?.replaceAll('&amp;', '&'));
+  return image ? [{ type: 'image', src: image, poster: image, width: 1, height: 1 }] : [];
+}
+
 export async function GET(request: NextRequest) {
   const code = request.nextUrl.searchParams.get('code') || '';
   if (!/^[A-Za-z0-9_-]{5,30}$/.test(code)) return NextResponse.json({ media: [] }, { status: 400 });
@@ -31,7 +41,11 @@ export async function GET(request: NextRequest) {
     if (!response.ok) throw new Error(`Instagram returned ${response.status}`);
     const html = await response.text();
     const match = html.match(/"contextJSON":"((?:\\.|[^"\\])*)"/);
-    if (!match) throw new Error('Instagram media payload missing');
+    if (!match) {
+      const media = await officialPosterFallback(code);
+      if (!media.length) throw new Error('Instagram media payload missing');
+      return NextResponse.json({ media }, { headers: { 'Cache-Control': 'public, s-maxage=1800, stale-while-revalidate=86400' } });
+    }
     const context = JSON.parse(JSON.parse(`"${match[1]}"`));
     const root: InstagramNode | undefined = context?.gql_data?.shortcode_media;
     const sidecarNodes = root?.edge_sidecar_to_children?.edges?.map((edge) => edge.node).filter((node): node is InstagramNode => Boolean(node));

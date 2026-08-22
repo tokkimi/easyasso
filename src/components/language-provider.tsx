@@ -362,8 +362,9 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     setLocaleState(preferred);
   }, []);
   useEffect(() => {
-    if (!pathname.startsWith('/dashboard')) return;
-    const locked = Boolean(document.querySelector('[data-dashboard-locale="fr"]'));
+    const hostname = window.location.hostname.toLowerCase();
+    const vielusosAdmin = (hostname === 'vielusos.com' || hostname === 'www.vielusos.com') && ['/admin', '/login', '/forgot-password', '/reset-password', '/verify-email'].some((path) => pathname === path || pathname.startsWith(`${path}/`));
+    const locked = vielusosAdmin || Boolean(document.querySelector('[data-dashboard-locale="fr"]'));
     setForceFrench(locked);
     if (locked) {
       localStorage.setItem('easyasso-language', 'fr');
@@ -371,6 +372,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
       setLocaleState('fr');
       return;
     }
+    if (!pathname.startsWith('/dashboard')) return;
     fetch('/api/organization/profile').then((response) => response.ok ? response.json() : null).then((profile) => {
       if (profile?.language === 'fr' || profile?.language === 'en') {
         localStorage.setItem('easyasso-language', profile.language);

@@ -45,7 +45,7 @@ export function Sidebar({
       </div>
 
       <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
-        {NAV.filter((n) => has(n.perm) && (!branded || !['/dashboard/generate', '/dashboard/themes', '/dashboard/donations', '/dashboard/campaigns', '/dashboard/donors'].includes(n.href))).map((n) => {
+        {NAV.filter((n) => has(n.perm) && (!branded || !['/dashboard/generate', '/dashboard/identity', '/dashboard/themes', '/dashboard/donations', '/dashboard/campaigns', '/dashboard/donors'].includes(n.href))).map((n) => {
           const active = n.href === '/dashboard' ? pathname === n.href : pathname.startsWith(n.href);
           return (
             <Link

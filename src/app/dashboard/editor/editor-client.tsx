@@ -301,7 +301,7 @@ export function EditorClient({ site: initial, canEdit, canPublish, siteUrl, bran
               </div>
             )}
             {tab === 'header' && <HeaderEditor value={header} branded={branded} onChange={(h) => { setHeader(h); saveSite({ header: h }); }} />}
-            {tab === 'footer' && <FooterEditor value={footer} pages={pages} onChange={(f) => { setFooter(f); saveSite({ footer: f }); }} />}
+            {tab === 'footer' && <FooterEditor value={footer} pages={pages} branded={branded} onChange={(f) => { setFooter(f); saveSite({ footer: f }); }} />}
           </aside>
         )}
       </div>
@@ -320,7 +320,7 @@ export function EditorClient({ site: initial, canEdit, canPublish, siteUrl, bran
               <div className="text-sm text-gray-600"><p>Sélectionnez une partie de la page ou ajoutez un bloc.</p><button onClick={() => { setMobileInspector(false); setShowPalette(true); }} className="btn btn-primary mt-4 w-full"><Plus className="h-4 w-4" /> Ajouter un bloc</button></div>
             )}
             {tab === 'header' && <HeaderEditor value={header} branded={branded} onChange={(h) => { setHeader(h); saveSite({ header: h }); }} />}
-            {tab === 'footer' && <FooterEditor value={footer} pages={pages} onChange={(f) => { setFooter(f); saveSite({ footer: f }); }} />}
+            {tab === 'footer' && <FooterEditor value={footer} pages={pages} branded={branded} onChange={(f) => { setFooter(f); saveSite({ footer: f }); }} />}
           </aside>
         </div>
       )}
@@ -866,8 +866,7 @@ function HeaderEditor({ value, branded = false, onChange }: { value: any; brande
       {branded ? <p className="rounded-xl bg-gray-50 p-3 text-sm text-gray-600">Le logo officiel VIELUSOS est utilisé dans l’en-tête.</p> : <><Field label="Texte du logo"><input className="input" value={h.logoText || ''} onChange={(e) => set({ logoText: e.target.value })} /></Field><ImageInput label="Logo (image, optionnel)" value={h.logoUrl} onChange={(logoUrl) => set({ logoUrl })} kind="logo" /></>}
       <Toggle checked={h.showNav ?? true} onChange={(v) => set({ showNav: v })} label="Afficher le menu" />
       <Toggle checked={h.sticky ?? true} onChange={(v) => set({ sticky: v })} label="En-tête fixe au défilement" />
-      <Field label="Couleur de fond"><ColorGrid value={h.background} onChange={(c) => set({ background: c })} /></Field>
-      <Field label="Couleur du texte"><ColorGrid value={h.textColor} onChange={(c) => set({ textColor: c })} /></Field>
+      {!branded && <><Field label="Couleur de fond"><ColorGrid value={h.background} onChange={(c) => set({ background: c })} /></Field><Field label="Couleur du texte"><ColorGrid value={h.textColor} onChange={(c) => set({ textColor: c })} /></Field></>}
       <div className="border-t border-gray-100 pt-3">
         <p className="mb-2 text-sm font-semibold text-gray-700">Bouton d’action</p>
         <Toggle checked={h.showCta ?? true} onChange={(v) => set({ showCta: v })} label="Afficher le bouton du header" />
@@ -895,19 +894,18 @@ function HeaderEditor({ value, branded = false, onChange }: { value: any; brande
   );
 }
 
-function FooterEditor({ value, pages, onChange }: { value: any; pages: Page[]; onChange: (v: any) => void }) {
+function FooterEditor({ value, pages, branded = false, onChange }: { value: any; pages: Page[]; branded?: boolean; onChange: (v: any) => void }) {
   const f = value; const set = (patch: any) => onChange({ ...f, ...patch });
   return (
     <div className="space-y-4">
       <h3 className="font-bold text-gray-900">Pied de page</h3>
-      <div className="rounded-xl border-2 border-brand-200 bg-brand-50 p-3">
+      {!branded && <div className="rounded-xl border-2 border-brand-200 bg-brand-50 p-3">
         <p className="mb-2 font-bold text-gray-900">Couleurs du pied de page</p>
         <Field label="Couleur de fond"><ColorGrid value={f.background} onChange={(c) => set({ background: c })} /></Field>
         <label className="mt-3 flex items-center justify-between gap-3 text-sm font-medium text-gray-700">Choisir une autre couleur<input type="color" value={f.background || '#111827'} onChange={(e) => set({ background: e.target.value })} className="h-11 w-16 cursor-pointer rounded-lg border border-gray-300 bg-white p-1" /></label>
         <div className="mt-3"><Field label="Couleur du texte"><ColorGrid value={f.textColor} onChange={(c) => set({ textColor: c })} /></Field></div>
-      </div>
-      <Field label="Texte du logo"><input className="input" value={f.logoText || ''} onChange={(e) => set({ logoText: e.target.value })} /></Field>
-      <ImageInput label="Logo (image)" value={f.logoUrl} onChange={(logoUrl) => set({ logoUrl })} kind="logo" />
+      </div>}
+      {branded ? <p className="rounded-xl bg-gray-50 p-3 text-sm text-gray-600">Le logo et les couleurs officiels VIELUSOS sont utilisés dans le pied de page.</p> : <><Field label="Texte du logo"><input className="input" value={f.logoText || ''} onChange={(e) => set({ logoText: e.target.value })} /></Field><ImageInput label="Logo (image)" value={f.logoUrl} onChange={(logoUrl) => set({ logoUrl })} kind="logo" /></>}
       <Field label="Texte de présentation"><textarea className="input min-h-[70px]" value={f.text || ''} onChange={(e) => set({ text: e.target.value })} /></Field>
       <Field label="Texte “tous droits réservés”"><input className="input" value={f.allRightsText || ''} onChange={(e) => set({ allRightsText: e.target.value })} /></Field>
       <div className="space-y-2 border-t border-gray-100 pt-3">

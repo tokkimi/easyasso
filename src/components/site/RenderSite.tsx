@@ -155,7 +155,7 @@ export async function RenderSite({ site, basePath, slug }: { site: SiteWithPages
   return (
     <div className={`flex min-h-screen flex-col ${vielusos ? 'vielusos-site' : ''}`} style={publicSiteStyle(theme, vielusos)}>
       {fontHref && <link rel="stylesheet" href={fontHref} />}
-      {vielusos && <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&display=swap" />}
+      {vielusos && <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&family=Montserrat:wght@300;400;500&display=swap" />}
       <style dangerouslySetInnerHTML={{ __html: `${brandCss(theme.primary)}${vielusosCss(vielusos)}` }} />
       <PageViewTracker organizationId={site.organizationId} path={page.slug} />
       <PublicHeader header={publicHeader} nav={nav} basePath={basePath} />
@@ -260,13 +260,18 @@ function publicSiteStyle(theme: any, vielusos: boolean): React.CSSProperties {
 function vielusosCss(enabled: boolean): string {
   if (!enabled) return '';
   return `
-.vielusos-site main { background: transparent; }
+.vielusos-site main { background: transparent; font-family: "Montserrat", "Helvetica Neue", Arial, sans-serif; font-weight: 300; }
 .vielusos-site .public-block-shell .text-gray-900, .vielusos-site .public-block-shell .text-gray-950 { color: #f7f7fb !important; }
 .vielusos-site .public-block-shell .text-gray-600, .vielusos-site .public-block-shell .text-gray-500 { color: rgba(247,247,251,.72) !important; }
 .vielusos-site .public-block-shell .bg-white { background: rgba(10,10,15,.68) !important; }
 .vielusos-site .public-block-shell .ring-gray-100 { --tw-ring-color: rgba(255,255,255,.18) !important; }
 .vielusos-site .public-header-shell, .vielusos-site .public-footer-shell { background: #0b0b10 !important; }
 .vielusos-site main h2 { font-family: "Cormorant Garamond", "Times New Roman", serif !important; font-size: clamp(1.75rem, 3vw, 2.5rem) !important; line-height: 1 !important; font-weight: 300 !important; letter-spacing: .18em !important; text-transform: uppercase !important; }
+.vielusos-site .vielusos-fluid { max-width: none !important; }
+.vielusos-site .vielusos-media-shell { padding-left: clamp(1.25rem, 4vw, 3rem) !important; padding-right: clamp(1.25rem, 4vw, 3rem) !important; }
+@media (min-width: 768px) {
+  .vielusos-site .vielusos-player-card, .vielusos-site .vielusos-video-card { width: calc((100% - 3rem) / 4) !important; max-width: none !important; }
+}
 `;
 }
 

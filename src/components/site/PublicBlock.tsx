@@ -49,6 +49,9 @@ export function PublicBlock({ type, content, style, basePath = '', organizationI
   if (FULL.has(type)) {
     return <div style={blockWrapperStyle({ ...style, paddingY: type === 'html' ? 0 : style.paddingY, background: type === 'cta' ? cleanBg(style.background) : undefined })} className="w-full">{inner}</div>;
   }
+  if (type === 'instagram' && content?.variant === 'vielusos') {
+    return <div style={blockWrapperStyle({ ...style, background: cleanBg(style.background) })} className="w-full">{inner}</div>;
+  }
   const maxW = WIDE.has(type) ? 'max-w-5xl' : 'max-w-3xl';
   return (
     <div style={blockWrapperStyle({ ...style, background: cleanBg(style.background) })} className={`public-block-shell mx-auto w-full ${maxW} px-4 ${alignClass(style.align)}`}>
@@ -235,7 +238,7 @@ function EventShowcase({ content }: { content: any }) {
   const href = safePublicUrl(content.buttonUrl);
   return (
     <section className="relative overflow-hidden px-5 py-14 text-white md:px-12 md:py-24">
-      <div className="mx-auto max-w-7xl">
+      <div className="vielusos-fluid mx-auto max-w-7xl">
         <p className="text-[10px] font-semibold uppercase tracking-[0.55em] text-white/45">{content.eyebrow || 'Live'}</p>
         <h2 className="mt-5 text-5xl font-light uppercase tracking-[0.22em] md:text-7xl" style={{ fontFamily: '"Cormorant Garamond", "Times New Roman", serif' }}>{content.title || 'Next date'}</h2>
         <div className="mt-10 grid gap-8 lg:grid-cols-[minmax(0,1.55fr)_minmax(260px,.55fr)] lg:items-center">
@@ -262,10 +265,10 @@ function SectionHeading({ eyebrow, title, intro }: { eyebrow?: string; title?: s
 
 function StatsShowcase({ content }: { content: any }) {
   const items = Array.isArray(content.items) ? content.items : [];
-  return <section className="px-5 py-14 text-white md:px-12 md:py-20"><div className="mx-auto max-w-7xl"><SectionHeading eyebrow={content.eyebrow} title={content.title} intro={content.intro} /><div className="mt-10 grid overflow-hidden rounded-3xl border border-white/15 sm:grid-cols-2 lg:grid-cols-3">{items.map((item: any, index: number) => <div key={index} className="min-h-36 border-b border-white/10 p-6 last:border-b-0 sm:border-r lg:min-h-40"><p className="text-4xl font-semibold tracking-tight md:text-5xl">{item.value}</p><p className="mt-6 max-w-[14rem] text-[10px] font-semibold uppercase leading-5 tracking-[0.25em] text-white/45">{item.label}</p></div>)}</div>{content.platforms && <p className="mt-5 text-center text-[9px] font-semibold uppercase tracking-[0.22em] text-white/35">{content.platforms}</p>}</div></section>;
+  return <section className="px-5 py-14 text-white md:px-12 md:py-20"><div className="vielusos-fluid mx-auto max-w-7xl"><SectionHeading eyebrow={content.eyebrow} title={content.title} intro={content.intro} /><div className="mt-10 grid overflow-hidden rounded-3xl border border-white/15 sm:grid-cols-2 lg:grid-cols-3">{items.map((item: any, index: number) => <div key={index} className="min-h-36 border-b border-white/10 p-6 last:border-b-0 sm:border-r lg:min-h-40"><p className="text-4xl font-semibold tracking-tight md:text-5xl">{item.value}</p><p className="mt-6 max-w-[14rem] text-[10px] font-semibold uppercase leading-5 tracking-[0.25em] text-white/45">{item.label}</p></div>)}</div>{content.platforms && <p className="mt-5 text-center text-[9px] font-semibold uppercase tracking-[0.22em] text-white/35">{content.platforms}</p>}</div></section>;
 }
 
 function EventHistory({ content }: { content: any }) {
   const items = Array.isArray(content.items) ? content.items : [];
-  return <section className="px-5 py-14 text-white md:px-12 md:py-20"><div className="mx-auto max-w-7xl"><SectionHeading eyebrow={content.eyebrow} title={content.title} /><div className="mt-10 grid gap-3 md:grid-cols-3">{items.map((item: any, index: number) => <article key={index} className="rounded-2xl border border-white/15 bg-black/20 p-6 backdrop-blur-sm"><p className="text-[9px] font-semibold uppercase tracking-[0.22em] text-white/40">{item.date}</p><h3 className="mt-5 text-xl font-light uppercase tracking-[0.08em] text-white" style={{ fontFamily: '"Cormorant Garamond", "Times New Roman", serif' }}>{item.name}</h3><p className="mt-3 text-[9px] font-semibold uppercase tracking-[0.2em] text-white/40">{item.location}</p></article>)}</div></div></section>;
+  return <section className="px-5 py-14 text-white md:px-12 md:py-20"><div className="vielusos-fluid mx-auto max-w-7xl"><SectionHeading eyebrow={content.eyebrow} title={content.title} /><div className="mt-10 grid gap-3 md:grid-cols-3">{items.map((item: any, index: number) => <article key={index} className="rounded-2xl border border-white/15 bg-black/20 p-6 backdrop-blur-sm"><p className="text-[9px] font-semibold uppercase tracking-[0.22em] text-white/40">{item.date}</p><h3 className="mt-5 text-xl font-light uppercase tracking-[0.08em] text-white" style={{ fontFamily: '"Cormorant Garamond", "Times New Roman", serif' }}>{item.name}</h3><p className="mt-3 text-[9px] font-semibold uppercase tracking-[0.2em] text-white/40">{item.location}</p></article>)}</div></div></section>;
 }

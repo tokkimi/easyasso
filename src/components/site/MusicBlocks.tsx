@@ -14,7 +14,7 @@ export function MusicTracks({ content }: { content: any }) {
   const clean = tracks.filter((t) => t && (t.title || t.thumbnail || t.url));
 
   return (
-    <div className="mx-auto w-full max-w-6xl px-4 pt-6">
+    <div className="vielusos-fluid vielusos-media-shell mx-auto w-full max-w-6xl px-4 pt-6">
       {content?.title && <h2 className="text-2xl font-extrabold uppercase tracking-tight md:text-3xl">{content.title}</h2>}
       {clean.length === 0 ? (
         <p className="py-10 text-center text-sm text-gray-400">Ajoutez vos sons — leurs pochettes s’afficheront automatiquement.</p>
@@ -73,7 +73,7 @@ export function VideoGrid({ content }: { content: any }) {
   const youtubeId = (url: string) => url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([\w-]{11})/)?.[1] || '';
   const youtubeMark = <svg viewBox="0 0 24 17" aria-hidden="true" className="h-6 w-8"><path fill="#FF0000" d="M23.5 2.65a3 3 0 0 0-2.12-2.12C19.5 0 12 0 12 0S4.5 0 2.62.53A3 3 0 0 0 .5 2.65 31.6 31.6 0 0 0 0 8.5a31.6 31.6 0 0 0 .5 5.85 3 3 0 0 0 2.12 2.12C4.5 17 12 17 12 17s7.5 0 9.38-.53a3 3 0 0 0 2.12-2.12A31.6 31.6 0 0 0 24 8.5a31.6 31.6 0 0 0-.5-5.85Z"/><path fill="white" d="m9.6 12.15 6.3-3.65-6.3-3.65v7.3Z"/></svg>;
   return (
-    <div className="mx-auto w-full max-w-6xl px-4 pt-6">
+    <div className="vielusos-fluid vielusos-media-shell mx-auto w-full max-w-6xl px-4 pt-6">
       <div className="mb-3" aria-label="YouTube">{youtubeMark}</div>
       {clean.length === 0 ? (
         <p className="py-10 text-center text-sm text-gray-400">Ajoutez des liens YouTube — les vidéos s’intègrent automatiquement.</p>
@@ -87,7 +87,7 @@ export function VideoGrid({ content }: { content: any }) {
             const id = youtubeId(v.url || '');
             const thumbnail = id ? `https://i.ytimg.com/vi/${id}/hqdefault.jpg` : '';
             return (
-              <div key={i} className="w-[78vw] max-w-[320px] shrink-0 snap-start md:w-[320px]">
+              <div key={i} className="vielusos-video-card w-[78vw] max-w-[320px] shrink-0 snap-start md:w-[320px]">
                 <div className="relative aspect-video w-full overflow-hidden rounded-2xl bg-black shadow-sm">
                   {playing[i] && src ? (
                     <iframe src={`${src}${src.includes('?') ? '&' : '?'}autoplay=1&modestbranding=1&rel=0`} className="absolute inset-0 h-full w-full border-0" allow="autoplay; encrypted-media; picture-in-picture" allowFullScreen title={`YouTube video ${i + 1}`} />
@@ -146,7 +146,7 @@ export function StreamingLinks({ content }: { content: any }) {
   const glowColor = content?.glowColor || '';
   const textOnly = linkStyle === 'text-white' || linkStyle === 'text-black';
   return (
-    <div className="mx-auto w-full max-w-4xl px-4 text-center">
+    <div className="vielusos-fluid vielusos-media-shell mx-auto w-full max-w-4xl px-4 text-center">
       {content?.title && <h2 className="text-2xl font-extrabold uppercase tracking-tight md:text-3xl">{content.title}</h2>}
       {items.length === 0 ? (
         <p className="py-8 text-sm text-gray-400">Ajoutez vos liens Spotify, Deezer, Apple Music, SoundCloud, YouTube.</p>
@@ -292,7 +292,7 @@ export function OfficialPlayers({ content }: { content: any }) {
     });
 
   return (
-    <div className="mx-auto w-full max-w-6xl px-4 pt-6">
+    <div className="vielusos-fluid vielusos-media-shell mx-auto w-full max-w-6xl px-4 pt-6">
       <div className="max-w-2xl">
         {content?.title && <h2 className="text-2xl font-extrabold uppercase tracking-tight md:text-3xl">{content.title}</h2>}
         {content?.intro && <p className="mt-2 text-sm leading-relaxed text-gray-500">{content.intro}</p>}
@@ -320,7 +320,7 @@ export function OfficialPlayers({ content }: { content: any }) {
                       const thumbnail = youtubeId ? `https://i.ytimg.com/vi/${youtubeId}/hqdefault.jpg` : '';
                       const key = `${platform}-${item.url}-${i}`;
                       if (isVideo) return (
-                        <article key={key} className="relative aspect-video w-[82vw] max-w-[320px] shrink-0 snap-start overflow-hidden rounded-2xl bg-black/70 shadow-sm ring-1 ring-white/20 md:w-[320px]">
+                        <article key={key} className="vielusos-player-card relative aspect-video w-[82vw] max-w-[320px] shrink-0 snap-start overflow-hidden rounded-2xl bg-black/70 shadow-sm ring-1 ring-white/20 md:w-[320px]">
                           {playing[key] ? (
                             <iframe src={`${src}${src.includes('?') ? '&' : '?'}autoplay=1&modestbranding=1&rel=0`} title="YouTube video" loading="lazy" allow="autoplay; encrypted-media; fullscreen; picture-in-picture" allowFullScreen className="absolute inset-0 h-full w-full border-0" />
                           ) : (
@@ -332,7 +332,7 @@ export function OfficialPlayers({ content }: { content: any }) {
                         </article>
                       );
                       return (
-                        <article key={key} className="flex h-[410px] w-[82vw] max-w-[320px] shrink-0 snap-start flex-col overflow-hidden rounded-2xl border border-white/20 bg-transparent shadow-sm backdrop-blur-md md:w-[320px]">
+                        <article key={key} className="vielusos-player-card flex h-[410px] w-[82vw] max-w-[320px] shrink-0 snap-start flex-col overflow-hidden rounded-2xl border border-white/20 bg-transparent shadow-sm backdrop-blur-md md:w-[320px]">
                           <div className="flex h-[144px] shrink-0 flex-col justify-between gap-2 border-b border-white/20 bg-transparent p-3">
                             <div className="sr-only"><PlatformLogo platform={platform} /></div>
                             <div className="min-h-0">
@@ -372,7 +372,7 @@ export function InstagramPreview({ content }: { content: any }) {
 
   if (content?.variant === 'vielusos') {
     return (
-      <section className="mx-auto w-full max-w-7xl px-5 py-10 md:px-12 md:py-14">
+      <section className="vielusos-fluid mx-auto w-full max-w-7xl px-5 py-10 md:px-12 md:py-14">
         <div className="flex items-center gap-3" aria-label="Instagram">
           <span className="grid h-7 w-7 place-items-center rounded-lg bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-600"><Instagram className="h-4 w-4 text-white" /></span>
           <span className="text-[9px] font-semibold uppercase tracking-[0.42em] text-white/45">Social</span>
@@ -382,12 +382,16 @@ export function InstagramPreview({ content }: { content: any }) {
           {profileUrl && <a href={profileUrl} target="_blank" rel="noreferrer" className="shrink-0 rounded-full border border-white/25 px-4 py-2 text-[9px] font-bold uppercase tracking-[0.2em] text-white/75 hover:bg-white/10">@{username}</a>}
         </div>
         {embeds.length > 0 ? (
-          <div className="mt-7 flex snap-x snap-mandatory gap-3 overflow-x-auto pb-4 [scrollbar-width:thin] [scrollbar-color:rgba(255,255,255,.22)_transparent]">
-            {embeds.map((src: string, i: number) => (
-              <article key={i} className="w-[calc(50vw-1.75rem)] min-w-[158px] max-w-[300px] shrink-0 snap-start overflow-hidden rounded-2xl border border-white/15 bg-white shadow-[0_18px_50px_rgba(0,0,0,.3)]">
-                <iframe src={src} title={`Instagram ${i + 1}`} loading="lazy" scrolling="yes" allow="autoplay; encrypted-media; fullscreen; picture-in-picture" allowFullScreen className="block h-[430px] w-full border-0 bg-white sm:h-[560px]" />
-              </article>
-            ))}
+          <div className="relative mt-7">
+            <button type="button" aria-label="Publication Instagram précédente" onClick={() => document.getElementById('vielusos-instagram-rail')?.scrollBy({ left: -window.innerWidth * 0.75, behavior: 'smooth' })} className="absolute left-1 top-1/2 z-10 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full border border-white/30 bg-black/55 text-white/90 shadow-[0_0_22px_rgba(255,255,255,.18)] backdrop-blur-md transition hover:border-white/60 hover:bg-black/80 hover:shadow-[0_0_28px_rgba(255,255,255,.32)] focus:outline-none focus:ring-2 focus:ring-white/70"><ChevronLeft className="h-5 w-5" /></button>
+            <button type="button" aria-label="Publication Instagram suivante" onClick={() => document.getElementById('vielusos-instagram-rail')?.scrollBy({ left: window.innerWidth * 0.75, behavior: 'smooth' })} className="absolute right-1 top-1/2 z-10 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full border border-white/30 bg-black/55 text-white/90 shadow-[0_0_22px_rgba(255,255,255,.18)] backdrop-blur-md transition hover:border-white/60 hover:bg-black/80 hover:shadow-[0_0_28px_rgba(255,255,255,.32)] focus:outline-none focus:ring-2 focus:ring-white/70"><ChevronRight className="h-5 w-5" /></button>
+            <div id="vielusos-instagram-rail" className="flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              {embeds.map((src: string, i: number) => (
+                <article key={i} className="relative aspect-[4/5] w-[calc((100%-0.75rem)/2)] shrink-0 snap-start overflow-hidden rounded-2xl border border-white/15 bg-black/55 shadow-[0_18px_50px_rgba(0,0,0,.3)] md:w-[calc((100%-3rem)/5)]">
+                  <iframe src={src} title={`Instagram ${i + 1}`} loading="lazy" scrolling="no" allow="autoplay; encrypted-media; fullscreen; picture-in-picture" allowFullScreen className="absolute left-0 top-[-52px] h-[calc(100%+190px)] w-full border-0 bg-white" />
+                </article>
+              ))}
+            </div>
           </div>
         ) : <p className="mt-6 text-sm text-white/45">Ajoutez les liens de chaque post dans l’éditeur.</p>}
       </section>

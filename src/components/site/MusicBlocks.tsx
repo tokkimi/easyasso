@@ -386,7 +386,7 @@ export function InstagramPreview({ content }: { content: any }) {
               {embeds.map((src: string, i: number) => (
                 <article key={src} className="relative aspect-[4/5] w-[calc((100%-0.75rem)/2)] shrink-0 snap-start overflow-hidden rounded-2xl bg-black/30 shadow-[0_18px_50px_rgba(0,0,0,.3)] md:w-[calc((100%-3rem)/5)]">
                   <iframe src={src} title={`Publication Instagram officielle ${i + 1}`} loading={i < 5 ? 'eager' : 'lazy'} scrolling="no" allow="autoplay; encrypted-media; fullscreen; picture-in-picture" allowFullScreen className="absolute left-0 top-[-56px] h-[calc(100%+220px)] w-full border-0 bg-transparent [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" />
-                  <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 z-[1] h-7 bg-gradient-to-t from-[#0b0b10] via-[#0b0b10]/95 to-transparent" />
+                  <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 z-[1] h-12 bg-gradient-to-t from-[#0b0b10] via-[#0b0b10] to-[#0b0b10]/80" />
                 </article>
               ))}
             </div>

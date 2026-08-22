@@ -361,7 +361,6 @@ function instaEmbedUrl(url: string): string {
   const m = String(url).match(/instagram\.com\/(?:[^/]+\/)?(p|reel|tv)\/([A-Za-z0-9_-]+)/);
   return m ? `https://www.instagram.com/${m[1]}/${m[2]}/embed` : '';
 }
-const instagramEmbedsWithExternalCta = new Set(['DbccODVs1K8', 'DVeFcxQDLiM']);
 export function InstagramPreview({ content }: { content: any }) {
   const username = String(content?.username || '').replace(/^@/, '');
   const profileUrl = safePublicUrl(content?.url || (username ? `https://instagram.com/${username}` : ''));
@@ -387,8 +386,6 @@ export function InstagramPreview({ content }: { content: any }) {
               {embeds.map((src: string, i: number) => (
                 <article key={src} className="relative aspect-[4/5] w-[calc((100%-0.75rem)/2)] shrink-0 snap-start overflow-hidden rounded-2xl bg-black/30 shadow-[0_18px_50px_rgba(0,0,0,.3)] md:w-[calc((100%-3rem)/5)]">
                   <iframe src={src} title={`Publication Instagram officielle ${i + 1}`} loading={i < 5 ? 'eager' : 'lazy'} scrolling="no" allow="autoplay; encrypted-media; fullscreen; picture-in-picture" allowFullScreen className="absolute left-0 top-[-56px] h-[calc(100%+220px)] w-full border-0 bg-transparent [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" />
-                  {instagramEmbedsWithExternalCta.has(src.split('/')[4]) && <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-[43%] z-[1] h-14 bg-gradient-to-b from-[#0b0b10]/75 via-[#0b0b10] to-[#0b0b10]/75" />}
-                  <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 z-[1] h-12 bg-gradient-to-t from-[#0b0b10] via-[#0b0b10] to-[#0b0b10]/80" />
                 </article>
               ))}
             </div>

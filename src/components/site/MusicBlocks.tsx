@@ -408,7 +408,7 @@ function InstagramMediaCard({ code, eager, position, variant = 'vielusos' }: { c
   return (
     <article
       className={variant === 'vielusos'
-        ? 'relative aspect-[4/5] w-[calc((100%-0.75rem)/2)] shrink-0 snap-start overflow-hidden rounded-2xl bg-black/30 shadow-[0_18px_50px_rgba(0,0,0,.3)] md:w-[calc((100%-5.25rem)/8)]'
+        ? 'relative aspect-[4/5] w-[calc((100%-0.75rem)/2)] shrink-0 snap-start overflow-hidden rounded-2xl bg-black/30 shadow-[0_18px_50px_rgba(0,0,0,.3)] md:w-[calc((100%-3rem)/5)]'
         : 'relative aspect-[4/5] w-[78vw] max-w-[360px] shrink-0 snap-start overflow-hidden rounded-2xl bg-gray-950/10 shadow-[0_18px_45px_rgba(15,23,42,.16)] sm:w-[calc((100%-1rem)/2)] lg:w-[calc((100%-3rem)/4)] xl:w-[calc((100%-4rem)/5)]'}
       onTouchStart={(event) => { touchStart.current = event.touches[0]?.clientX ?? null; }}
       onTouchEnd={(event) => {
@@ -483,7 +483,7 @@ export function InstagramPreview({ content }: { content: any }) {
               <button type="button" aria-label="Publication TikTok précédente" onClick={() => document.getElementById('vielusos-tiktok-rail')?.scrollBy({ left: -window.innerWidth * 0.75, behavior: 'smooth' })} className="absolute left-1 top-1/2 z-10 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full border border-white/30 bg-black/55 text-white/90 backdrop-blur-md"><ChevronLeft className="h-5 w-5" /></button>
               <button type="button" aria-label="Publication TikTok suivante" onClick={() => document.getElementById('vielusos-tiktok-rail')?.scrollBy({ left: window.innerWidth * 0.75, behavior: 'smooth' })} className="absolute right-1 top-1/2 z-10 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full border border-white/30 bg-black/55 text-white/90 backdrop-blur-md"><ChevronRight className="h-5 w-5" /></button>
               <div id="vielusos-tiktok-rail" className="flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                {tiktokPosts.map((post: { url: string; id: string }, index: number) => <article key={`${post.id}-${index}`} className="aspect-[4/5] w-[calc((100%-0.75rem)/2)] shrink-0 snap-start overflow-hidden rounded-2xl border border-white/15 bg-black/35 md:w-[calc((100%-5.25rem)/8)]"><iframe src={`https://www.tiktok.com/player/v1/${post.id}?autoplay=0&loop=0`} title={`TikTok ${index + 1}`} loading="lazy" allow="fullscreen" className="h-full w-full border-0" /></article>)}
+                {tiktokPosts.map((post: { url: string; id: string }, index: number) => <article key={`${post.id}-${index}`} className="aspect-[4/5] w-[calc((100%-0.75rem)/2)] shrink-0 snap-start overflow-hidden rounded-2xl border border-white/15 bg-black/35 md:w-[calc((100%-3rem)/5)]"><iframe src={`https://www.tiktok.com/player/v1/${post.id}?autoplay=0&loop=0`} title={`TikTok ${index + 1}`} loading="lazy" allow="fullscreen" className="h-full w-full border-0" /></article>)}
               </div>
             </div>
           ) : <p className="mt-6 text-sm text-white/45">Ajoutez les liens des publications TikTok dans l’éditeur.</p>}

@@ -160,7 +160,7 @@ export function StreamingLinks({ content }: { content: any }) {
   const glowColor = content?.glowColor || '';
   const textOnly = linkStyle === 'text-white' || linkStyle === 'text-black';
   return (
-    <div className="vielusos-fluid vielusos-media-shell mx-auto w-full max-w-4xl px-4 text-center">
+    <div className="vielusos-fluid vielusos-media-shell mx-auto w-full max-w-4xl px-4 pb-8 pt-2 text-center md:pb-12">
       {content?.title && <h2 className="text-2xl font-extrabold uppercase tracking-tight md:text-3xl">{content.title}</h2>}
       {items.length === 0 ? (
         <p className="py-8 text-sm text-gray-400">Ajoutez vos liens Spotify, Deezer, Apple Music, SoundCloud, YouTube.</p>

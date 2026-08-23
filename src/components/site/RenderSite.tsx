@@ -223,7 +223,7 @@ export async function RenderSite({ site, basePath, slug }: { site: SiteWithPages
         ) : (
           renderedBlocks.map((b) => (
             <Fragment key={b.id}>
-              <PublicBlock type={b.type} content={b.type === 'instagram' && vielusos ? { ...(b.content as any), tiktokTitle: (b.content as any)?.tiktokTitle || 'TikTok', tiktokUsername: (b.content as any)?.tiktokUsername || 'vielusos', tiktokUrl: (b.content as any)?.tiktokUrl || (publicHeader as any).social?.tiktok || 'https://www.tiktok.com/@vielusos', tiktokPostUrls: Array.isArray((b.content as any)?.tiktokPostUrls) && (b.content as any).tiktokPostUrls.length ? (b.content as any).tiktokPostUrls : VIELUSOS_TIKTOK_POSTS } : b.content as any} style={b.style as any} basePath={basePath} organizationId={site.organizationId} products={b.type === 'shop' ? products : undefined} shopReady={b.type === 'shop' ? shopReady : undefined} branded={vielusos} />
+              <PublicBlock type={b.type} content={b.type === 'instagram' && vielusos ? { ...(b.content as any), variant: 'vielusos', tiktokTitle: (b.content as any)?.tiktokTitle || 'TikTok', tiktokUsername: (b.content as any)?.tiktokUsername || 'vielusos', tiktokUrl: (b.content as any)?.tiktokUrl || (publicHeader as any).social?.tiktok || 'https://www.tiktok.com/@vielusos', tiktokPostUrls: Array.isArray((b.content as any)?.tiktokPostUrls) && (b.content as any).tiktokPostUrls.length ? (b.content as any).tiktokPostUrls : VIELUSOS_TIKTOK_POSTS } : b.content as any} style={b.style as any} basePath={basePath} organizationId={site.organizationId} products={b.type === 'shop' ? products : undefined} shopReady={b.type === 'shop' ? shopReady : undefined} branded={vielusos} />
               {vielusos && page.isHome && b.type === 'instagram' && <VielusosBio config={(header as any).vielusosBio} />}
             </Fragment>
           ))
@@ -297,3 +297,4 @@ function SiteOffline() {
     </main>
   );
 }
+

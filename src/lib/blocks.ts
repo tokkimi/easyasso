@@ -17,6 +17,15 @@ export interface SocialConfig {
   youtube?: string;
   linkedin?: string;
   tiktok?: string;
+  spotify?: string;
+  deezer?: string;
+  soundcloud?: string;
+  appleMusic?: string;
+  youtubeMusic?: string;
+  amazonMusic?: string;
+  beatport?: string;
+  bandcamp?: string;
+  tidal?: string;
   align: Align;
 }
 
@@ -66,7 +75,7 @@ export const BLOCK_LIBRARY: {
   group: 'layouts' | 'basics';
 }[] = [
   // Ready-made layouts (shown first — the easy way)
-  { type: 'banner', label: 'Bannière photo', icon: 'GalleryThumbnails', description: 'Grande photo + titre + bouton', group: 'layouts' },
+  { type: 'banner', label: 'Bannière image ou vidéo', icon: 'GalleryThumbnails', description: 'Fond image/vidéo + éléments librement positionnés', group: 'layouts' },
   { type: 'event', label: 'Prochain événement', icon: 'CalendarDays', description: 'Affiche complète, date, lieu et billetterie', group: 'layouts' },
   { type: 'events', label: 'Dates précédentes', icon: 'CalendarRange', description: 'Historique des concerts et événements', group: 'layouts' },
   { type: 'stats', label: 'Chiffres clés', icon: 'BarChart3', description: 'Statistiques et audience en cartes', group: 'layouts' },
@@ -74,7 +83,7 @@ export const BLOCK_LIBRARY: {
   { type: 'gallery', label: 'Galerie photos', icon: 'GalleryHorizontalEnd', description: 'Plusieurs photos en grille', group: 'layouts' },
   { type: 'slideshow', label: 'Diaporama', icon: 'Images', description: 'Photos qui défilent', group: 'layouts' },
   { type: 'cards', label: 'Cartes / colonnes', icon: 'LayoutGrid', description: '2 à 4 blocs illustrés', group: 'layouts' },
-  { type: 'cta', label: 'Appel au don', icon: 'Megaphone', description: 'Bandeau avec bouton d’action', group: 'layouts' },
+  { type: 'cta', label: 'Bandeau d’action', icon: 'Megaphone', description: 'Titre, texte et bouton vers l’action de votre choix', group: 'layouts' },
   { type: 'contact', label: 'Contact complet', icon: 'Mail', description: 'Coordonnées + formulaire prêt à recevoir des messages', group: 'layouts' },
   { type: 'donation', label: 'Questionnaire de dons', icon: 'HandCoins', description: 'Montants, coordonnées donateur, Stripe, HelloAsso, virement et chèque', group: 'layouts' },
   { type: 'leetchi', label: 'Cagnotte Leetchi', icon: 'ExternalLink', description: 'Jauge de cagnotte + bouton pour participer', group: 'layouts' },
@@ -83,7 +92,7 @@ export const BLOCK_LIBRARY: {
   { type: 'videos', label: 'Vidéos YouTube', icon: 'Youtube', description: 'Une grille de vidéos YouTube (miniatures automatiques)', group: 'layouts' },
   { type: 'streaming', label: 'Liens streaming', icon: 'Music', description: 'Spotify, Deezer, Apple Music, SoundCloud, YouTube — boutons stylés', group: 'layouts' },
   { type: 'players', label: 'Lecteurs officiels', icon: 'ListMusic', description: 'Spotify, SoundCloud, Deezer et YouTube en lecteurs officiels triés du plus récent au plus ancien', group: 'layouts' },
-  { type: 'instagram', label: 'Aperçu Instagram', icon: 'Instagram', description: 'Aperçu de votre profil Instagram avec bouton suivre', group: 'layouts' },
+  { type: 'instagram', label: 'Posts Instagram officiels', icon: 'Instagram', description: 'Photos, carrousels et vidéos depuis les posts officiels', group: 'layouts' },
   // Basic building blocks
   { type: 'heading', label: 'Titre', icon: 'Heading', description: 'Un grand titre', group: 'basics' },
   { type: 'text', label: 'Texte', icon: 'Type', description: 'Un paragraphe', group: 'basics' },
@@ -125,19 +134,27 @@ export function defaultContentFor(type: BlockType): Record<string, unknown> {
         height: 680,
       };
     case 'event':
-      return { eyebrow: 'Live', title: 'Next date', image: '', day: '', month: '', eventName: '', venue: '', city: '', time: '', buttonText: 'Tickets', buttonUrl: '' };
+      return { eyebrow: 'À venir', title: 'Prochain événement', image: '', day: '', month: '', eventName: '', venue: '', city: '', time: '', buttonText: 'Billets / inscription', buttonUrl: '' };
     case 'events':
-      return { eyebrow: 'Live', title: 'Previous dates', items: [{ date: '', name: '', location: '' }] };
+      return { eyebrow: 'Archives', title: 'Événements précédents', items: [{ date: '', name: '', location: '' }] };
     case 'stats':
-      return { eyebrow: 'VIELUSOS by the numbers', title: 'A sound that resonates.', intro: 'An audience that keeps growing.', items: [{ value: '1M+', label: 'Streams' }], platforms: '' };
+      return { eyebrow: 'En chiffres', title: 'Nos repères clés', intro: 'Présentez ici des chiffres vérifiés qui racontent votre activité.', items: [{ value: '100+', label: 'Exemple à modifier' }], platforms: '' };
     case 'banner':
       return {
+        backgroundType: 'image',
         image: PH('banner', 1600, 700),
+        videoUrl: '',
         title: 'Ensemble, changeons les choses',
         subtitle: 'Rejoignez notre association et soutenez notre cause.',
         overlay: 45,
         height: 460,
+        contentPosition: 'center',
+        textAlign: 'center',
+        contentWidth: 720,
+        foregroundImage: '',
+        foregroundImageWidth: 180,
         button: { text: 'Faire un don', href: '/don', color: '#ffffff', variant: 'solid', align: 'center' } as ButtonConfig,
+        button2: { text: '', href: '#', color: '#ffffff', variant: 'outline', align: 'center' } as ButtonConfig,
       };
     case 'textimage':
       return {
@@ -172,9 +189,9 @@ export function defaultContentFor(type: BlockType): Record<string, unknown> {
       };
     case 'cta':
       return {
-        title: 'Votre don a un impact réel',
-        text: 'Chaque contribution nous permet d’agir concrètement. Merci de votre générosité.',
-        button: { text: 'Je fais un don', href: '/don', color: '#1b5df5', variant: 'solid', align: 'center' } as ButtonConfig,
+        title: 'Prêt à passer à l’action ?',
+        text: 'Ajoutez ici une invitation claire et le lien vers la prochaine étape.',
+        button: { text: 'Découvrir', href: '#', color: '#1b5df5', variant: 'solid', align: 'center' } as ButtonConfig,
       };
     case 'contact':
       return { title: 'Contactez-nous', intro: 'Une question, une proposition ou envie de nous rejoindre ? Écrivez-nous.', email: '', phone: '', address: '', buttonText: 'Envoyer le message', successText: 'Merci, votre message a bien été envoyé.' };
@@ -189,7 +206,7 @@ export function defaultContentFor(type: BlockType): Record<string, unknown> {
     case 'videos':
       return { title: 'Vidéos', videos: [] };
     case 'streaming':
-      return { title: 'Écoutez-moi', linkStyle: 'dark-button', glowColor: '', links: { spotify: '', deezer: '', appleMusic: '', soundcloud: '', youtube: '' } };
+      return { title: 'Écoutez-moi', linkStyle: 'dark-button', glowColor: '', links: { spotify: '', deezer: '', appleMusic: '', soundcloud: '', youtube: '', youtubeMusic: '', amazonMusic: '', beatport: '', bandcamp: '', tidal: '' } };
     case 'players':
       return { title: 'Dernières sorties', intro: 'Écoutez les sons directement depuis les plateformes officielles.', sort: 'newest', items: [] };
     case 'instagram':
@@ -244,6 +261,10 @@ export interface HeaderConfig {
   textColor: string;
   showCta?: boolean;
   social?: Record<string, string>;
+  menuGlass?: boolean;
+  menuOpacity?: number;
+  menuBlur?: number;
+  menuBackground?: string;
   vielusosHero?: {
     videoUrl?: string;
     showLogo?: boolean;
@@ -285,6 +306,13 @@ export interface FooterConfig {
   contactBubbleTextEn?: string;
   contactBubbleEmail?: string;
   contactBubblePhone?: string;
+  contactBubblePosition?: 'left' | 'right';
+  contactBubbleColor?: string;
+  contactBubbleTextColor?: string;
+  contactBubbleShowPhone?: boolean;
+  contactBubbleShowSms?: boolean;
+  contactBubbleShowEmail?: boolean;
+  contactBubbleShowMessage?: boolean;
 }
 
 export const DEFAULT_HEADER: HeaderConfig = {
@@ -294,6 +322,10 @@ export const DEFAULT_HEADER: HeaderConfig = {
   background: '#ffffff',
   textColor: '#1f2937',
   showCta: true,
+  menuGlass: true,
+  menuOpacity: 78,
+  menuBlur: 20,
+  menuBackground: '#111827',
   cta: { text: 'Faire un don', href: '/don', color: '#1b5df5', variant: 'solid', align: 'right' },
 };
 
@@ -309,6 +341,14 @@ export const DEFAULT_FOOTER: FooterConfig = {
   allRightsText: `© ${new Date().getFullYear()} Mon association. Tous droits réservés.`,
   background: '#111827',
   textColor: '#e5e7eb',
+  showContactBubble: true,
+  contactBubblePosition: 'right',
+  contactBubbleColor: '#171717',
+  contactBubbleTextColor: '#ffffff',
+  contactBubbleShowPhone: true,
+  contactBubbleShowSms: true,
+  contactBubbleShowEmail: true,
+  contactBubbleShowMessage: true,
   columns: [
     { title: 'Association', links: [{ label: 'Accueil', href: '/' }] },
     { title: 'Nous soutenir', links: [{ label: 'Faire un don', href: '/don' }] },

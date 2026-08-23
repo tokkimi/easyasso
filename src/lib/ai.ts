@@ -109,7 +109,17 @@ INTERDICTIONS ABSOLUES :
 
 RÉDACTION : développe vraiment (chaque page 3 à 5 sections, chaque texte 90 à 180 mots), parle du style, de la qualité, du savoir-faire, de l'expérience client, des valeurs de la marque, de ce qui la rend unique. Ton chaleureux, désirable, professionnel, immédiatement publiable.`;
 
-const SYSTEM_MUSIC = `Tu es le concepteur-rédacteur d'un artiste, d'un groupe ou d'un projet musical. Tu écris directement à la première personne ("je", "nous", "mon projet", "notre musique"), jamais comme une association. Retourne uniquement un objet JSON valide avec "tagline" et "pages". Structure les pages autour de l'accueil, des sons, de la biographie / de l'univers, des actualités si elles sont fournies, et du contact. Décris le style musical, les influences, l'énergie, le parcours et l'expérience d'écoute à partir des informations données. N'invente jamais de titre, de date de sortie, de chiffre, de concert, de collaboration ou de plateforme. N'emploie jamais les mots association, bénévoles, adhérents, donateurs, cause ou bénéficiaires sauf s'ils sont réellement fournis et pertinents. Chaque texte doit apporter une idée nouvelle, être naturel, précis et publiable (90 à 180 mots). Les sections peuvent être banner, heading, text, textimage, cards, cta, gallery. N'ajoute pas d'appel au don par défaut.`;
+const SYSTEM_MUSIC = `Tu es le concepteur-rédacteur d'un artiste, d'un groupe ou d'un projet musical. Tu écris directement à la première personne ("je", "nous", "mon projet", "notre musique"), jamais comme une association.
+
+Retourne UNIQUEMENT un objet JSON valide, sans markdown, au format :
+{"tagline":"accroche courte","pages":[{"title":"Accueil","slug":"accueil","isHome":true,"sections":[{"type":"banner","title":"...","subtitle":"..."},{"type":"textimage","title":"...","text":"...","imageSide":"right"},{"type":"cards","items":[{"icon":"Music2","title":"...","text":"..."}]},{"type":"text","text":"..."}]}]}
+Types autorisés : banner (uniquement en premier sur l'accueil), heading, text, textimage, cards, cta, gallery. Chaque section doit utiliser exactement les propriétés montrées par le schéma.
+
+Crée dans cet ordre : Accueil (4 à 6 sections éditoriales), Sons / Musique, Bio / Univers (4 à 6 sections substantielles), Actualités uniquement si elles sont fournies, Contact. L'accueil explique immédiatement l'identité, la couleur musicale, l'expérience proposée et le projet actuel. La Bio raconte un parcours et une intention artistique sans inventer de faits. La page Sons introduit la discographie et l'écoute ; les vrais lecteurs officiels seront ajoutés séparément par EasyAsso.
+
+Décris le style musical, les influences, les textures, l'énergie, le processus de création, le parcours, l'univers visuel, le live et l'expérience d'écoute uniquement à partir des informations données. Chaque bloc texte fait 110 à 190 mots et apporte une idée nouvelle. Évite les slogans creux et les répétitions.
+
+N'invente JAMAIS de titre, date de sortie, chiffre, concert, festival, collaboration, label, récompense, matériel ou plateforme. N'emploie jamais les mots association, bénévoles, adhérents, donateurs, cause ou bénéficiaires. N'ajoute aucun appel au don.`;
 
 const SYSTEM_OTHER = `Tu es le concepteur-rédacteur d'un projet, d'une entreprise, d'un indépendant ou d'un collectif créatif. Tu écris le site de l'intérieur, avec "je", "nous", "notre projet" ou "notre activité" selon le contexte. Retourne uniquement un objet JSON valide avec "tagline" et "pages". Adapte les pages à l'activité : accueil, à propos, services / offre, réalisations ou projets, informations pratiques et contact ; actualités uniquement si elles sont fournies. N'utilise jamais le vocabulaire d'une association (cause, bénévoles, adhérents, public aidé, donateurs) et ne crée pas de page de don, sauf si le questionnaire demande explicitement une collecte. N'invente ni produit, ni prix, ni certification, ni résultat, ni statistique. Reformule les réponses en textes clairs, concrets et développés, sans répétition ni phrase générique.`;
 
@@ -230,6 +240,10 @@ function buildPrompt(input: GenerateInput): string {
       `Nom de la boutique / marque : ${input.name || 'Non précisé'}`,
       input.year ? `Année de création : ${input.year}` : '',
       input.mission ? `Présentation / univers de la marque : ${input.mission}` : '',
+      input.brandStory ? `Histoire réelle de la marque : ${input.brandStory}` : '',
+      input.brandPromise ? `Promesse faite au client : ${input.brandPromise}` : '',
+      input.brandProof ? `Preuves, méthode et savoir-faire : ${input.brandProof}` : '',
+      input.shippingInfo ? `Livraison, délais et retours : ${input.shippingInfo}` : '',
       input.functioning ? `Ce que nous proposons / notre offre : ${input.functioning}` : '',
       input.actions ? `Notre savoir-faire / nos gammes : ${input.actions}` : '',
       input.beneficiaries ? `Notre clientèle : ${input.beneficiaries}` : '',
@@ -254,6 +268,9 @@ ${lines.join('\n')}`;
       input.genre ? `Genre et esthétique musicale : ${input.genre}` : '',
       input.year ? `Début du projet : ${input.year}` : '',
       input.mission ? `Bio / univers : ${input.mission}` : '',
+      input.artistStory ? `Parcours et origine du projet : ${input.artistStory}` : '',
+      input.artistSound ? `Son, influences, textures et émotions : ${input.artistSound}` : '',
+      input.artistLive ? `Live, scénographie et univers visuel : ${input.artistLive}` : '',
       input.functioning ? `Manière de créer et de travailler : ${input.functioning}` : '',
       input.actions ? `Sons, sorties ou activités : ${input.actions}` : '',
       input.goodToKnow ? `Informations utiles : ${input.goodToKnow}` : '',
@@ -381,7 +398,12 @@ export async function aiGenerateSite(input: GenerateInput, themePhotos: string[]
 
   const detect = [input.mission, input.functioning, input.goodToKnow, input.beneficiaries, input.actions].filter(Boolean).join(' ');
   const baseId = pickTemplateId(detect, input.category);
-  const base = getTemplate(baseId) || TEMPLATES[0];
+  const requested = getTemplate(input.category || '');
+  const desiredFamily = isShop ? 'shop' : input.siteType === 'music' ? 'music' : 'association';
+  const base = (requested?.family === desiredFamily ? requested : undefined)
+    || TEMPLATES.find((template) => template.family === desiredFamily)
+    || getTemplate(baseId)
+    || TEMPLATES[0];
   const t: BuiltTemplate = JSON.parse(JSON.stringify(base));
   const name = input.name?.trim() || (isAssociation ? 'Votre association' : 'Votre projet');
   const photos = (input.photos || []).filter(Boolean);

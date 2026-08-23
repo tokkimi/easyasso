@@ -13,7 +13,7 @@ import { MusicTracks, VideoGrid, StreamingLinks, OfficialPlayers, InstagramPrevi
 import { LocalizedEmbed } from './LocalizedEmbed';
 
 const CARD_ICONS: Record<string, any> = {
-  Heart, Users, HandHeart, HandCoins, Star, Gift, Leaf, Home, BookOpen, Shield, Sparkles, Handshake,
+  Heart, Users, HandHeart, HandCoins, Star, Gift, Leaf, Home, BookOpen, Shield, Sparkles, Handshake, Music2,
 };
 
 // Blocks that break out of the narrow text column
@@ -90,14 +90,23 @@ function renderInner(type: string, content: any, style: BlockStyle, basePath: st
         { k: 'facebook', url: s.facebook, Icon: Facebook },
         { k: 'instagram', url: s.instagram, Icon: Instagram },
         { k: 'twitter', url: s.twitter, Icon: Twitter },
-        { k: 'youtube', url: s.youtube, Icon: Youtube },
+        { k: 'youtube', url: s.youtube, Icon: Youtube, asset: '/integrations/youtube.svg' },
         { k: 'linkedin', url: s.linkedin, Icon: Linkedin },
         { k: 'tiktok', url: s.tiktok, Icon: Music2 },
+        { k: 'spotify', url: s.spotify, Icon: Music2, asset: '/integrations/spotify.svg' },
+        { k: 'deezer', url: s.deezer, Icon: Music2, asset: '/integrations/deezer.svg' },
+        { k: 'soundcloud', url: s.soundcloud, Icon: Music2, asset: '/integrations/soundcloud.svg' },
+        { k: 'appleMusic', url: s.appleMusic, Icon: Music2, asset: '/integrations/applemusic.svg' },
+        { k: 'youtubeMusic', url: s.youtubeMusic, Icon: Music2, asset: 'https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/youtubemusic.svg' },
+        { k: 'amazonMusic', url: s.amazonMusic, Icon: Music2, asset: 'https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/amazonmusic.svg' },
+        { k: 'beatport', url: s.beatport, Icon: Music2, asset: 'https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/beatport.svg' },
+        { k: 'bandcamp', url: s.bandcamp, Icon: Music2, asset: 'https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/bandcamp.svg' },
+        { k: 'tidal', url: s.tidal, Icon: Music2, asset: 'https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/tidal.svg' },
       ].filter((i) => i.url);
       return (
         <div className={`flex gap-4 ${justifyClass(s.align)}`}>
-          {items.map(({ k, url, Icon }) => (
-            <a key={k} href={safePublicUrl(url) || '#'} target="_blank" rel="noreferrer" className="text-gray-600 transition hover:text-brand-600"><Icon className="h-6 w-6" /></a>
+          {items.map(({ k, url, Icon, asset }) => (
+            <a key={k} href={safePublicUrl(url) || '#'} target="_blank" rel="noreferrer" aria-label={k} title={k} className="grid h-11 w-11 place-items-center rounded-xl border border-current/15 text-gray-600 transition hover:-translate-y-0.5 hover:text-brand-600">{asset ? <img src={asset} alt="" className="h-6 w-6 object-contain" /> : <Icon className="h-6 w-6" />}</a>
           ))}
         </div>
       );
@@ -125,17 +134,33 @@ function renderInner(type: string, content: any, style: BlockStyle, basePath: st
     case 'banner': {
       const h = content.height || 460;
       const overlay = (content.overlay ?? 45) / 100;
+      const positions: Record<string, string> = {
+        'top-left': 'items-start justify-start', 'top-center': 'items-start justify-center', 'top-right': 'items-start justify-end',
+        'center-left': 'items-center justify-start', center: 'items-center justify-center', 'center-right': 'items-center justify-end',
+        'bottom-left': 'items-end justify-start', 'bottom-center': 'items-end justify-center', 'bottom-right': 'items-end justify-end',
+      };
+      const textAlign = ['left', 'center', 'right'].includes(content.textAlign) ? content.textAlign : 'center';
+      const mediaUrl = safePublicUrl(content.videoUrl || '');
       return (
-        <div className="relative flex w-full items-center justify-center overflow-hidden" style={{ height: h }}>
-          {content.image && (
+        <div className={`relative flex w-full overflow-hidden p-6 md:p-10 ${positions[content.contentPosition] || positions.center}`} style={{ height: h }}>
+          {content.backgroundType === 'video' && mediaUrl ? (
+            <video src={mediaUrl} autoPlay muted loop playsInline preload="metadata" className="absolute inset-0 h-full w-full object-cover" />
+          ) : content.image ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={safePublicUrl(content.image, { allowDataImage: true })} alt="" className="absolute inset-0 h-full w-full object-cover" />
-          )}
+          ) : null}
           <div className="absolute inset-0" style={{ background: `rgba(0,0,0,${overlay})` }} />
-          <div className="relative mx-auto max-w-3xl px-6 text-center text-white">
+          <div className="relative text-white" style={{ width: '100%', maxWidth: `${Math.max(280, Math.min(1100, Number(content.contentWidth) || 720))}px`, textAlign: textAlign as any }}>
+            {content.foregroundImage && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={safePublicUrl(content.foregroundImage, { allowDataImage: true })} alt="" className={`mb-5 h-auto object-contain ${textAlign === 'center' ? 'mx-auto' : textAlign === 'right' ? 'ml-auto' : 'mr-auto'}`} style={{ width: `${Math.max(48, Math.min(520, Number(content.foregroundImageWidth) || 180))}px` }} />
+            )}
             {content.title && <h2 className="text-3xl font-extrabold drop-shadow md:text-5xl">{content.title}</h2>}
-            {content.subtitle && <p className="mx-auto mt-3 max-w-xl text-lg drop-shadow">{content.subtitle}</p>}
-            {content.button?.text && <div className="mt-6"><Btn b={content.button} basePath={basePath} /></div>}
+            {content.subtitle && <p className={`mt-3 max-w-2xl whitespace-pre-wrap text-lg drop-shadow ${textAlign === 'center' ? 'mx-auto' : textAlign === 'right' ? 'ml-auto' : 'mr-auto'}`}>{content.subtitle}</p>}
+            {(content.button?.text || content.button2?.text) && <div className={`mt-6 flex flex-wrap gap-3 ${textAlign === 'center' ? 'justify-center' : textAlign === 'right' ? 'justify-end' : 'justify-start'}`}>
+              {content.button?.text && <Btn b={{ ...content.button, align: textAlign }} basePath={basePath} />}
+              {content.button2?.text && <Btn b={{ ...content.button2, align: textAlign }} basePath={basePath} />}
+            </div>}
           </div>
         </div>
       );

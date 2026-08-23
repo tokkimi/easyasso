@@ -93,16 +93,22 @@ export async function RenderSite({ site, basePath, slug }: { site: SiteWithPages
     ? { ...header, logoUrl: VIELUSOS_BRAND.logoUrl, logoText: site.name.toUpperCase(), background: VIELUSOS_BRAND.surface, textColor: '#f7f7fb' }
     : header;
   const headerSocials = Object.entries((publicHeader as any).social || {}).filter((entry): entry is [string, string] => typeof entry[1] === 'string' && Boolean(entry[1].trim()));
-  const socialLabels = new Set(['facebook', 'instagram', 'linkedin', 'youtube', 'youtube music', 'spotify', 'deezer', 'soundcloud', 'apple music', 'amazon music', 'beatport', 'shotgun', 'tiktok', 'x', 'twitter']);
+  const socialLabels = new Set(['facebook', 'instagram', 'linkedin', 'youtube', 'youtube music', 'spotify', 'deezer', 'soundcloud', 'apple music', 'amazon music', 'beatport', 'bandcamp', 'tidal', 'shotgun', 'tiktok', 'x', 'twitter']);
   const socialDisplayLabels: Record<string, string> = {
     applemusic: 'Apple Music',
     amazonmusic: 'Amazon Music',
     youtubemusic: 'YouTube Music',
     soundcloud: 'SoundCloud',
     beatport: 'Beatport',
+    bandcamp: 'Bandcamp',
+    tidal: 'TIDAL',
     shotgun: 'Shotgun',
   };
   const footerColumns = Array.isArray(footer.columns) ? footer.columns : [];
+  const columnsWithHeaderSocials = [
+    ...footerColumns.filter((column) => !column.links?.length || !column.links.every((link) => socialLabels.has(String(link.label).toLowerCase()))),
+    ...(headerSocials.length ? [{ title: 'Réseaux sociaux', links: headerSocials.map(([label, href]) => ({ label: label === 'x' ? 'X' : socialDisplayLabels[label.toLowerCase()] || label.charAt(0).toUpperCase() + label.slice(1), href })) }] : []),
+  ];
   const publicFooter = vielusos
     ? {
       ...footer,
@@ -110,12 +116,9 @@ export async function RenderSite({ site, basePath, slug }: { site: SiteWithPages
       logoText: site.name.toUpperCase(),
       background: VIELUSOS_BRAND.surface,
       textColor: '#f7f7fb',
-      columns: [
-        ...footerColumns.filter((column) => !column.links?.length || !column.links.every((link) => socialLabels.has(String(link.label).toLowerCase()))),
-        ...(headerSocials.length ? [{ title: 'Réseaux sociaux', links: headerSocials.map(([label, href]) => ({ label: label === 'x' ? 'X' : socialDisplayLabels[label.toLowerCase()] || label.charAt(0).toUpperCase() + label.slice(1), href })) }] : []),
-      ],
+      columns: columnsWithHeaderSocials,
     }
-    : footer;
+    : { ...footer, columns: columnsWithHeaderSocials };
   const shopEnabled = Boolean(profile.shopEnabled ?? profile.hasShop);
   const nav = site.pages.filter((p) => p.showInNav && (p.slug !== 'boutique' || shopEnabled)).map((p) => ({ title: p.title, slug: p.slug, isHome: p.isHome }));
   const theme = (site.theme as any) || {};
@@ -133,6 +136,14 @@ export async function RenderSite({ site, basePath, slug }: { site: SiteWithPages
       phone={(footer as any).contactBubblePhone || profile.phone}
       organizationId={site.organizationId}
       locale={profile.language === 'en' ? 'en' : 'fr'}
+      position={(footer as any).contactBubblePosition || 'right'}
+      backgroundColor={(footer as any).contactBubbleColor || '#171717'}
+      textColor={(footer as any).contactBubbleTextColor || '#ffffff'}
+      showPhone={(footer as any).contactBubbleShowPhone ?? true}
+      showSms={(footer as any).contactBubbleShowSms ?? true}
+      showEmail={(footer as any).contactBubbleShowEmail ?? true}
+      showMessage={(footer as any).contactBubbleShowMessage ?? true}
+      branded={vielusos}
     />
   );
 

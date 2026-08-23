@@ -534,12 +534,23 @@ function BlockInspector({ block, branded = false, onContent, onStyle, onDelete }
 
       {block.type === 'banner' && (
         <>
-          <ImageInput label="Photo de fond" value={c.image} onChange={(image) => onContent({ ...c, image })} />
+          {!branded && <Field label="Type de fond"><select className="input" value={c.backgroundType || 'image'} onChange={(e) => onContent({ ...c, backgroundType: e.target.value })}><option value="image">Image</option><option value="video">Vidéo</option></select></Field>}
+          {(c.backgroundType || 'image') === 'video' && !branded
+            ? <Field label="Vidéo de fond (URL MP4/WebM)"><input className="input" type="url" value={c.videoUrl || ''} onChange={(e) => onContent({ ...c, videoUrl: e.target.value })} placeholder="https://…/video.mp4" /><p className="mt-1 text-xs text-gray-500">La vidéo est lue automatiquement, en boucle et sans son.</p></Field>
+            : <ImageInput label="Photo de fond" value={c.image} onChange={(image) => onContent({ ...c, image })} />}
           <Field label="Titre"><input className="input" value={c.title || ''} onChange={(e) => onContent({ ...c, title: e.target.value })} /></Field>
           <Field label="Sous-titre"><textarea className="input" value={c.subtitle || ''} onChange={(e) => onContent({ ...c, subtitle: e.target.value })} /></Field>
+          {!branded && <>
+            <ImageInput label="Image superposée (logo, visuel, optionnel)" value={c.foregroundImage || ''} onChange={(foregroundImage) => onContent({ ...c, foregroundImage })} kind="logo" />
+            {c.foregroundImage && <Field label={`Largeur de l’image superposée : ${c.foregroundImageWidth || 180}px`}><input type="range" min={48} max={520} value={c.foregroundImageWidth || 180} onChange={(e) => onContent({ ...c, foregroundImageWidth: +e.target.value })} className="w-full" /></Field>}
+            <Field label="Position du contenu"><select className="input" value={c.contentPosition || 'center'} onChange={(e) => onContent({ ...c, contentPosition: e.target.value })}><option value="top-left">Haut gauche</option><option value="top-center">Haut centre</option><option value="top-right">Haut droite</option><option value="center-left">Milieu gauche</option><option value="center">Milieu centre</option><option value="center-right">Milieu droite</option><option value="bottom-left">Bas gauche</option><option value="bottom-center">Bas centre</option><option value="bottom-right">Bas droite</option></select></Field>
+            <Field label="Alignement du texte"><AlignPicker value={c.textAlign || 'center'} onChange={(textAlign) => onContent({ ...c, textAlign })} /></Field>
+            <Field label={`Largeur du contenu : ${c.contentWidth || 720}px`}><input type="range" min={280} max={1100} step={20} value={c.contentWidth || 720} onChange={(e) => onContent({ ...c, contentWidth: +e.target.value })} className="w-full" /></Field>
+          </>}
           <Field label={`Hauteur : ${c.height || 460}px`}><input type="range" min={240} max={720} value={c.height || 460} onChange={(e) => onContent({ ...c, height: +e.target.value })} className="w-full" /></Field>
           <Field label={`Assombrir la photo : ${c.overlay ?? 45}%`}><input type="range" min={0} max={80} value={c.overlay ?? 45} onChange={(e) => onContent({ ...c, overlay: +e.target.value })} className="w-full" /></Field>
           <div className="border-t border-gray-100 pt-3"><p className="mb-2 text-sm font-semibold text-gray-700">Bouton</p><ButtonEditor value={c.button} onChange={(button) => onContent({ ...c, button })} /></div>
+          {!branded && <div className="border-t border-gray-100 pt-3"><p className="mb-2 text-sm font-semibold text-gray-700">Deuxième bouton (optionnel)</p><ButtonEditor value={c.button2} onChange={(button2) => onContent({ ...c, button2 })} /></div>}
         </>
       )}
 
@@ -717,6 +728,11 @@ function StreamingEditor({ c, onContent }: { c: any; onContent: (v: any) => void
     ['appleMusic', 'Apple Music', 'https://music.apple.com/…'],
     ['soundcloud', 'SoundCloud', 'https://soundcloud.com/…'],
     ['youtube', 'YouTube', 'https://youtube.com/@…'],
+    ['youtubeMusic', 'YouTube Music', 'https://music.youtube.com/channel/…'],
+    ['amazonMusic', 'Amazon Music', 'https://music.amazon.com/artists/…'],
+    ['beatport', 'Beatport', 'https://www.beatport.com/artist/…'],
+    ['bandcamp', 'Bandcamp', 'https://artiste.bandcamp.com/…'],
+    ['tidal', 'TIDAL', 'https://tidal.com/browse/artist/…'],
   ];
   return (
     <>
@@ -849,7 +865,7 @@ function ButtonEditor({ value, onChange }: { value?: ButtonConfig; onChange: (b:
 function SocialEditor({ value, onChange }: { value?: any; onChange: (s: any) => void }) {
   const s = value || { align: 'center' };
   const set = (patch: any) => onChange({ ...s, ...patch });
-  const nets = ['facebook', 'instagram', 'twitter', 'youtube', 'linkedin', 'tiktok'];
+  const nets = ['facebook', 'instagram', 'twitter', 'youtube', 'linkedin', 'tiktok', 'spotify', 'deezer', 'soundcloud', 'appleMusic', 'youtubeMusic', 'amazonMusic', 'beatport', 'bandcamp', 'tidal'];
   return (
     <div className="space-y-3">
       {nets.map((n) => (
@@ -870,6 +886,13 @@ function HeaderEditor({ value, branded = false, onChange }: { value: any; brande
       <Toggle checked={h.showNav ?? true} onChange={(v) => set({ showNav: v })} label="Afficher le menu" />
       <Toggle checked={h.sticky ?? true} onChange={(v) => set({ sticky: v })} label="En-tête fixe au défilement" />
       {!branded && <><Field label="Couleur de fond"><ColorGrid value={h.background} onChange={(c) => set({ background: c })} /></Field><Field label="Couleur du texte"><ColorGrid value={h.textColor} onChange={(c) => set({ textColor: c })} /></Field></>}
+      {!branded && <div className="space-y-3 rounded-2xl border border-gray-200 bg-gray-50 p-4">
+        <p className="text-sm font-semibold text-gray-800">Menu déroulant</p>
+        <Toggle checked={h.menuGlass ?? true} onChange={(menuGlass) => set({ menuGlass })} label="Effet verre transparent" />
+        <Field label="Couleur du panneau"><ColorGrid value={h.menuBackground || '#111827'} onChange={(menuBackground) => set({ menuBackground })} /></Field>
+        <Field label={`Transparence : ${h.menuOpacity ?? 78}%`}><input type="range" min={20} max={100} value={h.menuOpacity ?? 78} onChange={(e) => set({ menuOpacity: +e.target.value })} className="w-full" /></Field>
+        <Field label={`Flou : ${h.menuBlur ?? 20}px`}><input type="range" min={0} max={36} value={h.menuBlur ?? 20} onChange={(e) => set({ menuBlur: +e.target.value })} className="w-full" /></Field>
+      </div>}
       <div className="border-t border-gray-100 pt-3">
         <p className="mb-2 text-sm font-semibold text-gray-700">Bouton d’action</p>
         <Toggle checked={h.showCta ?? true} onChange={(v) => set({ showCta: v })} label="Afficher le bouton du header" />
@@ -882,8 +905,10 @@ function HeaderEditor({ value, branded = false, onChange }: { value: any; brande
           ['instagram', 'Instagram'], ['tiktok', 'TikTok'], ['spotify', 'Spotify'], ['deezer', 'Deezer'],
           ['soundcloud', 'SoundCloud'], ['applemusic', 'Apple Music'], ['youtubemusic', 'YouTube Music'],
           ['shotgun', 'Shotgun'], ['amazonmusic', 'Amazon Music'], ['youtube', 'YouTube'], ['beatport', 'Beatport'],
+          ['bandcamp', 'Bandcamp'], ['tidal', 'TIDAL'], ['facebook', 'Facebook'], ['linkedin', 'LinkedIn'], ['twitter', 'X / Twitter'],
         ].map(([name, label]) => <Field key={name} label={label}><input className="input" type="url" value={h.social?.[name] || ''} onChange={(e) => set({ social: { ...(h.social || {}), [name]: e.target.value } })} placeholder={`Lien ${label}`} /></Field>)}
       </div>
+      {branded && <>
       <div className="space-y-3 border-t border-gray-100 pt-3">
         <p className="text-sm font-semibold text-gray-700">Bannière vidéo VIELUSOS</p>
         <Field label="URL de la vidéo"><input className="input" value={h.vielusosHero?.videoUrl || ''} onChange={(e) => set({ vielusosHero: { ...(h.vielusosHero || {}), videoUrl: e.target.value } })} placeholder="/vielusos/banner.mp4" /></Field>
@@ -902,6 +927,7 @@ function HeaderEditor({ value, branded = false, onChange }: { value: any; brande
         <Field label="Bio en anglais"><textarea className="input min-h-40" value={(h.vielusosBio?.paragraphsEn || h.vielusosBio?.paragraphs || []).join('\n\n')} onChange={(e) => set({ vielusosBio: { ...(h.vielusosBio || {}), paragraphsEn: e.target.value.split(/\n\s*\n/) } })} placeholder="Write the English biography here. Separate paragraphs with a blank line." /></Field>
         {[0, 1, 2].map((index) => <ImageInput key={index} label={`Image ${index + 1}`} value={h.vielusosBio?.images?.[index] || ''} onChange={(value) => { const images = [...(h.vielusosBio?.images || [])]; images[index] = value; set({ vielusosBio: { ...(h.vielusosBio || {}), images } }); }} />)}
       </div>
+      </>}
     </div>
   );
 }
@@ -931,7 +957,7 @@ function FooterEditor({ value, pages, branded = false, onChange }: { value: any;
       <div className="border-t border-gray-100 pt-3">
         <Toggle checked={f.showContactBubble ?? true} onChange={(v) => set({ showContactBubble: v })} label="Bulle de contact flottante" />
         <p className="mt-1 text-xs text-gray-500">Affiche en bas de chaque page une bulle « en ligne » avec le logo, le nom, le slogan et les moyens de contact (appel, SMS, e-mail, messagerie).</p>
-        {f.showContactBubble !== false && <div className="mt-3 space-y-3"><Field label="Texte de la bulle (français)"><input className="input" value={f.contactBubbleText || ''} onChange={(e) => set({ contactBubbleText: e.target.value })} /></Field><Field label="Texte de la bulle (anglais)"><input className="input" value={f.contactBubbleTextEn || ''} onChange={(e) => set({ contactBubbleTextEn: e.target.value })} /></Field><Field label="E-mail de la bulle"><input className="input" type="email" value={f.contactBubbleEmail || ''} onChange={(e) => set({ contactBubbleEmail: e.target.value })} /></Field><Field label="Téléphone de la bulle"><input className="input" type="tel" value={f.contactBubblePhone || ''} onChange={(e) => set({ contactBubblePhone: e.target.value })} /></Field></div>}
+        {f.showContactBubble !== false && <div className="mt-3 space-y-3"><Field label="Texte de la bulle (français)"><input className="input" value={f.contactBubbleText || ''} onChange={(e) => set({ contactBubbleText: e.target.value })} /></Field><Field label="Texte de la bulle (anglais)"><input className="input" value={f.contactBubbleTextEn || ''} onChange={(e) => set({ contactBubbleTextEn: e.target.value })} /></Field><Field label="E-mail de la bulle"><input className="input" type="email" value={f.contactBubbleEmail || ''} onChange={(e) => set({ contactBubbleEmail: e.target.value })} /></Field><Field label="Téléphone de la bulle"><input className="input" type="tel" value={f.contactBubblePhone || ''} onChange={(e) => set({ contactBubblePhone: e.target.value })} /></Field>{!branded && <><Field label="Position"><select className="input" value={f.contactBubblePosition || 'right'} onChange={(e) => set({ contactBubblePosition: e.target.value })}><option value="right">En bas à droite</option><option value="left">En bas à gauche</option></select></Field><Field label="Couleur de la bulle"><ColorGrid value={f.contactBubbleColor || '#171717'} onChange={(contactBubbleColor) => set({ contactBubbleColor })} /></Field><Field label="Couleur du texte"><ColorGrid value={f.contactBubbleTextColor || '#ffffff'} onChange={(contactBubbleTextColor) => set({ contactBubbleTextColor })} /></Field><Toggle checked={f.contactBubbleShowPhone ?? true} onChange={(contactBubbleShowPhone) => set({ contactBubbleShowPhone })} label="Afficher l’appel" /><Toggle checked={f.contactBubbleShowSms ?? true} onChange={(contactBubbleShowSms) => set({ contactBubbleShowSms })} label="Afficher le SMS" /><Toggle checked={f.contactBubbleShowEmail ?? true} onChange={(contactBubbleShowEmail) => set({ contactBubbleShowEmail })} label="Afficher l’e-mail" /><Toggle checked={f.contactBubbleShowMessage ?? true} onChange={(contactBubbleShowMessage) => set({ contactBubbleShowMessage })} label="Afficher la messagerie" /></>}</div>}
       </div>
       <div className="border-t border-gray-100 pt-3">
         <Toggle checked={f.showNewsletter ?? true} onChange={(v) => set({ showNewsletter: v })} label="Bloc newsletter" />

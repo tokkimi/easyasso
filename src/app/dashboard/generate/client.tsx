@@ -51,6 +51,8 @@ export function GenerateClient({ orgName, profile, categories, previews = [], we
     siteType: (profile.siteType || (profile.hasShop && profile.isAssociation === false ? 'shop' : 'association')) as 'association' | 'shop' | 'other' | 'music',
     hasShop: profile.hasShop ?? false,
     genre: profile.genre || '',
+    artistStory: profile.artistStory || '', artistSound: profile.artistSound || '', artistLive: profile.artistLive || '',
+    brandStory: profile.brandStory || '', brandPromise: profile.brandPromise || '', brandProof: profile.brandProof || '', shippingInfo: profile.shippingInfo || '',
     musicSpotify: profile.streamingLinks?.spotify || '', musicDeezer: profile.streamingLinks?.deezer || '', musicApple: profile.streamingLinks?.appleMusic || '', musicSoundcloud: profile.streamingLinks?.soundcloud || '', musicYoutube: profile.streamingLinks?.youtube || '', instagram: profile.instagram || '',
     language: profile.language || 'fr', beneficiaries: profile.beneficiaries || '', goodToKnow: profile.goodToKnow || '', slogan: profile.slogan || '', generateCgv: profile.generateCgv ?? true, news: '', city: profile.city || '', email: profile.email || '', legalCountry: profile.legalCountry || 'France', category: profile.category || '',
     donationCardEnabled: profile.donationCardEnabled ?? false, donationStripeUrl: profile.donationStripeUrl || '', donationHelloAssoEnabled: profile.donationHelloAssoEnabled ?? Boolean(profile.donationHelloAssoUrl), donationHelloAssoUrl: profile.donationHelloAssoUrl || '', donationTransferEnabled: profile.donationTransferEnabled ?? false, donationIban: profile.donationIban || '', donationBic: profile.donationBic || '', donationAccountHolder: profile.donationAccountHolder || '', donationBankName: profile.donationBankName || '', donationChequeEnabled: profile.donationChequeEnabled ?? false, donationChequePayable: profile.donationChequePayable || '', donationChequeAddress: profile.donationChequeAddress || '',
@@ -67,9 +69,9 @@ export function GenerateClient({ orgName, profile, categories, previews = [], we
   const isMusic = f.siteType === 'music';
   const nameLabel = isMusic ? 'Nom d’artiste / de groupe' : isShop ? 'Nom de la boutique / marque' : f.siteType === 'other' ? 'Nom de votre projet' : 'Nom de l’association';
   const missionLabel = isMusic ? 'Votre bio ★' : isShop ? 'Présentez votre univers / votre marque ★' : 'À propos / votre mission ★';
-  const functioningLabel = isShop ? 'Que proposez-vous ? (votre offre)' : 'Comment fonctionne votre association ?';
-  const actionsLabel = isShop ? 'Votre savoir-faire / vos gammes' : 'Vos actions / activités concrètes';
-  const beneficiariesLabel = isShop ? 'Votre clientèle' : 'Public aidé / bénéficiaires';
+  const functioningLabel = isMusic ? 'Votre façon de créer / produire' : isShop ? 'Que proposez-vous ? (votre offre)' : 'Comment fonctionne votre association ?';
+  const actionsLabel = isMusic ? 'Vos sorties, scènes et projets actuels' : isShop ? 'Votre savoir-faire / vos gammes' : 'Vos actions / activités concrètes';
+  const beneficiariesLabel = isMusic ? 'Votre public / l’expérience recherchée' : isShop ? 'Votre clientèle' : 'Public aidé / bénéficiaires';
   const visualPreviews = isMusic ? [] : previews.filter((p) => (isShop ? p.family === 'shop' : p.family === 'association'));
 
   function setArr(setter: (v: string[]) => void, arr: string[], i: number, v: string) { setter(arr.map((x, j) => (j === i ? v : x))); }
@@ -210,13 +212,17 @@ export function GenerateClient({ orgName, profile, categories, previews = [], we
 
         <Field label={missionLabel}>
           <textarea className="input min-h-[110px]" value={f.mission} onChange={(e) => set('mission', e.target.value)}
-            placeholder={isShop ? 'Qui êtes-vous, que vendez-vous, quel est votre style, vos valeurs ? Ex : créations artisanales en cuir, faites main à Lyon…' : 'Qui êtes-vous, quelle est votre cause, vos valeurs ? Ex : Nous aidons les personnes âgées isolées à rompre la solitude…'} />
+            placeholder={isMusic ? 'Racontez le projet, son origine, votre parcours et ce que vous voulez faire ressentir.' : isShop ? 'Qui êtes-vous, que vendez-vous, quel est votre style, vos valeurs ? Ex : créations artisanales en cuir, faites main à Lyon…' : 'Qui êtes-vous, quelle est votre cause, vos valeurs ? Ex : Nous aidons les personnes âgées isolées à rompre la solitude…'} />
           <p className="mt-1 text-xs text-gray-400">Champ le plus important — sert de base à tous les textes.</p>
         </Field>
 
+        {isMusic && <section className="space-y-4 rounded-2xl border border-violet-200 bg-violet-50/50 p-4"><div><h3 className="font-extrabold text-gray-900">Matière éditoriale de l’artiste</h3><p className="text-sm text-gray-600">Ces réponses alimentent la home et une vraie page Bio. Plus elles sont précises, moins le texte sera générique.</p></div><Field label="Parcours et origine du projet"><textarea className="input min-h-24" value={f.artistStory} onChange={(e) => set('artistStory', e.target.value)} placeholder="Déclic, premières influences, évolution du projet, intention artistique…" /></Field><Field label="Son, influences et émotions"><textarea className="input min-h-24" value={f.artistSound} onChange={(e) => set('artistSound', e.target.value)} placeholder="Textures, tempo, influences, atmosphère, énergie, émotions recherchées…" /></Field><Field label="Live et univers visuel"><textarea className="input min-h-24" value={f.artistLive} onChange={(e) => set('artistLive', e.target.value)} placeholder="Scénographie, relation au public, images, lumières, identité sur scène…" /></Field></section>}
+
+        {isShop && <section className="space-y-4 rounded-2xl border border-amber-200 bg-amber-50/50 p-4"><div><h3 className="font-extrabold text-gray-900">Matière éditoriale de la marque</h3><p className="text-sm text-gray-600">L’IA s’en sert pour créer un univers de marque crédible, une home détaillée et des pages pratiques.</p></div><Field label="Histoire de la marque"><textarea className="input min-h-24" value={f.brandStory} onChange={(e) => set('brandStory', e.target.value)} placeholder="Origine, déclic, personnes derrière la marque, vision…" /></Field><Field label="Promesse client"><textarea className="input min-h-24" value={f.brandPromise} onChange={(e) => set('brandPromise', e.target.value)} placeholder="Pourquoi choisir votre boutique ? Quelle expérience voulez-vous offrir ?" /></Field><Field label="Preuves et savoir-faire"><textarea className="input min-h-24" value={f.brandProof} onChange={(e) => set('brandProof', e.target.value)} placeholder="Fabrication, sélection, matières, contrôle qualité, expertise — sans inventer de label." /></Field><Field label="Livraison, retours et délais"><textarea className="input min-h-24" value={f.shippingInfo} onChange={(e) => set('shippingInfo', e.target.value)} placeholder="Zones livrées, délais réels, retours, emballage, retrait…" /></Field></section>}
+
         <Field label={functioningLabel}>
           <textarea className="input min-h-[90px]" value={f.functioning} onChange={(e) => set('functioning', e.target.value)}
-            placeholder={isShop ? 'Types de produits, matières, gammes, éditions limitées, sur-mesure…' : 'Bénévoles, adhérents, organisation, fréquence des actions, financement…'} />
+            placeholder={isMusic ? 'Composition, production, machines ou instruments, manière de collaborer…' : isShop ? 'Types de produits, matières, gammes, éditions limitées, sur-mesure…' : 'Bénévoles, adhérents, organisation, fréquence des actions, financement…'} />
         </Field>
 
         <Field label="Slogan court pour le pied de page">
@@ -240,11 +246,11 @@ export function GenerateClient({ orgName, profile, categories, previews = [], we
 
         <Field label={actionsLabel}>
           <textarea className="input min-h-[70px]" value={f.actions} onChange={(e) => set('actions', e.target.value)}
-            placeholder={isShop ? 'Ex : maroquinerie, bijoux faits main, seconde main de luxe…' : 'Ex : visites à domicile, sorties, ateliers, distributions, événements…'} />
+            placeholder={isMusic ? 'Ex : nouvel EP, préparation d’un live, clips, DJ sets, collaborations confirmées…' : isShop ? 'Ex : maroquinerie, bijoux faits main, seconde main de luxe…' : 'Ex : visites à domicile, sorties, ateliers, distributions, événements…'} />
         </Field>
 
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field label={beneficiariesLabel}><input className="input" value={f.beneficiaries} onChange={(e) => set('beneficiaries', e.target.value)} placeholder={isShop ? 'ex : femmes, amateurs de mode, familles…' : 'personnes âgées, enfants, animaux…'} /></Field>
+          <Field label={beneficiariesLabel}><input className="input" value={f.beneficiaries} onChange={(e) => set('beneficiaries', e.target.value)} placeholder={isMusic ? 'Ex : clubbers, auditeurs de techno mélodique, énergie cathartique…' : isShop ? 'ex : femmes, amateurs de mode, familles…' : 'personnes âgées, enfants, animaux…'} /></Field>
           <Field label={isShop ? 'Catégorie de boutique' : 'Type d’association'}>
             <select className="input" value={f.category} onChange={(e) => set('category', e.target.value)}>
               <option value="">Détection automatique ✨</option>

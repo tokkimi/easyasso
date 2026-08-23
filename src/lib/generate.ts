@@ -181,6 +181,13 @@ export interface GenerateInput {
   siteType?: 'association' | 'shop' | 'other' | 'music';
   hasShop?: boolean;
   genre?: string; // music style (techno, rap, pop…) — drives the accent colour
+  artistStory?: string;
+  artistSound?: string;
+  artistLive?: string;
+  brandStory?: string;
+  brandPromise?: string;
+  brandProof?: string;
+  shippingInfo?: string;
 
   slogan?: string;
   generateCgv?: boolean;
@@ -232,8 +239,38 @@ function composeProjectCopy(input: GenerateInput) {
   };
 }
 
+function composeShopCopy(input: GenerateInput) {
+  const language = input.language === 'en' ? 'en' : 'fr';
+  const name = input.name?.trim() || (language === 'en' ? 'Our shop' : 'Notre boutique');
+  const universe = polishUserText(input.mission || input.description || '');
+  const story = polishUserText(input.brandStory || '');
+  const promise = polishUserText(input.brandPromise || '');
+  const proof = polishUserText(input.brandProof || input.actions || input.functioning || '');
+  const practical = polishUserText(input.shippingInfo || input.goodToKnow || '');
+  return {
+    name,
+    heroSubtitle: firstSentence(input.slogan || promise || universe) || (language === 'en' ? 'A distinctive selection, designed with care.' : 'Une sélection singulière, pensée avec soin.'),
+    aboutText: para([story || universe, language === 'en' ? 'Behind every choice is a consistent point of view: create a clear universe, make quality easy to understand and offer an experience that feels considered from discovery to delivery.' : 'Derrière chaque choix, une même ligne directrice : construire un univers cohérent, rendre la qualité lisible et proposer une expérience soignée de la découverte jusqu’à la livraison.']),
+    actionText: para([polishUserText(input.functioning || ''), proof, language === 'en' ? 'The catalogue itself is kept separate from this editorial presentation so every description, price and availability always reflects the real products entered by the shop.' : 'Le catalogue reste séparé de cette présentation éditoriale afin que chaque description, chaque prix et chaque disponibilité correspondent toujours aux produits réellement saisis dans la boutique.']),
+    impactText: para([promise || (language === 'en' ? 'Our promise is a straightforward shopping experience, a carefully built selection and useful information before ordering.' : 'Notre promesse repose sur une expérience d’achat claire, une sélection construite avec attention et des informations utiles avant de commander.'), practical]),
+    goodToKnowText: practical,
+    contactText: para([input.email ? `Email : ${input.email}.` : '', input.city ? (language === 'en' ? `Based in ${input.city}.` : `Basés à ${input.city}.`) : '', language === 'en' ? 'For product, order or custom enquiries, contact us directly.' : 'Pour toute question sur un produit, une commande ou une demande particulière, contactez-nous directement.']),
+    footerText: input.slogan || promise || universe,
+    cards: language === 'en' ? [
+      { icon: 'Sparkles', title: 'A clear selection', text: promise || 'Products chosen around a consistent style and a real customer need.' },
+      { icon: 'Shield', title: 'Quality explained', text: proof || 'Useful details to understand materials, making and product care.' },
+      { icon: 'Gift', title: 'A considered experience', text: practical || 'Practical information made clear before checkout.' },
+    ] : [
+      { icon: 'Sparkles', title: 'Une sélection cohérente', text: promise || 'Des produits choisis autour d’un style affirmé et d’un besoin client réel.' },
+      { icon: 'Shield', title: 'Une qualité expliquée', text: proof || 'Des informations utiles pour comprendre les matières, la fabrication et l’entretien.' },
+      { icon: 'Gift', title: 'Une expérience soignée', text: practical || 'Des informations pratiques claires avant la commande.' },
+    ],
+  };
+}
+
 // Build developed, multi-paragraph copy from the questionnaire answers.
 function composeCopy(input: GenerateInput) {
+  if (input.siteType === 'shop') return composeShopCopy(input);
   if (input.siteType === 'other') return composeProjectCopy(input);
   const name = input.name?.trim() || 'notre association';
   const language = input.language === 'en' ? 'en' : 'fr';
@@ -340,7 +377,18 @@ export function buildMusicSite(
   const accent = genreAccent(input.genre);
   const genreLabel = clean(input.genre || '');
   const tagline = input.slogan?.trim() || (genreLabel ? (en ? `${genreLabel} — new releases and links.` : `${genreLabel} — sorties et liens.`) : firstSentence(input.mission || '')) || (en ? 'Music, releases and links.' : 'Sons, sorties et liens.');
-  const bio = polishUserText(input.mission || '') || (en ? `${name} shares music and new releases here.` : `${name} partage ici sa musique et ses dernières sorties.`);
+  const story = polishUserText(input.artistStory || input.mission || '');
+  const sound = polishUserText(input.artistSound || input.functioning || input.genre || '');
+  const live = polishUserText(input.artistLive || input.actions || '');
+  const bio = para([
+    story || (en ? `${name} is a musical project shaped by a personal identity and a clear desire to turn sound into a complete experience.` : `${name} est un projet musical construit autour d’une identité personnelle et d’une volonté claire : transformer le son en expérience complète.`),
+    sound ? (en ? `The musical direction is rooted in ${sound}` : `La direction musicale se construit autour de ${sound}`) : (genreLabel ? (en ? `The project explores ${genreLabel}, paying close attention to texture, tension, rhythm and the space left for emotion.` : `Le projet explore la ${genreLabel}, avec une attention particulière portée aux textures, à la tension, au rythme et à l’espace laissé à l’émotion.`) : ''),
+    live ? (en ? `On stage and through visual content, the project takes this approach further: ${live}` : `Sur scène et dans les contenus visuels, cette approche se prolonge : ${live}`) : '',
+  ]);
+  const homeIntro = para([
+    story ? firstSentence(story) : (en ? `${name} develops a musical universe where every release, image and performance belongs to the same artistic direction.` : `${name} développe un univers musical où chaque sortie, chaque image et chaque performance participent à une même direction artistique.`),
+    sound ? (en ? `Its sound is defined by ${sound}` : `Son identité sonore se distingue par ${sound}`) : (genreLabel ? (en ? `At the heart of the project: ${genreLabel}, approached as a living language rather than a fixed formula.` : `Au cœur du projet : la ${genreLabel}, pensée comme un langage vivant plutôt que comme une formule figée.`) : ''),
+  ]);
   const heroImage = media.tracks.find((t) => t.thumbnail)?.thumbnail || input.logoUrl || templateImage('club-sportif', 1, 1600, 760);
   const streamingFilled = Object.values(media.streaming || {}).some(Boolean);
   const playerItems = musicPlayerItems(media.tracks, media.videos);
@@ -348,6 +396,12 @@ export function buildMusicSite(
 
   const home = s([
     { type: 'banner', content: { image: heroImage, title: name, subtitle: tagline, overlay: 55, height: 520, button: streamingFilled ? { text: en ? 'Listen' : 'Écouter', href: '#ecouter', color: '#ffffff', variant: 'solid', align: 'center' } : undefined } },
+    { type: 'textimage', content: { title: en ? 'The project' : 'Le projet', text: homeIntro, image: input.photos?.[1] || input.photos?.[0] || heroImage, imageSide: 'right', button: { text: en ? 'Read the biography' : 'Lire la bio', href: '/bio', color: accent, variant: 'outline', align: 'left' } } },
+    { type: 'cards', content: { columns: 3, items: [
+      { icon: 'Music2', title: en ? 'Sound' : 'Son', text: sound || genreLabel || (en ? 'A precise musical identity, shaped release after release.' : 'Une identité musicale précise, façonnée sortie après sortie.') },
+      { icon: 'Sparkles', title: en ? 'Universe' : 'Univers', text: story ? firstSentence(story) : (en ? 'Music and imagery are developed as one coherent artistic language.' : 'Le son et l’image se répondent dans une même direction artistique.') },
+      { icon: 'Star', title: en ? 'Live' : 'Live', text: live || (en ? 'A direct experience designed to extend the energy of the tracks on stage.' : 'Une expérience directe pensée pour prolonger sur scène l’énergie des morceaux.') },
+    ] } },
     ...(streamingFilled ? [{ type: 'streaming', content: { title: en ? 'Listen everywhere' : 'Écoutez partout', links: media.streaming } }] : []),
     ...(playerItems.length ? [{ type: 'players', content: { title: en ? 'Latest releases' : 'Dernières sorties', intro: en ? 'Listen through the official players, with the newest releases first when dates are filled in.' : 'Écoutez directement via les lecteurs officiels, avec les sorties les plus récentes en premier lorsque les dates sont remplies.', sort: 'newest', items: playerItems } }] : []),
     ...(media.tracks.length ? [{ type: 'tracks', content: { title: en ? 'Latest tracks' : 'Derniers sons', layout: 'grid', tracks: media.tracks } }] : []),
@@ -365,8 +419,11 @@ export function buildMusicSite(
     ]) });
   }
   pages.push({ title: en ? 'About' : 'Bio', slug: 'bio', isHome: false, showInNav: true, blocks: s([
-    { type: 'heading', content: { text: en ? 'About' : 'Bio' } },
-    { type: 'text', content: { text: bio } },
+    { type: 'banner', content: { image: input.photos?.[0] || heroImage, title: en ? `About ${name}` : `À propos de ${name}`, subtitle: tagline, overlay: 58, height: 380 } },
+    { type: 'textimage', content: { title: en ? 'Story and direction' : 'Parcours et direction', text: bio, image: input.photos?.[1] || heroImage, imageSide: 'right' } },
+    { type: 'heading', content: { text: en ? 'A musical language' : 'Un langage musical' } },
+    { type: 'text', content: { text: sound || (en ? `${name} builds each track as part of a wider universe, balancing production choices, emotion and the energy intended for the listener.` : `${name} construit chaque morceau comme une partie d’un univers plus large, en reliant les choix de production, l’émotion et l’énergie destinée à l’auditeur.`) } },
+    ...(live ? [{ type: 'textimage', content: { title: en ? 'On stage' : 'Sur scène', text: live, image: input.photos?.[2] || input.photos?.[0] || heroImage, imageSide: 'left' } }] : []),
   ]) });
   pages.push({ title: 'Contact', slug: 'contact', isHome: false, showInNav: true, blocks: s([
     { type: 'heading', content: { text: 'Contact' } },
@@ -397,7 +454,10 @@ export function buildMusicSite(
 export function buildGeneratedSite(input: GenerateInput, themePhotos: string[] = []): BuiltTemplate {
   const detectText = [input.mission, input.functioning, input.goodToKnow, input.beneficiaries, input.actions, input.description].filter(Boolean).join(' ');
   const id = pickTemplateId(detectText, input.category);
-  const base = getTemplate(id) || TEMPLATES[0];
+  const requested = getTemplate(input.category || '');
+  const base = input.siteType === 'shop'
+    ? ((requested?.family === 'shop' ? requested : undefined) || TEMPLATES.find((template) => template.family === 'shop') || TEMPLATES[0])
+    : getTemplate(id) || TEMPLATES[0];
   const t: BuiltTemplate = JSON.parse(JSON.stringify(base));
   const copy = composeCopy(input);
   const photos = (input.photos || []).filter(Boolean);

@@ -13,6 +13,7 @@ import { legalDocuments } from '@/lib/legal';
 import { defaultStyleFor } from '@/lib/blocks';
 import { removeGeneratedCopyDuplicates } from '@/lib/copy-quality';
 import { enhanceGeneratedEditorialCopy } from '@/lib/editorial-depth';
+import { isVielusosSite } from '@/lib/vielusos';
 
 // Rich AI copywriting of a full multi-page site can take a few minutes.
 // Requires the Vercel Pro plan (Hobby caps maxDuration at 60s).
@@ -21,6 +22,8 @@ export const maxDuration = 300;
 export async function POST(req: Request) {
   try {
     const ctx = await requireApiPermission(PERMISSIONS.SITE_EDIT);
+    const protectedSite = await prisma.site.findUnique({ where: { organizationId: ctx.org.id }, select: { subdomain: true } });
+    if (isVielusosSite(protectedSite)) return NextResponse.json({ error: 'Le site VIELUSOS est verrouillé et ne peut pas être remplacé par le générateur.' }, { status: 403 });
     const b = await req.json();
     const name = (b.name || '').trim() || ctx.org.name;
     const previousProfile = (ctx.org.profile as Record<string, any>) || {};
@@ -39,6 +42,13 @@ export async function POST(req: Request) {
       siteType,
       hasShop,
       genre: b.genre || undefined,
+      artistStory: b.artistStory || undefined,
+      artistSound: b.artistSound || undefined,
+      artistLive: b.artistLive || undefined,
+      brandStory: b.brandStory || undefined,
+      brandPromise: b.brandPromise || undefined,
+      brandProof: b.brandProof || undefined,
+      shippingInfo: b.shippingInfo || undefined,
       slogan: requestedSlogan || undefined,
       generateCgv: generateLegal,
       year: b.year || undefined,
@@ -70,8 +80,27 @@ export async function POST(req: Request) {
       }));
       const videoLinks = (Array.isArray(b.videoLinks) ? b.videoLinks : []).filter(Boolean).slice(0, 12).map(String);
       const streaming = b.streamingLinks && typeof b.streamingLinks === 'object' ? b.streamingLinks : {};
-      generated = buildMusicSite(input, { tracks, streaming, videos: videoLinks, instagram: String(b.instagram || '') });
-      console.log('[magic-generator] generation_source', { organizationId: ctx.org.id, source: 'music', tracks: tracks.length });
+      const mediaGenerated = buildMusicSite(input, { tracks, streaming, videos: videoLinks, instagram: String(b.instagram || '') });
+      const aiGenerated = await aiGenerateSite(input, themePhotos);
+      if (aiGenerated) {
+        const aiHome = aiGenerated.pages.find((page: any) => page.isHome);
+        const aiBio = aiGenerated.pages.find((page: any) => /bio|about|propos|univers/i.test(`${page.slug} ${page.title}`));
+        const mediaHome = mediaGenerated.pages.find((page: any) => page.isHome);
+        const mediaBio = mediaGenerated.pages.find((page: any) => page.slug === 'bio');
+        if (mediaHome && aiHome) {
+          const hero = mediaHome.blocks.filter((block: any) => block.type === 'banner');
+          const editorial = (aiHome.blocks || []).filter((block: any) => ['heading', 'text', 'textimage', 'cards'].includes(block.type)).slice(0, 4);
+          const media = mediaHome.blocks.filter((block: any) => block.type !== 'banner' && !['heading', 'text', 'textimage', 'cards'].includes(block.type));
+          mediaHome.blocks = [...hero, ...editorial, ...media].map((block: any, order: number) => ({ ...block, order }));
+        }
+        if (mediaBio && aiBio && (aiBio.blocks || []).length >= 2) mediaBio.blocks = aiBio.blocks.map((block: any, order: number) => ({ ...block, order }));
+        const reserved = /^(accueil|home|bio|about|sons|music|contact)$/i;
+        for (const page of aiGenerated.pages) {
+          if (!page.isHome && !reserved.test(page.slug) && !mediaGenerated.pages.some((existing: any) => existing.slug === page.slug)) mediaGenerated.pages.splice(-1, 0, page);
+        }
+      }
+      generated = mediaGenerated;
+      console.log('[magic-generator] generation_source', { organizationId: ctx.org.id, source: aiGenerated ? 'music-ai' : 'music-deterministic', tracks: tracks.length });
     } else {
       // Try AI generation first (rich, all pages); fall back to the deterministic
       // builder if no API key or the model call fails.
@@ -178,6 +207,13 @@ export async function POST(req: Request) {
       language: input.language,
       siteType,
       genre: siteType === 'music' ? (b.genre || '') : profile.genre,
+      artistStory: siteType === 'music' ? (b.artistStory || '') : profile.artistStory,
+      artistSound: siteType === 'music' ? (b.artistSound || '') : profile.artistSound,
+      artistLive: siteType === 'music' ? (b.artistLive || '') : profile.artistLive,
+      brandStory: siteType === 'shop' ? (b.brandStory || '') : profile.brandStory,
+      brandPromise: siteType === 'shop' ? (b.brandPromise || '') : profile.brandPromise,
+      brandProof: siteType === 'shop' ? (b.brandProof || '') : profile.brandProof,
+      shippingInfo: siteType === 'shop' ? (b.shippingInfo || '') : profile.shippingInfo,
       streamingLinks: siteType === 'music' ? (b.streamingLinks || {}) : profile.streamingLinks,
       trackLinks: siteType === 'music' ? (Array.isArray(b.trackLinks) ? b.trackLinks : []) : profile.trackLinks,
       videoLinks: siteType === 'music' ? (Array.isArray(b.videoLinks) ? b.videoLinks : []) : profile.videoLinks,

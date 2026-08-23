@@ -118,9 +118,23 @@ const STREAMING = [
   { key: 'appleMusic', label: 'Apple Music', color: '#FA57C1' },
   { key: 'soundcloud', label: 'SoundCloud', color: '#FF5500' },
   { key: 'youtube', label: 'YouTube', color: '#FF0000' },
+  { key: 'youtubeMusic', label: 'YouTube Music', color: '#FF0000' },
+  { key: 'amazonMusic', label: 'Amazon Music', color: '#25D1DA' },
+  { key: 'beatport', label: 'Beatport', color: '#01FF95' },
+  { key: 'bandcamp', label: 'Bandcamp', color: '#1DA0C3' },
+  { key: 'tidal', label: 'TIDAL', color: '#000000' },
 ];
 function StreamingIcon({ k }: { k: string }) {
   if (k === 'youtube') return <Youtube className="h-5 w-5" />;
+  const officialMarks: Record<string, string> = {
+    youtubeMusic: 'https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/youtubemusic.svg',
+    amazonMusic: 'https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/amazonmusic.svg',
+    beatport: 'https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/beatport.svg',
+    bandcamp: 'https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/bandcamp.svg',
+    tidal: 'https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/tidal.svg',
+  };
+  if (officialMarks[k]) return <span aria-hidden="true" className="block h-5 w-5 bg-current" style={{ WebkitMask: `url(${officialMarks[k]}) center / contain no-repeat`, mask: `url(${officialMarks[k]}) center / contain no-repeat` }} />;
+  if (k === 'appleMusic') return <img src="/integrations/applemusic.svg" alt="" className="h-5 w-5 object-contain" />;
   if (k === 'soundcloud') {
     return <svg viewBox="0 0 44 28" className="h-5 w-8" aria-hidden="true"><path fill="currentColor" d="M31 27H11a11 11 0 0 1 0-22 12 12 0 0 1 21 5 8.5 8.5 0 0 1-1 17ZM3 15h2v10H3Zm5-6h2v18H8Zm5-4h2v22h-2Zm5-1h2v23h-2Zm5 2h2v21h-2Z" /></svg>;
   }
@@ -365,7 +379,7 @@ function instaPostCode(url: string): string {
   return String(url).match(/instagram\.com\/(?:[^/]+\/)?(?:p|reel|tv)\/([A-Za-z0-9_-]+)/)?.[1] || '';
 }
 type InstagramMedia = { type: 'image' | 'video'; src: string; poster?: string; width: number; height: number };
-function InstagramMediaCard({ code, eager, position }: { code: string; eager: boolean; position: number }) {
+function InstagramMediaCard({ code, eager, position, variant = 'vielusos' }: { code: string; eager: boolean; position: number; variant?: 'vielusos' | 'generic' }) {
   const [media, setMedia] = useState<InstagramMedia[]>([]);
   const [active, setActive] = useState(0);
   const touchStart = useRef<number | null>(null);
@@ -393,7 +407,9 @@ function InstagramMediaCard({ code, eager, position }: { code: string; eager: bo
   const move = (direction: number) => setActive((current) => (current + direction + media.length) % media.length);
   return (
     <article
-      className="relative aspect-[4/5] w-[calc((100%-0.75rem)/2)] shrink-0 snap-start overflow-hidden rounded-2xl bg-black/30 shadow-[0_18px_50px_rgba(0,0,0,.3)] md:w-[calc((100%-3rem)/5)]"
+      className={variant === 'vielusos'
+        ? 'relative aspect-[4/5] w-[calc((100%-0.75rem)/2)] shrink-0 snap-start overflow-hidden rounded-2xl bg-black/30 shadow-[0_18px_50px_rgba(0,0,0,.3)] md:w-[calc((100%-3rem)/5)]'
+        : 'relative aspect-[4/5] w-[78vw] max-w-[360px] shrink-0 snap-start overflow-hidden rounded-2xl bg-gray-950/10 shadow-[0_18px_45px_rgba(15,23,42,.16)] sm:w-[calc((100%-1rem)/2)] lg:w-[calc((100%-3rem)/4)] xl:w-[calc((100%-4rem)/5)]'}
       onTouchStart={(event) => { touchStart.current = event.touches[0]?.clientX ?? null; }}
       onTouchEnd={(event) => {
         if (touchStart.current === null || media.length < 2) return;
@@ -448,22 +464,23 @@ export function InstagramPreview({ content }: { content: any }) {
   }
 
   return (
-    <div className="mx-auto w-full max-w-5xl px-4">
-      <div className="mb-3 flex items-center" aria-label="Instagram">
-        <span className="grid h-7 w-7 place-items-center rounded-lg bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-600"><Instagram className="h-4 w-4 text-white" /></span>
+    <section className="mx-auto w-full max-w-7xl px-5 sm:px-8 lg:px-12">
+      <div className="flex items-end justify-between gap-4">
+        <div><div className="flex items-center gap-2" aria-label="Instagram"><span className="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-600"><Instagram className="h-4 w-4 text-white" /></span><span className="text-xs font-bold uppercase tracking-[0.18em] text-gray-500">Instagram</span></div>{content?.title && <h2 className="mt-3 text-2xl font-extrabold md:text-3xl">{content.title}</h2>}</div>
+        {profileUrl && <a href={profileUrl} target="_blank" rel="noreferrer" className="shrink-0 rounded-full border border-current/20 px-4 py-2 text-xs font-bold hover:bg-black/5">@{username || 'Instagram'}</a>}
       </div>
 
-      {embeds.length > 0 ? (
-        <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {embeds.map((src: string, i: number) => (
-            <div key={i} className="relative aspect-square overflow-hidden rounded-2xl bg-gray-100">
-              <iframe src={src} title={`instagram-${i}`} loading="lazy" scrolling="no" className="absolute left-0 top-[-64px] h-[760px] w-full border-0" />
-            </div>
-          ))}
+      {postCodes.length > 0 ? (
+        <div className="relative mt-6">
+          <button type="button" aria-label="Publication Instagram précédente" onClick={() => document.getElementById(`instagram-rail-${username || 'posts'}`)?.scrollBy({ left: -window.innerWidth * 0.75, behavior: 'smooth' })} className="absolute left-1 top-1/2 z-10 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full border border-white/30 bg-black/65 text-white shadow-lg backdrop-blur-md"><ChevronLeft className="h-5 w-5" /></button>
+          <button type="button" aria-label="Publication Instagram suivante" onClick={() => document.getElementById(`instagram-rail-${username || 'posts'}`)?.scrollBy({ left: window.innerWidth * 0.75, behavior: 'smooth' })} className="absolute right-1 top-1/2 z-10 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full border border-white/30 bg-black/65 text-white shadow-lg backdrop-blur-md"><ChevronRight className="h-5 w-5" /></button>
+          <div id={`instagram-rail-${username || 'posts'}`} className="flex snap-x snap-mandatory gap-4 overflow-x-auto px-1 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {postCodes.map((code: string, i: number) => <InstagramMediaCard key={`${code}-${i}`} code={code} eager={i < 5} position={i} variant="generic" />)}
+          </div>
         </div>
       ) : (
         <p className="mt-6 text-center text-sm text-gray-400">Ajoutez les liens de vos posts Instagram — ils s’afficheront ici en direct.</p>
       )}
-    </div>
+    </section>
   );
 }

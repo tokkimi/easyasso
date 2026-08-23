@@ -13,9 +13,17 @@ type Props = {
   phone?: string;
   organizationId?: string;
   locale?: 'fr' | 'en';
+  position?: 'left' | 'right';
+  backgroundColor?: string;
+  textColor?: string;
+  showPhone?: boolean;
+  showSms?: boolean;
+  showEmail?: boolean;
+  showMessage?: boolean;
+  branded?: boolean;
 };
 
-export function ContactBubble({ name, slogan, sloganEn, logoUrl, email, phone, organizationId, locale }: Props) {
+export function ContactBubble({ name, slogan, sloganEn, logoUrl, email, phone, organizationId, locale, position = 'right', backgroundColor = '#171717', textColor = '#ffffff', showPhone = true, showSms = true, showEmail = true, showMessage = true, branded = false }: Props) {
   const { locale: activeLocale } = useLanguage();
   const en = activeLocale === 'en' || (!activeLocale && locale === 'en');
   const [open, setOpen] = useState(false);
@@ -73,9 +81,9 @@ export function ContactBubble({ name, slogan, sloganEn, logoUrl, email, phone, o
   );
 
   return (
-    <div className="fixed bottom-4 right-4 z-[60] w-[min(92vw,20rem)] font-sans" data-no-translate>
+    <div className={`fixed bottom-4 z-[60] w-[min(92vw,20rem)] font-sans ${position === 'left' ? 'left-4' : 'right-4'}`} style={{ color: textColor }} data-no-translate>
       {open && (
-        <div className="mb-3 overflow-hidden rounded-3xl border border-white/15 bg-neutral-900/50 text-white shadow-2xl backdrop-blur-2xl">
+        <div className={`mb-3 overflow-hidden rounded-3xl border border-white/15 text-white shadow-2xl backdrop-blur-2xl ${branded ? 'bg-neutral-900/50' : ''}`} style={branded ? undefined : { backgroundColor: `${backgroundColor}d9`, color: textColor }}>
           <div className="flex items-start justify-between px-4 pb-3 pt-4">
             <h3 className="max-w-[12rem] text-lg font-bold leading-tight">{en ? 'How can we help?' : 'Comment nous joindre ?'}</h3>
             <button type="button" aria-label={en ? 'Close' : 'Fermer'} onClick={() => { setOpen(false); setView('menu'); setState('idle'); }} className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-white/10 text-white/80 transition hover:bg-white/20"><X className="h-4 w-4" /></button>
@@ -83,10 +91,10 @@ export function ContactBubble({ name, slogan, sloganEn, logoUrl, email, phone, o
 
           {view === 'menu' && (
             <div>
-              {phone && <Row icon={Phone} title={en ? 'Call' : 'Appeler'} subtitle={phone} onClick={() => { window.location.href = `tel:${phone.replace(/\s+/g, '')}`; }} />}
-              {phone && <Row icon={MessageSquare} title={en ? 'Send a text' : 'Envoyer un SMS'} subtitle={en ? 'Direct reply on mobile' : 'Réponse directe sur mobile'} onClick={() => { window.location.href = `sms:${phone.replace(/\s+/g, '')}`; }} />}
-              {email && <Row icon={Mail} title={en ? 'Send an email' : 'Envoyer un courriel'} subtitle={email} onClick={() => { window.location.href = `mailto:${email}`; }} />}
-              {organizationId && <Row icon={MessagesSquare} title={en ? 'Messaging' : 'Messagerie'} subtitle={en ? 'Write to us right here' : 'Écrivez-nous directement ici'} onClick={() => setView('message')} />}
+              {showPhone && phone && <Row icon={Phone} title={en ? 'Call' : 'Appeler'} subtitle={phone} onClick={() => { window.location.href = `tel:${phone.replace(/\s+/g, '')}`; }} />}
+              {showSms && phone && <Row icon={MessageSquare} title={en ? 'Send a text' : 'Envoyer un SMS'} subtitle={en ? 'Direct reply on mobile' : 'Réponse directe sur mobile'} onClick={() => { window.location.href = `sms:${phone.replace(/\s+/g, '')}`; }} />}
+              {showEmail && email && <Row icon={Mail} title={en ? 'Send an email' : 'Envoyer un courriel'} subtitle={email} onClick={() => { window.location.href = `mailto:${email}`; }} />}
+              {showMessage && organizationId && <Row icon={MessagesSquare} title={en ? 'Messaging' : 'Messagerie'} subtitle={en ? 'Write to us right here' : 'Écrivez-nous directement ici'} onClick={() => setView('message')} />}
             </div>
           )}
 
@@ -118,7 +126,7 @@ export function ContactBubble({ name, slogan, sloganEn, logoUrl, email, phone, o
       )}
 
       {!open && (
-        <button type="button" onClick={() => setOpen(true)} className="flex w-full items-center gap-3 rounded-3xl border border-white/15 bg-neutral-900/50 px-4 py-2.5 text-white shadow-2xl backdrop-blur-2xl transition hover:bg-neutral-900/60">
+        <button type="button" onClick={() => setOpen(true)} className={`flex w-full items-center gap-3 rounded-3xl border border-white/15 px-4 py-2.5 text-white shadow-2xl backdrop-blur-2xl transition ${branded ? 'bg-neutral-900/50 hover:bg-neutral-900/60' : 'hover:brightness-110'}`} style={branded ? undefined : { backgroundColor: `${backgroundColor}d9`, color: textColor }}>
           {Identity}
         </button>
       )}

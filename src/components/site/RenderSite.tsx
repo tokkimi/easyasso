@@ -118,6 +118,8 @@ export async function RenderSite({ site, basePath, slug }: { site: SiteWithPages
       background: VIELUSOS_BRAND.surface,
       textColor: '#f7f7fb',
       columns: columnsWithHeaderSocials,
+      text: String(footer.text || '').replace(/vielusos/gi, 'VIELUSOS'),
+      allRightsText: String(footer.allRightsText || '').replace(/vielusos/gi, 'VIELUSOS'),
     }
     : { ...footer, columns: columnsWithHeaderSocials };
   const shopEnabled = Boolean(profile.shopEnabled ?? profile.hasShop);
@@ -132,7 +134,7 @@ export async function RenderSite({ site, basePath, slug }: { site: SiteWithPages
   // footer.showContactBubble = false in the editor).
   const bubble = (footer as any).showContactBubble === false ? null : (
     <ContactBubble
-      name={site.name}
+      name={vielusos ? site.name.toUpperCase() : site.name}
       slogan={(footer as any).contactBubbleText || publicFooter.text}
       sloganEn={(footer as any).contactBubbleTextEn}
       logoUrl={(publicHeader as any).logoUrl || (publicFooter as any).logoUrl}
@@ -157,7 +159,7 @@ export async function RenderSite({ site, basePath, slug }: { site: SiteWithPages
         {fontHref && <link rel="stylesheet" href={fontHref} />}
         <style dangerouslySetInnerHTML={{ __html: `${brandCss(theme.primary)}${vielusos ? VIELUSOS_SITE_CSS : ''}` }} />
         <PublicHeader header={publicHeader} nav={nav} basePath={basePath} />
-        <ClientAccessPage organizationId={site.organizationId} organizationName={site.name} locale={profile.language === 'en' ? 'en' : 'fr'} branded={vielusos} />
+        <ClientAccessPage organizationId={site.organizationId} organizationName={vielusos ? site.name.toUpperCase() : site.name} locale={profile.language === 'en' ? 'en' : 'fr'} branded={vielusos} />
         <PublicFooter footer={publicFooter} orgId={site.organizationId} basePath={basePath} nav={nav} />
         {bubble}
       </div>

@@ -42,7 +42,8 @@ function Btn({ b, basePath = '' }: { b: ButtonConfig; basePath?: string }) {
 }
 
 export function PublicBlock({ type, content, style, basePath = '', organizationId, products, shopReady, branded = false }: { type: string; content: any; style: BlockStyle; basePath?: string; organizationId?: string; products?: ShopProduct[]; shopReady?: boolean; branded?: boolean }) {
-  const inner = renderInner(type, content, style, basePath, organizationId, products, shopReady, branded);
+  const publicContent = branded ? normalizeVielusosCopy(content) : content;
+  const inner = renderInner(type, publicContent, style, basePath, organizationId, products, shopReady, branded);
   // Drop the old default sky-blue band (it also left white borders on the sides
   // of width-constrained blocks).
   const cleanBg = (bg?: string) => (bg && bg.toLowerCase() !== '#f1f5ff' ? bg : undefined);
@@ -58,6 +59,16 @@ export function PublicBlock({ type, content, style, basePath = '', organizationI
       {inner}
     </div>
   );
+}
+
+function normalizeVielusosCopy(value: any): any {
+  if (typeof value === 'string') {
+    if (/^(?:https?:|\/)/i.test(value)) return value;
+    return value.replace(/vielusos/gi, 'VIELUSOS');
+  }
+  if (Array.isArray(value)) return value.map(normalizeVielusosCopy);
+  if (value && typeof value === 'object') return Object.fromEntries(Object.entries(value).map(([key, child]) => [key, normalizeVielusosCopy(child)]));
+  return value;
 }
 
 function renderInner(type: string, content: any, style: BlockStyle, basePath: string, organizationId?: string, products?: ShopProduct[], shopReady?: boolean, branded = false) {
@@ -106,7 +117,7 @@ function renderInner(type: string, content: any, style: BlockStyle, basePath: st
       return (
         <div className={`public-social-block flex gap-4 ${justifyClass(s.align)}`}>
           {items.map(({ k, url, Icon, asset }) => (
-            <a key={k} href={safePublicUrl(url) || '#'} target="_blank" rel="noreferrer" aria-label={k} title={k} className="grid h-11 w-11 place-items-center rounded-xl border border-current/15 text-gray-600 transition hover:-translate-y-0.5 hover:text-gray-300">{asset ? <img src={asset} alt="" className="h-6 w-6 object-contain" /> : <Icon className="h-6 w-6" />}</a>
+            <a key={k} href={safePublicUrl(url) || '#'} target="_blank" rel="noreferrer" aria-label={k} title={k} className={`grid h-11 w-11 place-items-center rounded-xl border border-current/15 text-gray-600 transition hover:-translate-y-0.5 ${branded ? 'hover:text-gray-300' : 'hover:text-brand-600'}`}>{asset ? <img src={asset} alt="" className="h-6 w-6 object-contain" /> : <Icon className="h-6 w-6" />}</a>
           ))}
         </div>
       );

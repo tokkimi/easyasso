@@ -441,7 +441,7 @@ export function InstagramPreview({ content }: { content: any }) {
   const tiktokUsername = String(content?.tiktokUsername || '').replace(/^@/, '');
   const tiktokProfileUrl = safePublicUrl(content?.tiktokUrl || (tiktokUsername ? `https://www.tiktok.com/@${tiktokUsername}` : ''));
   const tiktokPosts = (Array.isArray(content?.tiktokPostUrls) ? content.tiktokPostUrls : [])
-    .map((url: string) => ({ url: safePublicUrl(url), id: String(url).match(/tiktok\.com\/@[^/]+\/video\/(\d+)/)?.[1] || '' }))
+    .map((url: string) => ({ url: safePublicUrl(url), id: String(url).match(/tiktok\.com\/@[^/]+\/(?:video|photo)\/(\d+)/)?.[1] || '' }))
     .filter((post: { url: string; id: string }) => post.url && post.id)
     .slice(0, count);
 

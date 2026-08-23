@@ -18,6 +18,19 @@ import { VielusosBio } from './VielusosBio';
 
 type SiteWithPages = NonNullable<Awaited<ReturnType<typeof loadSiteBySubdomain>>>;
 
+const VIELUSOS_TIKTOK_POSTS = [
+  'https://www.tiktok.com/@vielusos/video/7639034526311796001',
+  'https://www.tiktok.com/@vielusos/video/7634953189300751638',
+  'https://www.tiktok.com/@vielusos/video/7617513144914627862',
+  'https://www.tiktok.com/@vielusos/video/7668617576657800480',
+  'https://www.tiktok.com/@vielusos/video/7665450867595808033',
+  'https://www.tiktok.com/@vielusos/video/7654693326142049568',
+  'https://www.tiktok.com/@vielusos/video/7637826062151322902',
+  'https://www.tiktok.com/@vielusos/video/7636121804993498390',
+  'https://www.tiktok.com/@vielusos/video/7633087077567040790',
+  'https://www.tiktok.com/@vielusos/photo/7632358675759320342',
+];
+
 export async function loadSiteBySubdomain(subdomain: string) {
   return prisma.site.findUnique({
     where: { subdomain },
@@ -210,7 +223,7 @@ export async function RenderSite({ site, basePath, slug }: { site: SiteWithPages
         ) : (
           renderedBlocks.map((b) => (
             <Fragment key={b.id}>
-              <PublicBlock type={b.type} content={b.type === 'instagram' && vielusos ? { ...(b.content as any), tiktokTitle: (b.content as any)?.tiktokTitle || 'TikTok', tiktokUsername: (b.content as any)?.tiktokUsername || 'vielusos', tiktokUrl: (b.content as any)?.tiktokUrl || (publicHeader as any).social?.tiktok || 'https://www.tiktok.com/@vielusos' } : b.content as any} style={b.style as any} basePath={basePath} organizationId={site.organizationId} products={b.type === 'shop' ? products : undefined} shopReady={b.type === 'shop' ? shopReady : undefined} branded={vielusos} />
+              <PublicBlock type={b.type} content={b.type === 'instagram' && vielusos ? { ...(b.content as any), tiktokTitle: (b.content as any)?.tiktokTitle || 'TikTok', tiktokUsername: (b.content as any)?.tiktokUsername || 'vielusos', tiktokUrl: (b.content as any)?.tiktokUrl || (publicHeader as any).social?.tiktok || 'https://www.tiktok.com/@vielusos', tiktokPostUrls: Array.isArray((b.content as any)?.tiktokPostUrls) && (b.content as any).tiktokPostUrls.length ? (b.content as any).tiktokPostUrls : VIELUSOS_TIKTOK_POSTS } : b.content as any} style={b.style as any} basePath={basePath} organizationId={site.organizationId} products={b.type === 'shop' ? products : undefined} shopReady={b.type === 'shop' ? shopReady : undefined} branded={vielusos} />
               {vielusos && page.isHome && b.type === 'instagram' && <VielusosBio config={(header as any).vielusosBio} />}
             </Fragment>
           ))

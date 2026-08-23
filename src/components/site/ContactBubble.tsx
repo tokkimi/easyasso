@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Phone, MessageSquare, Mail, MessagesSquare, X, Send, CheckCircle2 } from 'lucide-react';
+import { Phone, MessageSquare, Mail, MessagesSquare, CalendarDays, X, Send, CheckCircle2 } from 'lucide-react';
 import { useLanguage } from '@/components/language-provider';
 
 type Props = {
@@ -21,9 +21,15 @@ type Props = {
   showEmail?: boolean;
   showMessage?: boolean;
   branded?: boolean;
+  showBooking?: boolean;
+  bookingLabel?: string;
+  bookingLabelEn?: string;
+  bookingSubtitle?: string;
+  bookingSubtitleEn?: string;
+  bookingHref?: string;
 };
 
-export function ContactBubble({ name, slogan, sloganEn, logoUrl, email, phone, organizationId, locale, position = 'right', backgroundColor = '#171717', textColor = '#ffffff', showPhone = true, showSms = true, showEmail = true, showMessage = true, branded = false }: Props) {
+export function ContactBubble({ name, slogan, sloganEn, logoUrl, email, phone, organizationId, locale, position = 'right', backgroundColor = '#171717', textColor = '#ffffff', showPhone = true, showSms = true, showEmail = true, showMessage = true, branded = false, showBooking = false, bookingLabel = 'Booking', bookingLabelEn, bookingSubtitle = 'Dates, événements et demandes professionnelles', bookingSubtitleEn, bookingHref = '/booking' }: Props) {
   const { locale: activeLocale } = useLanguage();
   const en = activeLocale === 'en' || (!activeLocale && locale === 'en');
   const [open, setOpen] = useState(false);
@@ -94,6 +100,7 @@ export function ContactBubble({ name, slogan, sloganEn, logoUrl, email, phone, o
               {showPhone && phone && <Row icon={Phone} title={en ? 'Call' : 'Appeler'} subtitle={phone} onClick={() => { window.location.href = `tel:${phone.replace(/\s+/g, '')}`; }} />}
               {showSms && phone && <Row icon={MessageSquare} title={en ? 'Send a text' : 'Envoyer un SMS'} subtitle={en ? 'Direct reply on mobile' : 'Réponse directe sur mobile'} onClick={() => { window.location.href = `sms:${phone.replace(/\s+/g, '')}`; }} />}
               {showEmail && email && <Row icon={Mail} title={en ? 'Send an email' : 'Envoyer un courriel'} subtitle={email} onClick={() => { window.location.href = `mailto:${email}`; }} />}
+              {showBooking && <Row icon={CalendarDays} title={en ? bookingLabelEn || bookingLabel : bookingLabel} subtitle={en ? bookingSubtitleEn || bookingSubtitle : bookingSubtitle} onClick={() => { window.location.href = bookingHref; }} />}
               {showMessage && organizationId && <Row icon={MessagesSquare} title={en ? 'Messaging' : 'Messagerie'} subtitle={en ? 'Write to us right here' : 'Écrivez-nous directement ici'} onClick={() => setView('message')} />}
             </div>
           )}

@@ -15,6 +15,7 @@ import { isVielusosSite, VIELUSOS_BRAND } from '@/lib/vielusos';
 import { VIELUSOS_SITE_CSS } from '@/lib/vielusos';
 import { VielusosHero } from './VielusosHero';
 import { VielusosBio } from './VielusosBio';
+import { VielusosBooking } from './VielusosBooking';
 
 type SiteWithPages = NonNullable<Awaited<ReturnType<typeof loadSiteBySubdomain>>>;
 
@@ -163,6 +164,12 @@ export async function RenderSite({ site, basePath, slug }: { site: SiteWithPages
       showEmail={(footer as any).contactBubbleShowEmail ?? true}
       showMessage={(footer as any).contactBubbleShowMessage ?? true}
       branded={vielusos}
+      showBooking={vielusos && ((footer as any).contactBubbleShowBooking ?? true)}
+      bookingLabel={(footer as any).contactBubbleBookingLabel || 'Booking'}
+      bookingLabelEn={(footer as any).contactBubbleBookingLabelEn || 'Booking'}
+      bookingSubtitle={(footer as any).contactBubbleBookingSubtitle || 'Dates, événements et demandes professionnelles'}
+      bookingSubtitleEn={(footer as any).contactBubbleBookingSubtitleEn || 'Dates, events and professional enquiries'}
+      bookingHref={(footer as any).contactBubbleBookingHref || `${basePath || ''}/booking`}
     />
   );
 
@@ -197,6 +204,19 @@ export async function RenderSite({ site, basePath, slug }: { site: SiteWithPages
   }
 
   if (slug === 'boutique' && !shopEnabled) notFound();
+
+  if (vielusos && slug === 'booking') {
+    return (
+      <div className="vielusos-site flex min-h-screen flex-col" style={publicSiteStyle(theme, true)}>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&family=Montserrat:wght@300;400;500&display=swap" />
+        <style dangerouslySetInnerHTML={{ __html: `${brandCss(theme.primary)}${VIELUSOS_SITE_CSS}` }} />
+        <PublicHeader header={publicHeader} nav={nav} basePath={basePath} />
+        <VielusosBooking organizationId={site.organizationId} />
+        <PublicFooter footer={publicFooter} orgId={site.organizationId} basePath={basePath} nav={nav} />
+        {bubble}
+      </div>
+    );
+  }
 
   const page = slug ? site.pages.find((p) => p.slug === slug) : site.pages.find((p) => p.isHome) || site.pages[0];
   if (!page) notFound();

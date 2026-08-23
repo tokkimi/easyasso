@@ -313,6 +313,12 @@ export interface FooterConfig {
   contactBubbleShowSms?: boolean;
   contactBubbleShowEmail?: boolean;
   contactBubbleShowMessage?: boolean;
+  contactBubbleShowBooking?: boolean;
+  contactBubbleBookingLabel?: string;
+  contactBubbleBookingLabelEn?: string;
+  contactBubbleBookingSubtitle?: string;
+  contactBubbleBookingSubtitleEn?: string;
+  contactBubbleBookingHref?: string;
 }
 
 export const DEFAULT_HEADER: HeaderConfig = {
@@ -349,6 +355,12 @@ export const DEFAULT_FOOTER: FooterConfig = {
   contactBubbleShowSms: true,
   contactBubbleShowEmail: true,
   contactBubbleShowMessage: true,
+  contactBubbleShowBooking: false,
+  contactBubbleBookingLabel: 'Booking',
+  contactBubbleBookingLabelEn: 'Booking',
+  contactBubbleBookingSubtitle: 'Dates, événements et demandes professionnelles',
+  contactBubbleBookingSubtitleEn: 'Dates, events and professional enquiries',
+  contactBubbleBookingHref: '/booking',
   columns: [
     { title: 'Association', links: [{ label: 'Accueil', href: '/' }] },
     { title: 'Nous soutenir', links: [{ label: 'Faire un don', href: '/don' }] },

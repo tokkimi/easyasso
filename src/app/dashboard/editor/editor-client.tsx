@@ -815,7 +815,9 @@ function PlayersEditor({ c, onContent }: { c: any; onContent: (v: any) => void }
 
 function InstagramEditor({ c, onContent }: { c: any; onContent: (v: any) => void }) {
   const postUrls: string[] = Array.isArray(c.postUrls) ? c.postUrls : [];
+  const tiktokPostUrls: string[] = Array.isArray(c.tiktokPostUrls) ? c.tiktokPostUrls : [];
   const setUrl = (i: number, v: string) => onContent({ ...c, postUrls: postUrls.map((u, j) => (j === i ? v : u)) });
+  const setTiktokUrl = (i: number, v: string) => onContent({ ...c, tiktokPostUrls: tiktokPostUrls.map((u, j) => (j === i ? v : u)) });
   return (
     <>
       <Field label="Titre du bloc"><input className="input" value={c.title || ''} onChange={(e) => onContent({ ...c, title: e.target.value })} placeholder="Sur Instagram" /></Field>
@@ -839,6 +841,19 @@ function InstagramEditor({ c, onContent }: { c: any; onContent: (v: any) => void
         {postUrls.length < 20 && <button type="button" onClick={() => onContent({ ...c, postUrls: [...postUrls, ''] })} className="btn btn-ghost mt-2 text-sm"><Plus className="h-4 w-4" /> Ajouter un post officiel</button>}
       </div>
       <p className="rounded-xl bg-green-50 p-3 text-xs leading-5 text-green-800">Seuls les liens officiels Instagram sont acceptés. Les images importées, captures et widgets tiers ne sont jamais utilisés.</p>
+      <div className="border-t border-gray-200 pt-5">
+        <h4 className="font-bold text-gray-900">TikTok</h4>
+        <div className="mt-3 grid gap-3 sm:grid-cols-2">
+          <Field label="Titre du bloc"><input className="input" value={c.tiktokTitle || ''} onChange={(e) => onContent({ ...c, tiktokTitle: e.target.value })} placeholder="TikTok" /></Field>
+          <Field label="Nom d’utilisateur"><input className="input" value={c.tiktokUsername || ''} onChange={(e) => onContent({ ...c, tiktokUsername: e.target.value })} placeholder="vielusos" /></Field>
+        </div>
+        <Field label="Lien du profil"><input className="input" type="url" value={c.tiktokUrl || ''} onChange={(e) => onContent({ ...c, tiktokUrl: e.target.value })} placeholder="https://www.tiktok.com/@…" /></Field>
+        <label className="label">Liens des publications TikTok</label>
+        <div className="space-y-2">
+          {tiktokPostUrls.map((u, i) => <div key={i} className="flex gap-2"><input className="input flex-1" type="url" value={u} onChange={(e) => setTiktokUrl(i, e.target.value)} placeholder="https://www.tiktok.com/@…/video/…" /><button type="button" onClick={() => onContent({ ...c, tiktokPostUrls: tiktokPostUrls.filter((_, j) => j !== i) })} className="shrink-0 text-red-500 hover:text-red-700"><Trash2 className="h-4 w-4" /></button></div>)}
+        </div>
+        {tiktokPostUrls.length < 20 && <button type="button" onClick={() => onContent({ ...c, tiktokPostUrls: [...tiktokPostUrls, ''] })} className="btn btn-ghost mt-2 text-sm"><Plus className="h-4 w-4" /> Ajouter un post TikTok</button>}
+      </div>
     </>
   );
 }

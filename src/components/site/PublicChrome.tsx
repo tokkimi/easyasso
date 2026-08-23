@@ -73,7 +73,7 @@ export function PublicHeader({
             <span className="truncate">{header.logoText}</span>
           )}
         </Link>
-        <div className="public-header-desktop min-w-0 flex-[2_1_0%] items-center justify-center gap-4">
+        <div className={`${brandedHeader ? 'hidden' : 'public-header-desktop'} min-w-0 flex-[2_1_0%] items-center justify-center gap-4`}>
           {header.showNav && (
             <nav className="flex min-w-0 items-center justify-center gap-2 text-center text-sm font-medium lg:gap-4">
               {nav.map((p) => (
@@ -83,7 +83,7 @@ export function PublicHeader({
           )}
         </div>
         <div className="flex flex-1 basis-0 items-center justify-end gap-2.5">
-          {socials.map(([name, href]) => <a key={name} href={href} target="_blank" rel="noreferrer" aria-label={name} title={name} className="hidden h-7 w-7 shrink-0 items-center justify-center text-current opacity-80 transition hover:opacity-100 lg:inline-flex"><SocialMark label={name} monochrome={brandedHeader} /></a>)}
+          {!brandedHeader && socials.map(([name, href]) => <a key={name} href={href} target="_blank" rel="noreferrer" aria-label={name} title={name} className="hidden h-7 w-7 shrink-0 items-center justify-center text-current opacity-80 transition hover:opacity-100 lg:inline-flex"><SocialMark label={name} /></a>)}
           <span className="hidden sm:inline-flex"><LanguageSwitcher variant="inline" /></span>
           {header.showCta !== false && cta && (
             <a
@@ -104,12 +104,12 @@ export function PublicHeader({
           >
             <UserRound className="h-5 w-5" />
           </Link>
-          <button type="button" onClick={() => setMenuOpen((open) => !open)} className={`public-header-menu-button touch-target shrink-0 items-center justify-center rounded-xl border ${brandedHeader ? 'border-white/20 bg-transparent text-white hover:bg-white/10' : 'border-black/10 bg-white/80'}`} aria-expanded={menuOpen} aria-label={menuOpen ? 'Fermer le menu' : 'Ouvrir le menu'}>
+          <button type="button" onClick={() => setMenuOpen((open) => !open)} className={`${brandedHeader ? 'flex' : 'public-header-menu-button'} touch-target shrink-0 items-center justify-center rounded-xl border ${brandedHeader ? 'border-white/20 bg-transparent text-white hover:bg-white/10' : 'border-black/10 bg-white/80'}`} aria-expanded={menuOpen} aria-label={menuOpen ? 'Fermer le menu' : 'Ouvrir le menu'}>
             {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>
         </div>
         {menuOpen && (
-          <div style={!brandedHeader ? { background: glassMenu ? hexToRgba(menuBackground, menuOpacity) : menuBackground, color: glassMenu ? '#fff' : header.textColor, backdropFilter: glassMenu ? `blur(${Math.max(0, Math.min(36, Number(header.menuBlur) || 20))}px)` : undefined } : undefined} className={`public-header-dropdown absolute left-3 right-3 top-[calc(100%+0.5rem)] z-50 rounded-2xl p-3 shadow-2xl ${brandedHeader ? 'border border-white/15 bg-[#0b0b10]/75 text-white shadow-black/60 backdrop-blur-2xl' : glassMenu ? 'border border-white/20 text-white shadow-black/30' : 'ring-1 ring-black/10'}`}>
+          <div style={!brandedHeader ? { background: glassMenu ? hexToRgba(menuBackground, menuOpacity) : menuBackground, color: glassMenu ? '#fff' : header.textColor, backdropFilter: glassMenu ? `blur(${Math.max(0, Math.min(36, Number(header.menuBlur) || 20))}px)` : undefined } : undefined} className={`${brandedHeader ? 'block' : 'public-header-dropdown'} absolute left-3 right-3 top-[calc(100%+0.5rem)] z-50 rounded-2xl p-3 shadow-2xl ${brandedHeader ? 'border border-white/15 bg-[#0b0b10]/75 text-white shadow-black/60 backdrop-blur-2xl' : glassMenu ? 'border border-white/20 text-white shadow-black/30' : 'ring-1 ring-black/10'}`}>
             {header.showNav && <nav className="flex flex-col">{nav.map((p) => <Link key={p.slug} href={link(p.slug, p.isHome)} onClick={() => setMenuOpen(false)} className={`rounded-xl px-4 py-3 text-base font-semibold ${(brandedHeader || glassMenu) ? 'border-b border-white/10 hover:bg-white/10' : 'hover:bg-black/5'}`}>{t(p.title)}</Link>)}</nav>}
             <div className={`mt-3 flex flex-wrap items-center gap-3 px-2 pt-3 ${(brandedHeader || glassMenu) ? 'border-t border-white/10' : 'border-t border-black/10'}`}>
               {socials.map(([name, href]) => <a key={name} href={href} target="_blank" rel="noreferrer" aria-label={name} className={`grid h-10 w-10 place-items-center rounded-full border ${(brandedHeader || glassMenu) ? 'border-white/20 text-white/80 hover:bg-white/10 hover:text-white' : 'border-black/15 text-current'}`}><SocialMark label={name} monochrome={brandedHeader || glassMenu} /></a>)}

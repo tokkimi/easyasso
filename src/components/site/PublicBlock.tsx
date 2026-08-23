@@ -41,8 +41,8 @@ function Btn({ b, basePath = '' }: { b: ButtonConfig; basePath?: string }) {
   );
 }
 
-export function PublicBlock({ type, content, style, basePath = '', organizationId, products, shopReady }: { type: string; content: any; style: BlockStyle; basePath?: string; organizationId?: string; products?: ShopProduct[]; shopReady?: boolean }) {
-  const inner = renderInner(type, content, style, basePath, organizationId, products, shopReady);
+export function PublicBlock({ type, content, style, basePath = '', organizationId, products, shopReady, branded = false }: { type: string; content: any; style: BlockStyle; basePath?: string; organizationId?: string; products?: ShopProduct[]; shopReady?: boolean; branded?: boolean }) {
+  const inner = renderInner(type, content, style, basePath, organizationId, products, shopReady, branded);
   // Drop the old default sky-blue band (it also left white borders on the sides
   // of width-constrained blocks).
   const cleanBg = (bg?: string) => (bg && bg.toLowerCase() !== '#f1f5ff' ? bg : undefined);
@@ -60,7 +60,7 @@ export function PublicBlock({ type, content, style, basePath = '', organizationI
   );
 }
 
-function renderInner(type: string, content: any, style: BlockStyle, basePath: string, organizationId?: string, products?: ShopProduct[], shopReady?: boolean) {
+function renderInner(type: string, content: any, style: BlockStyle, basePath: string, organizationId?: string, products?: ShopProduct[], shopReady?: boolean, branded = false) {
   switch (type) {
     case 'heading':
       return <h2 style={{ color: style.color, fontSize: style.fontSize ? `${style.fontSize}px` : undefined }} className="font-extrabold leading-tight">{content.text}</h2>;
@@ -104,9 +104,9 @@ function renderInner(type: string, content: any, style: BlockStyle, basePath: st
         { k: 'tidal', url: s.tidal, Icon: Music2, asset: 'https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/tidal.svg' },
       ].filter((i) => i.url);
       return (
-        <div className={`flex gap-4 ${justifyClass(s.align)}`}>
+        <div className={`public-social-block flex gap-4 ${justifyClass(s.align)}`}>
           {items.map(({ k, url, Icon, asset }) => (
-            <a key={k} href={safePublicUrl(url) || '#'} target="_blank" rel="noreferrer" aria-label={k} title={k} className="grid h-11 w-11 place-items-center rounded-xl border border-current/15 text-gray-600 transition hover:-translate-y-0.5 hover:text-brand-600">{asset ? <img src={asset} alt="" className="h-6 w-6 object-contain" /> : <Icon className="h-6 w-6" />}</a>
+            <a key={k} href={safePublicUrl(url) || '#'} target="_blank" rel="noreferrer" aria-label={k} title={k} className="grid h-11 w-11 place-items-center rounded-xl border border-current/15 text-gray-600 transition hover:-translate-y-0.5 hover:text-gray-300">{asset ? <img src={asset} alt="" className="h-6 w-6 object-contain" /> : <Icon className="h-6 w-6" />}</a>
           ))}
         </div>
       );
@@ -128,7 +128,7 @@ function renderInner(type: string, content: any, style: BlockStyle, basePath: st
     case 'events':
       return <EventHistory content={content} />;
     case 'stats':
-      return <StatsShowcase content={content} />;
+      return <StatsShowcase content={content} hidePlatforms={branded} />;
 
     // ---- Rich layouts ----
     case 'banner': {
@@ -288,9 +288,9 @@ function SectionHeading({ eyebrow, title, intro }: { eyebrow?: string; title?: s
   return <div><p className="text-[8px] font-semibold uppercase tracking-[0.24em] text-white/45 sm:text-[10px] sm:tracking-[0.5em]">{eyebrow}</p>{title && <h2 className="mt-4 text-white">{title}</h2>}{intro && <p className="mt-4 max-w-2xl text-xs font-light leading-6 text-white/50 sm:text-sm sm:leading-7">{intro}</p>}</div>;
 }
 
-function StatsShowcase({ content }: { content: any }) {
+function StatsShowcase({ content, hidePlatforms = false }: { content: any; hidePlatforms?: boolean }) {
   const items = Array.isArray(content.items) ? content.items : [];
-  return <section className="px-5 py-10 text-white md:px-12 md:py-20"><div className="vielusos-fluid mx-auto max-w-7xl"><SectionHeading eyebrow={content.eyebrow} title={content.title} intro={content.intro} /><div className="mt-7 grid grid-cols-2 overflow-hidden rounded-2xl border border-white/15 sm:mt-10 sm:rounded-3xl lg:grid-cols-3">{items.map((item: any, index: number) => <div key={index} className="min-h-28 border-b border-r border-white/10 p-4 sm:min-h-36 sm:p-6 lg:min-h-40"><p className="break-words text-2xl font-semibold tracking-tight sm:text-4xl md:text-5xl">{item.value}</p><p className="mt-4 max-w-[14rem] text-[7px] font-semibold uppercase leading-4 tracking-[0.16em] text-white/45 sm:mt-6 sm:text-[10px] sm:leading-5 sm:tracking-[0.25em]">{item.label}</p></div>)}</div>{content.platforms && <p className="mt-4 break-words text-center text-[7px] font-semibold uppercase leading-4 tracking-[0.12em] text-white/35 sm:mt-5 sm:text-[9px] sm:tracking-[0.22em]">{content.platforms}</p>}</div></section>;
+  return <section className="px-5 py-10 text-white md:px-12 md:py-20"><div className="vielusos-fluid mx-auto max-w-7xl"><SectionHeading eyebrow={content.eyebrow} title={content.title} intro={content.intro} /><div className="mt-7 grid grid-cols-2 overflow-hidden rounded-2xl border border-white/15 sm:mt-10 sm:rounded-3xl lg:grid-cols-3">{items.map((item: any, index: number) => <div key={index} className="min-h-28 border-b border-r border-white/10 p-4 sm:min-h-36 sm:p-6 lg:min-h-40"><p className="break-words text-2xl font-semibold tracking-tight sm:text-4xl md:text-5xl">{item.value}</p><p className="mt-4 max-w-[14rem] text-[7px] font-semibold uppercase leading-4 tracking-[0.16em] text-white/45 sm:mt-6 sm:text-[10px] sm:leading-5 sm:tracking-[0.25em]">{item.label}</p></div>)}</div>{!hidePlatforms && content.platforms && <p className="mt-4 break-words text-center text-[7px] font-semibold uppercase leading-4 tracking-[0.12em] text-white/35 sm:mt-5 sm:text-[9px] sm:tracking-[0.22em]">{content.platforms}</p>}</div></section>;
 }
 
 function EventHistory({ content }: { content: any }) {

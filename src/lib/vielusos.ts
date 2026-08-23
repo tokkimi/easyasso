@@ -25,6 +25,14 @@ html:has(.vielusos-site), body:has(.vielusos-site) { min-height: 100%; backgroun
 .vielusos-site main h2 { font-family: "Cormorant Garamond", "Times New Roman", serif !important; font-size: clamp(1.75rem, 3vw, 2.5rem) !important; line-height: 1 !important; font-weight: 300 !important; letter-spacing: .18em !important; text-transform: uppercase !important; }
 .vielusos-site .vielusos-fluid { width: 80% !important; max-width: none !important; padding-left: 0 !important; padding-right: 0 !important; }
 .vielusos-site .vielusos-media-shell { padding-left: 0 !important; padding-right: 0 !important; }
+.vielusos-site .public-social-block img,
+.vielusos-site .public-footer-shell img[src*="integrations"],
+.vielusos-site .vielusos-media-shell img,
+.vielusos-site .vielusos-media-shell svg { filter: grayscale(1) saturate(0) !important; }
+.vielusos-site .public-social-block a { color: rgba(247,247,251,.58) !important; border-color: rgba(247,247,251,.2) !important; }
+.vielusos-site .public-social-block a:hover { color: rgba(247,247,251,.92) !important; background: rgba(255,255,255,.06); }
+.vielusos-site .vielusos-media-shell [style*="color"] { color: rgba(247,247,251,.68) !important; }
+.vielusos-site .vielusos-media-shell [style*="box-shadow"] { box-shadow: 0 12px 26px -12px rgba(180,180,188,.35) !important; }
 @media (min-width: 768px) {
   .vielusos-site .vielusos-player-card, .vielusos-site .vielusos-video-card { width: calc((100% - 3rem) / 4) !important; max-width: none !important; }
 }

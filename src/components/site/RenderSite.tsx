@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { Fragment } from 'react';
 import { notFound } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 import { DEFAULT_HEADER, DEFAULT_FOOTER, type HeaderConfig, type FooterConfig } from '@/lib/blocks';
@@ -120,7 +121,10 @@ export async function RenderSite({ site, basePath, slug }: { site: SiteWithPages
     }
     : { ...footer, columns: columnsWithHeaderSocials };
   const shopEnabled = Boolean(profile.shopEnabled ?? profile.hasShop);
-  const nav = site.pages.filter((p) => p.showInNav && (p.slug !== 'boutique' || shopEnabled)).map((p) => ({ title: p.title, slug: p.slug, isHome: p.isHome }));
+  const nav = site.pages
+    .filter((p) => p.showInNav && (p.slug !== 'boutique' || shopEnabled))
+    .filter((p) => !vielusos || (!p.isHome && !['bio', 'about', 'a-propos'].includes(p.slug)))
+    .map((p) => ({ title: p.title, slug: p.slug, isHome: p.isHome }));
   const theme = (site.theme as any) || {};
   const fontHref = googleFontsHref(theme.font);
 
@@ -187,6 +191,7 @@ export async function RenderSite({ site, basePath, slug }: { site: SiteWithPages
   const shopReady = Boolean(profile.stripeConnectReady);
   const hasShopBlock = page.blocks.some((b) => b.type === 'shop');
   const products = hasShopBlock && shopEnabled ? await loadShopProducts(site.organizationId) : [];
+  const renderedBlocks = vielusos && page.isHome ? moveSocialBelowStats(page.blocks) : page.blocks;
 
   return (
     <div className={`flex min-h-screen flex-col ${vielusos ? 'vielusos-site' : ''}`} style={publicSiteStyle(theme, vielusos)}>
@@ -201,13 +206,29 @@ export async function RenderSite({ site, basePath, slug }: { site: SiteWithPages
         {vielusos && (page.slug === 'bio' || page.slug === 'about' || page.slug === 'a-propos') ? null : page.blocks.length === 0 ? (
           <p className="py-20 text-center text-gray-400">Cette page est vide.</p>
         ) : (
-          page.blocks.map((b) => <PublicBlock key={b.id} type={b.type} content={b.content as any} style={b.style as any} basePath={basePath} organizationId={site.organizationId} products={b.type === 'shop' ? products : undefined} shopReady={b.type === 'shop' ? shopReady : undefined} />)
+          renderedBlocks.map((b) => (
+            <Fragment key={b.id}>
+              <PublicBlock type={b.type} content={b.content as any} style={b.style as any} basePath={basePath} organizationId={site.organizationId} products={b.type === 'shop' ? products : undefined} shopReady={b.type === 'shop' ? shopReady : undefined} branded={vielusos} />
+              {vielusos && page.isHome && b.type === 'instagram' && <VielusosBio config={(header as any).vielusosBio} />}
+            </Fragment>
+          ))
         )}
       </main>
       <PublicFooter footer={publicFooter} orgId={site.organizationId} basePath={basePath} nav={nav} />
       {bubble}
     </div>
   );
+}
+
+function moveSocialBelowStats<T extends { type: string }>(blocks: T[]): T[] {
+  const statsIndex = blocks.findIndex((block) => block.type === 'stats');
+  const socialIndex = blocks.findIndex((block) => block.type === 'social');
+  if (statsIndex < 0 || socialIndex < 0 || socialIndex === statsIndex + 1) return blocks;
+  const ordered = [...blocks];
+  const [social] = ordered.splice(socialIndex, 1);
+  const adjustedStatsIndex = ordered.findIndex((block) => block.type === 'stats');
+  ordered.splice(adjustedStatsIndex + 1, 0, social);
+  return ordered;
 }
 
 function publicSiteStyle(theme: any, vielusos: boolean): React.CSSProperties {
@@ -231,7 +252,7 @@ function ClientAccessPage({ organizationId, organizationName, locale, branded = 
     <main className={`flex-1 px-4 py-12 ${branded ? 'bg-transparent' : 'bg-gray-50'}`}>
       <section className={`mx-auto max-w-2xl rounded-3xl p-5 text-center shadow-sm sm:p-7 md:rounded-[2rem] md:p-10 ${branded ? 'bg-[#0b0b10]/55 text-[#f7f7fb] ring-1 ring-white/15 backdrop-blur-xl' : 'bg-white ring-1 ring-gray-200'}`}>
         <p className={`text-sm font-bold uppercase tracking-[0.2em] ${branded ? 'text-[#d33f5c]' : 'text-[var(--brand)]'}`}>
-          {branded ? 'Vielusos · espace client' : en ? 'Customer area' : 'Espace client'}
+          {branded ? 'VIELUSOS · espace client' : en ? 'Customer area' : 'Espace client'}
         </p>
         <h1 className={`mt-3 text-2xl font-black sm:text-3xl md:text-4xl ${branded ? 'text-white' : 'text-gray-900'}`}>
           {en ? 'Sign in or create your customer account' : 'Connexion ou inscription client'}

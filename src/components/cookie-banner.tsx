@@ -27,7 +27,7 @@ export function CookieBanner() {
   return (
     <div className={`fixed inset-x-3 bottom-3 z-[80] mx-auto max-w-4xl rounded-2xl p-4 shadow-2xl backdrop-blur-xl sm:inset-x-6 sm:bottom-6 ${vielusos ? 'border border-white/15 bg-[#0b0b10]/92 text-white shadow-black/60' : 'border border-gray-200 bg-white'}`}>
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
-        <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${vielusos ? 'bg-[#d33f5c]/15 text-[#ff829a] ring-1 ring-[#d33f5c]/25' : 'bg-brand-50 text-brand-700'}`}>
+        <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${vielusos ? 'bg-white/10 text-white/65 ring-1 ring-white/15' : 'bg-brand-50 text-brand-700'}`}>
           <ShieldCheck className="h-5 w-5" />
         </div>
         <div className="min-w-0 flex-1">
@@ -40,7 +40,7 @@ export function CookieBanner() {
           <button type="button" onClick={() => choose('refused')} className={vielusos ? 'rounded-xl border border-white/20 px-4 py-2 text-sm font-medium text-white/70 transition hover:bg-white/10 hover:text-white' : 'btn btn-ghost'}>
             {t('Refuser')}
           </button>
-          <button type="button" onClick={() => choose('accepted')} className={vielusos ? 'rounded-xl bg-[#d33f5c] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#e3516e]' : 'btn btn-primary'}>
+          <button type="button" onClick={() => choose('accepted')} className={vielusos ? 'rounded-xl bg-white/15 px-4 py-2 text-sm font-semibold text-white ring-1 ring-white/20 transition hover:bg-white/25' : 'btn btn-primary'}>
             {t('Accepter')}
           </button>
           <button type="button" onClick={() => choose('refused')} className={`grid h-11 w-11 place-items-center rounded-lg ${vielusos ? 'text-white/35 hover:bg-white/10 hover:text-white' : 'text-gray-400 hover:bg-gray-100 hover:text-gray-700'}`} aria-label={t('Fermer')}>

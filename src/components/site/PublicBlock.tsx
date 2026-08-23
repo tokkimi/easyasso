@@ -62,13 +62,13 @@ export function PublicBlock({ type, content, style, basePath = '', organizationI
   );
 }
 
-function normalizeVielusosCopy(value: any): any {
+function normalizeVielusosCopy(value: any, key = ''): any {
   if (typeof value === 'string') {
-    if (/^(?:https?:|\/)/i.test(value)) return value;
+    if (/^(?:https?:|\/)/i.test(value) || ['variant', 'platform', 'align', 'layout', 'sort', 'linkStyle', 'backgroundType', 'contentPosition', 'textAlign'].includes(key)) return value;
     return value.replace(/vielusos/gi, 'VIELUSOS');
   }
-  if (Array.isArray(value)) return value.map(normalizeVielusosCopy);
-  if (value && typeof value === 'object') return Object.fromEntries(Object.entries(value).map(([key, child]) => [key, normalizeVielusosCopy(child)]));
+  if (Array.isArray(value)) return value.map((child) => normalizeVielusosCopy(child, key));
+  if (value && typeof value === 'object') return Object.fromEntries(Object.entries(value).map(([childKey, child]) => [childKey, normalizeVielusosCopy(child, childKey)]));
   return value;
 }
 

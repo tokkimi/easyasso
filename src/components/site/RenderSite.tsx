@@ -164,7 +164,7 @@ export async function RenderSite({ site, basePath, slug }: { site: SiteWithPages
       showEmail={(footer as any).contactBubbleShowEmail ?? true}
       showMessage={(footer as any).contactBubbleShowMessage ?? true}
       branded={vielusos}
-      showBooking={vielusos && ((footer as any).contactBubbleShowBooking ?? true)}
+      showBooking={vielusos}
       bookingLabel={(footer as any).contactBubbleBookingLabel || 'Booking'}
       bookingLabelEn={(footer as any).contactBubbleBookingLabelEn || 'Booking'}
       bookingSubtitle={(footer as any).contactBubbleBookingSubtitle || 'Dates, événements et demandes professionnelles'}

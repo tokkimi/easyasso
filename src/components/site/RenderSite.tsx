@@ -193,7 +193,7 @@ export async function RenderSite({ site, basePath, slug }: { site: SiteWithPages
   const shopReady = Boolean(profile.stripeConnectReady);
   const hasShopBlock = page.blocks.some((b) => b.type === 'shop');
   const products = hasShopBlock && shopEnabled ? await loadShopProducts(site.organizationId) : [];
-  const renderedBlocks = vielusos && page.isHome ? moveSocialBelowStats(page.blocks) : page.blocks;
+  const renderedBlocks = vielusos && page.isHome ? moveNetworksBelowStats(page.blocks) : page.blocks;
 
   return (
     <div className={`flex min-h-screen flex-col ${vielusos ? 'vielusos-site' : ''}`} style={publicSiteStyle(theme, vielusos)}>
@@ -222,14 +222,15 @@ export async function RenderSite({ site, basePath, slug }: { site: SiteWithPages
   );
 }
 
-function moveSocialBelowStats<T extends { type: string }>(blocks: T[]): T[] {
+function moveNetworksBelowStats<T extends { type: string }>(blocks: T[]): T[] {
   const statsIndex = blocks.findIndex((block) => block.type === 'stats');
-  const socialIndex = blocks.findIndex((block) => block.type === 'social');
-  if (statsIndex < 0 || socialIndex < 0 || socialIndex === statsIndex + 1) return blocks;
+  const networkIndexes = blocks.map((block, index) => ({ type: block.type, index })).filter(({ type }) => type === 'streaming' || type === 'social').map(({ index }) => index);
+  if (statsIndex < 0 || networkIndexes.length === 0) return blocks;
   const ordered = [...blocks];
-  const [social] = ordered.splice(socialIndex, 1);
+  const networks = networkIndexes.map((index) => blocks[index]);
+  for (const index of [...networkIndexes].sort((a, b) => b - a)) ordered.splice(index, 1);
   const adjustedStatsIndex = ordered.findIndex((block) => block.type === 'stats');
-  ordered.splice(adjustedStatsIndex + 1, 0, social);
+  ordered.splice(adjustedStatsIndex + 1, 0, ...networks.sort((a, b) => (a.type === 'streaming' ? -1 : b.type === 'streaming' ? 1 : 0)));
   return ordered;
 }
 

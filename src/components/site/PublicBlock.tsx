@@ -139,7 +139,7 @@ function renderInner(type: string, content: any, style: BlockStyle, basePath: st
     case 'events':
       return <EventHistory content={content} />;
     case 'stats':
-      return <StatsShowcase content={content} hidePlatforms={branded} />;
+      return <StatsShowcase content={content} hidePlatforms={branded} hideTrackStats={branded} />;
 
     // ---- Rich layouts ----
     case 'banner': {
@@ -299,8 +299,8 @@ function SectionHeading({ eyebrow, title, intro }: { eyebrow?: string; title?: s
   return <div><p className="text-[8px] font-semibold uppercase tracking-[0.24em] text-white/45 sm:text-[10px] sm:tracking-[0.5em]">{eyebrow}</p>{title && <h2 className="mt-4 text-white">{title}</h2>}{intro && <p className="mt-4 max-w-2xl text-xs font-light leading-6 text-white/50 sm:text-sm sm:leading-7">{intro}</p>}</div>;
 }
 
-function StatsShowcase({ content, hidePlatforms = false }: { content: any; hidePlatforms?: boolean }) {
-  const items = Array.isArray(content.items) ? content.items : [];
+function StatsShowcase({ content, hidePlatforms = false, hideTrackStats = false }: { content: any; hidePlatforms?: boolean; hideTrackStats?: boolean }) {
+  const items = (Array.isArray(content.items) ? content.items : []).filter((item: any) => !hideTrackStats || !/(techno\s+sombrero|jos[ée]\s+le\s+perroquet|kino\s+der\s+toten)/i.test(String(item?.label || '')));
   return <section className="px-5 py-10 text-white md:px-12 md:py-20"><div className="vielusos-fluid mx-auto max-w-7xl"><SectionHeading eyebrow={content.eyebrow} title={content.title} intro={content.intro} /><div className="mt-7 grid grid-cols-2 overflow-hidden rounded-2xl border border-white/15 sm:mt-10 sm:rounded-3xl lg:grid-cols-3">{items.map((item: any, index: number) => <div key={index} className="min-h-28 border-b border-r border-white/10 p-4 sm:min-h-36 sm:p-6 lg:min-h-40"><p className="break-words text-2xl font-semibold tracking-tight sm:text-4xl md:text-5xl">{item.value}</p><p className="mt-4 max-w-[14rem] text-[7px] font-semibold uppercase leading-4 tracking-[0.16em] text-white/45 sm:mt-6 sm:text-[10px] sm:leading-5 sm:tracking-[0.25em]">{item.label}</p></div>)}</div>{!hidePlatforms && content.platforms && <p className="mt-4 break-words text-center text-[7px] font-semibold uppercase leading-4 tracking-[0.12em] text-white/35 sm:mt-5 sm:text-[9px] sm:tracking-[0.22em]">{content.platforms}</p>}</div></section>;
 }
 

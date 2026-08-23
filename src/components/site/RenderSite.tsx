@@ -211,7 +211,14 @@ export async function RenderSite({ site, basePath, slug }: { site: SiteWithPages
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&family=Montserrat:wght@300;400;500&display=swap" />
         <style dangerouslySetInnerHTML={{ __html: `${brandCss(theme.primary)}${VIELUSOS_SITE_CSS}` }} />
         <PublicHeader header={publicHeader} nav={nav} basePath={basePath} />
-        <VielusosBooking organizationId={site.organizationId} />
+        <VielusosBooking organizationId={site.organizationId} copy={{
+          title: (footer as any).bookingTitle,
+          titleEn: (footer as any).bookingTitleEn,
+          description: (footer as any).bookingDescription,
+          descriptionEn: (footer as any).bookingDescriptionEn,
+          formTitle: (footer as any).bookingFormTitle,
+          formTitleEn: (footer as any).bookingFormTitleEn,
+        }} />
         <PublicFooter footer={publicFooter} orgId={site.organizationId} basePath={basePath} nav={nav} />
         {bubble}
       </div>

@@ -319,6 +319,12 @@ export interface FooterConfig {
   contactBubbleBookingSubtitle?: string;
   contactBubbleBookingSubtitleEn?: string;
   contactBubbleBookingHref?: string;
+  bookingTitle?: string;
+  bookingTitleEn?: string;
+  bookingDescription?: string;
+  bookingDescriptionEn?: string;
+  bookingFormTitle?: string;
+  bookingFormTitleEn?: string;
 }
 
 export const DEFAULT_HEADER: HeaderConfig = {
@@ -361,6 +367,12 @@ export const DEFAULT_FOOTER: FooterConfig = {
   contactBubbleBookingSubtitle: 'Dates, événements et demandes professionnelles',
   contactBubbleBookingSubtitleEn: 'Dates, events and professional enquiries',
   contactBubbleBookingHref: '/booking',
+  bookingTitle: 'Envoyer un brief clair',
+  bookingTitleEn: 'Send a clear brief',
+  bookingDescription: 'Booking, média, partenariat ou demande professionnelle directe concernant VIELUSOS.',
+  bookingDescriptionEn: 'Booking, media, partnerships or a direct professional enquiry concerning VIELUSOS.',
+  bookingFormTitle: 'Contact · Projet',
+  bookingFormTitleEn: 'Contact · Project',
   columns: [
     { title: 'Association', links: [{ label: 'Accueil', href: '/' }] },
     { title: 'Nous soutenir', links: [{ label: 'Faire un don', href: '/don' }] },

@@ -2,9 +2,18 @@
 
 import { useState } from 'react';
 import { ArrowLeft, CalendarDays, CheckCircle2, Send } from 'lucide-react';
-import { useLanguage } from '@/components/language-provider';
+import { LanguageSwitcher, useLanguage } from '@/components/language-provider';
 
-export function VielusosBooking({ organizationId }: { organizationId: string }) {
+type BookingCopy = {
+  title?: string;
+  titleEn?: string;
+  description?: string;
+  descriptionEn?: string;
+  formTitle?: string;
+  formTitleEn?: string;
+};
+
+export function VielusosBooking({ organizationId, copy = {} }: { organizationId: string; copy?: BookingCopy }) {
   const { locale } = useLanguage();
   const en = locale === 'en';
   const [form, setForm] = useState({ requestType: 'Booking / date', name: '', company: '', email: '', artist: 'VIELUSOS', location: '', date: '', budget: '', project: '', website: '' });
@@ -23,12 +32,12 @@ export function VielusosBooking({ organizationId }: { organizationId: string }) 
   return (
     <main className="flex-1 px-5 py-10 text-white md:px-10 md:py-16">
       <div className="mx-auto max-w-6xl">
-        <a href="/" className="inline-flex items-center gap-2 text-[10px] font-medium uppercase tracking-[0.28em] text-white/50 transition hover:text-white"><ArrowLeft className="h-4 w-4" />{en ? 'Back' : 'Retour'}</a>
+        <div className="flex items-center justify-between gap-4"><a href="/" className="inline-flex items-center gap-2 text-[10px] font-medium uppercase tracking-[0.28em] text-white/50 transition hover:text-white"><ArrowLeft className="h-4 w-4" />{en ? 'Back' : 'Retour'}</a><LanguageSwitcher variant="inline" /></div>
         <div className="mt-10 grid gap-10 lg:grid-cols-[.75fr_1.25fr] lg:gap-16">
           <section>
             <p className="text-[10px] uppercase tracking-[0.48em] text-white/45">VIELUSOS · BOOKING</p>
-            <h1 className="mt-5 font-['Cormorant_Garamond'] text-5xl font-light uppercase leading-[.95] tracking-[0.12em] md:text-7xl">{en ? 'Send a clear brief' : 'Envoyer un brief clair'}</h1>
-            <p className="mt-7 max-w-md font-light leading-7 text-white/55">{en ? 'Booking, media, partnerships or a direct professional enquiry concerning VIELUSOS.' : 'Booking, média, partenariat ou demande professionnelle directe concernant VIELUSOS.'}</p>
+            <h1 className="mt-5 font-['Cormorant_Garamond'] text-5xl font-light uppercase leading-[.95] tracking-[0.12em] md:text-7xl">{en ? copy.titleEn || 'Send a clear brief' : copy.title || 'Envoyer un brief clair'}</h1>
+            <p className="mt-7 max-w-md font-light leading-7 text-white/55">{en ? copy.descriptionEn || 'Booking, media, partnerships or a direct professional enquiry concerning VIELUSOS.' : copy.description || 'Booking, média, partenariat ou demande professionnelle directe concernant VIELUSOS.'}</p>
             <div className="mt-10 grid gap-px overflow-hidden rounded-2xl border border-white/10 bg-white/10 sm:grid-cols-2 lg:grid-cols-1">
               {[[en ? 'Artistic direction' : 'Direction artistique', en ? 'Universe, image, visual consistency' : 'Univers, image, cohérence visuelle'], ['Booking', en ? 'Clubs, festivals, private events' : 'Clubs, festivals, événements privés'], [en ? 'Professional enquiries' : 'Demandes pros', en ? 'Media, brands and partnerships' : 'Médias, marques et partenariats']].map(([title, text]) => <div key={title} className="bg-[#0b0b10]/85 p-5"><p className="text-sm font-medium uppercase tracking-[0.16em]">{title}</p><p className="mt-2 text-xs leading-5 text-white/45">{text}</p></div>)}
             </div>
@@ -36,7 +45,7 @@ export function VielusosBooking({ organizationId }: { organizationId: string }) 
 
           <section className="rounded-[2rem] border border-white/12 bg-black/30 p-5 backdrop-blur-xl sm:p-8">
             {state === 'sent' ? <div className="grid min-h-[32rem] place-items-center text-center"><div><CheckCircle2 className="mx-auto h-12 w-12 text-white/70" /><h2 className="mt-5 text-3xl text-white">{en ? 'Request sent' : 'Demande envoyée'}</h2><p className="mt-3 text-white/50">{en ? 'Thank you. The booking request has been received.' : 'Merci. La demande de booking a bien été reçue.'}</p></div></div> : <form onSubmit={submit} className="space-y-4">
-              <div className="flex items-center gap-3 border-b border-white/10 pb-5"><CalendarDays className="h-5 w-5 text-white/55" /><div><p className="text-xs uppercase tracking-[0.3em] text-white/40">01 · 02 · 03</p><h2 className="mt-1 text-xl font-light uppercase tracking-[0.12em]">Contact · Projet</h2></div></div>
+              <div className="flex items-center gap-3 border-b border-white/10 pb-5"><CalendarDays className="h-5 w-5 text-white/55" /><div><p className="text-xs uppercase tracking-[0.3em] text-white/40">01 · 02 · 03</p><h2 className="mt-1 text-xl font-light uppercase tracking-[0.12em]">{en ? copy.formTitleEn || 'Contact · Project' : copy.formTitle || 'Contact · Projet'}</h2></div></div>
               <input className="hidden" tabIndex={-1} value={form.website} onChange={(e) => set('website', e.target.value)} />
               <label className="block"><span className="mb-2 block text-[10px] uppercase tracking-[0.22em] text-white/45">{en ? 'Your request' : 'Votre demande'}</span><select className={field} value={form.requestType} onChange={(e) => set('requestType', e.target.value)}><option className="bg-neutral-950">Booking / date</option><option className="bg-neutral-950">Média / interview</option><option className="bg-neutral-950">Partenariat / marque</option><option className="bg-neutral-950">Autre demande professionnelle</option></select></label>
               <div className="grid gap-4 sm:grid-cols-2"><input required className={field} placeholder={en ? 'Full name' : 'Nom / prénom'} value={form.name} onChange={(e) => set('name', e.target.value)} /><input className={field} placeholder={en ? 'Company / organisation' : 'Société / organisation'} value={form.company} onChange={(e) => set('company', e.target.value)} /></div>

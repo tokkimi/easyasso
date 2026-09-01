@@ -15,7 +15,7 @@ export function ImpactHero({ title, config }: { title: string; config?: HeaderCo
         <source src={darkVideoUrl} type="video/mp4" />
       </video>
       <div className="impact-hero-overlay absolute inset-0" aria-hidden="true" />
-      <div className="relative flex h-full items-center justify-center px-6 text-center">
+      <div className="impact-hero-content relative flex h-full items-center justify-center px-6 text-center">
         <div className="flex max-w-xl flex-col items-center">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           {config?.showLogo !== false && <img src={IMPACT_BRAND.logoUrl} alt="" className="impact-hero-logo mb-4 h-20 w-20 rounded-2xl object-contain md:h-28 md:w-28" />}

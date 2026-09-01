@@ -53,11 +53,11 @@ export function ImpactBio({ blocks = [], config }: { blocks?: any[]; config?: He
         </div>
         <div className="grid grid-cols-2 gap-3 md:gap-4">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={config?.images?.[0] || '/impact/profile.jpg'} alt="IMPACT" className="col-span-2 aspect-[16/9] w-full rounded-2xl object-cover object-center shadow-[0_18px_50px_-18px_rgba(47,107,255,.6)] ring-1 ring-[#4cc9ff]/25" />
+          <img src={config?.images?.[0] || '/impact/gallery/impact-gallery-01.jpg'} alt="IMPACT" className="impact-bio-photo col-span-2 max-h-[34rem] w-full rounded-2xl object-contain" />
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={config?.images?.[1] || '/impact/profile-2.jpg'} alt="" className="aspect-square w-full rounded-2xl object-cover shadow-xl ring-1 ring-[#4cc9ff]/25" />
+          <img src={config?.images?.[1] || '/impact/gallery/impact-gallery-03.jpg'} alt="" className="impact-bio-photo aspect-[2/3] w-full rounded-2xl object-contain" />
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={config?.images?.[2] || '/impact/profile.jpg'} alt="" className="aspect-square w-full rounded-2xl object-cover object-[center_30%] shadow-xl ring-1 ring-[#4cc9ff]/25" />
+          <img src={config?.images?.[2] || '/impact/gallery/impact-gallery-05.jpg'} alt="" className="impact-bio-photo aspect-[2/3] w-full rounded-2xl object-contain" />
         </div>
       </div>
     </section>

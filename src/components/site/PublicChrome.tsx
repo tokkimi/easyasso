@@ -1,7 +1,7 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Menu, X, Facebook, Linkedin, UserRound, Mail } from 'lucide-react';
+import { Menu, X, Facebook, Linkedin, UserRound, Mail, Moon, Sun } from 'lucide-react';
 import type { HeaderConfig, FooterConfig, ButtonConfig } from '@/lib/blocks';
 import { NewsletterForm } from './NewsletterForm';
 import { LanguageSwitcher, useLanguage } from '@/components/language-provider';
@@ -44,6 +44,7 @@ export function PublicHeader({
   header, nav, basePath,
 }: { header: HeaderConfig; nav: NavItem[]; basePath: string }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [impactTheme, setImpactTheme] = useState<'dark' | 'light'>('dark');
   const { t } = useLanguage();
   const cta: ButtonConfig | undefined = header.cta;
   const socials = Object.entries(header.social || {}).filter((entry): entry is [string, string] => Boolean(entry[1]));
@@ -59,6 +60,19 @@ export function PublicHeader({
   };
   const link = (slug: string, isHome: boolean) => (isHome ? basePath || '/' : `${basePath}/${slug}`);
   const customerHref = basePath === '#' ? '#client' : `${basePath || ''}/client`;
+  useEffect(() => {
+    if (!impactHeader) return;
+    const saved = window.localStorage.getItem('impact-theme');
+    const nextTheme = saved === 'light' ? 'light' : 'dark';
+    setImpactTheme(nextTheme);
+    document.querySelectorAll<HTMLElement>('.impact-site').forEach((element) => { element.dataset.impactTheme = nextTheme; });
+  }, [impactHeader]);
+  const toggleImpactTheme = () => {
+    const nextTheme = impactTheme === 'dark' ? 'light' : 'dark';
+    setImpactTheme(nextTheme);
+    window.localStorage.setItem('impact-theme', nextTheme);
+    document.querySelectorAll<HTMLElement>('.impact-site').forEach((element) => { element.dataset.impactTheme = nextTheme; });
+  };
   return (
     <header
       style={{ background: header.background, color: header.textColor }}
@@ -117,6 +131,12 @@ export function PublicHeader({
               {socials.map(([name, href]) => <a key={name} href={href} target="_blank" rel="noreferrer" aria-label={name} className={`grid h-10 w-10 place-items-center rounded-full border ${(brandedHeader || glassMenu) ? 'border-white/20 text-white/80 hover:bg-white/10 hover:text-white' : 'border-black/15 text-current'}`}><SocialMark label={name} monochrome={brandedHeader || glassMenu} /></a>)}
               {(!brandedHeader || impactHeader) && <LanguageSwitcher variant="inline" />}
             </div>
+            {impactHeader && (
+              <button type="button" onClick={toggleImpactTheme} className="impact-theme-toggle mt-2 flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-white/15 px-4 text-sm font-semibold transition hover:bg-white/10" aria-label={impactTheme === 'dark' ? 'Activer le mode clair' : 'Activer le mode sombre'}>
+                {impactTheme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+                {impactTheme === 'dark' ? 'Mode clair' : 'Mode sombre'}
+              </button>
+            )}
             {header.showCta !== false && cta && <a href={cta.href.startsWith('/') ? `${basePath}${cta.href}` : cta.href} onClick={() => setMenuOpen(false)} style={{ background: cta.color, color: '#fff' }} className="mt-2 flex min-h-11 items-center justify-center rounded-xl px-4 text-sm font-bold">{cta.text}</a>}
           </div>
         )}

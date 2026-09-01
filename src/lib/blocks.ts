@@ -267,6 +267,7 @@ export interface HeaderConfig {
   menuBackground?: string;
   vielusosHero?: {
     videoUrl?: string;
+    darkVideoUrl?: string;
     showLogo?: boolean;
     showName?: boolean;
     showTagline?: boolean;

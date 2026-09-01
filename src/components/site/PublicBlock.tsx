@@ -47,7 +47,7 @@ export function PublicBlock({ type, content, style, basePath = '', organizationI
   // Drop the old default sky-blue band (it also left white borders on the sides
   // of width-constrained blocks).
   const cleanBg = (bg?: string) => (bg && bg.toLowerCase() !== '#f1f5ff' ? bg : undefined);
-  if (FULL.has(type)) {
+  if (FULL.has(type) || (type === 'gallery' && publicContent?.variant === 'impact')) {
     return <div style={blockWrapperStyle({ ...style, paddingY: type === 'html' ? 0 : style.paddingY, background: type === 'cta' ? cleanBg(style.background) : undefined })} className="w-full">{inner}</div>;
   }
   if (type === 'instagram' && content?.variant === 'vielusos') {
@@ -199,6 +199,18 @@ function renderInner(type: string, content: any, style: BlockStyle, basePath: st
     case 'gallery': {
       const cols = content.columns || 3;
       const gridCls = cols === 4 ? 'public-grid-4' : cols === 2 ? 'public-grid-2' : 'public-grid-3';
+      if (content.variant === 'impact') {
+        return (
+          <div className="impact-gallery-grid">
+            {(content.images || []).map((src: string, i: number) => (
+              <figure key={i} className="impact-gallery-frame">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={safePublicUrl(src, { allowDataImage: true })} alt={`IMPACT — photo officielle ${i + 1}`} loading="lazy" decoding="async" />
+              </figure>
+            ))}
+          </div>
+        );
+      }
       return (
         <div className={`public-responsive-gallery ${gridCls}`}>
           {(content.images || []).map((src: string, i: number) => (

@@ -7,11 +7,68 @@ import { safePublicUrl, videoEmbed } from '@/lib/render';
 export type Track = { title?: string; artist?: string; url?: string; thumbnail?: string; year?: string; source?: string };
 type PlayerItem = { platform?: string; url?: string; title?: string; artist?: string; releaseDate?: string };
 
+function ImpactTrackRail({ source, tracks }: { source: string; tracks: Track[] }) {
+  const rail = useRef<HTMLDivElement>(null);
+  const normalized = source.toLowerCase();
+  const color = normalized.includes('spotify') ? '#1ed760' : normalized.includes('soundcloud') ? '#ff5500' : '#4cc9ff';
+  const icon = normalized.includes('spotify') ? '/integrations/spotify.svg' : normalized.includes('soundcloud') ? '/integrations/soundcloud.svg' : '';
+
+  return (
+    <section className="impact-track-platform" aria-label={source}>
+      <div className="mb-3 flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.16em]" style={{ color }}>
+        {icon && /* eslint-disable-next-line @next/next/no-img-element */ <img src={icon} alt="" className="h-5 w-5 object-contain" />}
+        <span>{source}</span>
+      </div>
+      <div className="relative">
+        <button type="button" aria-label={`${source} précédent`} onClick={() => rail.current?.scrollBy({ left: -360, behavior: 'smooth' })} className="impact-track-arrow left-2"><ChevronLeft className="h-4 w-4" /></button>
+        <button type="button" aria-label={`${source} suivant`} onClick={() => rail.current?.scrollBy({ left: 360, behavior: 'smooth' })} className="impact-track-arrow right-2"><ChevronRight className="h-4 w-4" /></button>
+        <div ref={rail} className="impact-track-rail">
+          {tracks.map((track, index) => {
+            const href = safePublicUrl(track.url || '');
+            const card = (
+              <article className="impact-track-card">
+                <div className="impact-track-artwork">
+                  {track.thumbnail && /* eslint-disable-next-line @next/next/no-img-element */ <img src={track.thumbnail} alt={`Pochette de ${track.title || 'la sortie'}`} loading="lazy" decoding="async" />}
+                  <span className="impact-track-play" aria-hidden="true"><Play className="h-5 w-5 fill-current" /></span>
+                </div>
+                <div className="impact-track-meta">
+                  <p className="truncate text-sm font-semibold">{track.title || 'Titre'}</p>
+                  <p className="mt-1 truncate text-[11px] uppercase tracking-[0.08em] opacity-45">{track.artist || 'IMPACT'}</p>
+                </div>
+              </article>
+            );
+            return href ? <a key={`${track.title}-${index}`} href={href} target="_blank" rel="noreferrer" className="snap-start">{card}</a> : <div key={`${track.title}-${index}`} className="snap-start">{card}</div>;
+          })}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 // ---- Sons / Playlist -------------------------------------------------------
 export function MusicTracks({ content }: { content: any }) {
   const tracks: Track[] = Array.isArray(content?.tracks) ? content.tracks : [];
   const layout = content?.layout === 'list' ? 'list' : 'grid';
   const clean = tracks.filter((t) => t && (t.title || t.thumbnail || t.url));
+
+  if (content?.variant === 'impact') {
+    const groups = Array.from(clean.reduce((map, track) => {
+      const source = track.source || 'Official releases';
+      map.set(source, [...(map.get(source) || []), track]);
+      return map;
+    }, new Map<string, Track[]>()));
+    return (
+      <div className="impact-track-shell vielusos-fluid mx-auto w-full py-7">
+        <div className="mb-8">
+          {content?.title && <h2 className="impact-track-heading">{content.title}</h2>}
+          <p className="mt-1 text-[11px] font-light opacity-35">{content?.subtitle || 'Latest releases'}</p>
+        </div>
+        <div className="space-y-10">
+          {groups.map(([source, sourceTracks]) => <ImpactTrackRail key={source} source={source} tracks={sourceTracks} />)}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="vielusos-fluid vielusos-media-shell mx-auto w-full max-w-6xl px-4 pt-6">

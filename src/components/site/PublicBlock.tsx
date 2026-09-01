@@ -205,7 +205,7 @@ function renderInner(type: string, content: any, style: BlockStyle, basePath: st
             {(content.images || []).map((src: string, i: number) => (
               <figure key={i} className="impact-gallery-frame">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={safePublicUrl(src, { allowDataImage: true })} alt={`IMPACT — photo officielle ${i + 1}`} loading="lazy" decoding="async" />
+                <img src={safePublicUrl(src, { allowRelative: true, allowDataImage: true })} alt={`IMPACT — photo officielle ${i + 1}`} loading="lazy" decoding="async" />
               </figure>
             ))}
           </div>
@@ -215,7 +215,7 @@ function renderInner(type: string, content: any, style: BlockStyle, basePath: st
         <div className={`public-responsive-gallery ${gridCls}`}>
           {(content.images || []).map((src: string, i: number) => (
             // eslint-disable-next-line @next/next/no-img-element
-            <img key={i} src={safePublicUrl(src, { allowDataImage: true })} alt="" loading="lazy" decoding="async" className="public-scroll-item aspect-square rounded-xl object-cover" />
+            <img key={i} src={safePublicUrl(src, { allowRelative: true, allowDataImage: true })} alt="" loading="lazy" decoding="async" className="public-scroll-item aspect-square rounded-xl object-cover" />
           ))}
         </div>
       );

@@ -442,7 +442,7 @@ function instaPostCode(url: string): string {
   return String(url).match(/instagram\.com\/(?:[^/]+\/)?(?:p|reel|tv)\/([A-Za-z0-9_-]+)/)?.[1] || '';
 }
 type InstagramMedia = { type: 'image' | 'video'; src: string; poster?: string; width: number; height: number };
-function InstagramMediaCard({ code, eager, position, variant = 'vielusos' }: { code: string; eager: boolean; position: number; variant?: 'vielusos' | 'generic' }) {
+function InstagramMediaCard({ code, eager, position, variant = 'vielusos' }: { code: string; eager: boolean; position: number; variant?: 'vielusos' | 'impact' | 'generic' }) {
   const [media, setMedia] = useState<InstagramMedia[]>([]);
   const [active, setActive] = useState(0);
   const touchStart = useRef<number | null>(null);
@@ -472,7 +472,9 @@ function InstagramMediaCard({ code, eager, position, variant = 'vielusos' }: { c
     <article
       className={variant === 'vielusos'
         ? 'relative aspect-[4/5] w-[calc((100%-0.75rem)/2)] shrink-0 snap-start overflow-hidden rounded-2xl bg-black/30 shadow-[0_18px_50px_rgba(0,0,0,.3)] md:w-[calc((100%-3rem)/5)]'
-        : 'relative aspect-[4/5] w-[78vw] max-w-[360px] shrink-0 snap-start overflow-hidden rounded-2xl bg-gray-950/10 shadow-[0_18px_45px_rgba(15,23,42,.16)] sm:w-[calc((100%-1rem)/2)] lg:w-[calc((100%-3rem)/4)] xl:w-[calc((100%-4rem)/5)]'}
+        : variant === 'impact'
+          ? 'relative aspect-[4/5] w-[72vw] max-w-[280px] shrink-0 snap-start overflow-hidden rounded-lg border border-white/10 bg-black/35 shadow-[0_20px_55px_rgba(47,107,255,.18)] sm:w-[calc((100%-1.5rem)/3)] lg:w-[calc((100%-3rem)/5)]'
+          : 'relative aspect-[4/5] w-[78vw] max-w-[360px] shrink-0 snap-start overflow-hidden rounded-2xl bg-gray-950/10 shadow-[0_18px_45px_rgba(15,23,42,.16)] sm:w-[calc((100%-1rem)/2)] lg:w-[calc((100%-3rem)/4)] xl:w-[calc((100%-4rem)/5)]'}
       onTouchStart={(event) => { touchStart.current = event.touches[0]?.clientX ?? null; }}
       onTouchEnd={(event) => {
         if (touchStart.current === null || media.length < 2) return;
@@ -483,10 +485,10 @@ function InstagramMediaCard({ code, eager, position, variant = 'vielusos' }: { c
     >
       {!item && <div className="absolute inset-0 animate-pulse bg-white/[0.035]" />}
       {item?.type === 'video' ? (
-        <video key={item.src} src={item.src} poster={item.poster} controls playsInline preload={eager ? 'metadata' : 'none'} className="absolute inset-0 h-full w-full bg-black object-cover" />
+        <video key={item.src} src={item.src} poster={item.poster} controls playsInline preload={eager ? 'metadata' : 'none'} className={`absolute inset-0 h-full w-full bg-black ${variant === 'impact' ? 'object-contain' : 'object-cover'}`} />
       ) : item ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={item.src} alt="" loading={eager ? 'eager' : 'lazy'} referrerPolicy="no-referrer" className="absolute inset-0 h-full w-full object-cover" />
+        <img src={item.src} alt="" loading={eager ? 'eager' : 'lazy'} referrerPolicy="no-referrer" className={`absolute inset-0 h-full w-full ${variant === 'impact' ? 'object-contain' : 'object-cover'}`} />
       ) : null}
       {media.length > 1 && <>
         <button type="button" aria-label="Média précédent" onClick={() => move(-1)} className="absolute left-2 top-1/2 z-[2] grid h-8 w-8 -translate-y-1/2 place-items-center rounded-full bg-black/65 text-white shadow-[0_0_16px_rgba(255,255,255,.18)]"><ChevronLeft className="h-5 w-5" /></button>
@@ -507,6 +509,32 @@ export function InstagramPreview({ content }: { content: any }) {
     .map((url: string) => ({ url: safePublicUrl(url), id: String(url).match(/tiktok\.com\/@[^/]+\/(?:video|photo)\/(\d+)/)?.[1] || '' }))
     .filter((post: { url: string; id: string }) => post.url && post.id)
     .slice(0, count);
+
+  if (content?.variant === 'impact') {
+    return (
+      <section className="impact-instagram-shell vielusos-fluid mx-auto w-full px-0 py-7">
+        <div className="mb-4 flex items-end justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2" aria-label="Instagram">
+              <span className="grid h-7 w-7 place-items-center rounded-lg bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-600"><Instagram className="h-4 w-4 text-white" /></span>
+              <span className="text-[11px] font-medium uppercase text-current/45">Instagram officiel</span>
+            </div>
+            <h2 className="impact-track-heading mt-2">{content?.title || 'IMPACT SUR INSTAGRAM'}</h2>
+          </div>
+          {profileUrl && <a href={profileUrl} target="_blank" rel="noreferrer" className="shrink-0 rounded-full border border-current/20 px-4 py-2 text-xs font-semibold hover:bg-white/10">@{username || 'impactdj_raw'}</a>}
+        </div>
+        {postCodes.length > 0 ? (
+          <div className="relative">
+            <button type="button" aria-label="Publication Instagram précédente" onClick={() => document.getElementById('impact-instagram-rail')?.scrollBy({ left: -window.innerWidth * 0.75, behavior: 'smooth' })} className="impact-track-arrow left-1"><ChevronLeft className="h-5 w-5" /></button>
+            <button type="button" aria-label="Publication Instagram suivante" onClick={() => document.getElementById('impact-instagram-rail')?.scrollBy({ left: window.innerWidth * 0.75, behavior: 'smooth' })} className="impact-track-arrow right-1"><ChevronRight className="h-5 w-5" /></button>
+            <div id="impact-instagram-rail" className="flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              {postCodes.map((code: string, i: number) => <InstagramMediaCard key={`${code}-${i}`} code={code} eager={i < 5} position={i} variant="impact" />)}
+            </div>
+          </div>
+        ) : <p className="mt-6 text-sm opacity-45">Ajoutez les liens de chaque post dans l’éditeur.</p>}
+      </section>
+    );
+  }
 
   if (content?.variant === 'vielusos') {
     return (

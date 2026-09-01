@@ -5,7 +5,7 @@ import { IMPACT_BRAND } from '@/lib/impact';
 // the existing teaser for light mode and the helmet/skull stage visual for dark.
 export function ImpactHero({ title, config }: { title: string; config?: HeaderConfig['vielusosHero'] }) {
   const lightVideoUrl = config?.videoUrl || '/impact/hero-teaser-web.mp4';
-  const darkVideoUrl = config?.darkVideoUrl || '/impact/hero-dark-focus.mp4';
+  const darkVideoUrl = config?.darkVideoUrl || '/impact/hero-dark-skeleton.mp4';
   return (
     <section className="impact-hero relative isolate aspect-video w-full overflow-hidden" aria-label={title}>
       <video className="impact-hero-light-media absolute inset-0 h-full w-full object-cover" autoPlay muted loop playsInline preload="metadata" aria-hidden="true">

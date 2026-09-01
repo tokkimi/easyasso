@@ -50,7 +50,7 @@ export function PublicBlock({ type, content, style, basePath = '', organizationI
   if (FULL.has(type) || (type === 'gallery' && publicContent?.variant === 'impact')) {
     return <div style={blockWrapperStyle({ ...style, paddingY: type === 'html' ? 0 : style.paddingY, background: type === 'cta' ? cleanBg(style.background) : undefined })} className="w-full">{inner}</div>;
   }
-  if (type === 'instagram' && content?.variant === 'vielusos') {
+  if (type === 'instagram' && ['vielusos', 'impact'].includes(content?.variant)) {
     return <div style={blockWrapperStyle({ ...style, background: cleanBg(style.background) })} className="w-full">{inner}</div>;
   }
   const maxW = WIDE.has(type) ? 'max-w-5xl' : 'max-w-3xl';

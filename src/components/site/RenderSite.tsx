@@ -65,13 +65,14 @@ export function siteMetadata(site: { name: string; header: unknown; footer: unkn
   const description = raw.slice(0, 300);
   const metaBrand = siteBrand({ subdomain });
   const image = metaBrand ? metaBrand.brand.logoUrl : (header.logoUrl || footer.logoUrl);
+  const icon = metaBrand?.brand.faviconUrl || image;
   return {
     title: { absolute: site.name },
     description,
     // Each published site uses its own uploaded logo for the browser tab and
     // home-screen shortcut. Fall back to EasyAsso's default only when no logo
     // was provided by the site owner.
-    icons: image ? { icon: [{ url: image }], apple: [{ url: image }] } : undefined,
+    icons: icon ? { icon: [{ url: icon }], apple: [{ url: icon }] } : undefined,
     openGraph: { title: site.name, description, type: 'website', images: image ? [{ url: image }] : undefined },
     twitter: { card: 'summary', title: site.name, description },
   };

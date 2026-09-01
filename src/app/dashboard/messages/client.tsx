@@ -35,6 +35,9 @@ export function MessagesClient({ initial, conversation = [], branded = false, or
 
   const easyassoUnread = thread.filter((m) => m.fromAdmin && !m.readByOrg).length;
   const lastThread = thread[thread.length - 1];
+  const supportName = branded ? 'Support artiste' : 'Équipe EasyAsso';
+  const supportSubtitle = branded ? 'Assistance technique' : 'Support & accompagnement';
+  const pageSubtitle = branded ? `Messages reçus depuis le site de ${organizationName}.` : 'Vos messages et vos échanges avec l’équipe EasyAsso.';
 
   async function contactAction(message: Message, type: 'read' | 'unread' | 'archive') {
     await fetch('/api/messages', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: message.id, action: type }) });
@@ -70,16 +73,16 @@ export function MessagesClient({ initial, conversation = [], branded = false, or
     setReply('');
   }
 
-  // ---- Detail: EasyAsso conversation ----
+  // ---- Detail: platform support conversation ----
   if (open === EASYASSO) {
     return (
       <div>
-        <PageHeader title="Messagerie" subtitle={branded ? `Messages reçus depuis le site de ${organizationName}.` : 'Vos messages et vos échanges avec l’équipe EasyAsso.'} />
+        <PageHeader title="Messagerie" subtitle={pageSubtitle} />
         <section className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-gray-200">
           <div className="flex items-center gap-3 border-b border-gray-100 p-4">
             <button onClick={() => setOpen(null)} className="grid h-9 w-9 place-items-center rounded-xl text-gray-600 transition hover:bg-gray-100"><ArrowLeft className="h-5 w-5" /></button>
-            <Avatar name="EasyAsso" brand />
-            <div><p className="font-extrabold text-gray-900">Équipe EasyAsso</p><p className="text-xs text-gray-500">Support & accompagnement</p></div>
+            <Avatar name={supportName} brand />
+            <div><p className="font-extrabold text-gray-900">{supportName}</p><p className="text-xs text-gray-500">{supportSubtitle}</p></div>
           </div>
           <div className="flex h-[54vh] flex-col gap-2 overflow-y-auto bg-gray-50 p-4">
             {thread.length === 0 && <p className="my-auto text-center text-sm text-gray-400">Aucun message. Écrivez à l’équipe ci-dessous.</p>}
@@ -106,7 +109,7 @@ export function MessagesClient({ initial, conversation = [], branded = false, or
   if (openMsg) {
     return (
       <div>
-        <PageHeader title="Messagerie" subtitle={branded ? `Messages reçus depuis le site de ${organizationName}.` : 'Vos messages et vos échanges avec l’équipe EasyAsso.'} />
+        <PageHeader title="Messagerie" subtitle={pageSubtitle} />
         <section className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-gray-200">
           <div className="flex items-center gap-3 border-b border-gray-100 p-4">
             <button onClick={() => setOpen(null)} className="grid h-9 w-9 place-items-center rounded-xl text-gray-600 transition hover:bg-gray-100"><ArrowLeft className="h-5 w-5" /></button>
@@ -132,14 +135,14 @@ export function MessagesClient({ initial, conversation = [], branded = false, or
   const sortedMessages = [...messages].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   return (
     <div>
-      <PageHeader title="Messagerie" subtitle={branded ? `Messages reçus depuis le site de ${organizationName}.` : 'Vos messages et vos échanges avec l’équipe EasyAsso.'} />
+      <PageHeader title="Messagerie" subtitle={pageSubtitle} />
       <div className="divide-y divide-gray-100 overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-gray-200">
         {/* Platform support conversation is intentionally hidden for branded workspaces. */}
         {!branded && <button onClick={() => openItem(EASYASSO)} className="flex w-full items-center gap-3 p-4 text-left transition hover:bg-gray-50">
-          <Avatar name="EasyAsso" brand />
+          <Avatar name={supportName} brand />
           <div className="min-w-0 flex-1">
             <div className="flex items-center justify-between gap-2">
-              <span className={`truncate ${easyassoUnread ? 'font-extrabold text-gray-900' : 'font-semibold text-gray-800'}`}>Équipe EasyAsso</span>
+              <span className={`truncate ${easyassoUnread ? 'font-extrabold text-gray-900' : 'font-semibold text-gray-800'}`}>{supportName}</span>
               {lastThread && <span className="shrink-0 text-xs text-gray-400">{relTime(lastThread.createdAt)}</span>}
             </div>
             <p className={`truncate text-sm ${easyassoUnread ? 'font-semibold text-gray-700' : 'text-gray-500'}`}>{lastThread ? `${lastThread.fromAdmin ? '' : 'Vous : '}${lastThread.body}` : 'Une question ? Écrivez à l’équipe.'}</p>

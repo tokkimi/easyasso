@@ -15,6 +15,8 @@ import {
   IMPACT_TRACKS,
   IMPACT_STATS,
   IMPACT_VIDEOS,
+  IMPACT_INSTAGRAM_POSTS,
+  IMPACT_TIKTOK_POSTS,
 } from '../src/lib/impact';
 
 const prisma = new PrismaClient();
@@ -86,19 +88,26 @@ async function main() {
 async function seedImpact() {
   const existing = await prisma.site.findUnique({ where: { subdomain: IMPACT_SUBDOMAIN }, include: { organization: true } });
   const previousProfile = ((existing?.organization.profile as any) || {}) as Record<string, any>;
-  const needsContentSetup = Number(previousProfile.impactSeedVersion || 0) < 5;
+  const needsContentSetup = Number(previousProfile.impactSeedVersion || 0) < 9;
   const passwordHash = await bcrypt.hash(IMPACT_LOGIN_PASSWORD, 10);
-  const legacyUser = await prisma.user.findUnique({ where: { email: 'impact@easyasso.fr' } });
+  const legacyEasyAssoUser = await prisma.user.findUnique({ where: { email: 'impact@easyasso.fr' } });
+  const legacyAgencyUser = await prisma.user.findUnique({ where: { email: 'contact@skorm-agency.com' } });
   let user = await prisma.user.findUnique({ where: { email: IMPACT_LOGIN_EMAIL } });
-  if (!user && legacyUser && existing) {
-    const ownsImpact = await prisma.membership.findUnique({ where: { userId_organizationId: { userId: legacyUser.id, organizationId: existing.organizationId } } });
-    if (ownsImpact) user = await prisma.user.update({ where: { id: legacyUser.id }, data: { name: 'IMPACT', email: IMPACT_LOGIN_EMAIL, passwordHash, emailVerified: new Date() } });
+  if (!user && existing) {
+    for (const legacyUser of [legacyAgencyUser, legacyEasyAssoUser]) {
+      if (!legacyUser) continue;
+      const ownsImpact = await prisma.membership.findUnique({ where: { userId_organizationId: { userId: legacyUser.id, organizationId: existing.organizationId } } });
+      if (ownsImpact) {
+        user = await prisma.user.update({ where: { id: legacyUser.id }, data: { name: 'IMPACT', email: IMPACT_LOGIN_EMAIL, passwordHash, emailVerified: new Date() } });
+        break;
+      }
+    }
   }
   if (!user) user = await prisma.user.create({ data: { name: 'IMPACT', email: IMPACT_LOGIN_EMAIL, passwordHash, emailVerified: new Date() } });
 
   const profile = {
     ...previousProfile,
-    impactSeedVersion: 5,
+    impactSeedVersion: 9,
     language: 'fr' as const,
     slogan: 'RAW · ELECTRONIC · ENERGY',
     email: IMPACT_CONTACT_EMAIL,
@@ -129,8 +138,10 @@ async function seedImpact() {
       update: { systemRole: 'OWNER' },
       create: { userId: user.id, organizationId, systemRole: 'OWNER' },
     });
-    if (legacyUser && legacyUser.id !== user.id) {
-      await prisma.membership.deleteMany({ where: { userId: legacyUser.id, organizationId } });
+    for (const legacyUser of [legacyAgencyUser, legacyEasyAssoUser]) {
+      if (legacyUser && legacyUser.id !== user.id) {
+        await prisma.membership.deleteMany({ where: { userId: legacyUser.id, organizationId } });
+      }
     }
   } else {
     let slug = 'impact';
@@ -160,13 +171,14 @@ async function seedImpact() {
     background: IMPACT_BRAND.surface, textColor: '#eaf2ff', showCta: true,
     cta: { text: 'BOOKING', href: '/booking', color: IMPACT_BRAND.accent, variant: 'solid', align: 'right' },
     social: IMPACT_SOCIALS,
-    vielusosHero: { videoUrl: '/impact/hero-teaser-web.mp4', darkVideoUrl: '/impact/hero-dark-focus.mp4', showLogo: true, showName: true, showTagline: true },
+    vielusosHero: { videoUrl: '/impact/hero-teaser-web.mp4', darkVideoUrl: '/impact/hero-dark-skeleton.mp4', showLogo: false, showName: false, showTagline: false },
     vielusosBio: { images: ['/impact/gallery/impact-gallery-01.jpg', '/impact/gallery/impact-gallery-02.jpg', '/impact/gallery/impact-gallery-03.jpg', '/impact/gallery/impact-gallery-04.jpg', '/impact/gallery/impact-gallery-05.jpg', '/impact/profile.jpg', '/impact/profile-2.jpg'], eyebrowFr: 'IMPACT · ARTISTE', eyebrowEn: 'IMPACT · ARTIST', titleFr: 'À PROPOS', titleEn: 'ABOUT' },
   };
   const footerDefaults = {
     logoText: 'IMPACT', logoUrl: IMPACT_BRAND.logoUrl, text: 'RAW · ELECTRONIC · ENERGY',
     background: IMPACT_BRAND.surface, textColor: '#eaf2ff', showNewsletter: true,
-    newsletterTitle: 'REJOINDRE LA COMMUNAUTÉ', showCgv: true, showMentions: true,
+    backgroundVideoUrl: '/impact/footer-walk-impact.mp4',
+    newsletterTitle: 'REJOINDRE LA COMMUNAUTÉ', showCgv: false, showMentions: false,
     allRightsText: `© ${new Date().getFullYear()} IMPACT. Tous droits réservés.`,
     showContactBubble: true, contactBubbleColor: IMPACT_BRAND.surface, contactBubbleTextColor: '#eaf2ff',
     contactBubbleEmail: IMPACT_CONTACT_EMAIL, contactBubbleShowPhone: false, contactBubbleShowSms: false,
@@ -177,11 +189,9 @@ async function seedImpact() {
     bookingFormTitle: 'Contact · Projet', bookingFormTitleEn: 'Contact · Project',
     pageSlugs: ['accueil', 'sons', 'videos', 'bio', 'galerie', 'booking', 'boutique'], columns: [],
   };
-  // The v5 migration installs the official SoundCloud inventory, sharper artwork,
-  // stats and the focused dark-mode hero video.
-  // preserve edits made by IMPACT in its personalized editor.
-  const header = existing && !needsContentSetup ? (existing.header as any) : headerDefaults;
-  const footer = existing && !needsContentSetup ? (existing.footer as any) : footerDefaults;
+  // Always refresh the public shell so the banner stays clean and independent.
+  const header = { ...((existing?.header as any) || {}), ...headerDefaults };
+  const footer = { ...((existing?.footer as any) || {}), ...footerDefaults };
   await prisma.site.update({
     where: { id: siteId },
     data: { name: 'IMPACT', theme: theme as any, header: header as any, footer: footer as any, customDomain: IMPACT_HOST, domainVerified: true, published: true },
@@ -197,7 +207,7 @@ async function seedImpact() {
         { type: 'stats', content: { variant: 'impact', eyebrow: 'Repères publics', title: 'IMPACT EN CHIFFRES', intro: 'Chiffres relevés sur les profils officiels au moment de la mise à jour.', source: 'Sources : Spotify artiste officiel et SoundCloud officiel IMPACT.', items: IMPACT_STATS } },
         { type: 'videos', content: { title: 'LIVE · IMPACT', videos: IMPACT_VIDEOS.slice(0, 5) } },
         { type: 'social', content: { social: { align: 'center', ...IMPACT_SOCIALS, appleMusic: IMPACT_SOCIALS.applemusic } } },
-        { type: 'instagram', content: { title: 'IMPACT SUR INSTAGRAM', username: 'impactdj_raw', url: IMPACT_SOCIALS.instagram, count: 8, postUrls: [], tiktokTitle: 'IMPACT SUR TIKTOK', tiktokUsername: 'impactdj_raw', tiktokUrl: IMPACT_SOCIALS.tiktok, tiktokPostUrls: [] } },
+        { type: 'instagram', content: { variant: 'impact', title: 'IMPACT SUR INSTAGRAM', username: 'impactdj_raw', url: IMPACT_SOCIALS.instagram, count: 15, postUrls: IMPACT_INSTAGRAM_POSTS, tiktokTitle: 'IMPACT SUR TIKTOK', tiktokUsername: 'impactdj_raw', tiktokUrl: IMPACT_SOCIALS.tiktok, tiktokPostUrls: IMPACT_TIKTOK_POSTS } },
       ] },
       { title: 'Sons', slug: 'sons', order: 1, description: 'Toutes les sorties et plateformes officielles d’IMPACT.', blocks: [
         { type: 'tracks', content: { variant: 'impact', title: 'TOUS LES SONS', subtitle: 'Official releases', tracks: IMPACT_TRACKS } },

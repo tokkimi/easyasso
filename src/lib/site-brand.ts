@@ -22,7 +22,7 @@ export type BrandKey = 'vielusos' | 'impact';
 export interface SiteBrand {
   key: BrandKey;
   /** logo/background/accent/surface tokens */
-  brand: { logoUrl: string; backgroundUrl: string; accent: string; surface: string };
+  brand: { logoUrl: string; faviconUrl?: string; backgroundUrl: string; accent: string; surface: string };
   /** scoped CSS injected on public + editor surfaces */
   css: string;
   /** class toggled on the public/editor site wrapper */
@@ -54,7 +54,7 @@ const CONFIG: Record<BrandKey, Omit<SiteBrand, 'key'>> = {
     displayName: (name) => name.toUpperCase(),
   },
   impact: {
-    brand: { logoUrl: IMPACT_BRAND.logoUrl, backgroundUrl: IMPACT_BRAND.backgroundUrl, accent: IMPACT_BRAND.accent, surface: IMPACT_BRAND.surface },
+    brand: { logoUrl: IMPACT_BRAND.logoUrl, faviconUrl: IMPACT_BRAND.faviconUrl, backgroundUrl: IMPACT_BRAND.backgroundUrl, accent: IMPACT_BRAND.accent, surface: IMPACT_BRAND.surface },
     css: IMPACT_SITE_CSS,
     siteClass: 'impact-site',
     dashboardContentClass: 'impact-dashboard-content',

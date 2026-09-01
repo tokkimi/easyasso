@@ -126,7 +126,7 @@ export function PublicHeader({
         </div>
         {menuOpen && (
           <div style={!brandedHeader ? { background: glassMenu ? hexToRgba(menuBackground, menuOpacity) : menuBackground, color: glassMenu ? '#fff' : header.textColor, backdropFilter: glassMenu ? `blur(${Math.max(0, Math.min(36, Number(header.menuBlur) || 20))}px)` : undefined } : undefined} className={`${impactHeader ? 'impact-header-dropdown ' : ''}${brandedHeader ? 'right-3 block w-[min(20rem,calc(100vw-1.5rem))]' : 'public-header-dropdown left-3 right-3'} absolute top-[calc(100%+0.5rem)] z-50 rounded-2xl p-3 shadow-2xl ${brandedHeader ? 'border border-white/15 bg-[#0b0b10]/55 text-white shadow-black/60 backdrop-blur-2xl' : glassMenu ? 'border border-white/20 text-white shadow-black/30' : 'ring-1 ring-black/10'}`}>
-            {header.showNav && <nav className="flex flex-col">{nav.map((p) => <Link key={p.slug} href={link(p.slug, p.isHome)} onClick={() => setMenuOpen(false)} className={`rounded-xl px-4 py-3 text-base font-semibold ${(brandedHeader || glassMenu) ? 'border-b border-white/10 hover:bg-white/10' : 'hover:bg-black/5'}`}>{t(p.title)}</Link>)}</nav>}
+            {header.showNav && <nav className="flex flex-col">{nav.map((p) => <Link key={p.slug} href={link(p.slug, p.isHome)} onClick={() => setMenuOpen(false)} className={`rounded-xl px-4 py-3 text-sm font-medium ${(brandedHeader || glassMenu) ? 'border-b border-white/10 hover:bg-white/10' : 'hover:bg-black/5'}`}>{t(p.title)}</Link>)}</nav>}
             <div className={`${brandedHeader ? 'grid grid-cols-4 place-items-center gap-3 p-2' : 'mt-3 flex flex-wrap items-center gap-3 px-2 pt-3'} ${(brandedHeader || glassMenu) && header.showNav && nav.length ? 'border-t border-white/10' : !brandedHeader ? 'border-t border-black/10' : ''}`}>
               {socials.map(([name, href]) => <a key={name} href={href} target="_blank" rel="noreferrer" aria-label={name} className={`grid h-10 w-10 place-items-center rounded-full border ${(brandedHeader || glassMenu) ? 'border-white/20 text-white/80 hover:bg-white/10 hover:text-white' : 'border-black/15 text-current'}`}><SocialMark label={name} monochrome={brandedHeader || glassMenu} /></a>)}
               {(!brandedHeader || impactHeader) && <LanguageSwitcher variant="inline" />}
@@ -159,9 +159,18 @@ export function PublicFooter({
   const selectedPages = nav.filter((page) => !footer.pageSlugs || footer.pageSlugs.includes(page.slug));
   const socialColumns = (footer.columns || []).filter(isSocialColumn);
   const brandedFooter = footer.logoUrl?.includes('/vielusos/') || footer.logoUrl?.includes('/impact/') || ['#0b0b10', '#05070f'].includes(footer.background?.toLowerCase() || '');
+  const backgroundVideoUrl = typeof (footer as any).backgroundVideoUrl === 'string' ? (footer as any).backgroundVideoUrl : '';
   return (
-    <footer style={{ background: footer.background, color: footer.textColor, paddingBottom: 'env(safe-area-inset-bottom)' }} className="public-footer-shell mt-0">
-      <div className="public-footer-grid mx-auto grid max-w-5xl gap-8 px-4 py-12">
+    <footer style={{ background: footer.background, color: footer.textColor, paddingBottom: 'env(safe-area-inset-bottom)' }} className="public-footer-shell relative isolate mt-0 overflow-hidden">
+      {backgroundVideoUrl && (
+        <>
+          <video className="public-footer-video absolute inset-0 z-0 h-full w-full object-cover" autoPlay muted loop playsInline preload="metadata" aria-hidden="true">
+            <source src={backgroundVideoUrl} type="video/mp4" />
+          </video>
+          <div className="public-footer-video-overlay absolute inset-0 z-[1]" aria-hidden="true" />
+        </>
+      )}
+      <div className="public-footer-grid relative z-10 mx-auto grid max-w-5xl gap-8 px-4 py-12">
         <div>
           <div className="text-lg font-extrabold">
             {footer.logoUrl ? (
@@ -202,7 +211,7 @@ export function PublicFooter({
         )}
       </div>
 
-      <div className="border-t border-white/10">
+      <div className="relative z-10 border-t border-white/10">
         <div className="public-footer-bottom mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-2 px-4 py-4 text-xs opacity-70">
           <span>{t(footer.allRightsText)}</span>
           <div className="flex gap-4">

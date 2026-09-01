@@ -1,9 +1,8 @@
 /**
  * IMPACT is a second art-directed artist profile, built as a parallel to
- * VIELUSOS. Its direction artistique is deliberately different: electric-blue
+ * the other artist profiles. Its direction artistique is deliberately different: electric-blue
  * neon, glass/translucent surfaces and a raw techno mood. Keep every IMPACT
- * exception in this one file so it never leaks into VIELUSOS or any other
- * EasyAsso tenant.
+ * exception in this one file so it stays isolated from every other tenant.
  */
 export const IMPACT_SUBDOMAIN = 'impact-djraw';
 
@@ -11,8 +10,8 @@ export const IMPACT_SUBDOMAIN = 'impact-djraw';
 export const IMPACT_HOST = 'impact-raw.vercel.app';
 
 // IMPACT owns this identity. Nothing shown to the artist or the public uses an
-// EasyAsso address. The public contact email remains separate from the login.
-export const IMPACT_LOGIN_EMAIL = 'contact@skorm-agency.com';
+// IMPACT owns this identity. The artist email is used for access and contact.
+export const IMPACT_LOGIN_EMAIL = 'impact.djoff@gmail.com';
 export const IMPACT_LOGIN_PASSWORD = 'impact1234';
 export const IMPACT_CONTACT_EMAIL = 'impact.djoff@gmail.com';
 
@@ -44,14 +43,28 @@ export const IMPACT_SOUNDCLOUD_TRACKS = [
   { title: 'RAGNAROK 2025 DJ CONTEST BY IMPACT', artist: 'IMPACT', year: '2025', releaseDate: '2025-08-26', thumbnail: '/impact/releases/ragnarok-2025-dj-contest.png', url: 'https://soundcloud.com/impactdj_raw/ragnarok-2025-dj-contest-by-impact', source: 'SoundCloud', playCount: '111' },
   { title: 'IMPACT PRESENTS "TOTAL DESTRUCTION" VOL.1', artist: 'IMPACT', year: '2025', releaseDate: '2025-07-24', thumbnail: '/impact/releases/total-destruction-vol-1.jpg', url: 'https://soundcloud.com/impactdj_raw/impact-presents-total-destruction-vol1', source: 'SoundCloud', playCount: '63' },
   { title: 'POWER OF DESTRUCTION', artist: 'IMPACT', year: '2025', releaseDate: '2025-05-22', thumbnail: '/impact/releases/power-of-destruction-soundcloud.png', url: 'https://soundcloud.com/impactdj_raw/power-of-destruction', source: 'SoundCloud', playCount: '105' },
+  { title: "KENAI - DON'T GO", artist: 'KENAI', year: '2025', releaseDate: '2025', thumbnail: '/impact/releases/kenai-dont-go.jpg', url: 'https://soundcloud.com/kenairaw/kenai-dont-go', source: 'SoundCloud' },
+  { title: 'ACULLITE - THE EVASION TOOL', artist: 'ACULLITE', year: '2025', releaseDate: '2025', thumbnail: '/impact/releases/acullite-the-evasion-tool.jpg', url: 'https://soundcloud.com/acullite/classified-tool', source: 'SoundCloud' },
 ] as const;
 
-export const IMPACT_TRACKS = [...IMPACT_SPOTIFY_TRACKS, ...IMPACT_SOUNDCLOUD_TRACKS] as const;
+export const IMPACT_YOUTUBE_TRACKS = [
+  { title: 'MAYDAY', artist: 'IMPACT', year: '2026', releaseDate: '2026-02-27', thumbnail: '/impact/releases/mayday-soundcloud.png', url: 'https://www.youtube.com/watch?v=XDoDJk4KxT0', source: 'YouTube' },
+  { title: 'LOCK THE DOOR', artist: 'IMPACT', year: '2025', releaseDate: '2025-09-17', thumbnail: '/impact/releases/lock-the-door-soundcloud.jpg', url: 'https://www.youtube.com/watch?v=wgzh2zgDcNc', source: 'YouTube' },
+  { title: 'POWER OF DESTRUCTION', artist: 'IMPACT', year: '2025', releaseDate: '2025-05-22', thumbnail: '/impact/releases/power-of-destruction-soundcloud.png', url: 'https://www.youtube.com/watch?v=LfrPnKEjGKY', source: 'YouTube' },
+] as const;
+
+export const IMPACT_APPLE_MUSIC_TRACKS = [
+  { title: 'YOU MADE IT', artist: 'IMPACT', year: '2026', releaseDate: '2026-02-24', thumbnail: '/impact/releases/you-made-it-soundcloud.png', url: 'https://music.apple.com/fr/song/you-made-it/1879401619', source: 'Apple Music' },
+  { title: 'MAYDAY', artist: 'IMPACT', year: '2026', releaseDate: '2026-02-27', thumbnail: '/impact/releases/mayday-soundcloud.png', url: 'https://music.apple.com/fr/song/mayday/1860372401', source: 'Apple Music' },
+  { title: 'LOCK THE DOOR', artist: 'IMPACT', year: '2025', releaseDate: '2025-09-17', thumbnail: '/impact/releases/lock-the-door-soundcloud.jpg', url: 'https://music.apple.com/fr/song/lock-the-door/1840803496', source: 'Apple Music' },
+] as const;
+
+export const IMPACT_TRACKS = [...IMPACT_SPOTIFY_TRACKS, ...IMPACT_SOUNDCLOUD_TRACKS, ...IMPACT_YOUTUBE_TRACKS, ...IMPACT_APPLE_MUSIC_TRACKS] as const;
 
 export const IMPACT_STATS = [
   { value: '160', label: 'auditeurs mensuels Spotify' },
   { value: '28K+', label: 'écoutes visibles sur les trois titres Spotify les plus lus' },
-  { value: '9', label: 'titres publiés sur SoundCloud' },
+  { value: '11', label: 'sons reliés sur SoundCloud' },
   { value: '54', label: 'followers SoundCloud' },
 ] as const;
 
@@ -64,8 +77,39 @@ export const IMPACT_VIDEOS = Array.from({ length: 10 }, (_, index) => {
   };
 });
 
+export const IMPACT_INSTAGRAM_POSTS = [
+  'https://www.instagram.com/p/DbqdwsTjH8f/?img_index=1',
+  'https://www.instagram.com/p/DWjc0PvDIQq/?img_index=1',
+  'https://www.instagram.com/p/DYSHlAxDD2K/?img_index=1',
+  'https://www.instagram.com/p/DcI8i5ljAtE/?img_index=1',
+  'https://www.instagram.com/p/DbvrCUYgl0w/?img_index=1',
+  'https://www.instagram.com/p/DakeQ7dszdG/',
+  'https://www.instagram.com/p/DadQYIasg1u/',
+  'https://www.instagram.com/p/DaS6sYSCJ_U/?img_index=1',
+  'https://www.instagram.com/p/DY2RhbcDCmp/?img_index=1',
+  'https://www.instagram.com/p/DV_dIU8ANjJ/',
+  'https://www.instagram.com/p/DVg0e5RjFY8/?img_index=1',
+  'https://www.instagram.com/p/DTQlUpKjBDv/?img_index=1',
+  'https://www.instagram.com/p/DSJ5p3BjLGL/',
+  'https://www.instagram.com/p/DOv_qaBjDGh/?img_index=1',
+  'https://www.instagram.com/p/DOoVPJRjCwU/',
+] as const;
+
+export const IMPACT_TIKTOK_POSTS = [
+  'https://www.tiktok.com/@impactdj_raw/video/7678053587284413729',
+  'https://www.tiktok.com/@impactdj_raw/video/7675673489398893857',
+  'https://www.tiktok.com/@impactdj_raw/video/7673910787097906464',
+  'https://www.tiktok.com/@impactdj_raw/video/7670922904493624609',
+  'https://www.tiktok.com/@impactdj_raw/video/7667932845020581152',
+  'https://www.tiktok.com/@impactdj_raw/video/7660498179695168800',
+  'https://www.tiktok.com/@impactdj_raw/video/7657220485058465057',
+  'https://www.tiktok.com/@impactdj_raw/video/7646801562802605345',
+  'https://www.tiktok.com/@impactdj_raw/video/7645250249606368545',
+] as const;
+
 export const IMPACT_BRAND = {
-  logoUrl: '/impact/logo.svg',
+  logoUrl: '/impact/logo.png',
+  faviconUrl: '/impact/favicon.png',
   backgroundUrl: '/impact/background.svg',
   accent: '#2f6bff', // bleu électrique
   neon: '#4cc9ff', // halo néon cyan-bleu
@@ -85,10 +129,14 @@ html:has(.impact-site), body:has(.impact-site) { min-height: 100%; background: #
 .impact-site[data-impact-theme="light"] .public-block-shell .text-gray-900, .impact-site[data-impact-theme="light"] .public-block-shell .text-gray-950 { color: #07101f !important; }
 .impact-site[data-impact-theme="light"] .public-block-shell .text-gray-600, .impact-site[data-impact-theme="light"] .public-block-shell .text-gray-500 { color: rgba(7,16,31,.64) !important; }
 .impact-site[data-impact-theme="light"] .public-block-shell .bg-white { background: rgba(255,255,255,.58) !important; border: 1px solid rgba(47,107,255,.13); box-shadow: 0 20px 60px rgba(31,80,180,.08) !important; }
-.impact-site .public-header-shell, .impact-site .public-footer-shell { background: rgba(2,3,10,.66) !important; color: #eaf2ff !important; -webkit-backdrop-filter: blur(24px); backdrop-filter: blur(24px); }
-.impact-site[data-impact-theme="light"] .public-header-shell, .impact-site[data-impact-theme="light"] .public-footer-shell { background: rgba(255,255,255,.82) !important; color: #07101f !important; border-color: rgba(47,107,255,.14) !important; box-shadow: 0 12px 38px rgba(31,80,180,.05); }
+.impact-site .public-header-shell, .impact-site .public-footer-shell { background: rgba(2,3,10,.5) !important; color: #eaf2ff !important; -webkit-backdrop-filter: blur(24px); backdrop-filter: blur(24px); }
+.impact-site[data-impact-theme="light"] .public-header-shell, .impact-site[data-impact-theme="light"] .public-footer-shell { background: rgba(255,255,255,.5) !important; color: #07101f !important; border-color: rgba(47,107,255,.14) !important; box-shadow: 0 12px 38px rgba(31,80,180,.05); }
 .impact-site .public-footer-shell { margin-bottom: 0 !important; border-top: 1px solid rgba(76,201,255,.18); }
 .impact-site .public-header-shell { border-bottom: 1px solid rgba(76,201,255,.18); }
+.impact-site .public-footer-video { opacity: 1; filter: none; }
+.impact-site .public-footer-video-overlay { background: linear-gradient(90deg, rgba(2,3,10,.92), rgba(2,3,10,.68) 45%, rgba(2,3,10,.88)), linear-gradient(180deg, rgba(2,3,10,.55), rgba(47,107,255,.12), rgba(2,3,10,.82)); }
+.impact-site[data-impact-theme="light"] .public-footer-video-overlay { background: linear-gradient(90deg, rgba(255,255,255,.94), rgba(255,255,255,.74) 45%, rgba(255,255,255,.9)), linear-gradient(180deg, rgba(255,255,255,.62), rgba(47,107,255,.12), rgba(255,255,255,.88)); }
+.impact-site[data-impact-theme="light"] .public-footer-shell { color: #07101f !important; text-shadow: 0 1px 0 rgba(255,255,255,.45); }
 .impact-site main h2 { font-family: "Space Grotesk", "Helvetica Neue", Arial, sans-serif !important; font-size: 1.45rem !important; line-height: 1.08 !important; font-weight: 600 !important; letter-spacing: 0 !important; text-transform: uppercase !important; color: #eaf2ff !important; text-shadow: 0 0 18px rgba(47,107,255,.34) !important; }
 .impact-site[data-impact-theme="light"] main h2 { color: #07101f !important; text-shadow: 0 0 18px rgba(47,107,255,.16) !important; }
 /* the shared block components emit these utility class names for every brand */
@@ -99,25 +147,30 @@ html:has(.impact-site), body:has(.impact-site) { min-height: 100%; background: #
 .impact-site[data-impact-theme="light"] .public-social-block a { color: rgba(7,16,31,.7) !important; }
 .impact-site .vielusos-media-shell [style*="box-shadow"] { box-shadow: 0 18px 40px -18px rgba(47,107,255,.55) !important; }
 .impact-site .public-block-shell a[style*="background"], .impact-site .public-block-shell button[style*="background"] { box-shadow: 0 0 26px rgba(47,107,255,.45); }
-.impact-site[data-impact-theme="light"] .impact-header-dropdown { background: rgba(255,255,255,.78) !important; border-color: rgba(47,107,255,.18) !important; color: #07101f !important; box-shadow: 0 24px 70px rgba(31,80,180,.15) !important; }
+.impact-site .public-header-shell a, .impact-site .public-header-shell button { font-size: .82rem !important; }
+.impact-site .public-header-shell [href*="booking"] { padding: .55rem .9rem !important; border-radius: .72rem !important; }
+.impact-site .impact-header-dropdown { background: rgba(2,3,10,.5) !important; }
+.impact-site[data-impact-theme="light"] .impact-header-dropdown { background: rgba(244,248,255,.5) !important; border: 1px solid rgba(47,107,255,.28) !important; color: #07101f !important; box-shadow: 0 22px 60px rgba(31,80,180,.22), 0 0 0 1px rgba(255,255,255,.72) inset !important; -webkit-backdrop-filter: blur(24px) saturate(1.25); backdrop-filter: blur(24px) saturate(1.25); }
 .impact-site[data-impact-theme="light"] .impact-header-dropdown img { filter: none !important; }
 .impact-site[data-impact-theme="light"] .impact-header-dropdown a:not([style]) { color: #07101f !important; border-color: rgba(47,107,255,.12) !important; }
 .impact-site[data-impact-theme="light"] .public-header-menu-button { border-color: rgba(47,107,255,.24) !important; color: #07101f !important; background: rgba(255,255,255,.45) !important; }
 .impact-site[data-impact-theme="light"] .impact-theme-toggle { border-color: rgba(47,107,255,.18) !important; background: rgba(47,107,255,.06); }
+.impact-site .impact-header-dropdown nav a { min-height: 2.55rem; padding: .62rem .85rem !important; font-size: .92rem !important; font-weight: 500 !important; }
+.impact-site .impact-header-dropdown .public-language-switcher, .impact-site .impact-header-dropdown [class*="LanguageSwitcher"] { font-size: .78rem !important; }
 
-.impact-hero { height: 34rem; max-height: 58svh; background: #02030a; }
+.impact-hero { width: min(92vw, 1280px); height: auto !important; max-height: none; margin: 1rem auto 0; aspect-ratio: 16/9; border: 1px solid rgba(76,201,255,.18); border-radius: 10px; background: #02030a; box-shadow: 0 24px 80px rgba(0,0,0,.32), 0 0 44px rgba(47,107,255,.16); }
 .impact-hero-light-media { display: none; }
 .impact-hero-dark-media { display: block; filter: none; }
-.impact-hero-overlay { background: linear-gradient(to bottom, transparent 0%, rgba(2,3,10,.08) 62%, #02030a 100%); }
+.impact-hero-overlay { display: none; }
 .impact-hero-content { display: none !important; }
 .impact-hero-logo { filter: drop-shadow(0 0 24px rgba(47,107,255,.7)); }
 .impact-hero-name { color: #fff; text-shadow: 0 0 26px rgba(47,107,255,.72), 0 0 52px rgba(76,201,255,.34); }
 .impact-hero-tagline { color: #9dc7ff; }
-.impact-site[data-impact-theme="light"] .impact-hero { background: #fff; }
+.impact-site[data-impact-theme="light"] .impact-hero { width: min(92vw, 1080px); aspect-ratio: 1080/566; background: #fff; border-color: rgba(47,107,255,.16); box-shadow: 0 22px 70px rgba(31,80,180,.12), 0 0 34px rgba(47,107,255,.1); }
 .impact-site[data-impact-theme="light"] .impact-hero-dark-media { display: none; }
 .impact-site[data-impact-theme="light"] .impact-hero-light-media { display: block; filter: none; opacity: 1; }
-.impact-site[data-impact-theme="light"] .impact-hero-overlay { background: linear-gradient(to bottom, transparent 0%, rgba(255,255,255,.1) 72%, #fff 100%); }
-.impact-site[data-impact-theme="light"] .impact-hero-content { display: flex !important; }
+.impact-site[data-impact-theme="light"] .impact-hero-overlay { display: none; }
+.impact-site[data-impact-theme="light"] .impact-hero-content { display: none !important; }
 .impact-site[data-impact-theme="light"] .impact-hero-name { color: #07101f; text-shadow: 0 0 28px rgba(47,107,255,.32); }
 .impact-site[data-impact-theme="light"] .impact-hero-tagline { color: #174dbd; }
 
@@ -173,7 +226,7 @@ html:has(.impact-site), body:has(.impact-site) { min-height: 100%; background: #
 }
 @media (max-width: 640px) {
   .impact-site .vielusos-fluid, .impact-gallery-grid { width: 92% !important; }
-  .impact-hero { height: 24rem; max-height: 58svh; }
+  .impact-hero, .impact-site[data-impact-theme="light"] .impact-hero { width: 100%; margin-top: 0; border-left: 0; border-right: 0; border-radius: 0; }
   .impact-track-card { width: min(78vw, 18rem); }
   .impact-stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .impact-gallery-grid { columns: 1; }

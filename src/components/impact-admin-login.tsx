@@ -32,7 +32,7 @@ export function ImpactAdminLogin() {
       <div className="w-full max-w-md">
         <Link href="/" className="mb-6 flex items-center justify-center gap-3 text-xl text-white">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/impact/logo.svg" alt="" className="h-14 w-14 rounded-xl object-contain" />
+          <img src="/impact/logo.png" alt="" className="h-auto w-44 object-contain" />
           <span className="font-bold uppercase tracking-[0.28em]" style={{ fontFamily: '"Space Grotesk", Arial, sans-serif', textShadow: '0 0 22px rgba(47,107,255,.7)' }}>IMPACT</span>
         </Link>
         <div className="rounded-3xl border border-[#4cc9ff]/20 bg-[#070b1a]/65 p-6 shadow-[0_0_60px_-18px_rgba(47,107,255,.8)] backdrop-blur-xl">

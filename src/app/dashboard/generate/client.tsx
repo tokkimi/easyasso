@@ -229,7 +229,7 @@ export function GenerateClient({ orgName, profile, categories, previews = [], we
           <input className="input" maxLength={180} value={f.slogan} onChange={(e) => set('slogan', e.target.value)} placeholder="Ex. Ensemble, faisons grandir demain." />
         </Field>
 
-        <label className="flex cursor-pointer items-start gap-3 rounded-xl bg-brand-50 p-4"><input type="checkbox" className="mt-1 h-5 w-5" checked={f.generateCgv} onChange={(e) => setF((current) => ({ ...current, generateCgv: e.target.checked }))} /><span><strong className="block text-gray-900">Générer mes CGV et mentions légales</strong><span className="text-sm text-gray-600">EasyAsso crée des documents détaillés et modifiables avec les informations légales enregistrées dans Réglages.</span></span></label>
+        <label className="flex cursor-pointer items-start gap-3 rounded-xl bg-brand-50 p-4"><input type="checkbox" className="mt-1 h-5 w-5" checked={f.generateCgv} onChange={(e) => setF((current) => ({ ...current, generateCgv: e.target.checked }))} /><span><strong className="block text-gray-900">Générer mes CGV et mentions légales</strong><span className="text-sm text-gray-600">Des documents détaillés et modifiables sont créés avec les informations légales enregistrées dans Réglages.</span></span></label>
 
         {f.generateCgv && (
           <Field label="Pays légal pour les CGV / mentions">

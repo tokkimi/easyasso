@@ -1,11 +1,19 @@
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import { createOrganizationForUser } from '../src/lib/bootstrap';
-import { getTemplate } from '../src/lib/templates';
-import { applyTemplateToSite } from '../src/lib/apply-template';
 import { DEFAULT_THEME } from '../src/lib/colors';
 import { SYSTEM_ROLE_PERMISSIONS } from '../src/lib/permissions';
-import { IMPACT_SUBDOMAIN, IMPACT_HOST, IMPACT_BRAND } from '../src/lib/impact';
+import { defaultStyleFor, type BlockType } from '../src/lib/blocks';
+import {
+  IMPACT_SUBDOMAIN,
+  IMPACT_HOST,
+  IMPACT_BRAND,
+  IMPACT_LOGIN_EMAIL,
+  IMPACT_LOGIN_PASSWORD,
+  IMPACT_SOCIALS,
+  IMPACT_TRACKS,
+  IMPACT_VIDEOS,
+} from '../src/lib/impact';
 
 const prisma = new PrismaClient();
 
@@ -71,75 +79,150 @@ async function main() {
   console.log('   Connexion démo : demo@easyasso.fr / demo1234');
 }
 
-// IMPACT — a second art-directed artist profile (parallel to VIELUSOS), created
-// as a free/comped tenant (no paid subscription). Idempotent: skips if it
-// already exists so re-seeding never disturbs VIELUSOS or any other site.
+// IMPACT — an independent, complimentary artist workspace. This function only
+// targets the dedicated IMPACT subdomain; it never reads or writes VIELUSOS.
 async function seedImpact() {
-  const existing = await prisma.site.findUnique({ where: { subdomain: IMPACT_SUBDOMAIN } });
-  if (existing) { console.log('IMPACT profile already exists, skipping.'); return; }
-
-  const email = 'impact@easyasso.fr';
-  const passwordHash = await bcrypt.hash('impact1234', 10);
-  const user = (await prisma.user.findUnique({ where: { email } }))
-    || (await prisma.user.create({ data: { name: 'IMPACT', email, passwordHash, emailVerified: new Date() } }));
-
-  let slug = 'impact';
-  let i = 1;
-  while (await prisma.organization.findUnique({ where: { slug } })) slug = `impact-${i++}`;
+  const existing = await prisma.site.findUnique({ where: { subdomain: IMPACT_SUBDOMAIN }, include: { organization: true } });
+  const previousProfile = ((existing?.organization.profile as any) || {}) as Record<string, any>;
+  const needsContentSetup = Number(previousProfile.impactSeedVersion || 0) < 2;
+  const passwordHash = await bcrypt.hash(IMPACT_LOGIN_PASSWORD, 10);
+  const legacyUser = await prisma.user.findUnique({ where: { email: 'impact@easyasso.fr' } });
+  let user = await prisma.user.findUnique({ where: { email: IMPACT_LOGIN_EMAIL } });
+  if (!user && legacyUser && existing) {
+    const ownsImpact = await prisma.membership.findUnique({ where: { userId_organizationId: { userId: legacyUser.id, organizationId: existing.organizationId } } });
+    if (ownsImpact) user = await prisma.user.update({ where: { id: legacyUser.id }, data: { name: 'IMPACT', email: IMPACT_LOGIN_EMAIL, passwordHash, emailVerified: new Date() } });
+  }
+  if (!user) user = await prisma.user.create({ data: { name: 'IMPACT', email: IMPACT_LOGIN_EMAIL, passwordHash, emailVerified: new Date() } });
 
   const profile = {
+    ...previousProfile,
+    impactSeedVersion: 2,
     language: 'fr' as const,
     slogan: 'RAW · ELECTRONIC · ENERGY',
-    email,
-    instagram: 'https://www.instagram.com/impactdj_raw',
+    email: IMPACT_LOGIN_EMAIL,
+    mission: previousProfile.mission || 'Rawstyle DJ/Producer · Resident Normandy Hard Night.',
+    instagram: IMPACT_SOCIALS.instagram,
+    tiktok: IMPACT_SOCIALS.tiktok,
+    spotify: IMPACT_SOCIALS.spotify,
+    soundcloud: IMPACT_SOCIALS.soundcloud,
+    deezer: IMPACT_SOCIALS.deezer,
+    youtube: IMPACT_SOCIALS.youtube,
+    applemusic: IMPACT_SOCIALS.applemusic,
+    hasShop: previousProfile.hasShop ?? false,
+    shopEnabled: previousProfile.shopEnabled ?? false,
   };
   const theme = { ...DEFAULT_THEME, primary: IMPACT_BRAND.accent, background: IMPACT_BRAND.surface, text: '#eaf2ff', font: 'sans' };
 
-  const org = await prisma.organization.create({
-    data: {
-      name: 'IMPACT',
-      slug,
-      planStatus: 'ACTIVE', // comped: fully live, no payment required
-      paidAt: new Date(),
-      profile: profile as any,
-      memberships: { create: { userId: user.id, systemRole: 'OWNER' } },
-      site: {
-        create: {
-          name: 'IMPACT',
-          subdomain: IMPACT_SUBDOMAIN,
-          customDomain: IMPACT_HOST,
-          domainVerified: true,
-          published: true,
-          theme: theme as any,
-          header: { logoText: 'IMPACT' } as any,
-          footer: { logoText: 'IMPACT', allRightsText: `© ${new Date().getFullYear()} IMPACT.` } as any,
-        },
+  let organizationId: string;
+  let siteId: string;
+  if (existing) {
+    organizationId = existing.organizationId;
+    siteId = existing.id;
+    await prisma.organization.update({
+      where: { id: organizationId },
+      data: { name: 'IMPACT', planStatus: 'ACTIVE', paidAt: null, stripeCustomerId: null, stripeSessionId: null, profile: profile as any },
+    });
+    await prisma.membership.upsert({
+      where: { userId_organizationId: { userId: user.id, organizationId } },
+      update: { systemRole: 'OWNER' },
+      create: { userId: user.id, organizationId, systemRole: 'OWNER' },
+    });
+    if (legacyUser && legacyUser.id !== user.id) {
+      await prisma.membership.deleteMany({ where: { userId: legacyUser.id, organizationId } });
+    }
+  } else {
+    let slug = 'impact';
+    let i = 1;
+    while (await prisma.organization.findUnique({ where: { slug } })) slug = `impact-${i++}`;
+    const org = await prisma.organization.create({
+      data: {
+        name: 'IMPACT', slug, planStatus: 'ACTIVE', paidAt: null, profile: profile as any,
+        memberships: { create: { userId: user.id, systemRole: 'OWNER' } },
+        site: { create: { name: 'IMPACT', subdomain: IMPACT_SUBDOMAIN, customDomain: IMPACT_HOST, domainVerified: true, published: true, theme: theme as any, header: { logoText: 'IMPACT' } as any, footer: { logoText: 'IMPACT' } as any } },
+        roles: { create: [{ name: 'Manager', isSystem: false, permissions: SYSTEM_ROLE_PERMISSIONS.EDITOR }] },
       },
-      roles: {
-        create: [
-          { name: 'Manager', isSystem: false, permissions: SYSTEM_ROLE_PERMISSIONS.EDITOR },
-        ],
-      },
-    },
-    include: { site: true },
+      include: { site: true },
+    });
+    organizationId = org.id;
+    siteId = org.site!.id;
+  }
+
+  await prisma.role.upsert({
+    where: { organizationId_name: { organizationId, name: 'Manager' } },
+    update: { permissions: SYSTEM_ROLE_PERMISSIONS.EDITOR },
+    create: { organizationId, name: 'Manager', isSystem: false, permissions: SYSTEM_ROLE_PERMISSIONS.EDITOR },
   });
 
-  // Populate with a dark electro/club music template, then force the IMPACT art
-  // direction (electric blue) + social links on top. The IMPACT branding overlay
-  // (impact-site CSS, ImpactHero/ImpactBio) recolours it into the final look.
-  const template = getTemplate('music-neon');
-  if (template) await applyTemplateToSite(org.site!.id, template, 'IMPACT', profile);
-
-  const site = await prisma.site.findUniqueOrThrow({ where: { id: org.site!.id }, select: { header: true, footer: true } });
-  const header = { ...((site.header as any) || {}), logoText: 'IMPACT', social: { instagram: 'https://www.instagram.com/impactdj_raw', tiktok: 'https://www.tiktok.com/@impactdj_raw' } };
-  const footer = { ...((site.footer as any) || {}), logoText: 'IMPACT' };
+  const headerDefaults = {
+    logoText: 'IMPACT', logoUrl: IMPACT_BRAND.logoUrl, showNav: true, sticky: true,
+    background: IMPACT_BRAND.surface, textColor: '#eaf2ff', showCta: true,
+    cta: { text: 'BOOKING', href: '/booking', color: IMPACT_BRAND.accent, variant: 'solid', align: 'right' },
+    social: IMPACT_SOCIALS,
+    vielusosHero: { videoUrl: '/impact/hero-teaser-web.mp4', showLogo: true, showName: true, showTagline: true },
+    vielusosBio: { images: ['/impact/profile.jpg', '/impact/profile-2.jpg', '/impact/profile.jpg'], eyebrowFr: 'IMPACT · ARTISTE', eyebrowEn: 'IMPACT · ARTIST', titleFr: 'À PROPOS', titleEn: 'ABOUT' },
+  };
+  const footerDefaults = {
+    logoText: 'IMPACT', logoUrl: IMPACT_BRAND.logoUrl, text: 'RAW · ELECTRONIC · ENERGY',
+    background: IMPACT_BRAND.surface, textColor: '#eaf2ff', showNewsletter: true,
+    newsletterTitle: 'REJOINDRE LA COMMUNAUTÉ', showCgv: true, showMentions: true,
+    allRightsText: `© ${new Date().getFullYear()} IMPACT. Tous droits réservés.`,
+    showContactBubble: true, contactBubbleColor: IMPACT_BRAND.surface, contactBubbleTextColor: '#eaf2ff',
+    contactBubbleEmail: IMPACT_LOGIN_EMAIL, contactBubbleShowPhone: false, contactBubbleShowSms: false,
+    contactBubbleShowEmail: true, contactBubbleShowMessage: true, contactBubbleShowBooking: true,
+    contactBubbleBookingHref: '/booking', bookingTitle: 'Envoyer un brief clair', bookingTitleEn: 'Send a clear brief',
+    bookingDescription: 'Booking, média, partenariat ou demande professionnelle directe concernant IMPACT.',
+    bookingDescriptionEn: 'Booking, media, partnerships or a direct professional enquiry concerning IMPACT.',
+    bookingFormTitle: 'Contact · Projet', bookingFormTitleEn: 'Contact · Project',
+    pageSlugs: ['accueil', 'sons', 'videos', 'bio', 'booking', 'boutique'], columns: [],
+  };
+  // The first v2 migration installs the complete art direction. Later seeds
+  // preserve edits made by IMPACT in its personalized editor.
+  const header = existing && !needsContentSetup ? (existing.header as any) : headerDefaults;
+  const footer = existing && !needsContentSetup ? (existing.footer as any) : footerDefaults;
   await prisma.site.update({
-    where: { id: org.site!.id },
-    data: { theme: theme as any, header: header as any, footer: footer as any, customDomain: IMPACT_HOST, domainVerified: true, published: true },
+    where: { id: siteId },
+    data: { name: 'IMPACT', theme: theme as any, header: header as any, footer: footer as any, customDomain: IMPACT_HOST, domainVerified: true, published: true },
   });
 
-  console.log('✅ Profil IMPACT créé (compte offert, sans abonnement payant).');
-  console.log('   Connexion IMPACT : impact@easyasso.fr / impact1234');
+  if (needsContentSetup || !existing) {
+    const streamingLinks = { spotify: IMPACT_SOCIALS.spotify, deezer: IMPACT_SOCIALS.deezer, appleMusic: IMPACT_SOCIALS.applemusic, soundcloud: IMPACT_SOCIALS.soundcloud, youtube: IMPACT_SOCIALS.youtube };
+    const players = IMPACT_TRACKS.map((track) => ({ platform: track.source, url: track.url, title: track.title, artist: track.artist, releaseDate: track.year || '' }));
+    const pages: Array<{ title: string; slug: string; order: number; isHome?: boolean; showInNav?: boolean; description: string; blocks: Array<{ type: BlockType; content: any }> }> = [
+      { title: 'Accueil', slug: 'accueil', order: 0, isHome: true, description: 'Site officiel IMPACT · Rawstyle DJ/Producer.', blocks: [
+        { type: 'streaming', content: { title: 'ÉCOUTER IMPACT', linkStyle: 'text-white', glowColor: IMPACT_BRAND.neon, links: streamingLinks } },
+        { type: 'tracks', content: { title: 'DERNIÈRES SORTIES', layout: 'grid', tracks: IMPACT_TRACKS } },
+        { type: 'videos', content: { title: 'LIVE · IMPACT', videos: IMPACT_VIDEOS.slice(0, 5) } },
+        { type: 'instagram', content: { title: 'IMPACT SUR INSTAGRAM', username: 'impactdj_raw', url: IMPACT_SOCIALS.instagram, count: 8, postUrls: [], tiktokTitle: 'IMPACT SUR TIKTOK', tiktokUsername: 'impactdj_raw', tiktokUrl: IMPACT_SOCIALS.tiktok, tiktokPostUrls: [] } },
+      ] },
+      { title: 'Sons', slug: 'sons', order: 1, description: 'Toutes les sorties et plateformes officielles d’IMPACT.', blocks: [
+        { type: 'tracks', content: { title: 'TOUS LES SONS', layout: 'grid', tracks: IMPACT_TRACKS } },
+        { type: 'players', content: { title: 'LECTEURS OFFICIELS', intro: 'Écoutez les sorties directement sur les plateformes officielles.', sort: 'newest', items: players } },
+        { type: 'streaming', content: { title: 'TOUTES LES PLATEFORMES', linkStyle: 'text-white', glowColor: IMPACT_BRAND.neon, links: streamingLinks } },
+      ] },
+      { title: 'Vidéos', slug: 'videos', order: 2, description: 'Lives et vidéos officielles d’IMPACT.', blocks: [
+        { type: 'videos', content: { title: 'LIVE · ESKAPE', videos: [...IMPACT_VIDEOS, { title: 'YOU MADE IT · OFFICIAL', url: 'https://www.youtube.com/watch?v=RSdKmX2BH7o' }] } },
+      ] },
+      { title: 'Bio', slug: 'bio', order: 3, description: 'Biographie et univers artistique d’IMPACT.', blocks: [] },
+      { title: 'Booking', slug: 'booking', order: 4, description: 'Booking et demandes professionnelles pour IMPACT.', blocks: [] },
+      { title: 'Boutique', slug: 'boutique', order: 5, showInNav: Boolean(profile.shopEnabled), description: 'Boutique officielle IMPACT.', blocks: [
+        { type: 'banner', content: { backgroundType: 'image', image: '/impact/profile-2.jpg', title: 'BOUTIQUE IMPACT', subtitle: 'Drops, éditions limitées et merchandising.', overlay: 55, height: 360, contentPosition: 'center', textAlign: 'center' } },
+        { type: 'shop', content: { title: 'SHOP', intro: '', search: true, showCategories: true, columns: 4 } },
+      ] },
+    ];
+    await prisma.page.deleteMany({ where: { siteId, slug: { notIn: pages.map((page) => page.slug) } } });
+    for (const pageData of pages) {
+      const page = await prisma.page.upsert({
+        where: { siteId_slug: { siteId, slug: pageData.slug } },
+        update: { title: pageData.title, order: pageData.order, isHome: Boolean(pageData.isHome), showInNav: pageData.showInNav ?? true, seoTitle: `${pageData.title} · IMPACT`, seoDescription: pageData.description },
+        create: { siteId, title: pageData.title, slug: pageData.slug, order: pageData.order, isHome: Boolean(pageData.isHome), showInNav: pageData.showInNav ?? true, seoTitle: `${pageData.title} · IMPACT`, seoDescription: pageData.description },
+      });
+      await prisma.block.deleteMany({ where: { pageId: page.id } });
+      if (pageData.blocks.length) await prisma.block.createMany({ data: pageData.blocks.map((block, order) => ({ pageId: page.id, type: block.type, order, content: block.content as any, style: defaultStyleFor(block.type) as any })) });
+    }
+  }
+
+  console.log('✅ Profil IMPACT prêt (compte offert, sans abonnement payant).');
+  console.log(`   Connexion IMPACT : ${IMPACT_LOGIN_EMAIL} / ${IMPACT_LOGIN_PASSWORD}`);
   console.log(`   URL interne : /s/${IMPACT_SUBDOMAIN}  ·  domaine : https://${IMPACT_HOST}  ·  admin : /impact-admin`);
 }
 

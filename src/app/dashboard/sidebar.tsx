@@ -27,21 +27,22 @@ const NAV = [
 ];
 
 export function Sidebar({
-  orgName, userName, permissions, siteUrl, published, unreadMessages, branded, brandLogoUrl,
+  orgName, userName, permissions, siteUrl, published, unreadMessages, branded, brandLogoUrl, brandAccent = '#d33f5c', brandSurface = '#0b0b10', brandKey,
 }: {
-  orgName: string; userName: string; permissions: string[]; siteUrl: string; published: boolean; unreadMessages: number; branded?: boolean; brandLogoUrl?: string;
+  orgName: string; userName: string; permissions: string[]; siteUrl: string; published: boolean; unreadMessages: number; branded?: boolean; brandLogoUrl?: string; brandAccent?: string; brandSurface?: string; brandKey?: 'vielusos' | 'impact';
 }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const has = (p: string | null) => p === null || permissions.includes(p);
+  const impactBrand = brandKey === 'impact';
 
   const content = (
-    <div className={`flex h-full flex-col ${branded ? 'bg-[#0b0b10] text-[#f7f7fb]' : 'bg-white'}`}>
+    <div className={`flex h-full flex-col ${branded ? `${impactBrand ? '' : 'bg-[#0b0b10]'} text-[#f7f7fb]` : 'bg-white'}`} style={impactBrand ? { backgroundColor: brandSurface } : undefined}>
       <div className={`border-b px-5 py-4 ${branded ? 'border-white/10' : 'border-gray-100'}`}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={brandLogoUrl || '/easyasso-logo.png'} alt={branded ? orgName : 'EasyAsso'} className="h-14 w-auto object-contain" />
         <p className={`mt-2 truncate text-sm font-medium ${branded ? 'text-white/85' : 'text-gray-900'}`}>{orgName}</p>
-        {branded && <p className="mt-1 text-[10px] font-black uppercase tracking-[0.24em] text-[#d33f5c]">Espace artiste</p>}
+        {branded && <p className={`mt-1 text-[10px] font-black uppercase tracking-[0.24em] ${impactBrand ? '' : 'text-[#d33f5c]'}`} style={impactBrand ? { color: brandAccent } : undefined}>Espace artiste</p>}
       </div>
 
       <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
@@ -54,9 +55,10 @@ export function Sidebar({
               onClick={() => setOpen(false)}
               className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition ${
                 active
-                  ? (branded ? 'bg-[#d33f5c]/20 text-[#ff9aae]' : 'bg-brand-50 text-brand-700')
+                  ? (branded ? (impactBrand ? '' : 'bg-[#d33f5c]/20 text-[#ff9aae]') : 'bg-brand-50 text-brand-700')
                   : (branded ? 'text-white/65 hover:bg-white/10 hover:text-white' : 'text-gray-600 hover:bg-gray-100')
               }`}
+              style={active && impactBrand ? { color: brandAccent, backgroundColor: `${brandAccent}24` } : undefined}
             >
               <n.icon className="h-5 w-5" /> {n.label}
               {'notification' in n && n.notification && unreadMessages > 0 && <span className="ml-auto grid min-h-5 min-w-5 place-items-center rounded-full bg-red-500 px-1 text-[11px] font-bold text-white">{unreadMessages > 99 ? '99+' : unreadMessages}</span>}
@@ -74,7 +76,7 @@ export function Sidebar({
         </a>
         <div className="flex items-center justify-between px-2 py-1">
           <span className={`truncate text-xs ${branded ? 'text-white/50' : 'text-gray-500'}`}>{userName}</span>
-          <button onClick={() => signOut({ callbackUrl: '/' })} className={branded ? 'text-white/45 hover:text-[#ff9aae]' : 'text-gray-400 hover:text-red-600'} title="Se déconnecter">
+          <button onClick={() => signOut({ callbackUrl: '/' })} className={branded ? (impactBrand ? 'text-white/45 hover:text-white' : 'text-white/45 hover:text-[#ff9aae]') : 'text-gray-400 hover:text-red-600'} title="Se déconnecter">
             <LogOut className="h-4 w-4" />
           </button>
         </div>
@@ -85,20 +87,20 @@ export function Sidebar({
   return (
     <>
       {/* Mobile top bar */}
-      <div className={`flex items-center justify-between border-b px-4 py-3 lg:hidden ${branded ? 'border-white/10 bg-[#0b0b10]' : 'border-gray-100 bg-white'}`}>
+      <div className={`flex items-center justify-between border-b px-4 py-3 lg:hidden ${branded ? `border-white/10 ${impactBrand ? '' : 'bg-[#0b0b10]'}` : 'border-gray-100 bg-white'}`} style={impactBrand ? { backgroundColor: brandSurface } : undefined}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={brandLogoUrl || '/easyasso-logo.png'} alt={branded ? orgName : 'EasyAsso'} className="h-12 w-auto object-contain" />
         <button onClick={() => setOpen(true)} className="touch-target rounded-lg" aria-label="Ouvrir le menu"><Menu className={`h-6 w-6 ${branded ? 'text-white' : 'text-gray-700'}`} /></button>
       </div>
 
       {/* Desktop sidebar */}
-      <aside className={`fixed inset-y-0 left-0 hidden w-64 border-r lg:block ${branded ? 'border-white/10 bg-[#0b0b10]' : 'border-gray-100 bg-white'}`}>{content}</aside>
+      <aside className={`fixed inset-y-0 left-0 hidden w-64 border-r lg:block ${branded ? `border-white/10 ${impactBrand ? '' : 'bg-[#0b0b10]'}` : 'border-gray-100 bg-white'}`} style={impactBrand ? { backgroundColor: brandSurface } : undefined}>{content}</aside>
 
       {/* Mobile drawer */}
       {open && (
         <div className="fixed inset-0 z-50 lg:hidden">
           <div className="absolute inset-0 bg-black/40" onClick={() => setOpen(false)} />
-          <aside className={`absolute inset-y-0 left-0 w-72 ${branded ? 'bg-[#0b0b10]' : 'bg-white'}`}>
+          <aside className={`absolute inset-y-0 left-0 w-72 ${branded ? (impactBrand ? '' : 'bg-[#0b0b10]') : 'bg-white'}`} style={impactBrand ? { backgroundColor: brandSurface } : undefined}>
             <button onClick={() => setOpen(false)} className={`touch-target absolute right-3 top-3 rounded-lg ${branded ? 'text-white/60' : 'text-gray-500'}`} aria-label="Fermer le menu"><X className="h-6 w-6" /></button>
             {content}
           </aside>

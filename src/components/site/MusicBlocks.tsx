@@ -64,9 +64,9 @@ export function MusicTracks({ content }: { content: any }) {
   );
 }
 
-// ---- Vidéos YouTube --------------------------------------------------------
+// ---- Vidéos (YouTube ou fichiers MP4 du profil) ---------------------------
 export function VideoGrid({ content }: { content: any }) {
-  const videos: { url?: string; title?: string }[] = Array.isArray(content?.videos) ? content.videos : [];
+  const videos: { url?: string; title?: string; poster?: string }[] = Array.isArray(content?.videos) ? content.videos : [];
   const clean = videos.filter((v) => v && v.url);
   const [playing, setPlaying] = useState<Record<number, boolean>>({});
 
@@ -83,13 +83,18 @@ export function VideoGrid({ content }: { content: any }) {
           <button type="button" aria-label="Vidéo suivante" onClick={() => document.getElementById('video-rail')?.scrollBy({ left: 340, behavior: 'smooth' })} className="absolute right-1 top-1/2 z-10 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full bg-black/70 text-white shadow-lg backdrop-blur transition hover:bg-black focus:outline-none focus:ring-2 focus:ring-white/80"><ChevronRight className="h-5 w-5" /></button>
           <div id="video-rail" className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-12 pb-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {clean.map((v, i) => {
+            const localVideo = Boolean(v.url?.startsWith('/') && /\.mp4(?:$|\?)/i.test(v.url));
             const src = safePublicUrl(videoEmbed(v.url || ''));
             const id = youtubeId(v.url || '');
             const thumbnail = id ? `https://i.ytimg.com/vi/${id}/hqdefault.jpg` : '';
             return (
               <div key={i} className="vielusos-video-card w-[78vw] max-w-[320px] shrink-0 snap-start md:w-[320px]">
                 <div className="relative aspect-video w-full overflow-hidden rounded-2xl bg-black shadow-sm">
-                  {playing[i] && src ? (
+                  {localVideo ? (
+                    <video controls playsInline preload="none" poster={v.poster || undefined} className="absolute inset-0 h-full w-full object-cover" aria-label={v.title || `Vidéo IMPACT ${i + 1}`}>
+                      <source src={v.url} type="video/mp4" />
+                    </video>
+                  ) : playing[i] && src ? (
                     <iframe src={`${src}${src.includes('?') ? '&' : '?'}autoplay=1&modestbranding=1&rel=0`} className="absolute inset-0 h-full w-full border-0" allow="autoplay; encrypted-media; picture-in-picture" allowFullScreen title={`YouTube video ${i + 1}`} />
                   ) : (
                     <button type="button" aria-label="Lire la vidéo" onClick={() => setPlaying((state) => ({ ...state, [i]: true }))} className="absolute inset-0 flex items-center justify-center bg-black/35 transition hover:bg-black/45 focus:outline-none focus:ring-2 focus:ring-white/80">
@@ -98,6 +103,7 @@ export function VideoGrid({ content }: { content: any }) {
                     </button>
                   )}
                 </div>
+                {localVideo && v.title && <p className="mt-3 truncate text-xs font-semibold uppercase tracking-[0.16em] text-current/70">{v.title}</p>}
               </div>
             );
           })}

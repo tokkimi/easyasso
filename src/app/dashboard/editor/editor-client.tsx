@@ -836,6 +836,7 @@ export function EditorClient({
               <HeaderEditor
                 value={header}
                 branded={branded}
+                artistName={artistName}
                 onChange={(h) => {
                   setHeader(h);
                   saveSite({ header: h });
@@ -847,6 +848,7 @@ export function EditorClient({
                 value={footer}
                 pages={pages}
                 branded={branded}
+                artistName={artistName}
                 onChange={(f) => {
                   setFooter(f);
                   saveSite({ footer: f });
@@ -914,6 +916,7 @@ export function EditorClient({
               <HeaderEditor
                 value={header}
                 branded={branded}
+                artistName={artistName}
                 onChange={(h) => {
                   setHeader(h);
                   saveSite({ header: h });
@@ -925,6 +928,7 @@ export function EditorClient({
                 value={footer}
                 pages={pages}
                 branded={branded}
+                artistName={artistName}
                 onChange={(f) => {
                   setFooter(f);
                   saveSite({ footer: f });
@@ -2908,10 +2912,12 @@ function SocialEditor({
 function HeaderEditor({
   value,
   branded = false,
+  artistName = "VIELUSOS",
   onChange,
 }: {
   value: any;
   branded?: boolean;
+  artistName?: string;
   onChange: (v: any) => void;
 }) {
   const h = value;
@@ -2921,7 +2927,7 @@ function HeaderEditor({
       <h3 className="font-bold text-gray-900">En-tête</h3>
       {branded ? (
         <p className="rounded-xl bg-gray-50 p-3 text-sm text-gray-600">
-          Le logo officiel VIELUSOS est utilisé dans l’en-tête.
+          Le logo officiel {artistName} est utilisé dans l’en-tête.
         </p>
       ) : (
         <>
@@ -3040,6 +3046,7 @@ function HeaderEditor({
           ["facebook", "Facebook"],
           ["linkedin", "LinkedIn"],
           ["twitter", "X / Twitter"],
+          ["email", "E-mail"],
         ].map(([name, label]) => (
           <Field key={name} label={label}>
             <input
@@ -3058,7 +3065,7 @@ function HeaderEditor({
         <>
           <div className="space-y-3 border-t border-gray-100 pt-3">
             <p className="text-sm font-semibold text-gray-700">
-              Bannière vidéo VIELUSOS
+              Bannière vidéo {artistName}
             </p>
             <Field label="URL de la vidéo">
               <input
@@ -3072,7 +3079,7 @@ function HeaderEditor({
                     },
                   })
                 }
-                placeholder="/vielusos/banner.mp4"
+                placeholder={artistName === "IMPACT" ? "/impact/hero-teaser-web.mp4" : "/vielusos/banner.mp4"}
               />
             </Field>
             <Toggle
@@ -3091,7 +3098,7 @@ function HeaderEditor({
                   vielusosHero: { ...(h.vielusosHero || {}), showName: v },
                 })
               }
-              label="Afficher VIELUSOS"
+              label={`Afficher ${artistName}`}
             />
             <Toggle
               checked={h.vielusosHero?.showTagline ?? true}
@@ -3100,17 +3107,17 @@ function HeaderEditor({
                   vielusosHero: { ...(h.vielusosHero || {}), showTagline: v },
                 })
               }
-              label="Afficher POWER OF EMOTION"
+              label={artistName === "IMPACT" ? "Afficher RAW · ELECTRONIC · ENERGY" : "Afficher POWER OF EMOTION"}
             />
           </div>
           <div className="space-y-3 border-t border-gray-100 pt-3">
             <p className="text-sm font-semibold text-gray-700">
-              Page « À propos » VIELUSOS
+              Page « À propos » {artistName}
             </p>
             <p className="rounded-xl bg-gray-50 p-3 text-xs leading-5 text-gray-600">
               Ces champs pilotent directement la section visible sur la page À
               propos. La version française et la version anglaise restent
-              séparées : VIELUSOS peut écrire et refaire sa bio sans toucher au
+              séparées : {artistName} peut écrire et refaire sa bio sans toucher au
               code.
             </p>
             <Field label="Petit titre (français)">
@@ -3125,7 +3132,7 @@ function HeaderEditor({
                     },
                   })
                 }
-                placeholder="VIELUSOS · ARTISTE"
+                placeholder={`${artistName} · ARTISTE`}
               />
             </Field>
             <Field label="Petit titre (anglais)">
@@ -3140,7 +3147,7 @@ function HeaderEditor({
                     },
                   })
                 }
-                placeholder="VIELUSOS · ARTIST"
+                placeholder={`${artistName} · ARTIST`}
               />
             </Field>
             <Field label="Titre (français)">
@@ -3230,11 +3237,13 @@ function FooterEditor({
   value,
   pages,
   branded = false,
+  artistName = "VIELUSOS",
   onChange,
 }: {
   value: any;
   pages: Page[];
   branded?: boolean;
+  artistName?: string;
   onChange: (v: any) => void;
 }) {
   const f = value;
@@ -3274,7 +3283,7 @@ function FooterEditor({
       )}
       {branded ? (
         <p className="rounded-xl bg-gray-50 p-3 text-sm text-gray-600">
-          Le logo et les couleurs officiels VIELUSOS sont utilisés dans le pied
+          Le logo et les couleurs officiels {artistName} sont utilisés dans le pied
           de page.
         </p>
       ) : (

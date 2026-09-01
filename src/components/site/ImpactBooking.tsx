@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { ArrowLeft, CalendarDays, CheckCircle2, Send } from 'lucide-react';
-import { LanguageSwitcher, useLanguage } from '@/components/language-provider';
+import { useLanguage } from '@/components/language-provider';
 
 type BookingCopy = {
   title?: string;
@@ -33,7 +33,7 @@ export function ImpactBooking({ organizationId, copy = {} }: { organizationId: s
   return (
     <main className="flex-1 px-5 py-10 text-white md:px-10 md:py-16">
       <div className="mx-auto max-w-6xl">
-        <div className="flex items-center justify-between gap-4"><a href="/" className="inline-flex items-center gap-2 text-[10px] font-medium uppercase tracking-[0.28em] text-white/50 transition hover:text-[#9dc7ff]"><ArrowLeft className="h-4 w-4" />{en ? 'Back' : 'Retour'}</a><LanguageSwitcher variant="inline" /></div>
+        <div className="flex items-center justify-between gap-4"><a href="/" className="inline-flex items-center gap-2 text-[10px] font-medium uppercase tracking-[0.28em] text-white/50 transition hover:text-[#9dc7ff]"><ArrowLeft className="h-4 w-4" />{en ? 'Back' : 'Retour'}</a></div>
         <div className="mt-10 grid gap-10 lg:grid-cols-[.75fr_1.25fr] lg:gap-16">
           <section>
             <p className="text-[10px] uppercase tracking-[0.48em] text-[#9dc7ff]">IMPACT · BOOKING</p>

@@ -30,7 +30,7 @@ export function middleware(req: NextRequest) {
     return NextResponse.rewrite(url);
   }
 
-  if (isImpactHost && req.nextUrl.pathname === '/admin') {
+  if (isImpactHost && (req.nextUrl.pathname === '/admin' || req.nextUrl.pathname === '/login')) {
     const url = req.nextUrl.clone();
     url.pathname = '/impact-admin';
     return NextResponse.rewrite(url);

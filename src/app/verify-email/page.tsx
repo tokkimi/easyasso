@@ -1,9 +1,11 @@
 import Link from 'next/link';
 import { prisma } from '@/lib/prisma';
+import { headers } from 'next/headers';
 
 export const dynamic = 'force-dynamic';
 
 export default async function VerifyEmailPage({ searchParams }: { searchParams: Promise<{ token?: string }> }) {
+  const impact = (await headers()).get('host')?.split(':')[0].toLowerCase() === 'impact.vercel.app';
   const { token } = await searchParams;
   let ok = false;
   if (token) {
@@ -19,7 +21,7 @@ export default async function VerifyEmailPage({ searchParams }: { searchParams: 
     <div className="grid min-h-screen place-items-center bg-gray-50 px-4">
       <div className="card max-w-md text-center">
         <h1 className="text-2xl font-bold text-gray-900">{ok ? 'Email confirmé ✅' : 'Lien invalide ou expiré'}</h1>
-        <p className="mt-2 text-gray-600">{ok ? 'Votre compte EasyAsso est sécurisé.' : 'Demandez un nouveau lien depuis votre tableau de bord.'}</p>
+        <p className="mt-2 text-gray-600">{ok ? (impact ? 'Votre compte est sécurisé.' : 'Votre compte EasyAsso est sécurisé.') : 'Demandez un nouveau lien depuis votre tableau de bord.'}</p>
         <Link href="/dashboard" className="btn btn-primary mt-5">Aller au tableau de bord</Link>
       </div>
     </div>

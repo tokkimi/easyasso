@@ -5,11 +5,12 @@ import { IMPACT_BRAND } from '@/lib/impact';
 // backdrop. Uses an optional looping video (config.videoUrl); otherwise falls
 // back to the brand background so nothing is ever broken/empty.
 export function ImpactHero({ title, config }: { title: string; config?: HeaderConfig['vielusosHero'] }) {
+  const videoUrl = config?.videoUrl || '/impact/hero-teaser-web.mp4';
   return (
     <section className="relative isolate aspect-video w-full overflow-hidden bg-[#05070f]" aria-label={title}>
-      {config?.videoUrl ? (
+      {videoUrl ? (
         <video className="absolute inset-0 h-full w-full object-cover opacity-70" autoPlay muted loop playsInline preload="metadata" poster={IMPACT_BRAND.backgroundUrl} aria-hidden="true">
-          <source src={config.videoUrl} type="video/mp4" />
+          <source src={videoUrl} type="video/mp4" />
         </video>
       ) : (
         // eslint-disable-next-line @next/next/no-img-element

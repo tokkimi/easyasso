@@ -4,7 +4,7 @@ import { PERMISSIONS } from '@/lib/permissions';
 import { siteUrlFor, rootDomain } from '@/lib/utils';
 import { SettingsClient } from './client';
 import { TEMPLATES } from '@/lib/templates';
-import { isArtistSite } from '@/lib/site-brand';
+import { siteBrand } from '@/lib/site-brand';
 
 export const dynamic = 'force-dynamic';
 
@@ -12,16 +12,20 @@ export default async function SettingsPage() {
   const ctx = await requirePermission(PERMISSIONS.ORG_SETTINGS);
   const org = ctx.organization!;
   const site = await prisma.site.findUniqueOrThrow({ where: { organizationId: org.id } });
+  const brand = siteBrand(site);
   return (
     <SettingsClient
       org={{ name: org.name, planStatus: org.planStatus, paidAt: org.paidAt ? String(org.paidAt) : null, profile: org.profile }}
       user={{ name: ctx.user.name || '', email: ctx.user.email, emailVerified: ctx.user.emailVerified ? String(ctx.user.emailVerified) : null }}
       site={{ name: site.name, subdomain: site.subdomain, customDomain: site.customDomain, domainVerified: site.domainVerified, published: site.published }}
-      freeUrl={siteUrlFor(site.subdomain, null)}
+      freeUrl={brand && site.customDomain ? `https://${site.customDomain}` : siteUrlFor(site.subdomain, null)}
       rootDomain={rootDomain()}
       canDomain={ctx.permissions.has(PERMISSIONS.SITE_DOMAIN)}
       categories={TEMPLATES.map((template) => ({ id: template.id, name: template.name }))}
-      branded={isArtistSite(site)}
+      branded={Boolean(brand)}
+      brandName={brand ? brand.displayName(site.name) : ''}
+      brandDomain={brand ? (site.customDomain || '') : ''}
+      brandKey={brand?.key || ''}
     />
   );
 }

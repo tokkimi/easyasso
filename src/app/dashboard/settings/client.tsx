@@ -7,7 +7,7 @@ import { formatDate } from '@/lib/utils';
 import { canUpgradePlan, PLANS, type PlanId } from '@/lib/plans';
 import { ManualTransferButton } from '@/app/onboarding/manual-transfer-button';
 
-export function SettingsClient({ org, user, site, freeUrl, rootDomain, canDomain, categories, branded = false }: any) {
+export function SettingsClient({ org, user, site, freeUrl, rootDomain, canDomain, categories, branded = false, brandName = '', brandDomain = '', brandKey = '' }: any) {
   const router = useRouter();
   const [name, setName] = useState(site.name);
   const [published, setPublished] = useState(!!site.published);
@@ -16,7 +16,7 @@ export function SettingsClient({ org, user, site, freeUrl, rootDomain, canDomain
   const [verifying, setVerifying] = useState(false);
   const [savingDomain, setSavingDomain] = useState(false);
   const [domainChoice, setDomainChoice] = useState<'connect' | 'buy' | null>(site.customDomain ? 'connect' : null);
-  const [profile, setProfile] = useState({ language: 'fr', year: '', category: '', mission: '', functioning: '', actions: '', beneficiaries: '', goodToKnow: '', slogan: '', generateCgv: true, city: '', email: '', phone: '', legalName: '', registrationNumber: '', legalAddress: '', legalCountry: 'France', publicationDirector: '', facebook: '', instagram: '', linkedin: '', youtube: '', tiktok: '', twitter: '', ...(org.profile || {}) });
+  const [profile, setProfile] = useState({ language: 'fr', year: '', category: '', mission: '', functioning: '', actions: '', beneficiaries: '', goodToKnow: '', slogan: '', generateCgv: true, city: '', email: '', phone: '', legalName: '', registrationNumber: '', legalAddress: '', legalCountry: 'France', publicationDirector: '', facebook: '', instagram: '', linkedin: '', youtube: '', tiktok: '', twitter: '', spotify: '', soundcloud: '', deezer: '', applemusic: '', ...(org.profile || {}) });
   const [account, setAccount] = useState({ name: user.name || '', email: user.email || '', currentPassword: '', newPassword: '' });
   const [billingLoading, setBillingLoading] = useState('');
   const [billingError, setBillingError] = useState('');
@@ -134,14 +134,14 @@ export function SettingsClient({ org, user, site, freeUrl, rootDomain, canDomain
         <div className="mt-4"><label className="label">Informations importantes</label><textarea className="input min-h-[80px]" value={profile.goodToKnow} onChange={(e) => setProfileField('goodToKnow', e.target.value)} placeholder={branded ? 'Dates, liens, contacts professionnels et informations utiles…' : 'Adhésion, horaires, reçus fiscaux, partenaires, chiffres clés…'} /></div>
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
           <div><label className="label">Ville / territoire</label><input className="input" value={profile.city} onChange={(e) => setProfileField('city', e.target.value)} /></div>
-          <div><label className="label">E-mail public</label><input type="email" className="input" value={profile.email} onChange={(e) => setProfileField('email', e.target.value)} placeholder={branded ? 'contact@vielusos.com' : 'contact@association.fr'} /></div>
+          <div><label className="label">E-mail public</label><input type="email" className="input" value={profile.email} onChange={(e) => setProfileField('email', e.target.value)} placeholder={branded ? `contact@${brandDomain || `${String(brandName).toLowerCase()}.com`}` : 'contact@association.fr'} /></div>
           <div><label className="label">Téléphone public</label><input className="input" value={profile.phone} onChange={(e) => setProfileField('phone', e.target.value)} placeholder="01 23 45 67 89" /></div>
         </div>
         <div className="mt-6 border-t border-gray-100 pt-5">
           <h3 className="font-bold text-gray-900">Réseaux sociaux</h3>
           <p className="mb-3 text-sm text-gray-500">Ajoutez uniquement les comptes officiels {branded ? 'du projet' : 'de l’association'}.</p>
           <div className="grid gap-3 sm:grid-cols-2">
-            {(['facebook', 'instagram', 'linkedin', 'youtube', 'tiktok', 'twitter'] as const).map((network) => (
+            {(brandKey === 'impact' ? ['facebook', 'instagram', 'linkedin', 'youtube', 'tiktok', 'twitter', 'spotify', 'soundcloud', 'deezer', 'applemusic'] : ['facebook', 'instagram', 'linkedin', 'youtube', 'tiktok', 'twitter']).map((network) => (
               <div key={network}><label className="label capitalize">{network === 'twitter' ? 'X (Twitter)' : network}</label><input className="input" type="url" value={profile[network]} onChange={(e) => setProfileField(network, e.target.value)} placeholder={network === 'twitter' ? 'https://x.com/...' : `https://${network}.com/...`} /></div>
             ))}
           </div>
@@ -184,7 +184,7 @@ export function SettingsClient({ org, user, site, freeUrl, rootDomain, canDomain
               <button type="button" onClick={() => setDomainChoice('connect')} className={`rounded-xl border p-4 text-left transition ${domainChoice === 'connect' ? 'border-brand-500 bg-brand-50' : 'border-gray-200 hover:border-gray-300'}`}>
                 <Link2 className="mb-2 h-5 w-5 text-brand-600" />
                 <span className="block font-semibold text-gray-900">J’ai déjà une adresse</span>
-                <span className="mt-1 block text-sm text-gray-500">Par exemple {branded ? 'vielusos.com' : 'mon-association.fr'}</span>
+                <span className="mt-1 block text-sm text-gray-500">Par exemple {branded ? (brandDomain || 'artiste.com') : 'mon-association.fr'}</span>
               </button>
               <button type="button" onClick={() => setDomainChoice('buy')} className={`rounded-xl border p-4 text-left transition ${domainChoice === 'buy' ? 'border-brand-500 bg-brand-50' : 'border-gray-200 hover:border-gray-300'}`}>
                 <ShoppingCart className="mb-2 h-5 w-5 text-brand-600" />
@@ -203,7 +203,7 @@ export function SettingsClient({ org, user, site, freeUrl, rootDomain, canDomain
               <div className="mt-4 rounded-xl border border-gray-200 p-4">
                 <label className="label">{branded ? 'Quelle adresse souhaitez-vous relier au site ?' : 'Quelle adresse appartient à l’association ?'}</label>
                 <div className="flex gap-2">
-                  <input className="input" placeholder={branded ? 'vielusos.com' : 'mon-association.fr'} value={domain} onChange={(e) => setDomain(e.target.value)} />
+                  <input className="input" placeholder={branded ? (brandDomain || 'artiste.com') : 'mon-association.fr'} value={domain} onChange={(e) => setDomain(e.target.value)} />
                   <button onClick={saveDomain} disabled={savingDomain || !domain.trim()} className="btn btn-primary shrink-0">{savingDomain ? 'Ajout…' : 'Continuer'}</button>
                 </div>
                 <p className="mt-2 text-xs text-gray-500">{branded ? 'Votre adresse gratuite reste protégée automatiquement.' : 'Ne saisissez pas easyasso.vercel.app : cette adresse est protégée automatiquement.'}</p>

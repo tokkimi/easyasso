@@ -10,6 +10,38 @@ export const IMPACT_SUBDOMAIN = 'impact-djraw';
 // The Vercel deployment domain this profile answers on (handled in middleware).
 export const IMPACT_HOST = 'impact.vercel.app';
 
+// IMPACT owns this identity. Nothing shown to the artist or the public uses an
+// EasyAsso address; the booking address is also the administrator login.
+export const IMPACT_LOGIN_EMAIL = 'contact@skorm-agency.com';
+export const IMPACT_LOGIN_PASSWORD = 'impact1234';
+
+export const IMPACT_SOCIALS = {
+  instagram: 'https://www.instagram.com/impactdj_raw',
+  tiktok: 'https://www.tiktok.com/@impactdj_raw',
+  spotify: 'https://open.spotify.com/artist/3AiyQHD9YDWhPX6rKJLkXZ',
+  soundcloud: 'https://on.soundcloud.com/gFkxJhH119PUD8bvJG',
+  deezer: 'https://link.deezer.com/s/32FJ0eJdg95ujwvQN8jFV',
+  youtube: 'https://www.youtube.com/channel/UCdqrxBgSQ7ReX0FmaQBIAfw',
+  applemusic: 'https://music.apple.com/fr/artist/impact/1815586907',
+  email: `mailto:${IMPACT_LOGIN_EMAIL}`,
+} as const;
+
+export const IMPACT_TRACKS = [
+  { title: 'YOU MADE IT', artist: 'IMPACT', year: '2026', thumbnail: '/impact/releases/you-made-it.jpg', url: 'https://open.spotify.com/track/00Wuied8VMJHv1FQEvQgTe', source: 'Spotify' },
+  { title: 'MAYDAY', artist: 'IMPACT', year: '2026', thumbnail: '/impact/releases/mayday.jpg', url: 'https://open.spotify.com/intl-fr/album/4OZIoOOEWlnUvmux0RcmLD', source: 'Spotify' },
+  { title: 'LOCK THE DOOR', artist: 'IMPACT', year: '', thumbnail: '/impact/releases/lock-the-door.jpg', url: 'https://soundcloud.com/impact-518694200/lock-the-door-vf-2', source: 'SoundCloud' },
+  { title: 'POWER OF DESTRUCTION', artist: 'IMPACT', year: '', thumbnail: '/impact/releases/power-of-destruction.jpg', url: 'https://soundcloud.com/impact-518694200/power-of-destruction', source: 'SoundCloud' },
+] as const;
+
+export const IMPACT_VIDEOS = Array.from({ length: 10 }, (_, index) => {
+  const number = String(index + 1).padStart(2, '0');
+  return {
+    title: `IMPACT · LIVE ESKAPE ${number}`,
+    url: `/impact/videos/impact-live-${number}.mp4`,
+    poster: `/impact/videos/posters/impact-live-${number}.jpg`,
+  };
+});
+
 export const IMPACT_BRAND = {
   logoUrl: '/impact/logo.svg',
   backgroundUrl: '/impact/background.svg',

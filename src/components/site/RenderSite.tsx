@@ -114,7 +114,7 @@ export async function RenderSite({ site, basePath, slug }: { site: SiteWithPages
     ? { ...header, logoUrl: brand.brand.logoUrl, logoText: brand.displayName(site.name), background: brand.brand.surface, textColor: '#f7f7fb' }
     : header;
   const headerSocials = Object.entries((publicHeader as any).social || {}).filter((entry): entry is [string, string] => typeof entry[1] === 'string' && Boolean(entry[1].trim()));
-  const socialLabels = new Set(['facebook', 'instagram', 'linkedin', 'youtube', 'youtube music', 'spotify', 'deezer', 'soundcloud', 'apple music', 'amazon music', 'beatport', 'bandcamp', 'tidal', 'shotgun', 'tiktok', 'x', 'twitter']);
+  const socialLabels = new Set(['facebook', 'instagram', 'linkedin', 'youtube', 'youtube music', 'spotify', 'deezer', 'soundcloud', 'apple music', 'amazon music', 'beatport', 'bandcamp', 'tidal', 'shotgun', 'tiktok', 'x', 'twitter', 'email']);
   const socialDisplayLabels: Record<string, string> = {
     applemusic: 'Apple Music',
     amazonmusic: 'Amazon Music',
@@ -145,7 +145,7 @@ export async function RenderSite({ site, basePath, slug }: { site: SiteWithPages
   const shopEnabled = Boolean(profile.shopEnabled ?? profile.hasShop);
   const nav = site.pages
     .filter((p) => p.showInNav && (p.slug !== 'boutique' || shopEnabled))
-    .filter((p) => !branded || (!p.isHome && !['bio', 'about', 'a-propos'].includes(p.slug)))
+    .filter((p) => !brand || brand.key === 'impact' || (!p.isHome && !['bio', 'about', 'a-propos'].includes(p.slug)))
     .map((p) => ({ title: p.title, slug: p.slug, isHome: p.isHome }));
   const theme = (site.theme as any) || {};
   const fontHref = googleFontsHref(theme.font);
@@ -327,7 +327,7 @@ function ClientAccessPage({ organizationId, organizationName, locale, branded = 
     <main className={`flex-1 px-4 py-12 ${branded ? 'bg-transparent' : 'bg-gray-50'}`}>
       <section className={`mx-auto max-w-2xl rounded-3xl p-5 text-center shadow-sm sm:p-7 md:rounded-[2rem] md:p-10 ${branded ? 'bg-[#0b0b10]/55 text-[#f7f7fb] ring-1 ring-white/15 backdrop-blur-xl' : 'bg-white ring-1 ring-gray-200'}`}>
         <p className={`text-sm font-bold uppercase tracking-[0.2em] ${branded ? 'text-[#d33f5c]' : 'text-[var(--brand)]'}`}>
-          {branded ? 'VIELUSOS · espace client' : en ? 'Customer area' : 'Espace client'}
+          {branded ? `${organizationName} · espace client` : en ? 'Customer area' : 'Espace client'}
         </p>
         <h1 className={`mt-3 text-2xl font-black sm:text-3xl md:text-4xl ${branded ? 'text-white' : 'text-gray-900'}`}>
           {en ? 'Sign in or create your customer account' : 'Connexion ou inscription client'}

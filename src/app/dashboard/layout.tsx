@@ -76,6 +76,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
         unreadMessages={unreadMessages}
         branded={vielusos}
         brandLogoUrl={brand ? brand.brand.logoUrl : '/easyasso-logo.png'}
+        brandAccent={brand?.brand.accent}
+        brandSurface={brand?.brand.surface}
+        brandKey={brand?.key}
       />
       <main className={`flex-1 lg:ml-64 ${brand ? 'text-[#f7f7fb]' : ''}`}>
         {!vielusos && access.isTrial && (

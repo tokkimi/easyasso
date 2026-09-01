@@ -13,6 +13,7 @@ import {
   IMPACT_CONTACT_EMAIL,
   IMPACT_SOCIALS,
   IMPACT_TRACKS,
+  IMPACT_STATS,
   IMPACT_VIDEOS,
 } from '../src/lib/impact';
 
@@ -85,7 +86,7 @@ async function main() {
 async function seedImpact() {
   const existing = await prisma.site.findUnique({ where: { subdomain: IMPACT_SUBDOMAIN }, include: { organization: true } });
   const previousProfile = ((existing?.organization.profile as any) || {}) as Record<string, any>;
-  const needsContentSetup = Number(previousProfile.impactSeedVersion || 0) < 3;
+  const needsContentSetup = Number(previousProfile.impactSeedVersion || 0) < 5;
   const passwordHash = await bcrypt.hash(IMPACT_LOGIN_PASSWORD, 10);
   const legacyUser = await prisma.user.findUnique({ where: { email: 'impact@easyasso.fr' } });
   let user = await prisma.user.findUnique({ where: { email: IMPACT_LOGIN_EMAIL } });
@@ -97,7 +98,7 @@ async function seedImpact() {
 
   const profile = {
     ...previousProfile,
-    impactSeedVersion: 3,
+    impactSeedVersion: 5,
     language: 'fr' as const,
     slogan: 'RAW · ELECTRONIC · ENERGY',
     email: IMPACT_CONTACT_EMAIL,
@@ -159,8 +160,8 @@ async function seedImpact() {
     background: IMPACT_BRAND.surface, textColor: '#eaf2ff', showCta: true,
     cta: { text: 'BOOKING', href: '/booking', color: IMPACT_BRAND.accent, variant: 'solid', align: 'right' },
     social: IMPACT_SOCIALS,
-    vielusosHero: { videoUrl: '/impact/hero-teaser-web.mp4', darkVideoUrl: '/impact/hero-dark-skeleton.mp4', showLogo: true, showName: true, showTagline: true },
-    vielusosBio: { images: ['/impact/gallery/impact-gallery-01.jpg', '/impact/gallery/impact-gallery-03.jpg', '/impact/gallery/impact-gallery-05.jpg'], eyebrowFr: 'IMPACT · ARTISTE', eyebrowEn: 'IMPACT · ARTIST', titleFr: 'À PROPOS', titleEn: 'ABOUT' },
+    vielusosHero: { videoUrl: '/impact/hero-teaser-web.mp4', darkVideoUrl: '/impact/hero-dark-focus.mp4', showLogo: true, showName: true, showTagline: true },
+    vielusosBio: { images: ['/impact/gallery/impact-gallery-01.jpg', '/impact/gallery/impact-gallery-02.jpg', '/impact/gallery/impact-gallery-03.jpg', '/impact/gallery/impact-gallery-04.jpg', '/impact/gallery/impact-gallery-05.jpg', '/impact/profile.jpg', '/impact/profile-2.jpg'], eyebrowFr: 'IMPACT · ARTISTE', eyebrowEn: 'IMPACT · ARTIST', titleFr: 'À PROPOS', titleEn: 'ABOUT' },
   };
   const footerDefaults = {
     logoText: 'IMPACT', logoUrl: IMPACT_BRAND.logoUrl, text: 'RAW · ELECTRONIC · ENERGY',
@@ -176,7 +177,8 @@ async function seedImpact() {
     bookingFormTitle: 'Contact · Projet', bookingFormTitleEn: 'Contact · Project',
     pageSlugs: ['accueil', 'sons', 'videos', 'bio', 'galerie', 'booking', 'boutique'], columns: [],
   };
-  // The v3 migration installs the original media and dual-theme art direction. Later seeds
+  // The v5 migration installs the official SoundCloud inventory, sharper artwork,
+  // stats and the focused dark-mode hero video.
   // preserve edits made by IMPACT in its personalized editor.
   const header = existing && !needsContentSetup ? (existing.header as any) : headerDefaults;
   const footer = existing && !needsContentSetup ? (existing.footer as any) : footerDefaults;
@@ -187,12 +189,14 @@ async function seedImpact() {
 
   if (needsContentSetup || !existing) {
     const streamingLinks = { spotify: IMPACT_SOCIALS.spotify, deezer: IMPACT_SOCIALS.deezer, appleMusic: IMPACT_SOCIALS.applemusic, soundcloud: IMPACT_SOCIALS.soundcloud, youtube: IMPACT_SOCIALS.youtube };
-    const players = IMPACT_TRACKS.map((track) => ({ platform: track.source, url: track.url, title: track.title, artist: track.artist, releaseDate: track.year || '' }));
+    const players = IMPACT_TRACKS.map((track) => ({ platform: track.source, url: track.url, title: track.title, artist: track.artist, releaseDate: track.releaseDate }));
     const pages: Array<{ title: string; slug: string; order: number; isHome?: boolean; showInNav?: boolean; description: string; blocks: Array<{ type: BlockType; content: any }> }> = [
       { title: 'Accueil', slug: 'accueil', order: 0, isHome: true, description: 'Site officiel IMPACT · Rawstyle DJ/Producer.', blocks: [
         { type: 'streaming', content: { title: 'ÉCOUTER IMPACT', linkStyle: 'text-white', glowColor: IMPACT_BRAND.neon, links: streamingLinks } },
         { type: 'tracks', content: { variant: 'impact', title: 'DERNIÈRES SORTIES', subtitle: 'Latest releases', tracks: IMPACT_TRACKS } },
+        { type: 'stats', content: { variant: 'impact', eyebrow: 'Repères publics', title: 'IMPACT EN CHIFFRES', intro: 'Chiffres relevés sur les profils officiels au moment de la mise à jour.', source: 'Sources : Spotify artiste officiel et SoundCloud officiel IMPACT.', items: IMPACT_STATS } },
         { type: 'videos', content: { title: 'LIVE · IMPACT', videos: IMPACT_VIDEOS.slice(0, 5) } },
+        { type: 'social', content: { social: { align: 'center', ...IMPACT_SOCIALS, appleMusic: IMPACT_SOCIALS.applemusic } } },
         { type: 'instagram', content: { title: 'IMPACT SUR INSTAGRAM', username: 'impactdj_raw', url: IMPACT_SOCIALS.instagram, count: 8, postUrls: [], tiktokTitle: 'IMPACT SUR TIKTOK', tiktokUsername: 'impactdj_raw', tiktokUrl: IMPACT_SOCIALS.tiktok, tiktokPostUrls: [] } },
       ] },
       { title: 'Sons', slug: 'sons', order: 1, description: 'Toutes les sorties et plateformes officielles d’IMPACT.', blocks: [

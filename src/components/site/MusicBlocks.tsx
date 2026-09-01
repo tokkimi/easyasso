@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Play, Instagram, Music2, Youtube, CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react';
 import { safePublicUrl, videoEmbed } from '@/lib/render';
 
-export type Track = { title?: string; artist?: string; url?: string; thumbnail?: string; year?: string; source?: string };
+export type Track = { title?: string; artist?: string; url?: string; thumbnail?: string; year?: string; source?: string; playCount?: string; releaseDate?: string };
 type PlayerItem = { platform?: string; url?: string; title?: string; artist?: string; releaseDate?: string };
 
 function ImpactTrackRail({ source, tracks }: { source: string; tracks: Track[] }) {
@@ -15,7 +15,7 @@ function ImpactTrackRail({ source, tracks }: { source: string; tracks: Track[] }
 
   return (
     <section className="impact-track-platform" aria-label={source}>
-      <div className="mb-3 flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.16em]" style={{ color }}>
+      <div className="impact-track-kicker mb-3 flex items-center gap-2 text-[11px] font-bold uppercase" style={{ color }}>
         {icon && /* eslint-disable-next-line @next/next/no-img-element */ <img src={icon} alt="" className="h-5 w-5 object-contain" />}
         <span>{source}</span>
       </div>
@@ -33,7 +33,7 @@ function ImpactTrackRail({ source, tracks }: { source: string; tracks: Track[] }
                 </div>
                 <div className="impact-track-meta">
                   <p className="truncate text-sm font-semibold">{track.title || 'Titre'}</p>
-                  <p className="mt-1 truncate text-[11px] uppercase tracking-[0.08em] opacity-45">{track.artist || 'IMPACT'}</p>
+                  <p className="mt-1 truncate text-[11px] uppercase opacity-45">{track.artist || 'IMPACT'}{track.playCount ? ` · ${track.playCount} écoutes` : ''}</p>
                 </div>
               </article>
             );
@@ -59,11 +59,11 @@ export function MusicTracks({ content }: { content: any }) {
     }, new Map<string, Track[]>()));
     return (
       <div className="impact-track-shell vielusos-fluid mx-auto w-full py-7">
-        <div className="mb-8">
+        <div className="mb-6">
           {content?.title && <h2 className="impact-track-heading">{content.title}</h2>}
-          <p className="mt-1 text-[11px] font-light opacity-35">{content?.subtitle || 'Latest releases'}</p>
+          <p className="mt-1 text-[11px] font-light opacity-45">{content?.subtitle || 'Latest releases'}</p>
         </div>
-        <div className="space-y-10">
+        <div className="space-y-8">
           {groups.map(([source, sourceTracks]) => <ImpactTrackRail key={source} source={source} tracks={sourceTracks} />)}
         </div>
       </div>

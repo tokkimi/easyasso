@@ -5,7 +5,7 @@ import { IMPACT_BRAND } from '@/lib/impact';
 // the existing teaser for light mode and the helmet/skull stage visual for dark.
 export function ImpactHero({ title, config }: { title: string; config?: HeaderConfig['vielusosHero'] }) {
   const lightVideoUrl = config?.videoUrl || '/impact/hero-teaser-web.mp4';
-  const darkVideoUrl = config?.darkVideoUrl || '/impact/hero-dark-skeleton.mp4';
+  const darkVideoUrl = config?.darkVideoUrl || '/impact/hero-dark-focus.mp4';
   return (
     <section className="impact-hero relative isolate aspect-video w-full overflow-hidden" aria-label={title}>
       <video className="impact-hero-light-media absolute inset-0 h-full w-full object-cover" autoPlay muted loop playsInline preload="metadata" aria-hidden="true">
@@ -18,9 +18,9 @@ export function ImpactHero({ title, config }: { title: string; config?: HeaderCo
       <div className="impact-hero-content relative flex h-full items-center justify-center px-6 text-center">
         <div className="flex max-w-xl flex-col items-center">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          {config?.showLogo !== false && <img src={IMPACT_BRAND.logoUrl} alt="" className="impact-hero-logo mb-4 h-20 w-20 rounded-2xl object-contain md:h-28 md:w-28" />}
-          {config?.showName !== false && <p className="impact-hero-name text-3xl font-bold uppercase leading-none tracking-[0.28em] md:text-5xl" style={{ fontFamily: '"Space Grotesk", Arial, sans-serif' }}>{title.toUpperCase()}</p>}
-          {config?.showTagline !== false && <h1 className="impact-hero-tagline mt-4 text-[11px] font-light uppercase tracking-[0.34em] md:text-sm" style={{ fontFamily: '"Space Grotesk", Arial, sans-serif' }}>RAW · ELECTRONIC · ENERGY</h1>}
+          {config?.showLogo !== false && <img src={IMPACT_BRAND.logoUrl} alt="" className="impact-hero-logo mb-4 h-16 w-16 rounded-lg object-contain md:h-20 md:w-20" />}
+          {config?.showName !== false && <p className="impact-hero-name text-2xl font-semibold uppercase leading-none md:text-4xl" style={{ fontFamily: '"Space Grotesk", Arial, sans-serif' }}>{title.toUpperCase()}</p>}
+          {config?.showTagline !== false && <h1 className="impact-hero-tagline mt-3 text-[11px] font-light uppercase md:text-sm" style={{ fontFamily: '"Space Grotesk", Arial, sans-serif' }}>RAW · ELECTRONIC · ENERGY</h1>}
         </div>
       </div>
     </section>

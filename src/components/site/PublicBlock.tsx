@@ -108,7 +108,7 @@ function renderInner(type: string, content: any, style: BlockStyle, basePath: st
         { k: 'spotify', url: s.spotify, Icon: Music2, asset: '/integrations/spotify.svg' },
         { k: 'deezer', url: s.deezer, Icon: Music2, asset: '/integrations/deezer.svg' },
         { k: 'soundcloud', url: s.soundcloud, Icon: Music2, asset: '/integrations/soundcloud.svg' },
-        { k: 'appleMusic', url: s.appleMusic, Icon: Music2, asset: '/integrations/applemusic.svg' },
+        { k: 'appleMusic', url: s.appleMusic || (s as any).applemusic, Icon: Music2, asset: '/integrations/applemusic.svg' },
         { k: 'youtubeMusic', url: s.youtubeMusic, Icon: Music2, asset: 'https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/youtubemusic.svg' },
         { k: 'amazonMusic', url: s.amazonMusic, Icon: Music2, asset: 'https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/amazonmusic.svg' },
         { k: 'beatport', url: s.beatport, Icon: Music2, asset: 'https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/beatport.svg' },
@@ -140,6 +140,7 @@ function renderInner(type: string, content: any, style: BlockStyle, basePath: st
     case 'events':
       return <EventHistory content={content} />;
     case 'stats':
+      if (content?.variant === 'impact') return <ImpactStatsShowcase content={content} />;
       return <StatsShowcase content={content} hidePlatforms={branded} hideTrackStats={branded} />;
 
     // ---- Rich layouts ----
@@ -315,6 +316,29 @@ function SectionHeading({ eyebrow, title, intro }: { eyebrow?: string; title?: s
 function StatsShowcase({ content, hidePlatforms = false, hideTrackStats = false }: { content: any; hidePlatforms?: boolean; hideTrackStats?: boolean }) {
   const items = (Array.isArray(content.items) ? content.items : []).filter((item: any) => !hideTrackStats || !/(techno\s+sombrero|jos[ée]\s+le\s+perroquet|kino\s+der\s+toten)/i.test(String(item?.label || '')));
   return <section className="px-5 pb-3 pt-10 text-white md:px-12 md:pb-4 md:pt-20"><div className="vielusos-fluid mx-auto max-w-7xl"><SectionHeading eyebrow={content.eyebrow} title={content.title} intro={content.intro} /><div className="mt-7 grid grid-cols-2 overflow-hidden rounded-2xl border border-white/15 sm:mt-10 sm:rounded-3xl lg:grid-cols-3">{items.map((item: any, index: number) => <div key={index} className={`${items.length % 2 === 1 && index === 0 ? 'col-span-2 lg:col-span-1' : ''} min-h-28 border-b border-r border-white/10 p-4 sm:min-h-36 sm:p-6 lg:min-h-40`}><p className="break-words text-2xl font-semibold tracking-tight sm:text-4xl md:text-5xl">{item.value}</p><p className="mt-4 max-w-[14rem] text-[7px] font-semibold uppercase leading-4 tracking-[0.16em] text-white/45 sm:mt-6 sm:text-[10px] sm:leading-5 sm:tracking-[0.25em]">{item.label}</p></div>)}</div>{!hidePlatforms && content.platforms && <p className="mt-4 break-words text-center text-[7px] font-semibold uppercase leading-4 tracking-[0.12em] text-white/35 sm:mt-5 sm:text-[9px] sm:tracking-[0.22em]">{content.platforms}</p>}</div></section>;
+}
+
+function ImpactStatsShowcase({ content }: { content: any }) {
+  const items = Array.isArray(content.items) ? content.items : [];
+  if (!items.length) return null;
+  return (
+    <section className="impact-stats" aria-label={content?.title || 'Statistiques IMPACT'}>
+      <div>
+        {content?.eyebrow && <p className="impact-track-kicker text-[11px] font-medium uppercase opacity-45">{content.eyebrow}</p>}
+        {content?.title && <h2 className="impact-track-heading mt-1">{content.title}</h2>}
+        {content?.intro && <p className="mt-2 max-w-2xl text-sm leading-6 opacity-55">{content.intro}</p>}
+      </div>
+      <div className="impact-stats-grid">
+        {items.map((item: any, index: number) => (
+          <article key={`${item?.label || 'stat'}-${index}`} className="impact-stat-card">
+            <p className="impact-stat-value">{item?.value}</p>
+            <p className="impact-stat-label">{item?.label}</p>
+          </article>
+        ))}
+      </div>
+      {content?.source && <p className="impact-stats-source">{content.source}</p>}
+    </section>
+  );
 }
 
 function EventHistory({ content }: { content: any }) {

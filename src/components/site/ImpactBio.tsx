@@ -1,7 +1,18 @@
 'use client';
 
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useLanguage } from '@/components/language-provider';
 import type { HeaderConfig } from '@/lib/blocks';
+
+const DEFAULT_IMAGES = [
+  '/impact/gallery/impact-gallery-01.jpg',
+  '/impact/gallery/impact-gallery-02.jpg',
+  '/impact/gallery/impact-gallery-03.jpg',
+  '/impact/gallery/impact-gallery-04.jpg',
+  '/impact/gallery/impact-gallery-05.jpg',
+  '/impact/profile.jpg',
+  '/impact/profile-2.jpg',
+];
 
 const DEFAULT_FR = [
   'IMPACT est un projet de musique électronique brute et physique, pensé pour le club et la scène. Chaque set est construit comme une montée continue : tension, énergie et basses qui frappent, sans temps mort.',
@@ -17,6 +28,30 @@ const DEFAULT_EN = [
 
 export function ImpactBio({ blocks = [], config }: { blocks?: any[]; config?: HeaderConfig['vielusosBio'] }) {
   const { locale } = useLanguage();
+  const configuredImages = (config?.images || []).filter(Boolean);
+  const images = configuredImages.length ? configuredImages : DEFAULT_IMAGES;
+  const [activeImage, setActiveImage] = useState(0);
+  const [flash, setFlash] = useState(false);
+  const flashTimer = useRef<number | null>(null);
+  const triggerFlash = useCallback(() => {
+    if (flashTimer.current) window.clearTimeout(flashTimer.current);
+    setFlash(true);
+    flashTimer.current = window.setTimeout(() => setFlash(false), 140);
+  }, []);
+
+  useEffect(() => {
+    if (images.length < 2) return;
+    const interval = window.setInterval(() => {
+      triggerFlash();
+      setActiveImage((index) => (index + 1) % images.length);
+    }, 3400);
+    return () => window.clearInterval(interval);
+  }, [images.length, triggerFlash]);
+
+  useEffect(() => () => {
+    if (flashTimer.current) window.clearTimeout(flashTimer.current);
+  }, []);
+
   const copyFromBlocks = blocks
     .flatMap((block) => {
       const content = (block?.content || {}) as Record<string, unknown>;
@@ -41,23 +76,42 @@ export function ImpactBio({ blocks = [], config }: { blocks?: any[]; config?: He
     : (config?.titleFr || config?.title || 'À PROPOS');
 
   return (
-    <section data-no-translate className="relative overflow-hidden border-y border-[#4cc9ff]/18 bg-[#070b1a]/45 px-5 py-12 backdrop-blur-xl md:px-12 md:py-20">
+    <section data-no-translate className="relative overflow-hidden border-y border-[#4cc9ff]/18 bg-[#070b1a]/45 px-5 py-10 backdrop-blur-xl md:px-12 md:py-16">
       <div className="pointer-events-none absolute inset-0 [background:radial-gradient(50%_60%_at_15%_0%,rgba(47,107,255,.2),transparent_70%)]" aria-hidden="true" />
       <div className="relative mx-auto grid max-w-6xl gap-8 md:grid-cols-[1.05fr_.95fr] md:items-center">
         <div>
-          <p className="text-xs font-medium uppercase tracking-[0.34em] text-[#9dc7ff]">{eyebrow}</p>
-          <h2 className="mt-3 text-4xl font-bold uppercase tracking-[0.14em] text-white md:text-5xl" style={{ fontFamily: '"Space Grotesk", Arial, sans-serif', textShadow: '0 0 24px rgba(47,107,255,.55)' }}>{title}</h2>
-          <div className="mt-6 space-y-5 text-base font-light leading-8 text-[#eaf2ff]/72 md:text-lg" style={{ fontFamily: '"Inter", Arial, sans-serif' }}>
-            {paragraphs.map((text, index) => <p key={index} className={index === paragraphs.length - 1 && text.length < 80 ? 'text-sm tracking-[0.2em] text-[#9dc7ff]' : ''}>{text}</p>)}
+          <p className="text-xs font-medium uppercase text-[#9dc7ff]">{eyebrow}</p>
+          <h2 className="mt-3 text-2xl font-semibold uppercase text-white md:text-3xl" style={{ fontFamily: '"Space Grotesk", Arial, sans-serif', textShadow: '0 0 18px rgba(47,107,255,.38)' }}>{title}</h2>
+          <div className="mt-5 space-y-4 text-sm font-light leading-7 text-[#eaf2ff]/72 md:text-base" style={{ fontFamily: '"Inter", Arial, sans-serif' }}>
+            {paragraphs.map((text, index) => <p key={index} className={index === paragraphs.length - 1 && text.length < 80 ? 'text-sm text-[#9dc7ff]' : ''}>{text}</p>)}
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-3 md:gap-4">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={config?.images?.[0] || '/impact/gallery/impact-gallery-01.jpg'} alt="IMPACT" className="impact-bio-photo col-span-2 max-h-[34rem] w-full rounded-2xl object-contain" />
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={config?.images?.[1] || '/impact/gallery/impact-gallery-03.jpg'} alt="" className="impact-bio-photo aspect-[2/3] w-full rounded-2xl object-contain" />
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={config?.images?.[2] || '/impact/gallery/impact-gallery-05.jpg'} alt="" className="impact-bio-photo aspect-[2/3] w-full rounded-2xl object-contain" />
+        <div className="impact-bio-carousel">
+          <div className="impact-bio-carousel-window">
+            {images.map((src, index) => (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                key={`${src}-${index}`}
+                src={src}
+                alt={index === activeImage ? 'IMPACT' : ''}
+                className={`impact-bio-carousel-image ${index === activeImage ? 'is-active' : ''}`}
+                loading={index === 0 ? 'eager' : 'lazy'}
+                decoding="async"
+              />
+            ))}
+            <span className={`impact-bio-flash ${flash ? 'is-visible' : ''}`} aria-hidden="true" />
+          </div>
+          <div className="impact-bio-strip" aria-label="Photos IMPACT">
+            {images.map((src, index) => (
+              <button key={`${src}-dot-${index}`} type="button" onClick={() => {
+                triggerFlash();
+                setActiveImage(index);
+              }} className={`impact-bio-thumb ${index === activeImage ? 'is-active' : ''}`} aria-label={`Afficher la photo ${index + 1}`}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={src} alt="" loading="lazy" decoding="async" />
+              </button>
+            ))}
+          </div>
         </div>
       </div>
     </section>

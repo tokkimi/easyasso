@@ -168,7 +168,7 @@ async function seedImpact() {
 
   const headerDefaults = {
     logoText: 'IMPACT', logoUrl: IMPACT_BRAND.logoUrl, showNav: true, sticky: true,
-    background: IMPACT_BRAND.surface, textColor: '#eaf2ff', showCta: true,
+    background: IMPACT_BRAND.surface, textColor: '#eaf2ff', showCta: false,
     cta: { text: 'BOOKING', href: '/booking', color: IMPACT_BRAND.accent, variant: 'solid', align: 'right' },
     social: IMPACT_SOCIALS,
     vielusosHero: { videoUrl: '/impact/hero-teaser-web.mp4', darkVideoUrl: '/impact/hero-dark-skeleton.mp4', showLogo: false, showName: false, showTagline: false },

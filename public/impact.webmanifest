@@ -1,0 +1,23 @@
+{
+  "name": "IMPACT",
+  "short_name": "IMPACT",
+  "description": "RAW · ELECTRONIC · ENERGY",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#02030a",
+  "theme_color": "#2f6bff",
+  "icons": [
+    {
+      "src": "/impact/favicon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/impact/helmet-favicon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

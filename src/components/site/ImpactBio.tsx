@@ -26,6 +26,14 @@ const DEFAULT_EN = [
   'DJ · PRODUCTION · LIVE',
 ];
 
+function imageFocus(src: string) {
+  if (src.includes('impact-gallery-04')) return '88% 50%';
+  if (src.includes('impact-gallery-02')) return '42% 50%';
+  if (src.includes('impact-gallery-03')) return '50% 42%';
+  if (src.includes('impact-gallery-05')) return '55% 50%';
+  return '50% 50%';
+}
+
 export function ImpactBio({ blocks = [], config }: { blocks?: any[]; config?: HeaderConfig['vielusosBio'] }) {
   const { locale } = useLanguage();
   const configuredImages = (config?.images || []).filter(Boolean);
@@ -95,6 +103,7 @@ export function ImpactBio({ blocks = [], config }: { blocks?: any[]; config?: He
                 src={src}
                 alt={index === activeImage ? 'IMPACT' : ''}
                 className={`impact-bio-carousel-image ${index === activeImage ? 'is-active' : ''}`}
+                style={{ objectPosition: imageFocus(src) }}
                 loading={index === 0 ? 'eager' : 'lazy'}
                 decoding="async"
               />
@@ -108,7 +117,7 @@ export function ImpactBio({ blocks = [], config }: { blocks?: any[]; config?: He
                 setActiveImage(index);
               }} className={`impact-bio-thumb ${index === activeImage ? 'is-active' : ''}`} aria-label={`Afficher la photo ${index + 1}`}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={src} alt="" loading="lazy" decoding="async" />
+                <img src={src} alt="" style={{ objectPosition: imageFocus(src) }} loading="lazy" decoding="async" />
               </button>
             ))}
           </div>

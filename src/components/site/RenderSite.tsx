@@ -66,14 +66,18 @@ export function siteMetadata(site: { name: string; header: unknown; footer: unkn
   const metaBrand = siteBrand({ subdomain });
   const image = metaBrand ? metaBrand.brand.logoUrl : (header.logoUrl || footer.logoUrl);
   const icon = metaBrand?.brand.faviconUrl || image;
+  const manifest = metaBrand?.key === 'impact' ? '/impact.webmanifest' : metaBrand?.key === 'vielusos' ? '/vielusos.webmanifest' : undefined;
   return {
     title: { absolute: site.name },
     description,
+    applicationName: metaBrand ? site.name : undefined,
+    manifest,
+    keywords: metaBrand?.key === 'impact' ? ['IMPACT', 'IMPACT DJ RAW', 'rawstyle', 'hardstyle', 'electronic music', 'DJ', 'producer'] : undefined,
     // Each published site uses its own uploaded logo for the browser tab and
     // home-screen shortcut. Fall back to EasyAsso's default only when no logo
     // was provided by the site owner.
     icons: icon ? { icon: [{ url: icon }], apple: [{ url: icon }] } : undefined,
-    openGraph: { title: site.name, description, type: 'website', images: image ? [{ url: image }] : undefined },
+    openGraph: { title: site.name, description, type: 'website', siteName: metaBrand ? site.name : undefined, images: image ? [{ url: image }] : undefined },
     twitter: { card: 'summary', title: site.name, description },
   };
 }
@@ -112,7 +116,14 @@ export async function RenderSite({ site, basePath, slug }: { site: SiteWithPages
   const normalizeName = (value: string) =>
     brand?.key === 'impact' ? String(value || '').replace(/impact/gi, 'IMPACT') : String(value || '').replace(/vielusos/gi, 'VIELUSOS');
   const publicHeader = brand
-    ? { ...header, logoUrl: brand.brand.logoUrl, logoText: brand.displayName(site.name), background: brand.brand.surface, textColor: '#f7f7fb' }
+    ? {
+      ...header,
+      logoUrl: brand.brand.logoUrl,
+      logoText: brand.displayName(site.name),
+      background: brand.brand.surface,
+      textColor: '#f7f7fb',
+      ...(brand.key === 'impact' ? { showCta: false, cta: undefined } : {}),
+    }
     : header;
   const headerSocials = Object.entries((publicHeader as any).social || {}).filter((entry): entry is [string, string] => typeof entry[1] === 'string' && Boolean(entry[1].trim()));
   const socialLabels = new Set(['facebook', 'instagram', 'linkedin', 'youtube', 'youtube music', 'spotify', 'deezer', 'soundcloud', 'apple music', 'amazon music', 'beatport', 'bandcamp', 'tidal', 'shotgun', 'tiktok', 'x', 'twitter', 'email']);

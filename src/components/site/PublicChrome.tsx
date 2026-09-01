@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type MouseEvent } from 'react';
 import Link from 'next/link';
 import { Menu, X, Facebook, Linkedin, UserRound, Mail, Moon, Sun } from 'lucide-react';
 import type { HeaderConfig, FooterConfig, ButtonConfig } from '@/lib/blocks';
@@ -45,6 +45,7 @@ export function PublicHeader({
 }: { header: HeaderConfig; nav: NavItem[]; basePath: string }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [impactTheme, setImpactTheme] = useState<'dark' | 'light'>('dark');
+  const [impactRouteLoading, setImpactRouteLoading] = useState(false);
   const { t } = useLanguage();
   const cta: ButtonConfig | undefined = header.cta;
   const socials = Object.entries(header.social || {}).filter((entry): entry is [string, string] => Boolean(entry[1]));
@@ -60,6 +61,17 @@ export function PublicHeader({
   };
   const link = (slug: string, isHome: boolean) => (isHome ? basePath || '/' : `${basePath}/${slug}`);
   const customerHref = basePath === '#' ? '#client' : `${basePath || ''}/client`;
+  const impactSoundsPage = impactHeader ? nav.find((page) => page.slug === 'sons') : undefined;
+  const impactSoundsHref = impactSoundsPage ? link(impactSoundsPage.slug, impactSoundsPage.isHome) : `${basePath || ''}/sons`;
+  const openImpactSounds = (event: MouseEvent<HTMLAnchorElement>) => {
+    if (!impactHeader) return;
+    event.preventDefault();
+    setMenuOpen(false);
+    setImpactRouteLoading(true);
+    window.setTimeout(() => {
+      window.location.assign(impactSoundsHref);
+    }, 720);
+  };
   useEffect(() => {
     if (!impactHeader) return;
     const saved = window.localStorage.getItem('impact-theme');
@@ -101,7 +113,12 @@ export function PublicHeader({
         <div className="flex flex-1 basis-0 items-center justify-end gap-2.5">
           {!brandedHeader && socials.map(([name, href]) => <a key={name} href={href} target="_blank" rel="noreferrer" aria-label={name} title={name} className="hidden h-7 w-7 shrink-0 items-center justify-center text-current opacity-80 transition hover:opacity-100 lg:inline-flex"><SocialMark label={name} /></a>)}
           {!impactHeader && <span className="hidden sm:inline-flex"><LanguageSwitcher variant="inline" /></span>}
-          {header.showCta !== false && cta && (
+          {impactHeader && (
+            <a href={impactSoundsHref} onClick={openImpactSounds} className="impact-playlist-button" aria-label="Ouvrir les sons IMPACT" title="Sons IMPACT">
+              <img src="/impact/helmet-cutout.png" alt="" className="impact-playlist-head" />
+            </a>
+          )}
+          {!impactHeader && header.showCta !== false && cta && (
             <a
               href={cta.href.startsWith('/') ? `${basePath}${cta.href}` : cta.href}
               style={cta.variant === 'solid'
@@ -137,10 +154,21 @@ export function PublicHeader({
                 {impactTheme === 'dark' ? 'Mode clair' : 'Mode sombre'}
               </button>
             )}
-            {header.showCta !== false && cta && <a href={cta.href.startsWith('/') ? `${basePath}${cta.href}` : cta.href} onClick={() => setMenuOpen(false)} style={{ background: cta.color, color: '#fff' }} className="mt-2 flex min-h-11 items-center justify-center rounded-xl px-4 text-sm font-bold">{cta.text}</a>}
+            {!impactHeader && header.showCta !== false && cta && <a href={cta.href.startsWith('/') ? `${basePath}${cta.href}` : cta.href} onClick={() => setMenuOpen(false)} style={{ background: cta.color, color: '#fff' }} className="mt-2 flex min-h-11 items-center justify-center rounded-xl px-4 text-sm font-bold">{cta.text}</a>}
           </div>
         )}
       </div>
+      {impactRouteLoading && (
+        <div className="impact-page-loader" role="status" aria-live="polite" aria-label="Chargement IMPACT">
+          <div className="impact-loader-card">
+            <div className="impact-loader-head">
+              <img src="/impact/helmet-cutout.png" alt="" className="impact-loader-head-base" />
+              <img src="/impact/helmet-cutout.png" alt="" className="impact-loader-head-fill" />
+            </div>
+            <div className="impact-loader-bar" aria-hidden="true"><span /></div>
+          </div>
+        </div>
+      )}
     </header>
   );
 }

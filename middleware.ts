@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server';
+import { IMPACT_HOST } from '@/lib/impact';
 
 // Maps custom domains to the internal /domain/<host> renderer. The app's own
 // domain (root) and Vercel preview URLs are served normally.
@@ -6,6 +7,10 @@ export function middleware(req: NextRequest) {
   const host = (req.headers.get('host') || '').split(':')[0].toLowerCase();
   const root = (process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'localhost').split(':')[0].toLowerCase();
   const isVielusosHost = host === 'vielusos.com' || host === 'www.vielusos.com';
+  // The IMPACT profile answers on its own Vercel deployment domain. It lives in
+  // this same app (nothing else is touched); it just gets branded routing.
+  const isImpactHost = host === IMPACT_HOST;
+  const brandedAppPaths = ['/dashboard', '/vielusos-admin', '/impact-admin', '/login', '/forgot-password', '/reset-password', '/verify-email'];
 
   if (host === 'vielusos.com') {
     const canonical = req.nextUrl.clone();
@@ -25,7 +30,13 @@ export function middleware(req: NextRequest) {
     return NextResponse.rewrite(url);
   }
 
-  if (isVielusosHost && ['/dashboard', '/vielusos-admin', '/login', '/forgot-password', '/reset-password', '/verify-email'].some((path) => req.nextUrl.pathname === path || req.nextUrl.pathname.startsWith(`${path}/`))) {
+  if (isImpactHost && req.nextUrl.pathname === '/admin') {
+    const url = req.nextUrl.clone();
+    url.pathname = '/impact-admin';
+    return NextResponse.rewrite(url);
+  }
+
+  if ((isVielusosHost || isImpactHost) && brandedAppPaths.some((path) => req.nextUrl.pathname === path || req.nextUrl.pathname.startsWith(`${path}/`))) {
     return NextResponse.next();
   }
 
@@ -33,7 +44,7 @@ export function middleware(req: NextRequest) {
     host === root ||
     host === `www.${root}` ||
     host === 'localhost' ||
-    host.endsWith('.vercel.app') ||
+    (host.endsWith('.vercel.app') && !isImpactHost) ||
     host === '127.0.0.1';
 
   if (isRoot) {

@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" width="1200" height="675">
+  <defs>
+    <linearGradient id="p1" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0a1636"/>
+      <stop offset="1" stop-color="#05070f"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="675" fill="url(#p1)"/>
+  <circle cx="600" cy="300" r="150" fill="none" stroke="#2f6bff" stroke-opacity="0.5" stroke-width="3"/>
+  <circle cx="600" cy="300" r="90" fill="#4cc9ff" fill-opacity="0.12"/>
+  <text x="600" y="560" text-anchor="middle" fill="#4cc9ff" font-family="'Space Grotesk',Arial,sans-serif" font-size="40" letter-spacing="14" font-weight="700">IMPACT</text>
+  <text x="600" y="600" text-anchor="middle" fill="#eaf2ff" fill-opacity="0.4" font-family="Arial,sans-serif" font-size="18" letter-spacing="6">VISUEL À REMPLACER</text>
+</svg>

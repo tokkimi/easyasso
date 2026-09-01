@@ -4,7 +4,7 @@ import { PERMISSIONS } from '@/lib/permissions';
 import { orgOverview, monthlyDonations } from '@/lib/stats';
 import { formatEuros } from '@/lib/utils';
 import { PageHeader, Stat, BarChart } from '@/components/ui';
-import { isVielusosSite } from '@/lib/vielusos';
+import { isArtistSite } from '@/lib/site-brand';
 
 export const dynamic = 'force-dynamic';
 
@@ -12,7 +12,7 @@ export default async function StatsPage() {
   const ctx = await requirePermission(PERMISSIONS.STATS_VIEW);
   const orgId = ctx.organization!.id;
   const site = await prisma.site.findUnique({ where: { organizationId: orgId }, select: { subdomain: true } });
-  const branded = isVielusosSite(site);
+  const branded = isArtistSite(site);
   const [o, monthly, byMethod, subs] = await Promise.all([
     orgOverview(orgId),
     monthlyDonations(orgId),

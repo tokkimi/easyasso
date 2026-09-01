@@ -160,6 +160,43 @@ body {
 .vielusos-editor-surface input,
 .vielusos-editor-surface textarea,
 .vielusos-editor-surface select { background: #fff !important; color: #111827 !important; border-color: #d1d5db !important; }
+
+/* Branded tenant workspace (used only by the IMPACT artist account) — electric
+   blue / glass variant of the dark artist dashboard. */
+.impact-dashboard-content .card {
+  background: rgba(9, 13, 26, .68);
+  color: #eaf2ff;
+  --tw-ring-color: rgba(76, 201, 255, .22);
+  backdrop-filter: blur(14px);
+}
+.impact-dashboard-content .text-gray-900,
+.impact-dashboard-content .text-gray-950 { color: #eaf2ff !important; }
+.impact-dashboard-content .text-gray-600,
+.impact-dashboard-content .text-gray-500,
+.impact-dashboard-content .text-gray-400,
+.impact-dashboard-content .text-gray-700 { color: rgba(234, 242, 255, .68) !important; }
+.impact-dashboard-content .bg-white { background: rgba(9, 13, 26, .78) !important; }
+.impact-dashboard-content .bg-gray-50,
+.impact-dashboard-content .bg-gray-100 { background: rgba(76, 201, 255, .07) !important; }
+.impact-dashboard-content input,
+.impact-dashboard-content textarea,
+.impact-dashboard-content select { background: rgba(255, 255, 255, .06); color: #eaf2ff; border-color: rgba(76, 201, 255, .28); }
+
+/* The IMPACT visual editor keeps the same light editing surface as VIELUSOS. */
+.impact-editor-surface { color: #111827; }
+.impact-editor-surface .text-gray-900,
+.impact-editor-surface .text-gray-950,
+.impact-editor-surface .text-gray-800,
+.impact-editor-surface .text-gray-700 { color: #1f2937 !important; }
+.impact-editor-surface .text-gray-600,
+.impact-editor-surface .text-gray-500,
+.impact-editor-surface .text-gray-400 { color: #6b7280 !important; }
+.impact-editor-surface .bg-white { background: #fff !important; }
+.impact-editor-surface .bg-gray-50 { background: #f9fafb !important; }
+.impact-editor-surface .bg-gray-100 { background: #f3f4f6 !important; }
+.impact-editor-surface input,
+.impact-editor-surface textarea,
+.impact-editor-surface select { background: #fff !important; color: #111827 !important; border-color: #d1d5db !important; }
 .badge { @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium; }
 
 .legal-content h2 { @apply mt-10 text-2xl font-extrabold tracking-tight text-gray-950; }

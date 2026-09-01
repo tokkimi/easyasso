@@ -2,7 +2,7 @@ import { requirePermission } from '@/lib/session';
 import { prisma } from '@/lib/prisma';
 import { PERMISSIONS, PERMISSION_GROUPS, SYSTEM_ROLE_LABELS } from '@/lib/permissions';
 import { TeamClient } from './client';
-import { isVielusosSite } from '@/lib/vielusos';
+import { isArtistSite } from '@/lib/site-brand';
 
 export const dynamic = 'force-dynamic';
 
@@ -15,7 +15,7 @@ export default async function TeamPage() {
     prisma.invitation.findMany({ where: { organizationId: orgId, acceptedAt: null }, orderBy: { createdAt: 'desc' } }),
     prisma.site.findUnique({ where: { organizationId: orgId }, select: { subdomain: true } }),
   ]);
-  const branded = isVielusosSite(site);
+  const branded = isArtistSite(site);
   const groups = branded ? PERMISSION_GROUPS
     .filter((group) => group.label !== 'Donateurs (CRM)' && group.label !== 'Campagnes & dons')
     .map((group) => ({ ...group, items: group.items.map((item) => item.key === PERMISSIONS.ORG_SETTINGS ? { ...item, label: 'Paramètres du site' } : item.key === PERMISSIONS.EXPORTS ? { ...item, help: 'Export comptable' } : item) })) : PERMISSION_GROUPS;

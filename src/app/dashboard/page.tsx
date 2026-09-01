@@ -5,13 +5,13 @@ import { orgOverview, monthlyDonations } from '@/lib/stats';
 import { formatEuros, formatDate } from '@/lib/utils';
 import { PageHeader, Stat, BarChart } from '@/components/ui';
 import { Trophy, ArrowRight, Sparkles, Fingerprint, LayoutTemplate } from 'lucide-react';
-import { isVielusosSite } from '@/lib/vielusos';
+import { isArtistSite } from '@/lib/site-brand';
 
 export default async function DashboardHome() {
   const ctx = await requireOrg();
   const orgId = ctx.organization!.id;
   const site = await prisma.site.findUnique({ where: { organizationId: orgId }, select: { subdomain: true } });
-  const branded = isVielusosSite(site);
+  const branded = isArtistSite(site);
   const [o, monthly] = await Promise.all([orgOverview(orgId), monthlyDonations(orgId)]);
 
   return (

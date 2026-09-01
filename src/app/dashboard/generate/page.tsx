@@ -4,7 +4,7 @@ import { prisma } from '@/lib/prisma';
 import { TEMPLATES } from '@/lib/templates';
 import { GenerateClient } from './client';
 import { redirect } from 'next/navigation';
-import { isVielusosSite } from '@/lib/vielusos';
+import { isArtistSite } from '@/lib/site-brand';
 
 export const dynamic = 'force-dynamic';
 
@@ -17,7 +17,7 @@ export default async function GeneratePage({ searchParams }: { searchParams: Pro
     where: { organizationId: ctx.organization!.id },
     select: { subdomain: true, header: true, footer: true },
   });
-  if (isVielusosSite(site)) redirect('/dashboard');
+  if (isArtistSite(site)) redirect('/dashboard');
   const header = (site?.header as any) || {};
   const footer = (site?.footer as any) || {};
   const initialLogo = header.logoUrl || footer.logoUrl || '';

@@ -52,8 +52,12 @@ import { PublicBlock } from "@/components/site/PublicBlock";
 import { PublicHeader, PublicFooter } from "@/components/site/PublicChrome";
 import { VielusosHero } from "@/components/site/VielusosHero";
 import { VielusosBio } from "@/components/site/VielusosBio";
+import { ImpactHero } from "@/components/site/ImpactHero";
+import { ImpactBio } from "@/components/site/ImpactBio";
 import { themeStyle, brandCss } from "@/lib/render";
 import { VIELUSOS_BRAND, VIELUSOS_SITE_CSS } from "@/lib/vielusos";
+import { IMPACT_BRAND, IMPACT_SITE_CSS, IMPACT_FONTS_HREF } from "@/lib/impact";
+import type { BrandKey } from "@/lib/site-brand";
 import { googleFontsHref } from "@/lib/fonts";
 import { ColorGrid, AlignPicker, Field, Toggle, ImageInput } from "./controls";
 
@@ -147,13 +151,28 @@ export function EditorClient({
   canPublish,
   siteUrl,
   branded = false,
+  brandKey,
 }: {
   site: Site;
   canEdit: boolean;
   canPublish: boolean;
   siteUrl: string;
   branded?: boolean;
+  brandKey?: BrandKey;
 }) {
+  // Resolve the art-direction tokens for the live preview (defaults to VIELUSOS
+  // when a legacy branded flag arrives without an explicit brand key).
+  const isImpact = brandKey === "impact";
+  const brandTokens = isImpact ? IMPACT_BRAND : VIELUSOS_BRAND;
+  const brandSiteCss = isImpact ? IMPACT_SITE_CSS : VIELUSOS_SITE_CSS;
+  const brandFontsHref = isImpact
+    ? IMPACT_FONTS_HREF
+    : "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&family=Montserrat:wght@300;400;500&display=swap";
+  const brandSiteClass = isImpact ? "impact-site" : "vielusos-site";
+  const brandEditorSurface = isImpact
+    ? "impact-editor-surface"
+    : "vielusos-editor-surface";
+  const artistName = isImpact ? "IMPACT" : "VIELUSOS";
   const [pages, setPages] = useState<Page[]>(initial.pages);
   const [activeId, setActiveId] = useState<string>(initial.pages[0]?.id);
   const [selectedBlock, setSelectedBlock] = useState<string | null>(null);
@@ -239,7 +258,7 @@ export function EditorClient({
           text: "Découvrir",
           href: "#",
           variant: "solid",
-          color: VIELUSOS_BRAND.accent,
+          color: brandTokens.accent,
         },
       },
       cards: {
@@ -251,13 +270,13 @@ export function EditorClient({
         ],
       },
       cta: {
-        title: "Suivez VIELUSOS",
+        title: `Suivez ${artistName}`,
         text: "Découvrez les dernières sorties et les prochaines dates.",
         button: {
           text: "Écouter",
           href: "#",
           variant: "solid",
-          color: VIELUSOS_BRAND.accent,
+          color: brandTokens.accent,
         },
       },
       contact: {
@@ -366,34 +385,29 @@ export function EditorClient({
   const previewHeader = branded
     ? {
         ...header,
-        logoUrl: VIELUSOS_BRAND.logoUrl,
+        logoUrl: brandTokens.logoUrl,
         logoText: initial.name.toUpperCase(),
-        background: VIELUSOS_BRAND.surface,
+        background: brandTokens.surface,
         textColor: "#f7f7fb",
       }
     : header;
   const previewFooter = branded
     ? {
         ...footer,
-        logoUrl: VIELUSOS_BRAND.logoUrl,
+        logoUrl: brandTokens.logoUrl,
         logoText: initial.name.toUpperCase(),
-        background: VIELUSOS_BRAND.surface,
+        background: brandTokens.surface,
         textColor: "#f7f7fb",
       }
     : footer;
 
   return (
-    <div className="vielusos-editor-surface fixed inset-0 z-30 flex flex-col bg-gray-100 lg:left-64">
+    <div className={`${branded ? brandEditorSurface : "vielusos-editor-surface"} fixed inset-0 z-30 flex flex-col bg-gray-100 lg:left-64`}>
       {fontHref && <link rel="stylesheet" href={fontHref} />}
-      {branded && (
-        <link
-          rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&family=Montserrat:wght@300;400;500&display=swap"
-        />
-      )}
+      {branded && <link rel="stylesheet" href={brandFontsHref} />}
       <style
         dangerouslySetInnerHTML={{
-          __html: `${brandCss((initial.theme as any)?.primary)}${branded ? VIELUSOS_SITE_CSS : ""}`,
+          __html: `${brandCss((initial.theme as any)?.primary)}${branded ? brandSiteCss : ""}`,
         }}
       />
       {/* Top bar */}
@@ -614,14 +628,14 @@ export function EditorClient({
             </p>
           </div>
           <div
-            className={`mx-auto overflow-hidden rounded-xl shadow-sm ring-1 ring-gray-200 transition-all ${branded ? "vielusos-site" : ""}`}
+            className={`mx-auto overflow-hidden rounded-xl shadow-sm ring-1 ring-gray-200 transition-all ${branded ? brandSiteClass : ""}`}
             style={{
               maxWidth: width,
               ...themeStyle(initial.theme),
               ...(branded
                 ? {
-                    backgroundColor: VIELUSOS_BRAND.surface,
-                    backgroundImage: `linear-gradient(rgba(8,8,12,.72),rgba(8,8,12,.72)),url(${VIELUSOS_BRAND.backgroundUrl})`,
+                    backgroundColor: brandTokens.surface,
+                    backgroundImage: `linear-gradient(rgba(8,8,12,.72),rgba(8,8,12,.72)),url(${brandTokens.backgroundUrl})`,
                     backgroundSize: "cover",
                     color: "#f7f7fb",
                   }
@@ -652,7 +666,9 @@ export function EditorClient({
               </div>
             </div>
             {branded && active?.isHome && (
-              <VielusosHero title={initial.name} config={header.vielusosHero} />
+              isImpact
+                ? <ImpactHero title={initial.name} config={header.vielusosHero} />
+                : <VielusosHero title={initial.name} config={header.vielusosHero} />
             )}
             <main className="flex-1 py-8">
               {branded &&
@@ -666,10 +682,17 @@ export function EditorClient({
                   }}
                   className="cursor-pointer hover:ring-1 hover:ring-brand-200"
                 >
-                  <VielusosBio
-                    blocks={active.blocks}
-                    config={header.vielusosBio}
-                  />
+                  {isImpact ? (
+                    <ImpactBio
+                      blocks={active.blocks}
+                      config={header.vielusosBio}
+                    />
+                  ) : (
+                    <VielusosBio
+                      blocks={active.blocks}
+                      config={header.vielusosBio}
+                    />
+                  )}
                 </div>
               ) : (
                 <>

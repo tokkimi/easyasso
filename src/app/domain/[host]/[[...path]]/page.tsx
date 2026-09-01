@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { prisma } from '@/lib/prisma';
 import { RenderSite, loadSiteByDomain, siteMetadata } from '@/components/site/RenderSite';
 import { VIELUSOS_SUBDOMAIN } from '@/lib/vielusos';
+import { IMPACT_SUBDOMAIN, IMPACT_HOST } from '@/lib/impact';
 
 // Cache verified custom-domain pages on the CDN, refreshing in the background
 // at most once a minute (edits call revalidatePath for an immediate refresh).
@@ -12,7 +13,7 @@ export async function generateMetadata({ params }: { params: Promise<{ host: str
   const domain = decodeURIComponent(host);
   const apex = domain.replace(/^www\./i, '');
   const site = await prisma.site.findFirst({ where: { customDomain: { in: [domain, apex, `www.${apex}`] }, domainVerified: true }, select: { name: true, header: true, footer: true } });
-  const brandedSubdomain = apex.toLowerCase() === 'vielusos.com' ? VIELUSOS_SUBDOMAIN : undefined;
+  const brandedSubdomain = apex.toLowerCase() === 'vielusos.com' ? VIELUSOS_SUBDOMAIN : apex.toLowerCase() === IMPACT_HOST ? IMPACT_SUBDOMAIN : undefined;
   return siteMetadata(site, brandedSubdomain);
 }
 

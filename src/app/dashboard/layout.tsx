@@ -9,10 +9,23 @@ import { siteUrlFor } from '@/lib/utils';
 import { isPlatformAdmin } from '@/lib/platform-admin';
 import { Sidebar } from './sidebar';
 import { EmailVerificationBanner } from './email-verification-banner';
-import { isVielusosSite, VIELUSOS_BRAND } from '@/lib/vielusos';
+import { siteBrand } from '@/lib/site-brand';
+import { IMPACT_HOST } from '@/lib/impact';
 
 export async function generateMetadata(): Promise<Metadata> {
   const host = (await headers()).get('host')?.split(':')[0].toLowerCase();
+  if (host === IMPACT_HOST) {
+    return {
+      title: { absolute: 'IMPACT · Administration' },
+      description: 'Administration du site officiel IMPACT.',
+      applicationName: 'IMPACT',
+      icons: {
+        icon: [{ url: '/impact/logo.svg' }],
+        apple: [{ url: '/impact/logo.svg' }],
+      },
+      robots: { index: false, follow: false },
+    };
+  }
   const vielusos = host === 'vielusos.com' || host === 'www.vielusos.com';
   if (!vielusos) return { title: 'Tableau de bord' };
   return {
@@ -38,15 +51,16 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const unreadMessages = await prisma.contactMessage.count({ where: { organizationId: org.id, readAt: null, archivedAt: null } });
   const siteUrl = site ? siteUrlFor(site.subdomain, site.customDomain, site.domainVerified) : '#';
   const platformAdmin = isPlatformAdmin(ctx.user);
-  const vielusos = isVielusosSite(site);
+  const brand = siteBrand(site);
+  const vielusos = Boolean(brand);
 
   return (
     <div
-      data-dashboard-locale={vielusos ? 'fr' : undefined}
-      className={`min-h-screen lg:flex ${vielusos ? 'vielusos-dashboard' : 'bg-gray-50'}`}
-      style={vielusos ? {
-        backgroundColor: VIELUSOS_BRAND.surface,
-        backgroundImage: `linear-gradient(rgba(8,8,12,.84), rgba(8,8,12,.84)), url(${VIELUSOS_BRAND.backgroundUrl})`,
+      data-dashboard-locale={brand ? 'fr' : undefined}
+      className={`min-h-screen lg:flex ${brand ? 'artist-dashboard' : 'bg-gray-50'}`}
+      style={brand ? {
+        backgroundColor: brand.brand.surface,
+        backgroundImage: `linear-gradient(rgba(8,8,12,.84), rgba(8,8,12,.84)), url(${brand.brand.backgroundUrl})`,
         backgroundPosition: 'center top',
         backgroundRepeat: 'no-repeat',
         backgroundSize: 'cover',
@@ -61,9 +75,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
         published={site?.published ?? false}
         unreadMessages={unreadMessages}
         branded={vielusos}
-        brandLogoUrl={vielusos ? VIELUSOS_BRAND.logoUrl : '/easyasso-logo.png'}
+        brandLogoUrl={brand ? brand.brand.logoUrl : '/easyasso-logo.png'}
       />
-      <main className={`flex-1 lg:ml-64 ${vielusos ? 'text-[#f7f7fb]' : ''}`}>
+      <main className={`flex-1 lg:ml-64 ${brand ? 'text-[#f7f7fb]' : ''}`}>
         {!vielusos && access.isTrial && (
           <div className="flex flex-wrap items-center justify-center gap-2 bg-amber-500 px-4 py-2 text-center text-sm font-medium text-white">
             <Clock className="h-4 w-4" />
@@ -79,7 +93,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
             Vous êtes admin EasyAsso · <Link href="/admin" className="underline">ouvrir l’administration globale</Link>
           </div>
         )}
-        <div className={`mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:px-8 ${vielusos ? 'vielusos-dashboard-content' : ''}`}>{children}</div>
+        <div className={`mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:px-8 ${brand ? brand.dashboardContentClass : ''}`}>{children}</div>
       </main>
     </div>
   );

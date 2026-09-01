@@ -13,7 +13,7 @@ import { legalDocuments } from '@/lib/legal';
 import { defaultStyleFor } from '@/lib/blocks';
 import { removeGeneratedCopyDuplicates } from '@/lib/copy-quality';
 import { enhanceGeneratedEditorialCopy } from '@/lib/editorial-depth';
-import { isVielusosSite } from '@/lib/vielusos';
+import { isArtistSite } from '@/lib/site-brand';
 
 // Rich AI copywriting of a full multi-page site can take a few minutes.
 // Requires the Vercel Pro plan (Hobby caps maxDuration at 60s).
@@ -23,7 +23,7 @@ export async function POST(req: Request) {
   try {
     const ctx = await requireApiPermission(PERMISSIONS.SITE_EDIT);
     const protectedSite = await prisma.site.findUnique({ where: { organizationId: ctx.org.id }, select: { subdomain: true } });
-    if (isVielusosSite(protectedSite)) return NextResponse.json({ error: 'Le site VIELUSOS est verrouillé et ne peut pas être remplacé par le générateur.' }, { status: 403 });
+    if (isArtistSite(protectedSite)) return NextResponse.json({ error: 'Ce site artiste est verrouillé et ne peut pas être remplacé par le générateur.' }, { status: 403 });
     const b = await req.json();
     const name = (b.name || '').trim() || ctx.org.name;
     const previousProfile = (ctx.org.profile as Record<string, any>) || {};

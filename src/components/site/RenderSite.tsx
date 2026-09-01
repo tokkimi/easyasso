@@ -11,11 +11,13 @@ import { PageViewTracker } from './PageViewTracker';
 import { themeStyle, brandCss } from '@/lib/render';
 import { googleFontsHref } from '@/lib/fonts';
 import { canShowPublicSite } from '@/lib/plan';
-import { isVielusosSite, VIELUSOS_BRAND } from '@/lib/vielusos';
-import { VIELUSOS_SITE_CSS } from '@/lib/vielusos';
+import { siteBrand } from '@/lib/site-brand';
 import { VielusosHero } from './VielusosHero';
 import { VielusosBio } from './VielusosBio';
 import { VielusosBooking } from './VielusosBooking';
+import { ImpactHero } from './ImpactHero';
+import { ImpactBio } from './ImpactBio';
+import { ImpactBooking } from './ImpactBooking';
 
 type SiteWithPages = NonNullable<Awaited<ReturnType<typeof loadSiteBySubdomain>>>;
 
@@ -61,7 +63,8 @@ export function siteMetadata(site: { name: string; header: unknown; footer: unkn
   const header = (site.header as any) || {};
   const raw = typeof footer.text === 'string' && footer.text.trim() ? footer.text.trim() : `Le site de ${site.name}.`;
   const description = raw.slice(0, 300);
-  const image = isVielusosSite({ subdomain }) ? VIELUSOS_BRAND.logoUrl : (header.logoUrl || footer.logoUrl);
+  const metaBrand = siteBrand({ subdomain });
+  const image = metaBrand ? metaBrand.brand.logoUrl : (header.logoUrl || footer.logoUrl);
   return {
     title: { absolute: site.name },
     description,
@@ -103,9 +106,12 @@ export async function RenderSite({ site, basePath, slug }: { site: SiteWithPages
   const header = { ...DEFAULT_HEADER, ...(site.header as any) } as HeaderConfig;
   const footer = { ...DEFAULT_FOOTER, ...(site.footer as any) } as FooterConfig;
   const profile = (((site.organization as any)?.profile) || {}) as Record<string, any>;
-  const vielusos = isVielusosSite(site);
-  const publicHeader = vielusos
-    ? { ...header, logoUrl: VIELUSOS_BRAND.logoUrl, logoText: site.name.toUpperCase(), background: VIELUSOS_BRAND.surface, textColor: '#f7f7fb' }
+  const brand = siteBrand(site);
+  const branded = Boolean(brand);
+  const normalizeName = (value: string) =>
+    brand?.key === 'impact' ? String(value || '').replace(/impact/gi, 'IMPACT') : String(value || '').replace(/vielusos/gi, 'VIELUSOS');
+  const publicHeader = brand
+    ? { ...header, logoUrl: brand.brand.logoUrl, logoText: brand.displayName(site.name), background: brand.brand.surface, textColor: '#f7f7fb' }
     : header;
   const headerSocials = Object.entries((publicHeader as any).social || {}).filter((entry): entry is [string, string] => typeof entry[1] === 'string' && Boolean(entry[1].trim()));
   const socialLabels = new Set(['facebook', 'instagram', 'linkedin', 'youtube', 'youtube music', 'spotify', 'deezer', 'soundcloud', 'apple music', 'amazon music', 'beatport', 'bandcamp', 'tidal', 'shotgun', 'tiktok', 'x', 'twitter']);
@@ -124,22 +130,22 @@ export async function RenderSite({ site, basePath, slug }: { site: SiteWithPages
     ...footerColumns.filter((column) => !column.links?.length || !column.links.every((link) => socialLabels.has(String(link.label).toLowerCase()))),
     ...(headerSocials.length ? [{ title: 'Réseaux sociaux', links: headerSocials.map(([label, href]) => ({ label: label === 'x' ? 'X' : socialDisplayLabels[label.toLowerCase()] || label.charAt(0).toUpperCase() + label.slice(1), href })) }] : []),
   ];
-  const publicFooter = vielusos
+  const publicFooter = brand
     ? {
       ...footer,
-      logoUrl: VIELUSOS_BRAND.logoUrl,
-      logoText: site.name.toUpperCase(),
-      background: VIELUSOS_BRAND.surface,
+      logoUrl: brand.brand.logoUrl,
+      logoText: brand.displayName(site.name),
+      background: brand.brand.surface,
       textColor: '#f7f7fb',
       columns: columnsWithHeaderSocials,
-      text: String(footer.text || '').replace(/vielusos/gi, 'VIELUSOS'),
-      allRightsText: String(footer.allRightsText || '').replace(/vielusos/gi, 'VIELUSOS'),
+      text: normalizeName(footer.text || ''),
+      allRightsText: normalizeName(footer.allRightsText || ''),
     }
     : { ...footer, columns: columnsWithHeaderSocials };
   const shopEnabled = Boolean(profile.shopEnabled ?? profile.hasShop);
   const nav = site.pages
     .filter((p) => p.showInNav && (p.slug !== 'boutique' || shopEnabled))
-    .filter((p) => !vielusos || (!p.isHome && !['bio', 'about', 'a-propos'].includes(p.slug)))
+    .filter((p) => !branded || (!p.isHome && !['bio', 'about', 'a-propos'].includes(p.slug)))
     .map((p) => ({ title: p.title, slug: p.slug, isHome: p.isHome }));
   const theme = (site.theme as any) || {};
   const fontHref = googleFontsHref(theme.font);
@@ -148,7 +154,7 @@ export async function RenderSite({ site, basePath, slug }: { site: SiteWithPages
   // footer.showContactBubble = false in the editor).
   const bubble = (footer as any).showContactBubble === false ? null : (
     <ContactBubble
-      name={vielusos ? site.name.toUpperCase() : site.name}
+      name={brand ? brand.displayName(site.name) : site.name}
       slogan={(footer as any).contactBubbleText || publicFooter.text}
       sloganEn={(footer as any).contactBubbleTextEn}
       logoUrl={(publicHeader as any).logoUrl || (publicFooter as any).logoUrl}
@@ -163,8 +169,8 @@ export async function RenderSite({ site, basePath, slug }: { site: SiteWithPages
       showSms={(footer as any).contactBubbleShowSms ?? true}
       showEmail={(footer as any).contactBubbleShowEmail ?? true}
       showMessage={(footer as any).contactBubbleShowMessage ?? true}
-      branded={vielusos}
-      showBooking={vielusos}
+      branded={branded}
+      showBooking={branded}
       bookingLabel={(footer as any).contactBubbleBookingLabel || 'Booking'}
       bookingLabelEn={(footer as any).contactBubbleBookingLabelEn || 'Booking'}
       bookingSubtitle={(footer as any).contactBubbleBookingSubtitle || 'Dates, événements et demandes professionnelles'}
@@ -175,11 +181,12 @@ export async function RenderSite({ site, basePath, slug }: { site: SiteWithPages
 
   if (slug === 'client') {
     return (
-      <div className={`flex min-h-screen flex-col ${vielusos ? 'vielusos-site' : ''}`} style={publicSiteStyle(theme, vielusos)}>
+      <div className={`flex min-h-screen flex-col ${brand?.siteClass ?? ''}`} style={publicSiteStyle(theme, brand)}>
         {fontHref && <link rel="stylesheet" href={fontHref} />}
-        <style dangerouslySetInnerHTML={{ __html: `${brandCss(theme.primary)}${vielusos ? VIELUSOS_SITE_CSS : ''}` }} />
+        {brand?.fontsHref && <link rel="stylesheet" href={brand.fontsHref} />}
+        <style dangerouslySetInnerHTML={{ __html: `${brandCss(theme.primary)}${brand?.css ?? ''}` }} />
         <PublicHeader header={publicHeader} nav={nav} basePath={basePath} />
-        <ClientAccessPage organizationId={site.organizationId} organizationName={vielusos ? site.name.toUpperCase() : site.name} locale={profile.language === 'en' ? 'en' : 'fr'} branded={vielusos} />
+        <ClientAccessPage organizationId={site.organizationId} organizationName={brand ? brand.displayName(site.name) : site.name} locale={profile.language === 'en' ? 'en' : 'fr'} branded={branded} />
         <PublicFooter footer={publicFooter} orgId={site.organizationId} basePath={basePath} nav={nav} />
         {bubble}
       </div>
@@ -189,9 +196,10 @@ export async function RenderSite({ site, basePath, slug }: { site: SiteWithPages
   if (slug === 'cgv' || slug === 'mentions-legales') {
     const isCgv = slug === 'cgv';
     return (
-      <div className={`min-h-screen ${vielusos ? 'vielusos-site' : ''}`} style={publicSiteStyle(theme, vielusos)}>
+      <div className={`min-h-screen ${brand?.siteClass ?? ''}`} style={publicSiteStyle(theme, brand)}>
         {fontHref && <link rel="stylesheet" href={fontHref} />}
-        <style dangerouslySetInnerHTML={{ __html: `${brandCss(theme.primary)}${vielusos ? VIELUSOS_SITE_CSS : ''}` }} />
+        {brand?.fontsHref && <link rel="stylesheet" href={brand.fontsHref} />}
+        <style dangerouslySetInnerHTML={{ __html: `${brandCss(theme.primary)}${brand?.css ?? ''}` }} />
         <PublicHeader header={publicHeader} nav={nav} basePath={basePath} />
         <main className="mx-auto max-w-3xl px-4 py-12">
           <h1 className="text-3xl font-extrabold">{isCgv ? 'Conditions générales' : 'Mentions légales'}</h1>
@@ -205,20 +213,23 @@ export async function RenderSite({ site, basePath, slug }: { site: SiteWithPages
 
   if (slug === 'boutique' && !shopEnabled) notFound();
 
-  if (vielusos && slug === 'booking') {
+  if (brand && slug === 'booking') {
+    const bookingCopy = {
+      title: (footer as any).bookingTitle,
+      titleEn: (footer as any).bookingTitleEn,
+      description: (footer as any).bookingDescription,
+      descriptionEn: (footer as any).bookingDescriptionEn,
+      formTitle: (footer as any).bookingFormTitle,
+      formTitleEn: (footer as any).bookingFormTitleEn,
+    };
     return (
-      <div className="vielusos-site flex min-h-screen flex-col" style={publicSiteStyle(theme, true)}>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&family=Montserrat:wght@300;400;500&display=swap" />
-        <style dangerouslySetInnerHTML={{ __html: `${brandCss(theme.primary)}${VIELUSOS_SITE_CSS}` }} />
+      <div className={`${brand.siteClass} flex min-h-screen flex-col`} style={publicSiteStyle(theme, brand)}>
+        {brand.fontsHref && <link rel="stylesheet" href={brand.fontsHref} />}
+        <style dangerouslySetInnerHTML={{ __html: `${brandCss(theme.primary)}${brand.css}` }} />
         <PublicHeader header={publicHeader} nav={nav} basePath={basePath} />
-        <VielusosBooking organizationId={site.organizationId} copy={{
-          title: (footer as any).bookingTitle,
-          titleEn: (footer as any).bookingTitleEn,
-          description: (footer as any).bookingDescription,
-          descriptionEn: (footer as any).bookingDescriptionEn,
-          formTitle: (footer as any).bookingFormTitle,
-          formTitleEn: (footer as any).bookingFormTitleEn,
-        }} />
+        {brand.key === 'impact'
+          ? <ImpactBooking organizationId={site.organizationId} copy={bookingCopy} />
+          : <VielusosBooking organizationId={site.organizationId} copy={bookingCopy} />}
         <PublicFooter footer={publicFooter} orgId={site.organizationId} basePath={basePath} nav={nav} />
         {bubble}
       </div>
@@ -233,25 +244,46 @@ export async function RenderSite({ site, basePath, slug }: { site: SiteWithPages
   const shopReady = Boolean(profile.stripeConnectReady);
   const hasShopBlock = page.blocks.some((b) => b.type === 'shop');
   const products = hasShopBlock && shopEnabled ? await loadShopProducts(site.organizationId) : [];
-  const renderedBlocks = vielusos && page.isHome ? moveNetworksBelowStats(page.blocks) : page.blocks;
+  const renderedBlocks = branded && page.isHome ? moveNetworksBelowStats(page.blocks) : page.blocks;
+  const isBioPage = page.slug === 'bio' || page.slug === 'about' || page.slug === 'a-propos';
+
+  const instagramContent = (raw: any) => {
+    if (!brand) return raw;
+    const username = raw?.tiktokUsername || brand.tiktokUsername;
+    const base = {
+      ...raw,
+      variant: 'vielusos',
+      tiktokTitle: raw?.tiktokTitle || 'TikTok',
+      tiktokUsername: username,
+      tiktokUrl: raw?.tiktokUrl || (publicHeader as any).social?.tiktok || `https://www.tiktok.com/@${username}`,
+    };
+    // Only VIELUSOS ships a curated fallback list of posts.
+    if (brand.key === 'vielusos') {
+      base.tiktokPostUrls = Array.isArray(raw?.tiktokPostUrls) && raw.tiktokPostUrls.length ? raw.tiktokPostUrls : VIELUSOS_TIKTOK_POSTS;
+    }
+    return base;
+  };
 
   return (
-    <div className={`flex min-h-screen flex-col ${vielusos ? 'vielusos-site' : ''}`} style={publicSiteStyle(theme, vielusos)}>
+    <div className={`flex min-h-screen flex-col ${brand?.siteClass ?? ''}`} style={publicSiteStyle(theme, brand)}>
       {fontHref && <link rel="stylesheet" href={fontHref} />}
-      {vielusos && <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&family=Montserrat:wght@300;400;500&display=swap" />}
-      <style dangerouslySetInnerHTML={{ __html: `${brandCss(theme.primary)}${vielusos ? VIELUSOS_SITE_CSS : ''}` }} />
+      {brand?.fontsHref && <link rel="stylesheet" href={brand.fontsHref} />}
+      <style dangerouslySetInnerHTML={{ __html: `${brandCss(theme.primary)}${brand?.css ?? ''}` }} />
       <PageViewTracker organizationId={site.organizationId} path={page.slug} />
       <PublicHeader header={publicHeader} nav={nav} basePath={basePath} />
-      {vielusos && page.isHome && <VielusosHero title={site.name} config={(header as any).vielusosHero} />}
-      {vielusos && (page.slug === 'bio' || page.slug === 'about' || page.slug === 'a-propos') && <VielusosBio blocks={page.blocks as any[]} config={(header as any).vielusosBio} />}
+      {brand?.key === 'vielusos' && page.isHome && <VielusosHero title={site.name} config={(header as any).vielusosHero} />}
+      {brand?.key === 'impact' && page.isHome && <ImpactHero title={site.name} config={(header as any).vielusosHero} />}
+      {brand?.key === 'vielusos' && isBioPage && <VielusosBio blocks={page.blocks as any[]} config={(header as any).vielusosBio} />}
+      {brand?.key === 'impact' && isBioPage && <ImpactBio blocks={page.blocks as any[]} config={(header as any).vielusosBio} />}
       <main className="flex-1 py-8">
-        {vielusos && (page.slug === 'bio' || page.slug === 'about' || page.slug === 'a-propos') ? null : page.blocks.length === 0 ? (
+        {branded && isBioPage ? null : page.blocks.length === 0 ? (
           <p className="py-20 text-center text-gray-400">Cette page est vide.</p>
         ) : (
           renderedBlocks.map((b) => (
             <Fragment key={b.id}>
-              <PublicBlock type={b.type} content={b.type === 'instagram' && vielusos ? { ...(b.content as any), variant: 'vielusos', tiktokTitle: (b.content as any)?.tiktokTitle || 'TikTok', tiktokUsername: (b.content as any)?.tiktokUsername || 'vielusos', tiktokUrl: (b.content as any)?.tiktokUrl || (publicHeader as any).social?.tiktok || 'https://www.tiktok.com/@vielusos', tiktokPostUrls: Array.isArray((b.content as any)?.tiktokPostUrls) && (b.content as any).tiktokPostUrls.length ? (b.content as any).tiktokPostUrls : VIELUSOS_TIKTOK_POSTS } : b.content as any} style={b.style as any} basePath={basePath} organizationId={site.organizationId} products={b.type === 'shop' ? products : undefined} shopReady={b.type === 'shop' ? shopReady : undefined} branded={vielusos} />
-              {vielusos && page.isHome && b.type === 'instagram' && <VielusosBio config={(header as any).vielusosBio} />}
+              <PublicBlock type={b.type} content={b.type === 'instagram' ? instagramContent(b.content as any) : b.content as any} style={b.style as any} basePath={basePath} organizationId={site.organizationId} products={b.type === 'shop' ? products : undefined} shopReady={b.type === 'shop' ? shopReady : undefined} branded={branded} />
+              {brand?.key === 'vielusos' && page.isHome && b.type === 'instagram' && <VielusosBio config={(header as any).vielusosBio} />}
+              {brand?.key === 'impact' && page.isHome && b.type === 'instagram' && <ImpactBio config={(header as any).vielusosBio} />}
             </Fragment>
           ))
         )}
@@ -274,13 +306,13 @@ function moveNetworksBelowStats<T extends { type: string }>(blocks: T[]): T[] {
   return ordered;
 }
 
-function publicSiteStyle(theme: any, vielusos: boolean): React.CSSProperties {
+function publicSiteStyle(theme: any, brand: { brand: { surface: string; backgroundUrl: string } } | null): React.CSSProperties {
   const base = themeStyle(theme);
-  if (!vielusos) return base;
+  if (!brand) return base;
   return {
     ...base,
-    backgroundColor: VIELUSOS_BRAND.surface,
-    backgroundImage: `linear-gradient(rgba(8, 8, 12, .72), rgba(8, 8, 12, .72)), url(${VIELUSOS_BRAND.backgroundUrl})`,
+    backgroundColor: brand.brand.surface,
+    backgroundImage: `linear-gradient(rgba(8, 8, 12, .72), rgba(8, 8, 12, .72)), url(${brand.brand.backgroundUrl})`,
     backgroundPosition: 'center top',
     backgroundRepeat: 'no-repeat',
     backgroundSize: 'cover',

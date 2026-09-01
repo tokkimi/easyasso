@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { PERMISSIONS } from '@/lib/permissions';
 import { DonorsClient } from './client';
 import { redirect } from 'next/navigation';
-import { isVielusosSite } from '@/lib/vielusos';
+import { isArtistSite } from '@/lib/site-brand';
 
 export const dynamic = 'force-dynamic';
 
@@ -11,7 +11,7 @@ export default async function DonorsPage() {
   const ctx = await requirePermission(PERMISSIONS.DONORS_VIEW);
   const orgId = ctx.organization!.id;
   const site = await prisma.site.findUnique({ where: { organizationId: orgId }, select: { subdomain: true } });
-  if (isVielusosSite(site)) redirect('/dashboard');
+  if (isArtistSite(site)) redirect('/dashboard');
   const donors = await prisma.donor.findMany({ where: { organizationId: orgId }, orderBy: { createdAt: 'desc' } });
   const sums = await prisma.donation.groupBy({
     by: ['donorId'], where: { organizationId: orgId, status: 'COMPLETED', donorId: { not: null } }, _sum: { amountCents: true }, _count: true,

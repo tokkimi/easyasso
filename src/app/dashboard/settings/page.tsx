@@ -4,7 +4,7 @@ import { PERMISSIONS } from '@/lib/permissions';
 import { siteUrlFor, rootDomain } from '@/lib/utils';
 import { SettingsClient } from './client';
 import { TEMPLATES } from '@/lib/templates';
-import { isVielusosSite } from '@/lib/vielusos';
+import { isArtistSite } from '@/lib/site-brand';
 
 export const dynamic = 'force-dynamic';
 
@@ -21,7 +21,7 @@ export default async function SettingsPage() {
       rootDomain={rootDomain()}
       canDomain={ctx.permissions.has(PERMISSIONS.SITE_DOMAIN)}
       categories={TEMPLATES.map((template) => ({ id: template.id, name: template.name }))}
-      branded={isVielusosSite(site)}
+      branded={isArtistSite(site)}
     />
   );
 }

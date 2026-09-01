@@ -8,7 +8,7 @@
 export const IMPACT_SUBDOMAIN = 'impact-djraw';
 
 // The Vercel deployment domain this profile answers on (handled in middleware).
-export const IMPACT_HOST = 'impact.vercel.app';
+export const IMPACT_HOST = 'impact-raw.vercel.app';
 
 // IMPACT owns this identity. Nothing shown to the artist or the public uses an
 // EasyAsso address; the booking address is also the administrator login.

@@ -810,6 +810,7 @@ export function EditorClient({
               <BlockInspector
                 block={block}
                 branded={branded}
+                artistName={artistName}
                 onContent={(c) => updateContent(block.id, c)}
                 onStyle={(s) => updateStyle(block.id, s)}
                 onDelete={() => deleteBlock(block.id)}
@@ -890,6 +891,7 @@ export function EditorClient({
               <BlockInspector
                 block={block}
                 branded={branded}
+                artistName={artistName}
                 onContent={(c) => updateContent(block.id, c)}
                 onStyle={(s) => updateStyle(block.id, s)}
                 onDelete={() => {
@@ -1053,12 +1055,14 @@ export function EditorClient({
 function BlockInspector({
   block,
   branded = false,
+  artistName = "VIELUSOS",
   onContent,
   onStyle,
   onDelete,
 }: {
   block: Block;
   branded?: boolean;
+  artistName?: string;
   onContent: (c: any) => void;
   onStyle: (s: any) => void;
   onDelete: () => void;
@@ -1408,7 +1412,7 @@ function BlockInspector({
         <PlayersEditor c={c} onContent={onContent} />
       )}
       {block.type === "instagram" && (
-        <InstagramEditor c={c} onContent={onContent} />
+        <InstagramEditor c={c} onContent={onContent} artistName={artistName} />
       )}
 
       {block.type === "columns" && (
@@ -2624,9 +2628,11 @@ function PlayersEditor({
 function InstagramEditor({
   c,
   onContent,
+  artistName = "VIELUSOS",
 }: {
   c: any;
   onContent: (v: any) => void;
+  artistName?: string;
 }) {
   const postUrls: string[] = Array.isArray(c.postUrls) ? c.postUrls : [];
   const tiktokPostUrls: string[] = Array.isArray(c.tiktokPostUrls)
@@ -2747,7 +2753,7 @@ function InstagramEditor({
               onChange={(e) =>
                 onContent({ ...c, tiktokUsername: e.target.value })
               }
-              placeholder="vielusos"
+              placeholder={artistName === "IMPACT" ? "impactdj_raw" : "vielusos"}
             />
           </Field>
         </div>

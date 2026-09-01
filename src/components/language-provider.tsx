@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { usePathname } from 'next/navigation';
+import { IMPACT_HOST } from '@/lib/impact';
 import { Languages } from 'lucide-react';
 
 type Locale = 'fr' | 'en';
@@ -364,7 +365,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   }, []);
   useEffect(() => {
     const hostname = window.location.hostname.toLowerCase();
-    setIsVielusosDomain(hostname === 'vielusos.com' || hostname === 'www.vielusos.com' || hostname === 'impact.vercel.app');
+    setIsVielusosDomain(hostname === 'vielusos.com' || hostname === 'www.vielusos.com' || hostname === IMPACT_HOST);
     const vielusosAdmin = (hostname === 'vielusos.com' || hostname === 'www.vielusos.com') && ['/admin', '/login', '/forgot-password', '/reset-password', '/verify-email'].some((path) => pathname === path || pathname.startsWith(`${path}/`));
     const locked = vielusosAdmin || Boolean(document.querySelector('[data-dashboard-locale="fr"]'));
     setForceFrench(locked);

@@ -12,6 +12,7 @@ import { themeStyle, brandCss } from '@/lib/render';
 import { googleFontsHref } from '@/lib/fonts';
 import { canShowPublicSite } from '@/lib/plan';
 import { siteBrand } from '@/lib/site-brand';
+import { IMPACT_ICONS } from '@/lib/impact';
 import { VielusosHero } from './VielusosHero';
 import { VielusosBio } from './VielusosBio';
 import { VielusosBooking } from './VielusosBooking';
@@ -65,13 +66,15 @@ export function siteMetadata(site: { name: string; header: unknown; footer: unkn
   const description = raw.slice(0, 300);
   const metaBrand = siteBrand({ subdomain });
   const image = metaBrand ? metaBrand.brand.logoUrl : (header.logoUrl || footer.logoUrl);
+  // IMPACT uses its neon mask as the tab icon (with the wordmark as fallback).
+  const iconList = metaBrand?.key === 'impact' ? IMPACT_ICONS : image ? [{ url: image }] : undefined;
   return {
     title: { absolute: site.name },
     description,
     // Each published site uses its own uploaded logo for the browser tab and
     // home-screen shortcut. Fall back to EasyAsso's default only when no logo
     // was provided by the site owner.
-    icons: image ? { icon: [{ url: image }], apple: [{ url: image }] } : undefined,
+    icons: iconList ? { icon: iconList, apple: iconList } : undefined,
     openGraph: { title: site.name, description, type: 'website', images: image ? [{ url: image }] : undefined },
     twitter: { card: 'summary', title: site.name, description },
   };

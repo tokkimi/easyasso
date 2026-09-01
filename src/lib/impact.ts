@@ -43,6 +43,12 @@ export const IMPACT_VIDEOS = Array.from({ length: 10 }, (_, index) => {
   };
 });
 
+// Favicon / tab icon for IMPACT: the neon-blue mask. Drop the file at
+// public/impact/favicon.png (transparent PNG, ~512px). Until it exists the
+// wordmark logo.svg is listed as a graceful fallback so the tab is never blank.
+export const IMPACT_FAVICON_URL = '/impact/favicon.png';
+export const IMPACT_ICONS = [{ url: IMPACT_FAVICON_URL }, { url: '/impact/logo.svg' }];
+
 export const IMPACT_BRAND = {
   logoUrl: '/impact/logo.svg',
   backgroundUrl: '/impact/background.svg',
@@ -121,6 +127,37 @@ html:has(.impact-site), body:has(.impact-site) { min-height: 100%; background: #
 .impact-bio-photo { background: #fff; box-shadow: 0 18px 50px -18px rgba(47,107,255,.58); outline: 1px solid rgba(76,201,255,.24); }
 .impact-site[data-impact-theme="light"] section[data-no-translate] { background: rgba(255,255,255,.58) !important; border-color: rgba(47,107,255,.14) !important; }
 .impact-site[data-impact-theme="light"] section[data-no-translate] h2, .impact-site[data-impact-theme="light"] section[data-no-translate] p { color: #07101f !important; text-shadow: none !important; }
+/* IMPACT listening / social icons: a single monochrome row (blue glow),
+   horizontal-scrollable on every width including mobile — no platform colours,
+   no wrapping. Black in light mode, white in dark mode. */
+.impact-site .streaming-links-row, .impact-site .public-social-block {
+  flex-wrap: nowrap !important;
+  justify-content: flex-start !important;
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  padding-bottom: 6px;
+}
+.impact-site .streaming-links-row::-webkit-scrollbar, .impact-site .public-social-block::-webkit-scrollbar { display: none; }
+.impact-site .streaming-links-row > a, .impact-site .public-social-block > a { flex: 0 0 auto; scroll-snap-align: start; }
+/* dark (default): white icons + blue glow */
+.impact-site .streaming-links-row a { color: #ffffff !important; text-shadow: 0 0 12px rgba(47,107,255,.55); }
+.impact-site .streaming-links-row a span { color: inherit !important; }
+.impact-site .public-social-block a { color: #ffffff !important; border-color: rgba(76,201,255,.3) !important; }
+.impact-site .streaming-links-row a svg,
+.impact-site .streaming-links-row a img,
+.impact-site .streaming-links-row a span[style],
+.impact-site .public-social-block a svg,
+.impact-site .public-social-block a img { filter: brightness(0) invert(1) drop-shadow(0 0 7px rgba(47,107,255,.9)) !important; }
+/* light: black icons + blue glow */
+.impact-site[data-impact-theme="light"] .streaming-links-row a { color: #05070f !important; text-shadow: 0 0 10px rgba(47,107,255,.32); }
+.impact-site[data-impact-theme="light"] .public-social-block a { color: #05070f !important; }
+.impact-site[data-impact-theme="light"] .streaming-links-row a svg,
+.impact-site[data-impact-theme="light"] .streaming-links-row a img,
+.impact-site[data-impact-theme="light"] .streaming-links-row a span[style],
+.impact-site[data-impact-theme="light"] .public-social-block a svg,
+.impact-site[data-impact-theme="light"] .public-social-block a img { filter: brightness(0) drop-shadow(0 0 6px rgba(47,107,255,.7)) !important; }
 @media (min-width: 768px) {
   .impact-site .vielusos-player-card, .impact-site .vielusos-video-card { width: calc((100% - 3rem) / 4) !important; max-width: none !important; }
 }

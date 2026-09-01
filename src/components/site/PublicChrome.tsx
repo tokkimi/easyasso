@@ -30,7 +30,7 @@ function SocialMark({ label, monochrome = false }: { label: string; monochrome?:
     tidal: 'https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/tidal.svg',
   };
   const asset = assets[key] || '';
-  if (asset) return <img src={asset} alt="" className={`h-[18px] w-[18px] object-contain ${monochrome ? 'brightness-0 invert' : asset.startsWith('http') ? 'rounded bg-white/90 p-0.5' : ''}`} />;
+  if (asset) return <img src={asset} alt="" className={`h-[18px] w-[18px] object-contain ${monochrome ? 'social-mark-monochrome' : asset.startsWith('http') ? 'rounded bg-white/90 p-0.5' : ''}`} />;
   if (key === 'shotgun') return <img src="https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/9e/a0/59/9ea0590d-68e5-d649-ca93-e31becb08410/AppIcon-0-0-1x_U007emarketing-0-11-0-85-220.png/128x128bb.jpg" alt="" className="h-[18px] w-[18px] rounded-[4px] object-contain" />;
   if (key === 'tiktok') return <svg viewBox="0 0 24 24" aria-hidden="true" className="h-[18px] w-[18px] fill-current"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.9 2.9 0 1 1-2-2.76v-3.5a6.34 6.34 0 1 0 5.45 6.26V8.73a8.16 8.16 0 0 0 4.77 1.52V6.8c-.34 0-.67-.04-1-.11Z" /></svg>;
   if (key === 'facebook') return <Facebook className="h-[18px] w-[18px]" />;
@@ -120,14 +120,14 @@ export function PublicHeader({
           >
             <UserRound className="h-5 w-5" />
           </Link>
-          <button type="button" onClick={() => setMenuOpen((open) => !open)} className={`${brandedHeader ? 'flex' : 'public-header-menu-button'} touch-target shrink-0 items-center justify-center rounded-xl border ${brandedHeader ? 'border-white/20 bg-transparent text-white hover:bg-white/10' : 'border-black/10 bg-white/80'}`} aria-expanded={menuOpen} aria-label={menuOpen ? 'Fermer le menu' : 'Ouvrir le menu'}>
+          <button type="button" onClick={() => setMenuOpen((open) => !open)} className={`${impactHeader ? 'impact-menu-button ' : ''}${brandedHeader ? 'flex' : 'public-header-menu-button'} touch-target shrink-0 items-center justify-center rounded-xl border ${brandedHeader ? 'border-white/20 bg-transparent text-white hover:bg-white/10' : 'border-black/10 bg-white/80'}`} aria-expanded={menuOpen} aria-label={menuOpen ? 'Fermer le menu' : 'Ouvrir le menu'}>
             {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>
         </div>
         {menuOpen && (
           <div style={!brandedHeader ? { background: glassMenu ? hexToRgba(menuBackground, menuOpacity) : menuBackground, color: glassMenu ? '#fff' : header.textColor, backdropFilter: glassMenu ? `blur(${Math.max(0, Math.min(36, Number(header.menuBlur) || 20))}px)` : undefined } : undefined} className={`${impactHeader ? 'impact-header-dropdown ' : ''}${brandedHeader ? 'right-3 block w-[min(20rem,calc(100vw-1.5rem))]' : 'public-header-dropdown left-3 right-3'} absolute top-[calc(100%+0.5rem)] z-50 rounded-2xl p-3 shadow-2xl ${brandedHeader ? 'border border-white/15 bg-[#0b0b10]/55 text-white shadow-black/60 backdrop-blur-2xl' : glassMenu ? 'border border-white/20 text-white shadow-black/30' : 'ring-1 ring-black/10'}`}>
             {header.showNav && <nav className="flex flex-col">{nav.map((p) => <Link key={p.slug} href={link(p.slug, p.isHome)} onClick={() => setMenuOpen(false)} className={`rounded-xl px-4 py-3 text-sm font-medium ${(brandedHeader || glassMenu) ? 'border-b border-white/10 hover:bg-white/10' : 'hover:bg-black/5'}`}>{t(p.title)}</Link>)}</nav>}
-            <div className={`${brandedHeader ? 'grid grid-cols-4 place-items-center gap-3 p-2' : 'mt-3 flex flex-wrap items-center gap-3 px-2 pt-3'} ${(brandedHeader || glassMenu) && header.showNav && nav.length ? 'border-t border-white/10' : !brandedHeader ? 'border-t border-black/10' : ''}`}>
+            <div className={`${impactHeader ? 'impact-header-social-row' : brandedHeader ? 'grid grid-cols-4 place-items-center gap-3 p-2' : 'mt-3 flex flex-wrap items-center gap-3 px-2 pt-3'} ${(brandedHeader || glassMenu) && header.showNav && nav.length ? 'border-t border-white/10' : !brandedHeader ? 'border-t border-black/10' : ''}`}>
               {socials.map(([name, href]) => <a key={name} href={href} target="_blank" rel="noreferrer" aria-label={name} className={`grid h-10 w-10 place-items-center rounded-full border ${(brandedHeader || glassMenu) ? 'border-white/20 text-white/80 hover:bg-white/10 hover:text-white' : 'border-black/15 text-current'}`}><SocialMark label={name} monochrome={brandedHeader || glassMenu} /></a>)}
               {(!brandedHeader || impactHeader) && <LanguageSwitcher variant="inline" />}
             </div>
@@ -158,7 +158,8 @@ export function PublicFooter({
   };
   const selectedPages = nav.filter((page) => !footer.pageSlugs || footer.pageSlugs.includes(page.slug));
   const socialColumns = (footer.columns || []).filter(isSocialColumn);
-  const brandedFooter = footer.logoUrl?.includes('/vielusos/') || footer.logoUrl?.includes('/impact/') || ['#0b0b10', '#05070f'].includes(footer.background?.toLowerCase() || '');
+  const impactFooter = footer.logoUrl?.includes('/impact/');
+  const brandedFooter = footer.logoUrl?.includes('/vielusos/') || impactFooter || ['#0b0b10', '#05070f'].includes(footer.background?.toLowerCase() || '');
   const backgroundVideoUrl = typeof (footer as any).backgroundVideoUrl === 'string' ? (footer as any).backgroundVideoUrl : '';
   return (
     <footer style={{ background: footer.background, color: footer.textColor, paddingBottom: 'env(safe-area-inset-bottom)' }} className="public-footer-shell relative isolate mt-0 overflow-hidden">
@@ -191,7 +192,7 @@ export function PublicFooter({
         {socialColumns.map((col, i) => (
           <div key={i}>
             <p className="text-sm font-bold uppercase tracking-wide opacity-90">{t(col.title)}</p>
-            <ul className={`mt-3 text-sm opacity-80 ${isSocialColumn(col) ? 'flex flex-wrap gap-2' : 'space-y-2'}`}>
+            <ul className={`mt-3 text-sm opacity-80 ${isSocialColumn(col) ? `${impactFooter ? 'impact-footer-social-row' : 'flex flex-wrap gap-2'}` : 'space-y-2'}`}>
               {col.links.map((l, j) => (
                 <li key={j}>
                   <a href={footerHref(l.href, l.label)} target={isSocialColumn(col) ? '_blank' : undefined} rel={isSocialColumn(col) ? 'noreferrer' : undefined} title={t(l.label)} aria-label={t(l.label)} className={isSocialColumn(col) ? 'grid h-11 w-11 place-items-center rounded-xl border border-current/20 transition hover:bg-white/10 hover:opacity-100' : 'hover:opacity-100'}>

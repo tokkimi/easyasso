@@ -88,7 +88,7 @@ async function main() {
 async function seedImpact() {
   const existing = await prisma.site.findUnique({ where: { subdomain: IMPACT_SUBDOMAIN }, include: { organization: true } });
   const previousProfile = ((existing?.organization.profile as any) || {}) as Record<string, any>;
-  const needsContentSetup = Number(previousProfile.impactSeedVersion || 0) < 9;
+  const needsContentSetup = Number(previousProfile.impactSeedVersion || 0) < 10;
   const passwordHash = await bcrypt.hash(IMPACT_LOGIN_PASSWORD, 10);
   const legacyEasyAssoUser = await prisma.user.findUnique({ where: { email: 'impact@easyasso.fr' } });
   const legacyAgencyUser = await prisma.user.findUnique({ where: { email: 'contact@skorm-agency.com' } });
@@ -107,7 +107,7 @@ async function seedImpact() {
 
   const profile = {
     ...previousProfile,
-    impactSeedVersion: 9,
+    impactSeedVersion: 10,
     language: 'fr' as const,
     slogan: 'RAW · ELECTRONIC · ENERGY',
     email: IMPACT_CONTACT_EMAIL,
@@ -202,17 +202,17 @@ async function seedImpact() {
     const players = IMPACT_TRACKS.map((track) => ({ platform: track.source, url: track.url, title: track.title, artist: track.artist, releaseDate: track.releaseDate }));
     const pages: Array<{ title: string; slug: string; order: number; isHome?: boolean; showInNav?: boolean; description: string; blocks: Array<{ type: BlockType; content: any }> }> = [
       { title: 'Accueil', slug: 'accueil', order: 0, isHome: true, description: 'Site officiel IMPACT · Rawstyle DJ/Producer.', blocks: [
-        { type: 'streaming', content: { title: 'ÉCOUTER IMPACT', linkStyle: 'text-white', glowColor: IMPACT_BRAND.neon, links: streamingLinks } },
+        { type: 'streaming', content: { variant: 'impact', title: 'ÉCOUTER IMPACT', linkStyle: 'text-white', glowColor: IMPACT_BRAND.neon, links: streamingLinks } },
         { type: 'tracks', content: { variant: 'impact', title: 'DERNIÈRES SORTIES', subtitle: 'Latest releases', tracks: IMPACT_TRACKS } },
         { type: 'stats', content: { variant: 'impact', eyebrow: 'Repères publics', title: 'IMPACT EN CHIFFRES', intro: 'Chiffres relevés sur les profils officiels au moment de la mise à jour.', source: 'Sources : Spotify artiste officiel et SoundCloud officiel IMPACT.', items: IMPACT_STATS } },
         { type: 'videos', content: { title: 'LIVE · IMPACT', videos: IMPACT_VIDEOS.slice(0, 5) } },
-        { type: 'social', content: { social: { align: 'center', ...IMPACT_SOCIALS, appleMusic: IMPACT_SOCIALS.applemusic } } },
+        { type: 'social', content: { variant: 'impact', social: { align: 'center', ...IMPACT_SOCIALS, appleMusic: IMPACT_SOCIALS.applemusic } } },
         { type: 'instagram', content: { variant: 'impact', title: 'IMPACT SUR INSTAGRAM', username: 'impactdj_raw', url: IMPACT_SOCIALS.instagram, count: 15, postUrls: IMPACT_INSTAGRAM_POSTS, tiktokTitle: 'IMPACT SUR TIKTOK', tiktokUsername: 'impactdj_raw', tiktokUrl: IMPACT_SOCIALS.tiktok, tiktokPostUrls: IMPACT_TIKTOK_POSTS } },
       ] },
       { title: 'Sons', slug: 'sons', order: 1, description: 'Toutes les sorties et plateformes officielles d’IMPACT.', blocks: [
         { type: 'tracks', content: { variant: 'impact', title: 'TOUS LES SONS', subtitle: 'Official releases', tracks: IMPACT_TRACKS } },
         { type: 'players', content: { title: 'LECTEURS OFFICIELS', intro: 'Écoutez les sorties directement sur les plateformes officielles.', sort: 'newest', items: players } },
-        { type: 'streaming', content: { title: 'TOUTES LES PLATEFORMES', linkStyle: 'text-white', glowColor: IMPACT_BRAND.neon, links: streamingLinks } },
+        { type: 'streaming', content: { variant: 'impact', title: 'TOUTES LES PLATEFORMES', linkStyle: 'text-white', glowColor: IMPACT_BRAND.neon, links: streamingLinks } },
       ] },
       { title: 'Vidéos', slug: 'videos', order: 2, description: 'Lives et vidéos officielles d’IMPACT.', blocks: [
         { type: 'videos', content: { title: 'LIVE · ESKAPE', videos: [...IMPACT_VIDEOS, { title: 'YOU MADE IT · OFFICIAL', url: 'https://www.youtube.com/watch?v=RSdKmX2BH7o' }] } },

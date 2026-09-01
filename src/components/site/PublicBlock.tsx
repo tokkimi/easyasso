@@ -98,6 +98,7 @@ function renderInner(type: string, content: any, style: BlockStyle, basePath: st
       return content.button ? <Btn b={content.button} basePath={basePath} /> : null;
     case 'social': {
       const s: SocialConfig = content.social || {};
+      const impactSocial = content?.variant === 'impact';
       const items = [
         { k: 'facebook', url: s.facebook, Icon: Facebook },
         { k: 'instagram', url: s.instagram, Icon: Instagram },
@@ -116,9 +117,9 @@ function renderInner(type: string, content: any, style: BlockStyle, basePath: st
         { k: 'tidal', url: s.tidal, Icon: Music2, asset: 'https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/tidal.svg' },
       ].filter((i) => i.url);
       return (
-        <div className={`public-social-block flex gap-4 ${justifyClass(s.align)}`}>
+        <div className={`public-social-block ${impactSocial ? 'impact-social-row' : `flex gap-4 ${justifyClass(s.align)}`}`}>
           {items.map(({ k, url, Icon, asset }) => (
-            <a key={k} href={safePublicUrl(url) || '#'} target="_blank" rel="noreferrer" aria-label={k} title={k} className={`grid h-11 w-11 place-items-center rounded-xl border border-current/15 text-gray-600 transition hover:-translate-y-0.5 ${branded ? 'hover:text-gray-300' : 'hover:text-brand-600'}`}>{asset ? <img src={asset} alt="" className="h-6 w-6 object-contain" /> : <Icon className="h-6 w-6" />}</a>
+            <a key={k} href={safePublicUrl(url) || '#'} target="_blank" rel="noreferrer" aria-label={k} title={k} className={`grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-current/15 text-gray-600 transition hover:-translate-y-0.5 ${branded ? 'hover:text-gray-300' : 'hover:text-brand-600'}`}>{asset ? <img src={asset} alt="" className={`h-6 w-6 object-contain ${impactSocial ? 'impact-social-mark' : ''}`} /> : <Icon className="h-6 w-6" />}</a>
           ))}
         </div>
       );

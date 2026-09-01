@@ -253,7 +253,7 @@ export async function RenderSite({ site, basePath, slug }: { site: SiteWithPages
     const username = raw?.tiktokUsername || brand.tiktokUsername;
     const base = {
       ...raw,
-      variant: 'vielusos',
+      variant: brand.key,
       tiktokTitle: raw?.tiktokTitle || 'TikTok',
       tiktokUsername: username,
       tiktokUrl: raw?.tiktokUrl || (publicHeader as any).social?.tiktok || `https://www.tiktok.com/@${username}`,

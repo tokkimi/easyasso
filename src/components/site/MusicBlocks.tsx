@@ -221,19 +221,25 @@ export function StreamingLinks({ content }: { content: any }) {
   const items = STREAMING.filter((s) => links[s.key]);
   const linkStyle = content?.linkStyle || 'dark-button';
   const glowColor = content?.glowColor || '';
+  const impactStreaming = content?.variant === 'impact';
   const textOnly = linkStyle === 'text-white' || linkStyle === 'text-black';
   return (
-    <div className="vielusos-fluid vielusos-media-shell mx-auto w-full max-w-4xl px-4 pb-8 pt-2 text-center md:pb-12">
+    <div className={`vielusos-fluid vielusos-media-shell mx-auto w-full px-4 pb-8 pt-2 text-center md:pb-12 ${impactStreaming ? 'impact-streaming-shell' : 'max-w-4xl'}`}>
       {content?.title && <h2 className="text-2xl font-extrabold uppercase tracking-tight md:text-3xl">{content.title}</h2>}
       {items.length === 0 ? (
         <p className="py-8 text-sm text-gray-400">Ajoutez vos liens Spotify, Deezer, Apple Music, SoundCloud, YouTube.</p>
       ) : (
-        <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
+        <div className={`mt-5 ${impactStreaming ? 'impact-streaming-row' : 'flex flex-wrap items-center justify-center gap-3'}`}>
           {items.map((s) => (
             <a key={s.key} href={safePublicUrl(links[s.key]) || '#'} target="_blank" rel="noreferrer"
-              className={`inline-flex items-center gap-2.5 rounded-full py-3 text-sm font-bold transition ${textOnly ? '' : 'px-5'} ${streamingLinkClass(linkStyle)}`}
-              style={textOnly ? undefined : { boxShadow: `0 12px 26px -12px ${(glowColor || s.color)}aa` }}>
-              <span style={{ color: s.color }}><StreamingIcon k={s.key} /></span> {s.label}
+              aria-label={s.label}
+              title={s.label}
+              className={impactStreaming
+                ? 'impact-streaming-icon-link'
+                : `inline-flex items-center gap-2.5 rounded-full py-3 text-sm font-bold transition ${textOnly ? '' : 'px-5'} ${streamingLinkClass(linkStyle)}`}
+              style={impactStreaming ? undefined : textOnly ? undefined : { boxShadow: `0 12px 26px -12px ${(glowColor || s.color)}aa` }}>
+              <span style={impactStreaming ? undefined : { color: s.color }}><StreamingIcon k={s.key} /></span>
+              {!impactStreaming && s.label}
             </a>
           ))}
         </div>

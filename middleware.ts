@@ -10,7 +10,7 @@ export function middleware(req: NextRequest) {
   // The IMPACT profile answers on its own Vercel deployment domain. It lives in
   // this same app (nothing else is touched); it just gets branded routing.
   const isImpactHost = host === IMPACT_HOST;
-  const brandedAppPaths = ['/dashboard', '/vielusos-admin', '/impact-admin', '/login', '/forgot-password', '/reset-password', '/verify-email'];
+  const brandedAppPaths = ['/dashboard', '/vielusos-admin', '/impact-admin', '/login', '/forgot-password', '/reset-password', '/verify-email', '/accept-invitation'];
 
   if (host === 'vielusos.com') {
     const canonical = req.nextUrl.clone();

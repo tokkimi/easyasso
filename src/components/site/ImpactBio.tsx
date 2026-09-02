@@ -15,15 +15,15 @@ const DEFAULT_IMAGES = [
 ];
 
 const DEFAULT_FR = [
-  'IMPACT est un projet de musique électronique brute et physique, pensé pour le club et la scène. Chaque set est construit comme une montée continue : tension, énergie et basses qui frappent, sans temps mort.',
-  'Entre techno tranchante et impulsions plus mélodiques, le projet cultive le contraste et l’intensité. Le son est direct, immersif, taillé pour le dancefloor.',
-  'DJ · PRODUCTION · LIVE',
+  'IMPACT construit un univers électronique frontal, sombre et physique, porté par une identité visuelle immédiatement reconnaissable : casque noir, lumière bleue électrique, tension permanente. Le projet avance comme une machine de scène, entre précision, violence contrôlée et montée d’adrénaline.',
+  'Ses sets et productions mélangent rawstyle, hard dance, bass music et textures techno pour créer un impact direct sur le dancefloor. L’objectif n’est pas seulement de faire écouter un morceau : c’est d’installer une pression, déclencher une réaction, puis garder le public dans l’énergie.',
+  'Derrière le masque, IMPACT défend une esthétique nette : son massif, visuels cinématiques, atmosphère futuriste et rapport très physique au live. Chaque sortie, vidéo et apparition prolonge cette même signature : RAW · ELECTRONIC · ENERGY.',
 ];
 
 const DEFAULT_EN = [
-  'IMPACT is a raw, physical electronic music project made for the club and the stage. Every set is built as one continuous rise: tension, energy and bass that hits, with no dead time.',
-  'Moving between sharp techno and more melodic impulses, the project thrives on contrast and intensity. The sound is direct, immersive, built for the dancefloor.',
-  'DJ · PRODUCTION · LIVE',
+  'IMPACT builds a frontal, dark and physical electronic universe, driven by an instantly recognisable visual identity: black helmet, electric-blue light and permanent tension. The project moves like a stage machine, balancing precision, controlled violence and pure adrenaline.',
+  'His sets and productions blend rawstyle, hard dance, bass music and techno textures to create a direct shock on the dancefloor. The goal is not only to play a track: it is to build pressure, trigger a reaction and keep the crowd locked inside the energy.',
+  'Behind the mask, IMPACT carries a sharp aesthetic: massive sound, cinematic visuals, futuristic atmosphere and a very physical relationship with live performance. Every release, video and appearance extends the same signature: RAW · ELECTRONIC · ENERGY.',
 ];
 
 function imageFocus(src: string) {

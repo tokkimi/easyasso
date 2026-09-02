@@ -12,7 +12,7 @@ export default async function TeamPage() {
   const [memberships, roles, invitations, site] = await Promise.all([
     prisma.membership.findMany({ where: { organizationId: orgId }, include: { user: true, role: true }, orderBy: { createdAt: 'asc' } }),
     prisma.role.findMany({ where: { organizationId: orgId }, orderBy: { name: 'asc' } }),
-    prisma.invitation.findMany({ where: { organizationId: orgId, acceptedAt: null }, orderBy: { createdAt: 'desc' } }),
+    prisma.invitation.findMany({ where: { organizationId: orgId, acceptedAt: null }, include: { role: true }, orderBy: { createdAt: 'desc' } }),
     prisma.site.findUnique({ where: { organizationId: orgId }, select: { subdomain: true } }),
   ]);
   const branded = isArtistSite(site);

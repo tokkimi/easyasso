@@ -170,17 +170,48 @@ body {
   backdrop-filter: blur(14px);
 }
 .impact-dashboard-content .text-gray-900,
-.impact-dashboard-content .text-gray-950 { color: #eaf2ff !important; }
-.impact-dashboard-content .text-gray-600,
-.impact-dashboard-content .text-gray-500,
+.impact-dashboard-content .text-gray-950,
+.impact-dashboard-content .text-gray-800 { color: #eaf2ff !important; }
+.impact-dashboard-content .text-gray-700,
+.impact-dashboard-content .text-gray-600 { color: #d3def0 !important; }
+.impact-dashboard-content .text-gray-500 { color: #bdc9dc !important; }
 .impact-dashboard-content .text-gray-400,
-.impact-dashboard-content .text-gray-700 { color: rgba(234, 242, 255, .68) !important; }
+.impact-dashboard-content .text-gray-300 { color: #a7b5cc !important; }
 .impact-dashboard-content .bg-white { background: rgba(9, 13, 26, .78) !important; }
 .impact-dashboard-content .bg-gray-50,
 .impact-dashboard-content .bg-gray-100 { background: rgba(76, 201, 255, .07) !important; }
+.impact-dashboard-content .bg-brand-50,
+.impact-dashboard-content .bg-blue-50 { background: rgba(47, 107, 255, .14) !important; }
+.impact-dashboard-content .bg-green-50 { background: rgba(34, 197, 94, .12) !important; }
+.impact-dashboard-content .bg-amber-50 { background: rgba(245, 158, 11, .12) !important; }
+.impact-dashboard-content .bg-red-50 { background: rgba(239, 68, 68, .12) !important; }
+.impact-dashboard-content .text-brand-600,
+.impact-dashboard-content .text-brand-700,
+.impact-dashboard-content .text-blue-700,
+.impact-dashboard-content .text-blue-800 { color: #76a6ff !important; }
+.impact-dashboard-content .text-green-700,
+.impact-dashboard-content .text-green-800,
+.impact-dashboard-content .text-green-950 { color: #86efac !important; }
+.impact-dashboard-content .text-amber-700,
+.impact-dashboard-content .text-amber-800 { color: #fcd34d !important; }
+.impact-dashboard-content .text-red-700 { color: #fca5a5 !important; }
+.impact-dashboard-content .border-gray-200,
+.impact-dashboard-content .border-gray-100 { border-color: rgba(76, 201, 255, .2) !important; }
+.impact-dashboard-content .divide-gray-100 > :not([hidden]) ~ :not([hidden]) { border-color: rgba(76, 201, 255, .14) !important; }
 .impact-dashboard-content input,
 .impact-dashboard-content textarea,
 .impact-dashboard-content select { background: rgba(255, 255, 255, .06); color: #eaf2ff; border-color: rgba(76, 201, 255, .28); }
+.impact-dashboard-content input::placeholder,
+.impact-dashboard-content textarea::placeholder { color: #9eacc2; opacity: 1; }
+.impact-dashboard-content input:disabled,
+.impact-dashboard-content textarea:disabled,
+.impact-dashboard-content select:disabled { color: #b9c6da; opacity: .82; }
+.impact-dashboard-content select option,
+.impact-dashboard-content select optgroup { background: #07101f; color: #eaf2ff; }
+.impact-dashboard-content .dashboard-dialog { background: #09101f !important; color: #eaf2ff !important; border: 1px solid rgba(76,201,255,.28); box-shadow: 0 24px 80px rgba(0,0,0,.6), 0 0 38px rgba(47,107,255,.2); }
+.impact-dashboard-content .dashboard-dialog h3,
+.impact-dashboard-content .dashboard-dialog label { color: #eaf2ff !important; }
+.impact-dashboard-content .dashboard-dialog .hover\:bg-gray-50:hover { background: rgba(76,201,255,.08) !important; }
 
 /* The IMPACT visual editor keeps the same light editing surface as VIELUSOS. */
 .impact-editor-surface { color: #111827; }

@@ -9,7 +9,7 @@ export async function POST(req: Request) {
   try {
     const ctx = await requireApiPermission(PERMISSIONS.SITE_EDIT);
     const { pageId, type } = await req.json();
-    await assertPageInOrg(pageId, ctx.org.id);
+    const page = await assertPageInOrg(pageId, ctx.org.id);
     const count = await prisma.block.count({ where: { pageId } });
     const content: any = defaultContentFor(type as BlockType);
     if (type === 'contact') {
@@ -57,6 +57,7 @@ export async function POST(req: Request) {
         style: defaultStyleFor(type as BlockType) as any,
       },
     });
+    await prisma.site.update({ where: { id: page.site.id }, data: { updatedAt: new Date() } });
     return NextResponse.json(block);
   } catch (e) {
     return handleApiError(e);
@@ -68,12 +69,13 @@ export async function PATCH(req: Request) {
   try {
     const ctx = await requireApiPermission(PERMISSIONS.SITE_EDIT);
     const { pageId, ids } = await req.json();
-    await assertPageInOrg(pageId, ctx.org.id);
+    const page = await assertPageInOrg(pageId, ctx.org.id);
     await prisma.$transaction(
       (ids as string[]).map((id, order) =>
         prisma.block.updateMany({ where: { id, pageId }, data: { order } })
       )
     );
+    await prisma.site.update({ where: { id: page.site.id }, data: { updatedAt: new Date() } });
     return NextResponse.json({ ok: true });
   } catch (e) {
     return handleApiError(e);

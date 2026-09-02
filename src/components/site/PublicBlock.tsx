@@ -16,6 +16,19 @@ const CARD_ICONS: Record<string, any> = {
   Heart, Users, HandHeart, HandCoins, Star, Gift, Leaf, Home, BookOpen, Shield, Sparkles, Handshake, Music2,
 };
 
+function ImpactOfficialSocialMark({ asset, Icon }: { asset?: string; Icon: any }) {
+  if (asset) {
+    return (
+      <span
+        aria-hidden="true"
+        className="impact-social-mark block h-5 w-5 bg-current"
+        style={{ WebkitMask: `url(${asset}) center / contain no-repeat`, mask: `url(${asset}) center / contain no-repeat` }}
+      />
+    );
+  }
+  return <Icon className="h-5 w-5" />;
+}
+
 // Blocks that break out of the narrow text column
 const WIDE = new Set(['textimage', 'gallery', 'cards', 'contact', 'donation', 'leetchi', 'streaming', 'instagram']);
 const FULL = new Set(['banner', 'slideshow', 'cta', 'shop', 'tracks', 'videos', 'players', 'html', 'event', 'events', 'stats']);
@@ -105,7 +118,7 @@ function renderInner(type: string, content: any, style: BlockStyle, basePath: st
         { k: 'twitter', url: s.twitter, Icon: Twitter },
         { k: 'youtube', url: s.youtube, Icon: Youtube, asset: '/integrations/youtube.svg' },
         { k: 'linkedin', url: s.linkedin, Icon: Linkedin },
-        { k: 'tiktok', url: s.tiktok, Icon: Music2 },
+        { k: 'tiktok', url: s.tiktok, Icon: Music2, asset: 'https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/tiktok.svg' },
         { k: 'spotify', url: s.spotify, Icon: Music2, asset: '/integrations/spotify.svg' },
         { k: 'deezer', url: s.deezer, Icon: Music2, asset: '/integrations/deezer.svg' },
         { k: 'soundcloud', url: s.soundcloud, Icon: Music2, asset: '/integrations/soundcloud.svg' },
@@ -119,7 +132,9 @@ function renderInner(type: string, content: any, style: BlockStyle, basePath: st
       return (
         <div className={`public-social-block ${impactSocial ? 'impact-social-row' : `flex gap-4 ${justifyClass(s.align)}`}`}>
           {items.map(({ k, url, Icon, asset }) => (
-            <a key={k} href={safePublicUrl(url) || '#'} target="_blank" rel="noreferrer" aria-label={k} title={k} className={`grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-current/15 text-gray-600 transition hover:-translate-y-0.5 ${branded ? 'hover:text-gray-300' : 'hover:text-brand-600'}`}>{asset ? <img src={asset} alt="" className={`h-6 w-6 object-contain ${impactSocial ? 'impact-social-mark' : ''}`} /> : <Icon className="h-6 w-6" />}</a>
+            <a key={k} href={safePublicUrl(url) || '#'} target="_blank" rel="noreferrer" aria-label={k} title={k} className={`grid shrink-0 place-items-center rounded-xl border border-current/15 text-gray-600 transition hover:-translate-y-0.5 ${impactSocial ? 'h-10 w-10' : 'h-11 w-11'} ${branded ? 'hover:text-gray-300' : 'hover:text-brand-600'}`}>
+              {impactSocial ? <ImpactOfficialSocialMark asset={asset} Icon={Icon} /> : asset ? <img src={asset} alt="" className="h-6 w-6 object-contain" /> : <Icon className="h-6 w-6" />}
+            </a>
           ))}
         </div>
       );

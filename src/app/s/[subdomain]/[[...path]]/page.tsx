@@ -2,10 +2,9 @@ import type { Metadata } from 'next';
 import { prisma } from '@/lib/prisma';
 import { RenderSite, loadSiteBySubdomain, siteMetadata } from '@/components/site/RenderSite';
 
-// Cache public pages and serve them from the CDN (fast worldwide), refreshing
-// in the background at most once a minute. Edits call revalidatePath, so
-// changes appear right away; otherwise a page self-refreshes within 60s.
-export const revalidate = 60;
+// The site editor must be reflected on the public site at the very next load.
+// Dynamic rendering avoids serving a stale CDN snapshot after an edit.
+export const dynamic = 'force-dynamic';
 
 export async function generateMetadata({ params }: { params: Promise<{ subdomain: string }> }): Promise<Metadata> {
   const { subdomain } = await params;

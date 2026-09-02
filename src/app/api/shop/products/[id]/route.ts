@@ -28,7 +28,7 @@ async function revalidateOrgShop(orgId: string) {
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const ctx = await requireApiPermission(PERMISSIONS.SITE_EDIT);
+    const ctx = await requireApiPermission(PERMISSIONS.SHOP_EDIT);
     const { id } = await params;
     if (!(await ownProduct(ctx.org.id, id))) return NextResponse.json({ error: 'Produit introuvable.' }, { status: 404 });
     const b = await req.json().catch(() => ({}));
@@ -40,6 +40,9 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     if (b.category !== undefined) data.category = String(b.category).slice(0, 60);
     if (b.brand !== undefined) data.brand = String(b.brand).slice(0, 80);
     if (b.stock !== undefined) data.stock = optionalStock(b.stock);
+    if (b.sku !== undefined) data.sku = String(b.sku).trim().slice(0, 80);
+    if (b.weightGrams !== undefined) data.weightGrams = Math.max(0, Math.round(Number(b.weightGrams) || 0));
+    if (b.requiresShipping !== undefined) data.requiresShipping = !!b.requiresShipping;
     if (b.active !== undefined) data.active = !!b.active;
     const product = await prisma.product.update({ where: { id }, data });
     await revalidateOrgShop(ctx.org.id);
@@ -49,7 +52,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 
 export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const ctx = await requireApiPermission(PERMISSIONS.SITE_EDIT);
+    const ctx = await requireApiPermission(PERMISSIONS.SHOP_EDIT);
     const { id } = await params;
     if (!(await ownProduct(ctx.org.id, id))) return NextResponse.json({ error: 'Produit introuvable.' }, { status: 404 });
     await prisma.product.delete({ where: { id } });

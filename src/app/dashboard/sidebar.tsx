@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import { signOut } from 'next-auth/react';
 import {
   LayoutDashboard, Files, HandCoins, Users, Megaphone, Calculator, BarChart3,
-  Settings, LogOut, ExternalLink, Menu, X, UserCog, Palette, LayoutTemplate, Sparkles, Fingerprint, Mail, ShoppingBag,
+  Settings, LogOut, ExternalLink, Menu, X, UserCog, Palette, LayoutTemplate, Sparkles, Fingerprint, Mail, ShoppingBag, Truck,
 } from 'lucide-react';
 import { PERMISSIONS } from '@/lib/permissions';
 
@@ -16,7 +16,8 @@ const NAV = [
   { href: '/dashboard/messages', label: 'Messagerie', icon: Mail, perm: PERMISSIONS.SITE_VIEW, notification: true },
   { href: '/dashboard/identity', label: 'Identité (logo, couleurs)', icon: Fingerprint, perm: PERMISSIONS.SITE_EDIT },
   { href: '/dashboard/themes', label: 'Modèles de site', icon: LayoutTemplate, perm: PERMISSIONS.SITE_EDIT },
-  { href: '/dashboard/shop', label: 'Boutique', icon: ShoppingBag, perm: PERMISSIONS.SITE_VIEW },
+  { href: '/dashboard/shop', label: 'Boutique', icon: ShoppingBag, perm: PERMISSIONS.SHOP_VIEW },
+  { href: '/dashboard/logistics', label: 'Commandes & logistique', icon: Truck, perm: PERMISSIONS.LOGISTICS_VIEW },
   { href: '/dashboard/donations', label: 'Dons', icon: HandCoins, perm: PERMISSIONS.DONATIONS_VIEW },
   { href: '/dashboard/campaigns', label: 'Campagnes', icon: Megaphone, perm: PERMISSIONS.CAMPAIGNS_VIEW },
   { href: '/dashboard/donors', label: 'Donateurs (CRM)', icon: Users, perm: PERMISSIONS.DONORS_VIEW },

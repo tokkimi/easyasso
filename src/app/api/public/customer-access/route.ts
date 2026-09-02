@@ -1,12 +1,15 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
+import bcrypt from 'bcryptjs';
 import { prisma } from '@/lib/prisma';
 import { rateLimit, rateLimitExceeded } from '@/lib/rate-limit';
+import { createCustomerSession } from '@/lib/customer-session';
 
 const schema = z.object({
   organizationId: z.string().min(1),
   email: z.string().email(),
   name: z.string().max(120).optional().default(''),
+  password: z.string().min(6),
 });
 
 export async function POST(req: Request) {
@@ -20,11 +23,30 @@ export async function POST(req: Request) {
 
   const email = parsed.data.email.trim().toLowerCase();
   const name = parsed.data.name.trim();
-  const profile = await prisma.customerProfile.upsert({
+  const existing = await prisma.customerProfile.findUnique({
     where: { organizationId_email: { organizationId: organization.id, email } },
-    update: { ...(name ? { name } : {}), lastSeenAt: new Date() },
-    create: { organizationId: organization.id, email, name },
-    select: { id: true, email: true, name: true },
+    select: { id: true, email: true, name: true, passwordHash: true },
+  });
+  if (existing?.passwordHash) {
+    const ok = await bcrypt.compare(parsed.data.password, existing.passwordHash);
+    if (!ok) return NextResponse.json({ error: 'Email ou mot de passe incorrect.' }, { status: 401 });
+  }
+  const passwordHash = existing?.passwordHash || await bcrypt.hash(parsed.data.password, 10);
+  const profile = existing
+    ? await prisma.customerProfile.update({
+      where: { id: existing.id },
+      data: { ...(name ? { name } : {}), passwordHash, lastSeenAt: new Date() },
+      select: { id: true, email: true, name: true },
+    })
+    : await prisma.customerProfile.create({
+      data: { organizationId: organization.id, email, name, passwordHash },
+      select: { id: true, email: true, name: true },
+    });
+
+  await createCustomerSession(profile.id);
+  await prisma.order.updateMany({
+    where: { organizationId: organization.id, customerEmail: email, customerProfileId: null },
+    data: { customerProfileId: profile.id },
   });
 
   return NextResponse.json({ profile });

@@ -14,12 +14,13 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   try {
     const { id } = await params;
     const ctx = await requireApiPermission(PERMISSIONS.SITE_EDIT);
-    await assertBlock(id, ctx.org.id);
+    const block = await assertBlock(id, ctx.org.id);
     const body = await req.json();
     const data: any = {};
     if (body.content !== undefined) data.content = body.content;
     if (body.style !== undefined) data.style = body.style;
     const updated = await prisma.block.update({ where: { id }, data });
+    await prisma.site.update({ where: { id: block.page.site.id }, data: { updatedAt: new Date() } });
     return NextResponse.json(updated);
   } catch (e) {
     return handleApiError(e);
@@ -30,8 +31,9 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
   try {
     const { id } = await params;
     const ctx = await requireApiPermission(PERMISSIONS.SITE_EDIT);
-    await assertBlock(id, ctx.org.id);
+    const block = await assertBlock(id, ctx.org.id);
     await prisma.block.delete({ where: { id } });
+    await prisma.site.update({ where: { id: block.page.site.id }, data: { updatedAt: new Date() } });
     return NextResponse.json({ ok: true });
   } catch (e) {
     return handleApiError(e);

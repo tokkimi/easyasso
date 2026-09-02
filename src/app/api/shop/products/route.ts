@@ -24,7 +24,7 @@ async function revalidateOrgShop(orgId: string) {
 // Create a product for this organization's shop.
 export async function POST(req: Request) {
   try {
-    const ctx = await requireApiPermission(PERMISSIONS.SITE_EDIT);
+    const ctx = await requireApiPermission(PERMISSIONS.SHOP_EDIT);
     const b = await req.json().catch(() => ({}));
     const name = String(b.name || '').trim();
     if (!name) return NextResponse.json({ error: 'Le nom du produit est requis.' }, { status: 400 });
@@ -41,6 +41,9 @@ export async function POST(req: Request) {
         category: String(b.category || '').slice(0, 60),
         brand: String(b.brand || '').slice(0, 80),
         stock: optionalStock(b.stock),
+        sku: String(b.sku || '').trim().slice(0, 80),
+        weightGrams: Math.max(0, Math.round(Number(b.weightGrams) || 0)),
+        requiresShipping: b.requiresShipping !== false,
         active: b.active === undefined ? true : !!b.active,
         order: count,
       },

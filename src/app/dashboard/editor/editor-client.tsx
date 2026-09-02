@@ -246,6 +246,7 @@ export function EditorClient({
   }
 
   async function addBlock(type: BlockType) {
+    if (isImpact && ["tracks", "videos", "gallery", "social"].includes(type)) return;
     const created = await api("/api/blocks", "POST", {
       pageId: activeId,
       type,
@@ -628,7 +629,7 @@ export function EditorClient({
             </p>
           </div>
           <div
-            className={`mx-auto overflow-hidden rounded-xl shadow-sm ring-1 ring-gray-200 transition-all ${branded ? brandSiteClass : ""}`}
+            className={`mx-auto overflow-hidden rounded-xl shadow-sm ring-1 ring-gray-200 transition-all ${branded ? brandSiteClass : ""} ${isImpact ? "impact-editor-preview" : ""}`}
             style={{
               maxWidth: width,
               ...themeStyle(initial.theme),
@@ -996,7 +997,8 @@ export function EditorClient({
                   b.group === "layouts" &&
                   b.type !== "donation" &&
                   b.type !== "contact" &&
-                  (!branded || b.type !== "leetchi"),
+                  (!branded || b.type !== "leetchi") &&
+                  (!isImpact || !["tracks", "videos", "gallery", "social"].includes(b.type)),
               ).map((b) => {
                 const Icon = ICONS[b.icon] || Type;
                 return (
@@ -1024,7 +1026,8 @@ export function EditorClient({
               {BLOCK_LIBRARY.filter(
                 (b) =>
                   b.group === "basics" &&
-                  (!branded || (b.type !== "donation" && b.type !== "leetchi")),
+                  (!branded || (b.type !== "donation" && b.type !== "leetchi")) &&
+                  (!isImpact || !["tracks", "videos", "gallery", "social"].includes(b.type)),
               ).map((b) => {
                 const Icon = ICONS[b.icon] || Type;
                 return (
@@ -2562,6 +2565,7 @@ function PlayersEditor({
                 <option value="soundcloud">SoundCloud</option>
                 <option value="deezer">Deezer</option>
                 <option value="youtube">YouTube</option>
+                <option value="applemusic">Apple Music</option>
               </select>
               <input
                 className="input"
@@ -2603,6 +2607,13 @@ function PlayersEditor({
                 onChange={(e) => setItem(i, { releaseDate: e.target.value })}
               />
             </div>
+            <input
+              className="input"
+              type="url"
+              value={item.thumbnail || ""}
+              onChange={(e) => setItem(i, { thumbnail: e.target.value })}
+              placeholder="URL de la pochette officielle"
+            />
             <button
               type="button"
               onClick={() => remove(i)}

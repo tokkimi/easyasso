@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { stripe } from '@/lib/stripe';
 import { appBaseUrl } from '@/lib/utils';
 import { rateLimit, rateLimitExceeded } from '@/lib/rate-limit';
+import { currentCustomer } from '@/lib/customer-session';
 
 // Platform commission on each shop sale, in percent (0 = none).
 const FEE_PERCENT = Number(process.env.SHOP_FEE_PERCENT || '0');
@@ -17,6 +18,7 @@ export async function POST(req: Request) {
   const organizationId = String(body.organizationId || '');
   const rawItems: { productId?: string; quantity?: number }[] = Array.isArray(body.items) ? body.items : [];
   const returnPath = typeof body.returnPath === 'string' && body.returnPath.startsWith('/') ? body.returnPath : '';
+  const shippingCountry = /^[A-Z]{2}$/.test(String(body.shippingCountry || '').toUpperCase()) ? String(body.shippingCountry).toUpperCase() : 'FR';
   if (!organizationId || rawItems.length === 0) return NextResponse.json({ error: 'Panier vide.' }, { status: 400 });
 
   const org = await prisma.organization.findUnique({ where: { id: organizationId } });
@@ -42,6 +44,10 @@ export async function POST(req: Request) {
   if (lines.length === 0) return NextResponse.json({ error: 'Aucun article valide dans le panier.' }, { status: 400 });
 
   const total = lines.reduce((s, l) => s + l.product.priceCents * l.quantity, 0);
+  const shippingRates = await prisma.shippingRate.findMany({ where: { organizationId, active: true, countryCodes: { has: shippingCountry } }, orderBy: { order: 'asc' } });
+  const rate = shippingRates.find((r) => total >= r.minOrderCents && (r.maxOrderCents == null || total <= r.maxOrderCents)) || null;
+  const shippingCents = rate ? (rate.freeAboveCents != null && total >= rate.freeAboveCents ? 0 : rate.priceCents) : 0;
+  const customer = await currentCustomer(organizationId);
   const appUrl = appBaseUrl();
   const base = returnPath ? `${appUrl}${returnPath}` : appUrl;
 
@@ -50,13 +56,21 @@ export async function POST(req: Request) {
     data: {
       organizationId,
       status: 'PENDING',
-      totalCents: total,
+      paymentStatus: 'PENDING',
+      subtotalCents: total,
+      shippingCents,
+      totalCents: total + shippingCents,
+      shippingCountryCode: shippingCountry,
+      shippingMethod: rate?.name || 'Livraison standard',
+      customerProfileId: customer?.id,
+      customerEmail: customer?.email || '',
+      customerName: customer?.name || '',
       items: { create: lines.map((l) => ({ productId: l.product.id, name: l.product.name, priceCents: l.product.priceCents, quantity: l.quantity })) },
     },
   });
 
   try {
-    const feeAmount = FEE_PERCENT > 0 ? Math.round((total * FEE_PERCENT) / 100) : 0;
+    const feeAmount = FEE_PERCENT > 0 ? Math.round(((total + shippingCents) * FEE_PERCENT) / 100) : 0;
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
       payment_method_types: ['card'],
@@ -74,6 +88,8 @@ export async function POST(req: Request) {
         ...(feeAmount > 0 ? { application_fee_amount: feeAmount } : {}),
       },
       shipping_address_collection: { allowed_countries: ['FR', 'BE', 'CH', 'LU', 'MC'] },
+      ...(rate ? { shipping_options: [{ shipping_rate_data: { type: 'fixed_amount', fixed_amount: { amount: shippingCents, currency: 'eur' }, display_name: rate.name, ...(rate.minDeliveryDays != null ? { delivery_estimate: { minimum: { unit: 'business_day', value: rate.minDeliveryDays }, maximum: { unit: 'business_day', value: rate.maxDeliveryDays || rate.minDeliveryDays } } } : {}) } }] } : {}),
+      ...(customer?.email ? { customer_email: customer.email } : {}),
       phone_number_collection: { enabled: true },
       success_url: `${base}?order=success`,
       cancel_url: `${base}?order=cancelled`,

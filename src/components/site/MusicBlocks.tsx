@@ -5,7 +5,40 @@ import { Play, Instagram, Music2, Youtube, CalendarDays, ChevronLeft, ChevronRig
 import { safePublicUrl, videoEmbed } from '@/lib/render';
 
 export type Track = { title?: string; artist?: string; url?: string; thumbnail?: string; year?: string; source?: string; playCount?: string; releaseDate?: string };
-type PlayerItem = { platform?: string; url?: string; title?: string; artist?: string; releaseDate?: string };
+type PlayerItem = { platform?: string; url?: string; title?: string; artist?: string; releaseDate?: string; thumbnail?: string };
+type TikTokPost = { url: string; id: string };
+type TikTokMeta = { title: string; authorName: string; thumbnailUrl: string };
+
+function TikTokMark({ className = 'h-5 w-5' }: { className?: string }) {
+  return <svg viewBox="0 0 24 24" aria-hidden="true" className={`${className} fill-current`}><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.9 2.9 0 1 1-2-2.76v-3.5a6.34 6.34 0 1 0 5.45 6.26V8.73a8.16 8.16 0 0 0 4.77 1.52V6.8c-.34 0-.67-.04-1-.11Z" /></svg>;
+}
+
+function TikTokPreviewCard({ post, index, variant }: { post: TikTokPost; index: number; variant: 'impact' | 'vielusos' }) {
+  const [meta, setMeta] = useState<TikTokMeta | null>(null);
+  useEffect(() => {
+    const controller = new AbortController();
+    fetch(`/api/public/tiktok-oembed?url=${encodeURIComponent(post.url)}`, { signal: controller.signal })
+      .then((response) => response.ok ? response.json() : null)
+      .then((data) => { if (data && !controller.signal.aborted) setMeta(data); })
+      .catch(() => {});
+    return () => controller.abort();
+  }, [post.url]);
+
+  const impact = variant === 'impact';
+  return (
+    <article className={`${impact ? 'aspect-[9/16] rounded-xl border-current/15' : 'aspect-[4/5] rounded-2xl border-white/15'} relative w-[calc((100%-0.75rem)/2)] shrink-0 snap-start overflow-hidden border bg-black/50 md:w-[calc((100%-3rem)/5)]`}>
+      <a href={post.url} target="_blank" rel="noreferrer" aria-label={`Voir la publication TikTok ${index + 1}`} className="group absolute inset-0 block overflow-hidden bg-[radial-gradient(circle_at_50%_28%,rgba(47,107,255,.32),transparent_48%),#05070f]">
+        {meta?.thumbnailUrl ? <img src={meta.thumbnailUrl} alt="" loading="lazy" decoding="async" referrerPolicy="no-referrer" className="absolute inset-0 h-full w-full object-cover transition duration-300 group-hover:scale-[1.025]" /> : <span className="absolute inset-0 animate-pulse bg-white/[0.035]" />}
+        <span className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/5 to-black/10" />
+        <span className="absolute left-1/2 top-1/2 grid h-12 w-12 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border border-white/35 bg-black/55 text-white shadow-[0_0_26px_rgba(47,107,255,.55)] backdrop-blur"><Play className="h-5 w-5 fill-current" /></span>
+        <span className="absolute inset-x-0 bottom-0 p-3 text-white">
+          <span className="flex items-center gap-2 text-[10px] font-semibold uppercase"><TikTokMark className="h-4 w-4" />{meta?.authorName || 'IMPACT'}</span>
+          {meta?.title && <span className="mt-2 line-clamp-2 block text-[11px] font-medium leading-4 text-white/80">{meta.title}</span>}
+        </span>
+      </a>
+    </article>
+  );
+}
 
 function ImpactTrackRail({ source, tracks }: { source: string; tracks: Track[] }) {
   const rail = useRef<HTMLDivElement>(null);
@@ -188,16 +221,19 @@ const STREAMING = [
   { key: 'tidal', label: 'TIDAL', color: '#000000' },
 ];
 function StreamingIcon({ k }: { k: string }) {
-  if (k === 'youtube') return <Youtube className="h-5 w-5" />;
   const officialMarks: Record<string, string> = {
+    spotify: '/integrations/spotify.svg',
+    deezer: '/integrations/deezer.svg',
+    appleMusic: '/integrations/applemusic.svg',
+    soundcloud: '/integrations/soundcloud.svg',
+    youtube: '/integrations/youtube.svg',
     youtubeMusic: 'https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/youtubemusic.svg',
     amazonMusic: 'https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/amazonmusic.svg',
     beatport: 'https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/beatport.svg',
     bandcamp: 'https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/bandcamp.svg',
     tidal: 'https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/tidal.svg',
   };
-  if (officialMarks[k]) return <span aria-hidden="true" className="block h-5 w-5 bg-current" style={{ WebkitMask: `url(${officialMarks[k]}) center / contain no-repeat`, mask: `url(${officialMarks[k]}) center / contain no-repeat` }} />;
-  if (k === 'appleMusic') return <img src="/integrations/applemusic.svg" alt="" className="h-5 w-5 object-contain" />;
+  if (officialMarks[k]) return <span aria-hidden="true" className="impact-streaming-mark block h-5 w-5 bg-current" style={{ WebkitMask: `url(${officialMarks[k]}) center / contain no-repeat`, mask: `url(${officialMarks[k]}) center / contain no-repeat` }} />;
   if (k === 'soundcloud') {
     return <svg viewBox="0 0 44 28" className="h-5 w-8" aria-hidden="true"><path fill="currentColor" d="M31 27H11a11 11 0 0 1 0-22 12 12 0 0 1 21 5 8.5 8.5 0 0 1-1 17ZM3 15h2v10H3Zm5-6h2v18H8Zm5-4h2v22h-2Zm5-1h2v23h-2Zm5 2h2v21h-2Z" /></svg>;
   }
@@ -250,13 +286,14 @@ export function StreamingLinks({ content }: { content: any }) {
 
 // ---- Lecteurs officiels Spotify / SoundCloud / Deezer / YouTube -----------
 function detectPlatform(rawUrl = '', forced = '') {
-  const forcedPlatform = String(forced || '').toLowerCase();
-  if (['spotify', 'soundcloud', 'deezer', 'youtube'].includes(forcedPlatform)) return forcedPlatform;
+  const forcedPlatform = String(forced || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  if (['spotify', 'soundcloud', 'deezer', 'youtube', 'applemusic'].includes(forcedPlatform)) return forcedPlatform;
   const u = String(rawUrl).toLowerCase();
   if (u.includes('open.spotify.com')) return 'spotify';
   if (u.includes('soundcloud.com')) return 'soundcloud';
   if (u.includes('deezer.com')) return 'deezer';
   if (u.includes('youtube.com') || u.includes('youtu.be')) return 'youtube';
+  if (u.includes('music.apple.com')) return 'applemusic';
   return '';
 }
 
@@ -297,12 +334,23 @@ function deezerEmbed(rawUrl: string) {
   } catch { return ''; }
 }
 
+function appleMusicEmbed(rawUrl: string) {
+  const clean = safePublicUrl(rawUrl);
+  if (!clean) return '';
+  try {
+    const u = new URL(clean);
+    if (!u.hostname.includes('music.apple.com')) return '';
+    return `https://embed.music.apple.com${u.pathname}${u.search}`;
+  } catch { return ''; }
+}
+
 function officialEmbed(item: PlayerItem) {
   const platform = detectPlatform(item.url, item.platform);
   if (platform === 'spotify') return spotifyEmbed(item.url || '');
   if (platform === 'soundcloud') return soundCloudEmbed(item.url || '');
   if (platform === 'deezer') return deezerEmbed(item.url || '');
   if (platform === 'youtube') return safePublicUrl(videoEmbed(item.url || ''));
+  if (platform === 'applemusic') return appleMusicEmbed(item.url || '');
   return '';
 }
 
@@ -311,34 +359,26 @@ function platformLabel(platform: string) {
   if (platform === 'soundcloud') return 'SoundCloud';
   if (platform === 'deezer') return 'Deezer';
   if (platform === 'youtube') return 'YouTube';
+  if (platform === 'applemusic') return 'Apple Music';
   return 'Lecteur';
 }
 
 function PlatformLogo({ platform }: { platform: string }) {
-  if (platform === 'youtube') {
-    return (
-      <span className="inline-flex items-center gap-2 font-black text-[#ff0000]" aria-label="YouTube">
-        <span className="grid h-7 w-10 place-items-center rounded-lg bg-[#ff0000] text-white"><Play className="h-4 w-4 fill-current" /></span>
-        YouTube
-      </span>
-    );
-  }
-  if (platform === 'spotify') {
-    return (
-      <span className="inline-flex items-center gap-2 font-black text-[#1db954]">
-        <svg viewBox="0 0 32 32" className="h-7 w-7" aria-hidden="true"><circle cx="16" cy="16" r="16" fill="currentColor" /><path d="M8.2 12.2c5.4-1.8 11.3-1 15.2 1.3M9.5 16c4.4-1.3 9-.8 12.2 1M10.7 19.5c3.2-.9 6.5-.5 9 .7" fill="none" stroke="#0a0a0a" strokeLinecap="round" strokeWidth="2.2" /></svg>
-        Spotify
-      </span>
-    );
-  }
-  if (platform === 'soundcloud') {
-    return (
-      <span className="inline-flex items-center gap-2 font-black text-[#ff5500]">
-        <svg viewBox="0 0 44 28" className="h-7 w-11" aria-hidden="true"><path fill="currentColor" d="M31 27H11a11 11 0 0 1 0-22 12 12 0 0 1 21 5 8.5 8.5 0 0 1-1 17ZM3 15h2v10H3Zm5-6h2v18H8Zm5-4h2v22h-2Zm5-1h2v23h-2Zm5 2h2v21h-2Z" /></svg>
-        SoundCloud
-      </span>
-    );
-  }
+  const assets: Record<string, string> = {
+    spotify: '/integrations/spotify.svg',
+    soundcloud: '/integrations/soundcloud.svg',
+    deezer: '/integrations/deezer.svg',
+    youtube: '/integrations/youtube.svg',
+    applemusic: '/integrations/applemusic.svg',
+  };
+  const asset = assets[platform];
+  if (asset) return (
+    <span className="impact-official-platform-label inline-flex items-center gap-2 font-black" aria-label={platformLabel(platform)}>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={asset} alt="" className="h-6 w-6 object-contain" />
+      {platformLabel(platform)}
+    </span>
+  );
   if (platform === 'deezer') {
     return (
       <span className="inline-flex items-center gap-2 font-black text-[#a238ff]">
@@ -354,6 +394,7 @@ function PlatformLogo({ platform }: { platform: string }) {
 
 export function OfficialPlayers({ content }: { content: any }) {
   const [playing, setPlaying] = useState<Record<string, boolean>>({});
+  const impactOfficial = content?.variant === 'impact';
   const items: PlayerItem[] = Array.isArray(content?.items) ? content.items : [];
   // Also surface platform URLs saved in the site's streaming-links settings.
   // This prevents a configured release from disappearing simply because it
@@ -388,20 +429,51 @@ export function OfficialPlayers({ content }: { content: any }) {
             const group = clean.filter((item) => detectPlatform(item.url, item.platform) === platform);
             const railId = `official-player-rail-${platform}`;
             return (
-              <section key={platform} aria-labelledby={`${railId}-title`}>
+              <section key={platform} aria-labelledby={`${railId}-title`} className="impact-official-platform-section">
                 <div id={`${railId}-title`} className="mb-3 flex items-center gap-2 text-sm font-black uppercase tracking-[0.16em] text-white/85">
                   <PlatformLogo platform={platform} />
                 </div>
                 <div className="relative">
                   <button type="button" aria-label={`${platformLabel(platform)} précédent`} onClick={() => document.getElementById(railId)?.scrollBy({ left: -330, behavior: 'smooth' })} className="absolute left-1 top-1/2 z-10 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full bg-black/65 text-white shadow-lg backdrop-blur transition hover:bg-black/85 focus:outline-none focus:ring-2 focus:ring-white/80"><ChevronLeft className="h-5 w-5" /></button>
                   <button type="button" aria-label={`${platformLabel(platform)} suivant`} onClick={() => document.getElementById(railId)?.scrollBy({ left: 330, behavior: 'smooth' })} className="absolute right-1 top-1/2 z-10 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full bg-black/65 text-white shadow-lg backdrop-blur transition hover:bg-black/85 focus:outline-none focus:ring-2 focus:ring-white/80"><ChevronRight className="h-5 w-5" /></button>
-                  <div id={railId} className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-12 pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                  <div id={railId} className="impact-official-rail flex snap-x snap-mandatory gap-4 overflow-x-auto pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                     {group.map((item, i) => {
                       const src = officialEmbed(item);
                       const isVideo = platform === 'youtube';
                       const youtubeId = isVideo ? item.url?.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([\w-]{11})/)?.[1] : '';
                       const thumbnail = youtubeId ? `https://i.ytimg.com/vi/${youtubeId}/hqdefault.jpg` : '';
                       const key = `${platform}-${item.url}-${i}`;
+                      if (impactOfficial) {
+                        const cover = item.thumbnail || thumbnail;
+                        const active = Boolean(playing[key]);
+                        const playColor = platform === 'spotify' ? '#1ed760' : platform === 'soundcloud' ? '#ff5500' : platform === 'youtube' ? '#ff0033' : platform === 'applemusic' ? '#fa243c' : '#2f6bff';
+                        return (
+                          <article key={key} className="impact-official-player-card vielusos-player-card shrink-0 snap-start overflow-hidden">
+                            <div className="impact-official-artwork">
+                              {isVideo && active ? (
+                                <iframe src={`${src}${src.includes('?') ? '&' : '?'}autoplay=1&modestbranding=1&rel=0`} title={`${platformLabel(platform)} ${item.title || i + 1}`} allow="autoplay; encrypted-media; fullscreen; picture-in-picture" allowFullScreen className="absolute inset-0 h-full w-full border-0" />
+                              ) : (
+                                <>
+                                  {cover && /* eslint-disable-next-line @next/next/no-img-element */ <img src={cover} alt={`Pochette de ${item.title || 'la sortie'}`} loading="lazy" decoding="async" />}
+                                  <span className="impact-official-artwork-shade" aria-hidden="true" />
+                                  <button type="button" className="impact-official-play-button" style={{ backgroundColor: playColor }} aria-label={`Écouter ${item.title || platformLabel(platform)}`} onClick={() => setPlaying((state) => ({ ...state, [key]: !state[key] }))}>
+                                    <Play className="h-5 w-5 fill-current" />
+                                  </button>
+                                </>
+                              )}
+                            </div>
+                            <div className="impact-official-meta">
+                              <h3>{item.title || `${platformLabel(platform)} ${i + 1}`}</h3>
+                              <p>{item.artist || 'IMPACT'}</p>
+                            </div>
+                            {!isVideo && active && (
+                              <div className="impact-official-inline-player">
+                                <iframe src={src} title={`${platformLabel(platform)} ${item.title || i + 1}`} loading="lazy" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" allowFullScreen className="h-full w-full border-0" />
+                              </div>
+                            )}
+                          </article>
+                        );
+                      }
                       if (isVideo) return (
                         <article key={key} className="vielusos-player-card relative aspect-video w-[82vw] max-w-[320px] shrink-0 snap-start overflow-hidden rounded-2xl bg-black/70 shadow-sm ring-1 ring-white/20 md:w-[320px]">
                           {playing[key] ? (
@@ -511,13 +583,14 @@ export function InstagramPreview({ content }: { content: any }) {
   const postCodes = (Array.isArray(content?.postUrls) ? content.postUrls : []).map(instaPostCode).filter(Boolean).slice(0, count);
   const tiktokUsername = String(content?.tiktokUsername || '').replace(/^@/, '');
   const tiktokProfileUrl = safePublicUrl(content?.tiktokUrl || (tiktokUsername ? `https://www.tiktok.com/@${tiktokUsername}` : ''));
-  const tiktokPosts = (Array.isArray(content?.tiktokPostUrls) ? content.tiktokPostUrls : [])
+  const tiktokPosts: TikTokPost[] = (Array.isArray(content?.tiktokPostUrls) ? content.tiktokPostUrls : [])
     .map((url: string) => ({ url: safePublicUrl(url), id: String(url).match(/tiktok\.com\/@[^/]+\/(?:video|photo)\/(\d+)/)?.[1] || '' }))
     .filter((post: { url: string; id: string }) => post.url && post.id)
     .slice(0, count);
 
   if (content?.variant === 'impact') {
     return (
+      <>
       <section className="impact-instagram-shell vielusos-fluid mx-auto w-full px-0 py-7">
         <div className="mb-4 flex items-end justify-between gap-4">
           <div>
@@ -539,6 +612,28 @@ export function InstagramPreview({ content }: { content: any }) {
           </div>
         ) : <p className="mt-6 text-sm opacity-45">Ajoutez les liens de chaque post dans l’éditeur.</p>}
       </section>
+      <section className="impact-tiktok-shell vielusos-fluid mx-auto w-full px-0 py-7">
+        <div className="mb-4 flex items-end justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2" aria-label="TikTok">
+              <span className="grid h-7 w-7 place-items-center rounded-lg border border-current/20 bg-current/5"><TikTokMark className="h-4 w-4" /></span>
+              <span className="text-[11px] font-medium uppercase text-current/45">TikTok officiel</span>
+            </div>
+            <h2 className="impact-track-heading mt-2">{content?.tiktokTitle || 'IMPACT SUR TIKTOK'}</h2>
+          </div>
+          {tiktokProfileUrl && <a href={tiktokProfileUrl} target="_blank" rel="noreferrer" className="shrink-0 rounded-full border border-current/20 px-4 py-2 text-xs font-semibold hover:bg-white/10">@{tiktokUsername || 'impactdj_raw'}</a>}
+        </div>
+        {tiktokPosts.length > 0 ? (
+          <div className="relative">
+            <button type="button" aria-label="Publication TikTok précédente" onClick={() => document.getElementById('impact-tiktok-rail')?.scrollBy({ left: -window.innerWidth * 0.75, behavior: 'smooth' })} className="impact-track-arrow left-1"><ChevronLeft className="h-5 w-5" /></button>
+            <button type="button" aria-label="Publication TikTok suivante" onClick={() => document.getElementById('impact-tiktok-rail')?.scrollBy({ left: window.innerWidth * 0.75, behavior: 'smooth' })} className="impact-track-arrow right-1"><ChevronRight className="h-5 w-5" /></button>
+            <div id="impact-tiktok-rail" className="flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              {tiktokPosts.map((post, index) => <TikTokPreviewCard key={`${post.id}-${index}`} post={post} index={index} variant="impact" />)}
+            </div>
+          </div>
+        ) : <p className="mt-6 text-sm opacity-45">Ajoutez les liens des publications TikTok dans l’éditeur.</p>}
+      </section>
+      </>
     );
   }
 
@@ -568,7 +663,7 @@ export function InstagramPreview({ content }: { content: any }) {
       <section className="vielusos-fluid mx-auto w-full max-w-7xl px-6 py-10 md:px-16 md:py-14 lg:px-20">
         <div>
           <div className="flex items-center gap-3" aria-label="TikTok">
-            <span className="grid h-7 w-7 place-items-center rounded-lg border border-white/20 text-white/70"><Music2 className="h-4 w-4" /></span>
+            <span className="grid h-7 w-7 place-items-center rounded-lg border border-white/20 text-white/70"><TikTokMark className="h-4 w-4" /></span>
             <span className="text-[9px] font-semibold uppercase tracking-[0.42em] text-white/45">Social</span>
           </div>
           <div className="mt-3 flex items-end justify-between gap-4">
@@ -580,7 +675,7 @@ export function InstagramPreview({ content }: { content: any }) {
               <button type="button" aria-label="Publication TikTok précédente" onClick={() => document.getElementById('vielusos-tiktok-rail')?.scrollBy({ left: -window.innerWidth * 0.75, behavior: 'smooth' })} className="absolute left-1 top-1/2 z-10 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full border border-white/30 bg-black/55 text-white/90 backdrop-blur-md"><ChevronLeft className="h-5 w-5" /></button>
               <button type="button" aria-label="Publication TikTok suivante" onClick={() => document.getElementById('vielusos-tiktok-rail')?.scrollBy({ left: window.innerWidth * 0.75, behavior: 'smooth' })} className="absolute right-1 top-1/2 z-10 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full border border-white/30 bg-black/55 text-white/90 backdrop-blur-md"><ChevronRight className="h-5 w-5" /></button>
               <div id="vielusos-tiktok-rail" className="flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                {tiktokPosts.map((post: { url: string; id: string }, index: number) => <article key={`${post.id}-${index}`} className="aspect-[4/5] w-[calc((100%-0.75rem)/2)] shrink-0 snap-start overflow-hidden rounded-2xl border border-white/15 bg-black/35 md:w-[calc((100%-3rem)/5)]"><iframe src={`https://www.tiktok.com/player/v1/${post.id}?autoplay=0&loop=0`} title={`TikTok ${index + 1}`} loading="lazy" allow="fullscreen" className="h-full w-full border-0" /></article>)}
+                {tiktokPosts.map((post, index) => <TikTokPreviewCard key={`${post.id}-${index}`} post={post} index={index} variant="vielusos" />)}
               </div>
             </div>
           ) : <p className="mt-6 text-sm text-white/45">Ajoutez les liens des publications TikTok dans l’éditeur.</p>}

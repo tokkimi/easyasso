@@ -13,15 +13,19 @@ type Product = {
   category?: string;
   brand?: string;
   stock?: number | null;
+  sku?: string;
+  weightGrams?: number;
+  requiresShipping?: boolean;
   active: boolean;
 };
 
 type OrderItem = { id: string; name: string; priceCents: number; quantity: number };
 type Order = { id: string; status: string; customerName: string; customerEmail: string; customerPhone: string; shippingAddress: string; totalCents: number; createdAt: string; items: OrderItem[] };
+type ShippingRate = { id: string; name: string; countryCodes: string[]; priceCents: number; freeAboveCents?: number|null; minDeliveryDays?: number|null; maxDeliveryDays?: number|null; active: boolean };
 
-type Draft = { name: string; description: string; priceEuros: string; images: string[]; category: string; brand: string; stock: string };
+type Draft = { name: string; description: string; priceEuros: string; images: string[]; category: string; brand: string; stock: string; sku: string; weightGrams: string; requiresShipping: boolean };
 
-const EMPTY: Draft = { name: '', description: '', priceEuros: '', images: [], category: '', brand: '', stock: '' };
+const EMPTY: Draft = { name: '', description: '', priceEuros: '', images: [], category: '', brand: '', stock: '', sku: '', weightGrams: '', requiresShipping: true };
 
 function euros(cents: number) {
   return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format((cents || 0) / 100);
@@ -33,7 +37,7 @@ function mainImage(p: Product) {
   return (p.images && p.images[0]) || p.imageUrl || '';
 }
 
-export function ShopClient({ enabled: initialEnabled, initial, boutiqueUrl = '', hasBoutiquePage: initialHasPage = false, connectStarted = false, connectReady: initialReady = false, orders = [] }: { enabled: boolean; initial: Product[]; boutiqueUrl?: string; hasBoutiquePage?: boolean; connectStarted?: boolean; connectReady?: boolean; orders?: Order[] }) {
+export function ShopClient({ enabled: initialEnabled, initial, boutiqueUrl = '', hasBoutiquePage: initialHasPage = false, connectStarted = false, connectReady: initialReady = false, orders = [], shippingRates: initialRates = [], canEdit = false }: { enabled: boolean; initial: Product[]; boutiqueUrl?: string; hasBoutiquePage?: boolean; connectStarted?: boolean; connectReady?: boolean; orders?: Order[]; shippingRates?: ShippingRate[]; canEdit?: boolean }) {
   const [enabled, setEnabled] = useState(initialEnabled);
   const [products, setProducts] = useState<Product[]>(initial);
   const [draft, setDraft] = useState<Draft | null>(null);
@@ -44,6 +48,23 @@ export function ShopClient({ enabled: initialEnabled, initial, boutiqueUrl = '',
   const [connect, setConnect] = useState({ started: connectStarted, ready: initialReady });
   const [connecting, setConnecting] = useState(false);
   const dragIndex = useRef<number | null>(null);
+  const [rates, setRates] = useState<ShippingRate[]>(initialRates);
+  const [rateDraft, setRateDraft] = useState({ name: 'Livraison standard', countryCodes: 'FR, BE, LU', priceEuros: '6.90', freeAboveEuros: '', minDeliveryDays: '2', maxDeliveryDays: '5' });
+
+  async function addRate() {
+    const res = await fetch('/api/shop/shipping-rates', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(rateDraft) });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) { alert(data.error || 'Tarif impossible à enregistrer.'); return; }
+    setRates((all) => [...all, data.rate]);
+  }
+  async function toggleRate(rate: ShippingRate) {
+    const res = await fetch(`/api/shop/shipping-rates/${rate.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ active: !rate.active }) });
+    const data = await res.json().catch(() => ({})); if (res.ok) setRates((a) => a.map((x) => x.id === rate.id ? data.rate : x));
+  }
+  async function removeRate(id: string) {
+    if (!confirm('Supprimer ce tarif de livraison ?')) return;
+    const res = await fetch(`/api/shop/shipping-rates/${id}`, { method: 'DELETE' }); if (res.ok) setRates((a) => a.filter((x) => x.id !== id));
+  }
 
   // Coming back from Stripe onboarding: refresh the account status.
   useEffect(() => {
@@ -99,6 +120,7 @@ export function ShopClient({ enabled: initialEnabled, initial, boutiqueUrl = '',
       name: p.name, description: p.description || '', priceEuros: String((p.priceCents || 0) / 100),
       images: (p.images && p.images.length ? p.images : p.imageUrl ? [p.imageUrl] : []),
       category: p.category || '', brand: p.brand || '', stock: p.stock == null ? '' : String(p.stock),
+      sku: p.sku || '', weightGrams: p.weightGrams ? String(p.weightGrams) : '', requiresShipping: p.requiresShipping !== false,
     });
   }
   function cancel() { setDraft(null); setEditingId(null); }
@@ -151,7 +173,7 @@ export function ShopClient({ enabled: initialEnabled, initial, boutiqueUrl = '',
   async function save() {
     if (!draft || !draft.name.trim()) { alert('Le nom du produit est requis.'); return; }
     setBusy(true);
-    const payload = { name: draft.name.trim(), description: draft.description, priceEuros: draft.priceEuros, images: draft.images, category: draft.category.trim(), brand: draft.brand.trim(), stock: draft.stock };
+    const payload = { name: draft.name.trim(), description: draft.description, priceEuros: draft.priceEuros, images: draft.images, category: draft.category.trim(), brand: draft.brand.trim(), stock: draft.stock, sku: draft.sku.trim(), weightGrams: draft.weightGrams, requiresShipping: draft.requiresShipping };
     if (JSON.stringify(payload).length > 4_000_000) {
       setBusy(false);
       alert('Les photos sont trop lourdes. Ajoutez moins d’images ou utilisez des photos plus légères.');
@@ -200,12 +222,11 @@ export function ShopClient({ enabled: initialEnabled, initial, boutiqueUrl = '',
       </div>
 
       {!enabled && (
-        <div className="rounded-2xl border-2 border-dashed border-gray-200 p-8 text-center text-gray-500">
-          Activez la boutique ci-dessus pour commencer à ajouter des produits.
+        <div className="mb-5 rounded-2xl border border-amber-300/40 bg-amber-50/10 p-4 text-sm text-amber-200">
+          La boutique est masquée du site public. Vous pouvez quand même préparer tous les produits, prix, stocks, paiements et frais de livraison ci-dessous.
         </div>
       )}
 
-      {enabled && (
         <div className="space-y-4">
           {/* Ready-made shop page */}
           <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-brand-100 bg-brand-50/60 p-4">
@@ -241,6 +262,12 @@ export function ShopClient({ enabled: initialEnabled, initial, boutiqueUrl = '',
           {!connect.ready && products.length > 0 && (
             <p className="flex items-center gap-1.5 text-xs text-amber-700"><AlertCircle className="h-3.5 w-3.5" /> Tant que Stripe n’est pas connecté, les clients peuvent voir vos produits mais pas payer par carte.</p>
           )}
+
+          <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-gray-200">
+            <div className="mb-4"><h2 className="text-lg font-extrabold text-gray-900">Livraison par pays</h2><p className="text-sm text-gray-500">Tarifs appliqués au panier, seuil de gratuité et délais affichés au client.</p></div>
+            <div className="space-y-2">{rates.map((rate) => <div key={rate.id} className="flex flex-wrap items-center gap-3 rounded-xl bg-gray-50 p-3"><div className="min-w-48 flex-1"><p className="font-bold text-gray-900">{rate.name}</p><p className="text-xs text-gray-500">{rate.countryCodes.join(', ') || 'Tous pays'} · {euros(rate.priceCents)}{rate.freeAboveCents != null ? ` · gratuit dès ${euros(rate.freeAboveCents)}` : ''}{rate.minDeliveryDays != null ? ` · ${rate.minDeliveryDays}–${rate.maxDeliveryDays || rate.minDeliveryDays} jours` : ''}</p></div><span className={`rounded-full px-2 py-1 text-xs font-bold ${rate.active?'bg-green-100 text-green-700':'bg-gray-200 text-gray-500'}`}>{rate.active?'Actif':'Désactivé'}</span>{canEdit&&<><button onClick={()=>toggleRate(rate)} className="btn btn-ghost text-xs">{rate.active?'Désactiver':'Activer'}</button><button onClick={()=>removeRate(rate.id)} className="text-red-500"><Trash2 className="h-4 w-4"/></button></>}</div>)}</div>
+            {canEdit&&<div className="mt-4 grid gap-3 border-t border-gray-100 pt-4 md:grid-cols-3"><div><label className="label">Nom</label><input className="input" value={rateDraft.name} onChange={e=>setRateDraft({...rateDraft,name:e.target.value})}/></div><div><label className="label">Pays (codes ISO)</label><input className="input" value={rateDraft.countryCodes} onChange={e=>setRateDraft({...rateDraft,countryCodes:e.target.value})} placeholder="FR, BE, CH"/></div><div><label className="label">Prix (€)</label><input className="input" type="number" step="0.01" value={rateDraft.priceEuros} onChange={e=>setRateDraft({...rateDraft,priceEuros:e.target.value})}/></div><div><label className="label">Gratuit dès (€)</label><input className="input" type="number" step="0.01" value={rateDraft.freeAboveEuros} onChange={e=>setRateDraft({...rateDraft,freeAboveEuros:e.target.value})}/></div><div><label className="label">Délai minimum</label><input className="input" type="number" value={rateDraft.minDeliveryDays} onChange={e=>setRateDraft({...rateDraft,minDeliveryDays:e.target.value})}/></div><div><label className="label">Délai maximum</label><input className="input" type="number" value={rateDraft.maxDeliveryDays} onChange={e=>setRateDraft({...rateDraft,maxDeliveryDays:e.target.value})}/></div><button onClick={addRate} className="btn btn-primary md:col-span-3"><Plus className="h-4 w-4"/>Ajouter le tarif</button></div>}
+          </div>
 
           {/* Recent orders */}
           {orders.length > 0 && (
@@ -315,6 +342,9 @@ export function ShopClient({ enabled: initialEnabled, initial, boutiqueUrl = '',
                 <div><label className="label">Marque <span className="font-normal text-gray-400">(optionnel)</span></label><input className="input" value={draft.brand} onChange={(e) => setDraft({ ...draft, brand: e.target.value })} placeholder="Ex : Gucci" /></div>
                 <div className="md:col-span-2"><label className="label">Description</label><textarea className="input min-h-[80px]" value={draft.description} onChange={(e) => setDraft({ ...draft, description: e.target.value })} placeholder="Décrivez le produit…" /></div>
                 <div><label className="label">Stock <span className="font-normal text-gray-400">(vide = illimité)</span></label><input className="input" type="number" min="0" step="1" value={draft.stock} onChange={(e) => setDraft({ ...draft, stock: e.target.value })} placeholder="illimité" /></div>
+                <div><label className="label">Référence / SKU</label><input className="input" value={draft.sku} onChange={(e) => setDraft({ ...draft, sku: e.target.value })} placeholder="IMPACT-TSHIRT-BLK-M" /></div>
+                <div><label className="label">Poids (grammes)</label><input className="input" type="number" min="0" value={draft.weightGrams} onChange={(e) => setDraft({ ...draft, weightGrams: e.target.value })} placeholder="350" /></div>
+                <label className="flex items-center gap-3 self-end rounded-xl bg-gray-50 px-4 py-3 text-sm font-bold text-gray-700"><input type="checkbox" checked={draft.requiresShipping} onChange={(e) => setDraft({ ...draft, requiresShipping: e.target.checked })} /> Produit à expédier</label>
               </div>
               <div className="mt-4 flex gap-2">
                 <button onClick={save} disabled={busy} className="btn btn-primary"><Save className="h-4 w-4" /> {busy ? 'Enregistrement…' : editingId ? 'Enregistrer' : 'Ajouter le produit'}</button>
@@ -354,7 +384,6 @@ export function ShopClient({ enabled: initialEnabled, initial, boutiqueUrl = '',
             ))}
           </div>
         </div>
-      )}
     </div>
   );
 }

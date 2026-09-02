@@ -44,7 +44,7 @@ async function ensureBoutiquePage(site: NonNullable<Awaited<ReturnType<typeof pr
 // follows the switch: enabled = created/shown, disabled = hidden from visitors.
 export async function PATCH(req: Request) {
   try {
-    const ctx = await requireApiPermission(PERMISSIONS.SITE_EDIT);
+    const ctx = await requireApiPermission(PERMISSIONS.SHOP_EDIT);
     const body = await req.json().catch(() => ({}));
     const enabled = !!body.enabled;
     const org = await prisma.organization.findUnique({ where: { id: ctx.org.id } });

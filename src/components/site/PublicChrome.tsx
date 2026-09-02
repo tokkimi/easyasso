@@ -24,13 +24,17 @@ function SocialMark({ label, monochrome = false }: { label: string; monochrome?:
     deezer: '/integrations/deezer.svg',
     soundcloud: '/integrations/soundcloud.svg',
     applemusic: '/integrations/applemusic.svg',
+    tiktok: 'https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/tiktok.svg',
     amazonmusic: 'https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/amazonmusic.svg',
     beatport: 'https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/beatport.svg',
     bandcamp: 'https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/bandcamp.svg',
     tidal: 'https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/tidal.svg',
   };
   const asset = assets[key] || '';
-  if (asset) return <img src={asset} alt="" className={`h-[18px] w-[18px] object-contain ${monochrome ? 'social-mark-monochrome' : asset.startsWith('http') ? 'rounded bg-white/90 p-0.5' : ''}`} />;
+  if (asset && monochrome) {
+    return <span aria-hidden="true" className="social-mark-monochrome block h-[18px] w-[18px] bg-current" style={{ WebkitMask: `url(${asset}) center / contain no-repeat`, mask: `url(${asset}) center / contain no-repeat` }} />;
+  }
+  if (asset) return <img src={asset} alt="" className={`h-[18px] w-[18px] object-contain ${asset.startsWith('http') ? 'rounded bg-white/90 p-0.5' : ''}`} />;
   if (key === 'shotgun') return <img src="https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/9e/a0/59/9ea0590d-68e5-d649-ca93-e31becb08410/AppIcon-0-0-1x_U007emarketing-0-11-0-85-220.png/128x128bb.jpg" alt="" className="h-[18px] w-[18px] rounded-[4px] object-contain" />;
   if (key === 'tiktok') return <svg viewBox="0 0 24 24" aria-hidden="true" className="h-[18px] w-[18px] fill-current"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.9 2.9 0 1 1-2-2.76v-3.5a6.34 6.34 0 1 0 5.45 6.26V8.73a8.16 8.16 0 0 0 4.77 1.52V6.8c-.34 0-.67-.04-1-.11Z" /></svg>;
   if (key === 'facebook') return <Facebook className="h-[18px] w-[18px]" />;
@@ -129,14 +133,16 @@ export function PublicHeader({
               {cta.text}
             </a>
           )}
-          <Link
-            href={customerHref}
-            title="Connexion ou inscription client"
-            aria-label="Connexion ou inscription client"
-            className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-current/25 bg-transparent text-current transition hover:border-current/60"
-          >
-            <UserRound className="h-5 w-5" />
-          </Link>
+          {!impactHeader && (
+            <Link
+              href={customerHref}
+              title="Connexion ou inscription client"
+              aria-label="Connexion ou inscription client"
+              className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-current/25 bg-transparent text-current transition hover:border-current/60"
+            >
+              <UserRound className="h-5 w-5" />
+            </Link>
+          )}
           <button type="button" onClick={() => setMenuOpen((open) => !open)} className={`${impactHeader ? 'impact-menu-button ' : ''}${brandedHeader ? 'flex' : 'public-header-menu-button'} touch-target shrink-0 items-center justify-center rounded-xl border ${brandedHeader ? 'border-white/20 bg-transparent text-white hover:bg-white/10' : 'border-black/10 bg-white/80'}`} aria-expanded={menuOpen} aria-label={menuOpen ? 'Fermer le menu' : 'Ouvrir le menu'}>
             {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>
@@ -146,8 +152,20 @@ export function PublicHeader({
             {header.showNav && <nav className="flex flex-col">{nav.map((p) => <Link key={p.slug} href={link(p.slug, p.isHome)} onClick={() => setMenuOpen(false)} className={`rounded-xl px-4 py-3 text-sm font-medium ${(brandedHeader || glassMenu) ? 'border-b border-white/10 hover:bg-white/10' : 'hover:bg-black/5'}`}>{t(p.title)}</Link>)}</nav>}
             <div className={`${impactHeader ? 'impact-header-social-row' : brandedHeader ? 'grid grid-cols-4 place-items-center gap-3 p-2' : 'mt-3 flex flex-wrap items-center gap-3 px-2 pt-3'} ${(brandedHeader || glassMenu) && header.showNav && nav.length ? 'border-t border-white/10' : !brandedHeader ? 'border-t border-black/10' : ''}`}>
               {socials.map(([name, href]) => <a key={name} href={href} target="_blank" rel="noreferrer" aria-label={name} className={`grid h-10 w-10 place-items-center rounded-full border ${(brandedHeader || glassMenu) ? 'border-white/20 text-white/80 hover:bg-white/10 hover:text-white' : 'border-black/15 text-current'}`}><SocialMark label={name} monochrome={brandedHeader || glassMenu} /></a>)}
-              {(!brandedHeader || impactHeader) && <LanguageSwitcher variant="inline" />}
+              {!brandedHeader && <LanguageSwitcher variant="inline" />}
             </div>
+            {impactHeader && (
+              <div className="impact-language-menu-row mt-2 flex min-h-11 items-center justify-between gap-3 rounded-xl border px-4">
+                <span className="text-xs font-semibold uppercase">Langue</span>
+                <LanguageSwitcher variant="inline" />
+              </div>
+            )}
+            {impactHeader && (
+              <Link href={customerHref} onClick={() => setMenuOpen(false)} className="impact-customer-menu-link mt-2 flex min-h-11 items-center justify-center gap-2 rounded-xl border px-4 text-sm font-semibold transition">
+                <UserRound className="h-4 w-4" />
+                Connexion / inscription
+              </Link>
+            )}
             {impactHeader && (
               <button type="button" onClick={toggleImpactTheme} className="impact-theme-toggle mt-2 flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-white/15 px-4 text-sm font-semibold transition hover:bg-white/10" aria-label={impactTheme === 'dark' ? 'Activer le mode clair' : 'Activer le mode sombre'}>
                 {impactTheme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}

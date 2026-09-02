@@ -14,7 +14,6 @@ import {
   IMPACT_SOCIALS,
   IMPACT_TRACKS,
   IMPACT_STATS,
-  IMPACT_VIDEOS,
   IMPACT_INSTAGRAM_POSTS,
   IMPACT_TIKTOK_POSTS,
 } from '../src/lib/impact';
@@ -88,7 +87,7 @@ async function main() {
 async function seedImpact() {
   const existing = await prisma.site.findUnique({ where: { subdomain: IMPACT_SUBDOMAIN }, include: { organization: true } });
   const previousProfile = ((existing?.organization.profile as any) || {}) as Record<string, any>;
-  const needsContentSetup = Number(previousProfile.impactSeedVersion || 0) < 10;
+  const needsContentSetup = Number(previousProfile.impactSeedVersion || 0) < 14;
   const passwordHash = await bcrypt.hash(IMPACT_LOGIN_PASSWORD, 10);
   const legacyEasyAssoUser = await prisma.user.findUnique({ where: { email: 'impact@easyasso.fr' } });
   const legacyAgencyUser = await prisma.user.findUnique({ where: { email: 'contact@skorm-agency.com' } });
@@ -107,7 +106,7 @@ async function seedImpact() {
 
   const profile = {
     ...previousProfile,
-    impactSeedVersion: 10,
+    impactSeedVersion: 14,
     language: 'fr' as const,
     slogan: 'RAW · ELECTRONIC · ENERGY',
     email: IMPACT_CONTACT_EMAIL,
@@ -171,7 +170,7 @@ async function seedImpact() {
     background: IMPACT_BRAND.surface, textColor: '#eaf2ff', showCta: false,
     cta: { text: 'BOOKING', href: '/booking', color: IMPACT_BRAND.accent, variant: 'solid', align: 'right' },
     social: IMPACT_SOCIALS,
-    vielusosHero: { videoUrl: '/impact/hero-teaser-web.mp4', darkVideoUrl: '/impact/hero-dark-skeleton.mp4', showLogo: false, showName: false, showTagline: false },
+    vielusosHero: { videoUrl: '/impact/hero-teaser-web.mp4', darkVideoUrl: '/impact/hero-dark-casque.mp4', showLogo: false, showName: false, showTagline: false },
     vielusosBio: { images: ['/impact/gallery/impact-gallery-01.jpg', '/impact/gallery/impact-gallery-02.jpg', '/impact/gallery/impact-gallery-03.jpg', '/impact/gallery/impact-gallery-04.jpg', '/impact/gallery/impact-gallery-05.jpg', '/impact/profile.jpg', '/impact/profile-2.jpg'], eyebrowFr: 'IMPACT · ARTISTE', eyebrowEn: 'IMPACT · ARTIST', titleFr: 'À PROPOS', titleEn: 'ABOUT' },
   };
   const footerDefaults = {
@@ -187,7 +186,7 @@ async function seedImpact() {
     bookingDescription: 'Booking, média, partenariat ou demande professionnelle directe concernant IMPACT.',
     bookingDescriptionEn: 'Booking, media, partnerships or a direct professional enquiry concerning IMPACT.',
     bookingFormTitle: 'Contact · Projet', bookingFormTitleEn: 'Contact · Project',
-    pageSlugs: ['accueil', 'sons', 'videos', 'bio', 'galerie', 'booking', 'boutique'], columns: [],
+    pageSlugs: ['accueil', 'sons', 'bio', 'booking', 'boutique'], columns: [],
   };
   // Always refresh the public shell so the banner stays clean and independent.
   const header = { ...((existing?.header as any) || {}), ...headerDefaults };
@@ -199,30 +198,21 @@ async function seedImpact() {
 
   if (needsContentSetup || !existing) {
     const streamingLinks = { spotify: IMPACT_SOCIALS.spotify, deezer: IMPACT_SOCIALS.deezer, appleMusic: IMPACT_SOCIALS.applemusic, soundcloud: IMPACT_SOCIALS.soundcloud, youtube: IMPACT_SOCIALS.youtube };
-    const players = IMPACT_TRACKS.map((track) => ({ platform: track.source, url: track.url, title: track.title, artist: track.artist, releaseDate: track.releaseDate }));
+    const players = IMPACT_TRACKS.map((track) => ({ platform: track.source, url: track.url, title: track.title, artist: track.artist, releaseDate: track.releaseDate, thumbnail: track.thumbnail }));
     const pages: Array<{ title: string; slug: string; order: number; isHome?: boolean; showInNav?: boolean; description: string; blocks: Array<{ type: BlockType; content: any }> }> = [
       { title: 'Accueil', slug: 'accueil', order: 0, isHome: true, description: 'Site officiel IMPACT · Rawstyle DJ/Producer.', blocks: [
-        { type: 'streaming', content: { variant: 'impact', title: 'ÉCOUTER IMPACT', linkStyle: 'text-white', glowColor: IMPACT_BRAND.neon, links: streamingLinks } },
-        { type: 'tracks', content: { variant: 'impact', title: 'DERNIÈRES SORTIES', subtitle: 'Latest releases', tracks: IMPACT_TRACKS } },
         { type: 'stats', content: { variant: 'impact', eyebrow: 'Repères publics', title: 'IMPACT EN CHIFFRES', intro: 'Chiffres relevés sur les profils officiels au moment de la mise à jour.', source: 'Sources : Spotify artiste officiel et SoundCloud officiel IMPACT.', items: IMPACT_STATS } },
-        { type: 'videos', content: { title: 'LIVE · IMPACT', videos: IMPACT_VIDEOS.slice(0, 5) } },
-        { type: 'social', content: { variant: 'impact', social: { align: 'center', ...IMPACT_SOCIALS, appleMusic: IMPACT_SOCIALS.applemusic } } },
+        { type: 'streaming', content: { variant: 'impact', title: '', linkStyle: 'text-white', glowColor: IMPACT_BRAND.neon, links: streamingLinks } },
+        { type: 'players', content: { variant: 'impact', sort: 'manual', items: IMPACT_TRACKS.filter((track) => ['Spotify', 'YouTube'].includes(track.source)).map((track) => ({ platform: track.source, url: track.url, title: track.title, artist: track.artist, releaseDate: track.releaseDate, thumbnail: track.thumbnail })), links: {} } },
         { type: 'instagram', content: { variant: 'impact', title: 'IMPACT SUR INSTAGRAM', username: 'impactdj_raw', url: IMPACT_SOCIALS.instagram, count: 15, postUrls: IMPACT_INSTAGRAM_POSTS, tiktokTitle: 'IMPACT SUR TIKTOK', tiktokUsername: 'impactdj_raw', tiktokUrl: IMPACT_SOCIALS.tiktok, tiktokPostUrls: IMPACT_TIKTOK_POSTS } },
       ] },
       { title: 'Sons', slug: 'sons', order: 1, description: 'Toutes les sorties et plateformes officielles d’IMPACT.', blocks: [
-        { type: 'tracks', content: { variant: 'impact', title: 'TOUS LES SONS', subtitle: 'Official releases', tracks: IMPACT_TRACKS } },
-        { type: 'players', content: { title: 'LECTEURS OFFICIELS', intro: 'Écoutez les sorties directement sur les plateformes officielles.', sort: 'newest', items: players } },
+        { type: 'players', content: { variant: 'impact', title: 'LECTEURS OFFICIELS', intro: 'Écoutez les sorties directement sur les plateformes officielles.', sort: 'manual', items: players, links: {} } },
         { type: 'streaming', content: { variant: 'impact', title: 'TOUTES LES PLATEFORMES', linkStyle: 'text-white', glowColor: IMPACT_BRAND.neon, links: streamingLinks } },
       ] },
-      { title: 'Vidéos', slug: 'videos', order: 2, description: 'Lives et vidéos officielles d’IMPACT.', blocks: [
-        { type: 'videos', content: { title: 'LIVE · ESKAPE', videos: [...IMPACT_VIDEOS, { title: 'YOU MADE IT · OFFICIAL', url: 'https://www.youtube.com/watch?v=RSdKmX2BH7o' }] } },
-      ] },
-      { title: 'Bio', slug: 'bio', order: 3, description: 'Biographie et univers artistique d’IMPACT.', blocks: [] },
-      { title: 'Galerie', slug: 'galerie', order: 4, description: 'Photos officielles d’IMPACT.', blocks: [
-        { type: 'gallery', content: { variant: 'impact', columns: 3, images: ['/impact/gallery/impact-gallery-01.jpg', '/impact/gallery/impact-gallery-02.jpg', '/impact/gallery/impact-gallery-03.jpg', '/impact/gallery/impact-gallery-04.jpg', '/impact/gallery/impact-gallery-05.jpg', '/impact/profile.jpg', '/impact/profile-2.jpg'] } },
-      ] },
-      { title: 'Booking', slug: 'booking', order: 5, description: 'Booking et demandes professionnelles pour IMPACT.', blocks: [] },
-      { title: 'Boutique', slug: 'boutique', order: 6, showInNav: Boolean(profile.shopEnabled), description: 'Boutique officielle IMPACT.', blocks: [
+      { title: 'Bio', slug: 'bio', order: 2, description: 'Biographie et univers artistique d’IMPACT.', blocks: [] },
+      { title: 'Booking', slug: 'booking', order: 3, description: 'Booking et demandes professionnelles pour IMPACT.', blocks: [] },
+      { title: 'Boutique', slug: 'boutique', order: 4, showInNav: Boolean(profile.shopEnabled), description: 'Boutique officielle IMPACT.', blocks: [
         { type: 'banner', content: { backgroundType: 'image', image: '/impact/profile-2.jpg', title: 'BOUTIQUE IMPACT', subtitle: 'Drops, éditions limitées et merchandising.', overlay: 55, height: 360, contentPosition: 'center', textAlign: 'center' } },
         { type: 'shop', content: { title: 'SHOP', intro: '', search: true, showCategories: true, columns: 4 } },
       ] },
@@ -244,7 +234,8 @@ async function seedImpact() {
   console.log(`   URL interne : /s/${IMPACT_SUBDOMAIN}  ·  domaine : https://${IMPACT_HOST}  ·  admin : /impact-admin`);
 }
 
-main()
-  .then(seedImpact)
+const seedRun = process.env.IMPACT_ONLY === '1' ? seedImpact() : main().then(seedImpact);
+
+seedRun
   .catch((e) => { console.error(e); process.exit(1); })
   .finally(() => prisma.$disconnect());

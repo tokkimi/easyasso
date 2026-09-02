@@ -9,24 +9,29 @@ const SYSTEM_ROLES = ['OWNER', 'ADMIN', 'EDITOR', 'ACCOUNTANT', 'MEMBER', 'VIEWE
 export function TeamClient({ members, roles, invitations, groups, roleLabels, canManageTeam, canManageRoles, currentUserId }: any) {
   const router = useRouter();
   const [inviteOpen, setInviteOpen] = useState(false);
-  const [invite, setInvite] = useState({ email: '', systemRole: 'MEMBER' });
+  const [invite, setInvite] = useState({ email: '', selection: 'system:MEMBER' });
   const [inviteMsg, setInviteMsg] = useState('');
+  const [inviteLink, setInviteLink] = useState('');
   const [roleOpen, setRoleOpen] = useState(false);
   const [editingRole, setEditingRole] = useState<any>(null);
   const [roleForm, setRoleForm] = useState<{ name: string; permissions: string[] }>({ name: '', permissions: [] });
 
   async function doInvite(e: React.FormEvent) {
     e.preventDefault();
-    const res = await fetch('/api/team', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(invite) });
+    const custom = invite.selection.startsWith('custom:');
+    const payload = { email: invite.email, systemRole: custom ? 'MEMBER' : invite.selection.replace('system:', ''), roleId: custom ? invite.selection.replace('custom:', '') : null };
+    const res = await fetch('/api/team', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
     const data = await res.json();
     if (!res.ok) return setInviteMsg(data.error || 'Erreur');
-    setInviteMsg(data.added ? 'Membre ajouté ✓' : 'Invitation créée ✓');
-    setInvite({ email: '', systemRole: 'MEMBER' });
+    setInviteLink(data.inviteUrl || '');
+    setInviteMsg(data.added ? (data.emailSent ? 'Membre ajouté et prévenu par email ✓' : 'Membre ajouté. Partagez-lui le lien de connexion ci-dessous.') : data.emailSent ? 'Invitation envoyée par email ✓' : 'Invitation créée. Copiez le lien sécurisé ci-dessous pour le partager.');
+    if (data.emailSent) setInvite({ email: '', selection: 'system:MEMBER' });
     router.refresh();
-    setTimeout(() => { setInviteOpen(false); setInviteMsg(''); }, 1200);
+    if (data.emailSent) setTimeout(() => { setInviteOpen(false); setInviteMsg(''); setInviteLink(''); }, 1600);
   }
-  async function changeRole(membershipId: string, systemRole: string) {
-    await fetch('/api/team', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ membershipId, systemRole }) });
+  async function changeRole(membershipId: string, selection: string) {
+    const custom = selection.startsWith('custom:');
+    await fetch('/api/team', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ membershipId, systemRole: custom ? 'MEMBER' : selection.replace('system:', ''), roleId: custom ? selection.replace('custom:', '') : '' }) });
     router.refresh();
   }
   async function removeMember(membershipId: string) {
@@ -38,6 +43,11 @@ export function TeamClient({ members, roles, invitations, groups, roleLabels, ca
   function startRole(r?: any) {
     setEditingRole(r || null);
     setRoleForm(r ? { name: r.name, permissions: r.permissions } : { name: '', permissions: [] });
+    setRoleOpen(true);
+  }
+  function startLogisticsRole() {
+    setEditingRole(null);
+    setRoleForm({ name: 'Logistique', permissions: ['logistics.view', 'logistics.edit'] });
     setRoleOpen(true);
   }
   function togglePerm(key: string) {
@@ -71,8 +81,9 @@ export function TeamClient({ members, roles, invitations, groups, roleLabels, ca
                 {m.systemRole === 'OWNER' || !canManageTeam ? (
                   <span className="badge bg-brand-50 text-brand-700">{roleLabels[m.systemRole]}</span>
                 ) : (
-                  <select value={m.systemRole} onChange={(e) => changeRole(m.id, e.target.value)} className="rounded-lg border border-gray-200 px-2 py-1 text-sm">
-                    {SYSTEM_ROLES.filter((r) => r !== 'OWNER').map((r) => <option key={r} value={r}>{roleLabels[r]}</option>)}
+                  <select value={m.roleId ? `custom:${m.roleId}` : `system:${m.systemRole}`} onChange={(e) => changeRole(m.id, e.target.value)} className="rounded-lg border border-gray-200 px-2 py-1 text-sm">
+                    {SYSTEM_ROLES.filter((r) => r !== 'OWNER').map((r) => <option key={r} value={`system:${r}`}>{roleLabels[r]}</option>)}
+                    {roles.map((r:any)=><option key={r.id} value={`custom:${r.id}`}>{r.name} · personnalisé</option>)}
                   </select>
                 )}
                 {canManageTeam && m.systemRole !== 'OWNER' && <button onClick={() => removeMember(m.id)} className="text-gray-300 hover:text-red-600"><Trash2 className="h-4 w-4" /></button>}
@@ -84,7 +95,7 @@ export function TeamClient({ members, roles, invitations, groups, roleLabels, ca
           <div className="mt-4 border-t border-gray-100 pt-4">
             <p className="mb-2 text-xs font-semibold uppercase text-gray-400">Invitations en attente</p>
             {invitations.map((inv: any) => (
-              <div key={inv.id} className="flex items-center gap-2 py-1 text-sm text-gray-500"><Mail className="h-4 w-4" /> {inv.email} — {roleLabels[inv.systemRole]}</div>
+              <div key={inv.id} className="flex items-center gap-2 py-1 text-sm text-gray-500"><Mail className="h-4 w-4" /> {inv.email} — {inv.role?.name || roleLabels[inv.systemRole]}</div>
             ))}
           </div>
         )}
@@ -94,7 +105,7 @@ export function TeamClient({ members, roles, invitations, groups, roleLabels, ca
       <div className="card mt-6">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="flex items-center gap-2 font-bold text-gray-900"><Shield className="h-5 w-5" /> Rôles personnalisés</h2>
-          {canManageRoles && <button onClick={() => startRole()} className="btn btn-ghost text-sm"><Plus className="h-4 w-4" /> Nouveau rôle</button>}
+          {canManageRoles && <div className="flex flex-wrap gap-2"><button onClick={startLogisticsRole} className="btn btn-primary text-sm"><Shield className="h-4 w-4" /> Créer le rôle Logistique</button><button onClick={() => startRole()} className="btn btn-ghost text-sm"><Plus className="h-4 w-4" /> Nouveau rôle</button></div>}
         </div>
         {roles.length === 0 ? <p className="text-sm text-gray-500">Aucun rôle personnalisé. Les rôles système suffisent souvent.</p> : (
           <div className="grid gap-3 sm:grid-cols-2">
@@ -114,12 +125,13 @@ export function TeamClient({ members, roles, invitations, groups, roleLabels, ca
       {/* Invite modal */}
       {inviteOpen && (
         <div className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4" onClick={() => setInviteOpen(false)}>
-          <form onSubmit={doInvite} className="w-full max-w-md rounded-2xl bg-white p-5" onClick={(e) => e.stopPropagation()}>
+          <form onSubmit={doInvite} className="dashboard-dialog w-full max-w-md rounded-2xl bg-white p-5" onClick={(e) => e.stopPropagation()}>
             <div className="mb-4 flex items-center justify-between"><h3 className="font-bold">Inviter un membre</h3><button type="button" onClick={() => setInviteOpen(false)}><X className="h-5 w-5 text-gray-400" /></button></div>
             <div className="space-y-3">
               <div><label className="label">Email</label><input type="email" required className="input" value={invite.email} onChange={(e) => setInvite({ ...invite, email: e.target.value })} /></div>
-              <div><label className="label">Rôle</label><select className="input" value={invite.systemRole} onChange={(e) => setInvite({ ...invite, systemRole: e.target.value })}>{SYSTEM_ROLES.filter((r) => r !== 'OWNER').map((r) => <option key={r} value={r}>{roleLabels[r]}</option>)}</select></div>
-              {inviteMsg && <p className="text-sm text-green-600">{inviteMsg}</p>}
+              <div><label className="label">Accès accordé</label><select className="input" value={invite.selection} onChange={(e) => setInvite({ ...invite, selection: e.target.value })}>{roles.length>0&&<optgroup label="Rôles personnalisés">{roles.map((r:any)=><option key={r.id} value={`custom:${r.id}`}>{r.name}</option>)}</optgroup>}<optgroup label="Rôles système">{SYSTEM_ROLES.filter((r) => r !== 'OWNER').map((r) => <option key={r} value={`system:${r}`}>{roleLabels[r]}</option>)}</optgroup></select><p className="mt-1 text-xs text-gray-400">Le rôle choisi sera appliqué automatiquement lorsque la personne acceptera l’email.</p></div>
+              {inviteMsg && <p className="rounded-xl bg-green-500/10 p-3 text-sm font-semibold text-green-700">{inviteMsg}</p>}
+              {inviteLink && <div className="rounded-xl border border-blue-400/30 bg-blue-500/10 p-3"><p className="break-all text-xs text-gray-600">{inviteLink}</p><div className="mt-2 flex gap-2"><button type="button" onClick={() => navigator.clipboard.writeText(inviteLink)} className="btn btn-primary flex-1 text-xs">Copier le lien</button><a className="btn btn-ghost flex-1 text-xs" href={`mailto:${encodeURIComponent(invite.email)}?subject=${encodeURIComponent('Invitation à rejoindre l’équipe')}&body=${encodeURIComponent(`Bonjour, voici votre invitation sécurisée : ${inviteLink}`)}`}>Ouvrir mon email</a></div></div>}
             </div>
             <button className="btn btn-primary mt-5 w-full">Envoyer l’invitation</button>
             <p className="mt-2 text-center text-xs text-gray-400">Si la personne a déjà un compte, elle est ajoutée immédiatement.</p>
@@ -130,7 +142,7 @@ export function TeamClient({ members, roles, invitations, groups, roleLabels, ca
       {/* Role modal */}
       {roleOpen && (
         <div className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4" onClick={() => setRoleOpen(false)}>
-          <form onSubmit={saveRole} className="max-h-[85vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white p-5" onClick={(e) => e.stopPropagation()}>
+          <form onSubmit={saveRole} className="dashboard-dialog max-h-[85vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white p-5" onClick={(e) => e.stopPropagation()}>
             <div className="mb-4 flex items-center justify-between"><h3 className="font-bold">{editingRole ? 'Modifier' : 'Nouveau'} rôle</h3><button type="button" onClick={() => setRoleOpen(false)}><X className="h-5 w-5 text-gray-400" /></button></div>
             <div><label className="label">Nom du rôle</label><input required className="input" value={roleForm.name} onChange={(e) => setRoleForm({ ...roleForm, name: e.target.value })} /></div>
             <div className="mt-4 space-y-4">

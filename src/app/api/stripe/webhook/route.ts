@@ -61,17 +61,37 @@ export async function POST(req: Request) {
         const details = session.customer_details || {};
         const shipping = session.shipping_details?.address || session.customer_details?.address;
         const address = shipping ? [shipping.line1, shipping.line2, `${shipping.postal_code || ''} ${shipping.city || ''}`.trim(), shipping.country].filter(Boolean).join(', ') : '';
+        const email = String(details.email || order.customerEmail || '').trim().toLowerCase();
+        const customer = email ? await prisma.customerProfile.upsert({
+          where: { organizationId_email: { organizationId: order.organizationId, email } },
+          create: { organizationId: order.organizationId, email, name: details.name || '', phone: details.phone || '', shippingAddress: address },
+          update: { name: details.name || undefined, phone: details.phone || undefined, shippingAddress: address || undefined, lastSeenAt: new Date() },
+        }) : null;
         await prisma.order.update({
           where: { id: order.id },
           data: {
             status: 'PAID',
+            paymentStatus: 'PAID',
+            paidAt: new Date(),
             stripePaymentIntentId: (session.payment_intent as string) || null,
             customerName: details.name || '',
-            customerEmail: details.email || '',
+            customerEmail: email,
             customerPhone: details.phone || '',
             shippingAddress: address,
+            shippingLine1: shipping?.line1 || '',
+            shippingLine2: shipping?.line2 || '',
+            shippingPostalCode: shipping?.postal_code || '',
+            shippingCity: shipping?.city || '',
+            shippingRegion: shipping?.state || '',
+            shippingCountryCode: shipping?.country || order.shippingCountryCode,
+            customerProfileId: customer?.id || order.customerProfileId,
           },
         });
+        await prisma.orderEvent.create({ data: { orderId: order.id, type: 'PAYMENT_CONFIRMED', title: 'Paiement confirmé', detail: 'Votre commande a bien été enregistrée et va être préparée.', visibleToCustomer: true } });
+        if (customer && shipping?.line1) {
+          await prisma.customerAddress.updateMany({ where: { customerProfileId: customer.id }, data: { isDefault: false } });
+          await prisma.customerAddress.create({ data: { customerProfileId: customer.id, recipientName: details.name || '', phone: details.phone || '', line1: shipping.line1, line2: shipping.line2 || '', postalCode: shipping.postal_code || '', city: shipping.city || '', region: shipping.state || '', countryCode: shipping.country || '', isDefault: true } });
+        }
         // Decrement stock for tracked products.
         for (const item of order.items) {
           if (item.productId) {

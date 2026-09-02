@@ -18,6 +18,7 @@ import { VielusosBooking } from './VielusosBooking';
 import { ImpactHero } from './ImpactHero';
 import { ImpactBio } from './ImpactBio';
 import { ImpactBooking } from './ImpactBooking';
+import { IMPACT_SOCIALS } from '@/lib/impact';
 
 type SiteWithPages = NonNullable<Awaited<ReturnType<typeof loadSiteBySubdomain>>>;
 
@@ -113,6 +114,7 @@ export async function RenderSite({ site, basePath, slug }: { site: SiteWithPages
   const profile = (((site.organization as any)?.profile) || {}) as Record<string, any>;
   const brand = siteBrand(site);
   const branded = Boolean(brand);
+  if (brand?.key === 'impact' && slug && ['videos', 'galerie'].includes(slug)) notFound();
   const normalizeName = (value: string) =>
     brand?.key === 'impact' ? String(value || '').replace(/impact/gi, 'IMPACT') : String(value || '').replace(/vielusos/gi, 'VIELUSOS');
   const publicHeader = brand
@@ -122,10 +124,14 @@ export async function RenderSite({ site, basePath, slug }: { site: SiteWithPages
       logoText: brand.displayName(site.name),
       background: brand.brand.surface,
       textColor: '#f7f7fb',
+      ...(brand.key === 'impact' ? { social: { ...IMPACT_SOCIALS, ...((header as any).social || {}) } } : {}),
       ...(brand.key === 'impact' ? { showCta: false, cta: undefined } : {}),
     }
     : header;
-  const headerSocials = Object.entries((publicHeader as any).social || {}).filter((entry): entry is [string, string] => typeof entry[1] === 'string' && Boolean(entry[1].trim()));
+  const resolvedSocials = brand?.key === 'impact'
+    ? { ...IMPACT_SOCIALS, ...((publicHeader as any).social || {}) }
+    : ((publicHeader as any).social || {});
+  const headerSocials = Object.entries(resolvedSocials).filter((entry): entry is [string, string] => typeof entry[1] === 'string' && Boolean(entry[1].trim()));
   const socialLabels = new Set(['facebook', 'instagram', 'linkedin', 'youtube', 'youtube music', 'spotify', 'deezer', 'soundcloud', 'apple music', 'amazon music', 'beatport', 'bandcamp', 'tidal', 'shotgun', 'tiktok', 'x', 'twitter', 'email']);
   const socialDisplayLabels: Record<string, string> = {
     applemusic: 'Apple Music',
@@ -157,6 +163,7 @@ export async function RenderSite({ site, basePath, slug }: { site: SiteWithPages
   const shopEnabled = Boolean(profile.shopEnabled ?? profile.hasShop);
   const nav = site.pages
     .filter((p) => p.showInNav && (p.slug !== 'boutique' || shopEnabled))
+    .filter((p) => brand?.key !== 'impact' || !['videos', 'galerie'].includes(p.slug))
     .filter((p) => !brand || brand.key === 'impact' || (!p.isHome && !['bio', 'about', 'a-propos'].includes(p.slug)))
     .map((p) => ({ title: p.title, slug: p.slug, isHome: p.isHome }));
   const theme = (site.theme as any) || {};
@@ -198,7 +205,7 @@ export async function RenderSite({ site, basePath, slug }: { site: SiteWithPages
         {brand?.fontsHref && <link rel="stylesheet" href={brand.fontsHref} />}
         <style dangerouslySetInnerHTML={{ __html: `${brandCss(theme.primary)}${brand?.css ?? ''}` }} />
         <PublicHeader header={publicHeader} nav={nav} basePath={basePath} />
-        <ClientAccessPage organizationId={site.organizationId} organizationName={brand ? brand.displayName(site.name) : site.name} locale={profile.language === 'en' ? 'en' : 'fr'} branded={branded} />
+        <ClientAccessPage organizationId={site.organizationId} organizationName={brand ? brand.displayName(site.name) : site.name} locale={profile.language === 'en' ? 'en' : 'fr'} branded={branded} brandKey={brand?.key} />
         <PublicFooter footer={publicFooter} orgId={site.organizationId} basePath={basePath} nav={nav} />
         {bubble}
       </div>
@@ -256,7 +263,9 @@ export async function RenderSite({ site, basePath, slug }: { site: SiteWithPages
   const shopReady = Boolean(profile.stripeConnectReady);
   const hasShopBlock = page.blocks.some((b) => b.type === 'shop');
   const products = hasShopBlock && shopEnabled ? await loadShopProducts(site.organizationId) : [];
-  const renderedBlocks = branded && page.isHome ? moveNetworksBelowStats(page.blocks) : page.blocks;
+  const renderedBlocks = brand?.key === 'vielusos' && page.isHome
+      ? prepareBrandHomeBlocks(page.blocks)
+      : page.blocks;
   const isBioPage = page.slug === 'bio' || page.slug === 'about' || page.slug === 'a-propos';
 
   const instagramContent = (raw: any) => {
@@ -277,7 +286,7 @@ export async function RenderSite({ site, basePath, slug }: { site: SiteWithPages
   };
 
   return (
-    <div className={`flex min-h-screen flex-col ${brand?.siteClass ?? ''}`} style={publicSiteStyle(theme, brand)}>
+    <div className={`flex min-h-screen flex-col ${brand?.siteClass ?? ''} ${brand?.key === 'impact' ? (page.isHome ? 'impact-page-home' : 'impact-page-inner') : ''}`} style={publicSiteStyle(theme, brand)}>
       {fontHref && <link rel="stylesheet" href={fontHref} />}
       {brand?.fontsHref && <link rel="stylesheet" href={brand.fontsHref} />}
       <style dangerouslySetInnerHTML={{ __html: `${brandCss(theme.primary)}${brand?.css ?? ''}` }} />
@@ -285,9 +294,15 @@ export async function RenderSite({ site, basePath, slug }: { site: SiteWithPages
       <PublicHeader header={publicHeader} nav={nav} basePath={basePath} />
       {brand?.key === 'vielusos' && page.isHome && <VielusosHero title={site.name} config={(header as any).vielusosHero} />}
       {brand?.key === 'impact' && page.isHome && <ImpactHero title={site.name} config={(header as any).vielusosHero} />}
+      {brand?.key === 'impact' && (
+        <div className="impact-light-fixed-background" aria-hidden="true">
+          <span className="impact-light-fixed-background-base" />
+          <span className="impact-light-fixed-background-glitch" />
+        </div>
+      )}
       {brand?.key === 'vielusos' && isBioPage && <VielusosBio blocks={page.blocks as any[]} config={(header as any).vielusosBio} />}
       {brand?.key === 'impact' && isBioPage && <ImpactBio blocks={page.blocks as any[]} config={(header as any).vielusosBio} />}
-      <main className="flex-1 py-8">
+      <main className={`flex-1 py-8 ${branded && isBioPage ? 'hidden' : ''}`}>
         {branded && isBioPage ? null : page.blocks.length === 0 ? (
           <p className="py-20 text-center text-gray-400">Cette page est vide.</p>
         ) : (
@@ -304,6 +319,10 @@ export async function RenderSite({ site, basePath, slug }: { site: SiteWithPages
       {bubble}
     </div>
   );
+}
+
+function prepareBrandHomeBlocks<T extends { type: string; content?: any }>(blocks: T[]): T[] {
+  return moveNetworksBelowStats(blocks);
 }
 
 function moveNetworksBelowStats<T extends { type: string }>(blocks: T[]): T[] {
@@ -333,23 +352,24 @@ function publicSiteStyle(theme: any, brand: { brand: { surface: string; backgrou
   };
 }
 
-function ClientAccessPage({ organizationId, organizationName, locale, branded = false }: { organizationId: string; organizationName: string; locale: 'fr' | 'en'; branded?: boolean }) {
+function ClientAccessPage({ organizationId, organizationName, locale, branded = false, brandKey }: { organizationId: string; organizationName: string; locale: 'fr' | 'en'; branded?: boolean; brandKey?: string }) {
   const en = locale === 'en';
+  const impact = brandKey === 'impact';
   return (
-    <main className={`flex-1 px-4 py-12 ${branded ? 'bg-transparent' : 'bg-gray-50'}`}>
-      <section className={`mx-auto max-w-2xl rounded-3xl p-5 text-center shadow-sm sm:p-7 md:rounded-[2rem] md:p-10 ${branded ? 'bg-[#0b0b10]/55 text-[#f7f7fb] ring-1 ring-white/15 backdrop-blur-xl' : 'bg-white ring-1 ring-gray-200'}`}>
-        <p className={`text-sm font-bold uppercase tracking-[0.2em] ${branded ? 'text-[#d33f5c]' : 'text-[var(--brand)]'}`}>
+    <main className={`flex-1 px-4 py-12 ${impact ? 'impact-client-page' : branded ? 'bg-transparent' : 'bg-gray-50'}`}>
+      <section className={`mx-auto max-w-2xl rounded-3xl p-5 text-center shadow-sm sm:p-7 md:rounded-[2rem] md:p-10 ${impact ? 'impact-client-card' : branded ? 'bg-[#0b0b10]/55 text-[#f7f7fb] ring-1 ring-white/15 backdrop-blur-xl' : 'bg-white ring-1 ring-gray-200'}`}>
+        <p className={`text-sm font-bold uppercase tracking-[0.2em] ${impact ? 'text-[#2f6bff]' : branded ? 'text-[#d33f5c]' : 'text-[var(--brand)]'}`}>
           {branded ? `${organizationName} · espace client` : en ? 'Customer area' : 'Espace client'}
         </p>
-        <h1 className={`mt-3 text-2xl font-black sm:text-3xl md:text-4xl ${branded ? 'text-white' : 'text-gray-900'}`}>
+        <h1 className={`mt-3 text-2xl font-black sm:text-3xl md:text-4xl ${impact ? 'text-[#07101f] impact-client-title' : branded ? 'text-white' : 'text-gray-900'}`}>
           {en ? 'Sign in or create your customer account' : 'Connexion ou inscription client'}
         </h1>
-        <p className={`mx-auto mt-4 max-w-xl ${branded ? 'text-white/65' : 'text-gray-600'}`}>
+        <p className={`mx-auto mt-4 max-w-xl ${impact ? 'text-[#07101f]/65' : branded ? 'text-white/65' : 'text-gray-600'}`}>
           {en
-            ? `Use your email to sign in or create your customer profile on ${organizationName}'s website.`
-            : `Utilisez votre email pour vous connecter ou créer votre profil client sur le site de ${organizationName}.`}
+            ? `Use your email and password to sign in or create your customer profile on ${organizationName}'s website.`
+            : `Utilisez votre email et un mot de passe pour vous connecter ou créer votre profil client sur le site de ${organizationName}.`}
         </p>
-        <CustomerAccessForm organizationId={organizationId} organizationName={organizationName} locale={locale} branded={branded} />
+        <CustomerAccessForm organizationId={organizationId} organizationName={organizationName} locale={locale} branded={branded} brandKey={brandKey} />
       </section>
     </main>
   );

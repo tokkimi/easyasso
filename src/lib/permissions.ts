@@ -28,6 +28,10 @@ export const PERMISSIONS = {
   ROLES_MANAGE: 'roles.manage', // create/edit custom roles
   BILLING_MANAGE: 'billing.manage',
   ORG_SETTINGS: 'org.settings',
+  SHOP_VIEW: 'shop.view',
+  SHOP_EDIT: 'shop.edit',
+  LOGISTICS_VIEW: 'logistics.view',
+  LOGISTICS_EDIT: 'logistics.edit',
 } as const;
 
 export type Permission = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
@@ -39,6 +43,15 @@ export const PERMISSION_GROUPS: {
   label: string;
   items: { key: Permission; label: string; help: string }[];
 }[] = [
+  {
+    label: 'Boutique & logistique',
+    items: [
+      { key: PERMISSIONS.SHOP_VIEW, label: 'Voir la boutique', help: 'Produits et réglages commerciaux' },
+      { key: PERMISSIONS.SHOP_EDIT, label: 'Gérer la boutique', help: 'Prix, produits, stocks et frais de port' },
+      { key: PERMISSIONS.LOGISTICS_VIEW, label: 'Voir les commandes', help: 'Accès aux commandes uniquement' },
+      { key: PERMISSIONS.LOGISTICS_EDIT, label: 'Traiter les commandes', help: 'Préparation, suivi, expédition et livraison' },
+    ],
+  },
   {
     label: 'Site internet',
     items: [
@@ -98,7 +111,7 @@ const P = PERMISSIONS;
 export const SYSTEM_ROLE_PERMISSIONS: Record<SystemRole, Permission[]> = {
   OWNER: ALL_PERMISSIONS,
   ADMIN: ALL_PERMISSIONS.filter((p) => p !== P.BILLING_MANAGE),
-  EDITOR: [P.SITE_VIEW, P.SITE_EDIT, P.SITE_PUBLISH, P.CAMPAIGNS_VIEW, P.STATS_VIEW],
+  EDITOR: [P.SITE_VIEW, P.SITE_EDIT, P.SITE_PUBLISH, P.CAMPAIGNS_VIEW, P.STATS_VIEW, P.SHOP_VIEW, P.SHOP_EDIT],
   ACCOUNTANT: [
     P.DONORS_VIEW, P.DONATIONS_VIEW, P.DONATIONS_EDIT, P.RECEIPTS_MANAGE,
     P.CAMPAIGNS_VIEW, P.ACCOUNTING_VIEW, P.ACCOUNTING_EDIT, P.EXPORTS, P.STATS_VIEW,
@@ -120,9 +133,12 @@ export function permissionsForMembership(
   systemRole: SystemRole,
   customRolePermissions?: string[] | null
 ): Set<string> {
+  // A custom role is an exact access profile, not an additive bonus on top of
+  // MEMBER. This makes restricted roles such as “Logistique” genuinely show
+  // only the sections explicitly selected by the owner.
+  if (customRolePermissions) return new Set<string>(customRolePermissions);
   const base = SYSTEM_ROLE_PERMISSIONS[systemRole] ?? [];
-  const custom = customRolePermissions ?? [];
-  return new Set<string>([...base, ...custom]);
+  return new Set<string>(base);
 }
 
 export function can(perms: Set<string>, permission: Permission): boolean {

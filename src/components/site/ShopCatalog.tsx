@@ -31,6 +31,7 @@ export function ShopCatalog({
   const [paying, setPaying] = useState(false);
   const [favorites, setFavorites] = useState<string[]>([]);
   const [showFavorites, setShowFavorites] = useState(false);
+  const [shippingCountry, setShippingCountry] = useState('FR');
 
   const storageKey = `easyasso-cart-${organizationId}`;
   const favoritesKey = `easyasso-favorites-${organizationId}`;
@@ -85,7 +86,7 @@ export function ShopCatalog({
     const returnPath = typeof window !== 'undefined' ? window.location.pathname : '';
     const res = await fetch('/api/shop/checkout', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ organizationId, returnPath, items: cart.map((l) => ({ productId: l.id, quantity: l.qty })) }),
+      body: JSON.stringify({ organizationId, returnPath, shippingCountry, items: cart.map((l) => ({ productId: l.id, quantity: l.qty })) }),
     });
     const data = await res.json().catch(() => ({}));
     setPaying(false);
@@ -206,6 +207,7 @@ export function ShopCatalog({
               ))}
             </div>
             <div className="border-t border-gray-100 p-4">
+              <label className="mb-3 block text-sm font-bold text-gray-700">Pays de livraison<select className="input mt-1" value={shippingCountry} onChange={(e)=>setShippingCountry(e.target.value)}><option value="FR">France</option><option value="BE">Belgique</option><option value="CH">Suisse</option><option value="LU">Luxembourg</option><option value="MC">Monaco</option></select></label>
               <div className="mb-3 flex items-center justify-between text-lg font-extrabold text-gray-900"><span>Total</span><span>{euros(cartTotal)}</span></div>
               <button onClick={checkout} disabled={paying || cart.length === 0} className="w-full rounded-xl bg-[var(--brand)] py-3 font-bold text-white transition hover:opacity-90 disabled:opacity-50">{paying ? 'Redirection…' : 'Payer par carte'}</button>
               <p className="mt-2 text-center text-xs text-gray-400">Paiement sécurisé par Stripe · Livraison renseignée à l’étape suivante</p>

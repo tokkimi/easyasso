@@ -4,9 +4,9 @@ import { RenderSite, loadSiteByDomain, siteMetadata } from '@/components/site/Re
 import { VIELUSOS_SUBDOMAIN } from '@/lib/vielusos';
 import { IMPACT_SUBDOMAIN, IMPACT_HOST } from '@/lib/impact';
 
-// Cache verified custom-domain pages on the CDN, refreshing in the background
-// at most once a minute (edits call revalidatePath for an immediate refresh).
-export const revalidate = 60;
+// The site editor must be reflected on the public site at the very next load.
+// Dynamic rendering avoids serving a stale CDN snapshot after an edit.
+export const dynamic = 'force-dynamic';
 
 export async function generateMetadata({ params }: { params: Promise<{ host: string }> }): Promise<Metadata> {
   const { host } = await params;

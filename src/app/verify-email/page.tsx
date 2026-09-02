@@ -1,12 +1,12 @@
 import Link from 'next/link';
 import { prisma } from '@/lib/prisma';
 import { headers } from 'next/headers';
-import { IMPACT_HOST } from '@/lib/impact';
+import { isImpactHost } from '@/lib/impact';
 
 export const dynamic = 'force-dynamic';
 
 export default async function VerifyEmailPage({ searchParams }: { searchParams: Promise<{ token?: string }> }) {
-  const impact = (await headers()).get('host')?.split(':')[0].toLowerCase() === IMPACT_HOST;
+  const impact = isImpactHost((await headers()).get('host'));
   const { token } = await searchParams;
   let ok = false;
   if (token) {

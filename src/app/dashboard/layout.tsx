@@ -10,11 +10,11 @@ import { isPlatformAdmin } from '@/lib/platform-admin';
 import { Sidebar } from './sidebar';
 import { EmailVerificationBanner } from './email-verification-banner';
 import { siteBrand } from '@/lib/site-brand';
-import { IMPACT_HOST, IMPACT_ICONS } from '@/lib/impact';
+import { isImpactHost, IMPACT_ICONS } from '@/lib/impact';
 
 export async function generateMetadata(): Promise<Metadata> {
   const host = (await headers()).get('host')?.split(':')[0].toLowerCase();
-  if (host === IMPACT_HOST) {
+  if (isImpactHost(host)) {
     return {
       title: { absolute: 'IMPACT · Administration' },
       description: 'Administration du site officiel IMPACT.',

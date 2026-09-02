@@ -12,7 +12,7 @@ import { themeStyle, brandCss } from '@/lib/render';
 import { googleFontsHref } from '@/lib/fonts';
 import { canShowPublicSite } from '@/lib/plan';
 import { siteBrand } from '@/lib/site-brand';
-import { IMPACT_ICONS } from '@/lib/impact';
+import { IMPACT_ICONS, IMPACT_SUBDOMAIN, isImpactHost } from '@/lib/impact';
 import { VielusosHero } from './VielusosHero';
 import { VielusosBio } from './VielusosBio';
 import { VielusosBooking } from './VielusosBooking';
@@ -46,6 +46,10 @@ export async function loadSiteBySubdomain(subdomain: string) {
 }
 export async function loadSiteByDomain(domain: string) {
   const apex = domain.replace(/^www\./i, '');
+  // IMPACT answers on several hosts (its Vercel alias + its own domain). Resolve
+  // them straight to the IMPACT tenant by subdomain, so a newly linked domain
+  // works without editing the DB customDomain field. Nothing else is affected.
+  if (isImpactHost(domain)) return loadSiteBySubdomain(IMPACT_SUBDOMAIN);
   return prisma.site.findFirst({
     where: { customDomain: { in: [domain, apex, `www.${apex}`] }, domainVerified: true },
     include: {

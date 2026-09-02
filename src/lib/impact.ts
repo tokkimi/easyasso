@@ -10,6 +10,24 @@ export const IMPACT_SUBDOMAIN = 'impact-djraw';
 // The Vercel deployment domain this profile answers on (handled in middleware).
 export const IMPACT_HOST = 'impact-raw.vercel.app';
 
+// Every host that must resolve to the IMPACT site. The public custom domain and
+// the Vercel alias both map here — matched independently of the DB customDomain
+// field so no re-seed is needed to add a domain. Only IMPACT is affected;
+// VIELUSOS and every other tenant are untouched.
+export const IMPACT_DOMAINS = [
+  IMPACT_HOST,
+  'impactdj-raw.com',
+  'www.impactdj-raw.com',
+];
+
+// True when a request host (or its apex, minus a leading www.) is an IMPACT domain.
+export function isImpactHost(host?: string | null): boolean {
+  if (!host) return false;
+  const h = host.split(':')[0].toLowerCase();
+  const apex = h.replace(/^www\./, '');
+  return IMPACT_DOMAINS.some((d) => d === h || d === apex || d === `www.${apex}`);
+}
+
 // IMPACT owns this identity. Nothing shown to the artist or the public uses an
 // EasyAsso address. The public contact email remains separate from the login.
 export const IMPACT_LOGIN_EMAIL = 'contact@skorm-agency.com';

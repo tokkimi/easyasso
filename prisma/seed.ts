@@ -241,7 +241,9 @@ async function seedImpact() {
   console.log(`   URL interne : /s/${IMPACT_SUBDOMAIN}  ·  domaine : https://${IMPACT_HOST}  ·  admin : /impact-admin`);
 }
 
-main()
-  .then(seedImpact)
+// SEED_ONLY=impact seeds ONLY the IMPACT tenant — used when standing up an
+// isolated IMPACT deployment with its own database (no demo org, no VIELUSOS).
+const run = process.env.SEED_ONLY === 'impact' ? seedImpact() : main().then(seedImpact);
+run
   .catch((e) => { console.error(e); process.exit(1); })
   .finally(() => prisma.$disconnect());

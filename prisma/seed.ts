@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
+import { randomBytes } from 'crypto';
 import { createOrganizationForUser } from '../src/lib/bootstrap';
 import { DEFAULT_THEME } from '../src/lib/colors';
 import { SYSTEM_ROLE_PERMISSIONS } from '../src/lib/permissions';
@@ -9,7 +10,6 @@ import {
   IMPACT_HOST,
   IMPACT_BRAND,
   IMPACT_LOGIN_EMAIL,
-  IMPACT_LOGIN_PASSWORD,
   IMPACT_CONTACT_EMAIL,
   IMPACT_SOCIALS,
   IMPACT_TRACKS,
@@ -86,7 +86,13 @@ async function seedImpact() {
   const existing = await prisma.site.findUnique({ where: { subdomain: IMPACT_SUBDOMAIN }, include: { organization: true } });
   const previousProfile = ((existing?.organization.profile as any) || {}) as Record<string, any>;
   const needsContentSetup = Number(previousProfile.impactSeedVersion || 0) < 3;
-  const passwordHash = await bcrypt.hash(IMPACT_LOGIN_PASSWORD, 10);
+  // The admin password never lives in the repo. Use IMPACT_ADMIN_PASSWORD when
+  // provided; otherwise generate a strong random one and print it below. Either
+  // way the IMPACT admin account is (re)set to this value on every seed, so the
+  // old hard-coded password is retired.
+  const envPassword = process.env.IMPACT_ADMIN_PASSWORD;
+  const impactPassword = envPassword || randomBytes(12).toString('base64url');
+  const passwordHash = await bcrypt.hash(impactPassword, 10);
   const legacyUser = await prisma.user.findUnique({ where: { email: 'impact@easyasso.fr' } });
   let user = await prisma.user.findUnique({ where: { email: IMPACT_LOGIN_EMAIL } });
   if (!user && legacyUser && existing) {
@@ -94,6 +100,8 @@ async function seedImpact() {
     if (ownsImpact) user = await prisma.user.update({ where: { id: legacyUser.id }, data: { name: 'IMPACT', email: IMPACT_LOGIN_EMAIL, passwordHash, emailVerified: new Date() } });
   }
   if (!user) user = await prisma.user.create({ data: { name: 'IMPACT', email: IMPACT_LOGIN_EMAIL, passwordHash, emailVerified: new Date() } });
+  // Always reset the password so a previously seeded (compromised) one is replaced.
+  await prisma.user.update({ where: { id: user.id }, data: { passwordHash } });
 
   const profile = {
     ...previousProfile,
@@ -226,7 +234,10 @@ async function seedImpact() {
   }
 
   console.log('✅ Profil IMPACT prêt (compte offert, sans abonnement payant).');
-  console.log(`   Connexion IMPACT : ${IMPACT_LOGIN_EMAIL} / ${IMPACT_LOGIN_PASSWORD}`);
+  console.log(`   Connexion IMPACT : ${IMPACT_LOGIN_EMAIL}`);
+  console.log(envPassword
+    ? '   Mot de passe IMPACT : (défini via la variable IMPACT_ADMIN_PASSWORD)'
+    : `   Mot de passe IMPACT (généré, à noter maintenant) : ${impactPassword}`);
   console.log(`   URL interne : /s/${IMPACT_SUBDOMAIN}  ·  domaine : https://${IMPACT_HOST}  ·  admin : /impact-admin`);
 }
 

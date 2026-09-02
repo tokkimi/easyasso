@@ -30,8 +30,11 @@ export function isImpactHost(host?: string | null): boolean {
 
 // IMPACT owns this identity. Nothing shown to the artist or the public uses an
 // EasyAsso address. The public contact email remains separate from the login.
-export const IMPACT_LOGIN_EMAIL = 'contact@skorm-agency.com';
-export const IMPACT_LOGIN_PASSWORD = 'impact1234';
+// The admin login email can be overridden by the IMPACT_ADMIN_EMAIL env var at
+// seed time. The password is NEVER stored in code — it comes from the
+// IMPACT_ADMIN_PASSWORD env var (or a random one generated at seed time). See
+// prisma/seed.ts.
+export const IMPACT_LOGIN_EMAIL = process.env.IMPACT_ADMIN_EMAIL || 'contact@skorm-agency.com';
 export const IMPACT_CONTACT_EMAIL = 'impact.djoff@gmail.com';
 
 export const IMPACT_SOCIALS = {

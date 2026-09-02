@@ -15,6 +15,7 @@ export const IMPACT_HOST = 'impact-raw.vercel.app';
 // VIELUSOS and every other tenant are untouched.
 export const IMPACT_DOMAINS = [
   IMPACT_HOST,
+  'impactdj-raw.vercel.app',
   'impactdj-raw.com',
   'www.impactdj-raw.com',
 ];

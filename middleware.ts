@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server';
-import { IMPACT_HOST } from '@/lib/impact';
+import { isImpactHost } from '@/lib/impact';
 
 // Maps custom domains to the internal /domain/<host> renderer. The app's own
 // domain (root) and Vercel preview URLs are served normally.
@@ -7,9 +7,10 @@ export function middleware(req: NextRequest) {
   const host = (req.headers.get('host') || '').split(':')[0].toLowerCase();
   const root = (process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'localhost').split(':')[0].toLowerCase();
   const isVielusosHost = host === 'vielusos.com' || host === 'www.vielusos.com';
-  // The IMPACT profile answers on its own Vercel deployment domain. It lives in
-  // this same app (nothing else is touched); it just gets branded routing.
-  const isImpactHost = host === IMPACT_HOST;
+  // The IMPACT profile answers on its Vercel alias AND its own custom domain
+  // (impactdj-raw.com / www). All of them live in this same app — nothing else
+  // is touched; they just get branded routing.
+  const impactHost = isImpactHost(host);
   const brandedAppPaths = ['/dashboard', '/vielusos-admin', '/impact-admin', '/login', '/forgot-password', '/reset-password', '/verify-email', '/accept-invitation'];
 
   if (host === 'vielusos.com') {
@@ -30,13 +31,13 @@ export function middleware(req: NextRequest) {
     return NextResponse.rewrite(url);
   }
 
-  if (isImpactHost && (req.nextUrl.pathname === '/admin' || req.nextUrl.pathname === '/login')) {
+  if (impactHost && (req.nextUrl.pathname === '/admin' || req.nextUrl.pathname === '/login')) {
     const url = req.nextUrl.clone();
     url.pathname = '/impact-admin';
     return NextResponse.rewrite(url);
   }
 
-  if ((isVielusosHost || isImpactHost) && brandedAppPaths.some((path) => req.nextUrl.pathname === path || req.nextUrl.pathname.startsWith(`${path}/`))) {
+  if ((isVielusosHost || impactHost) && brandedAppPaths.some((path) => req.nextUrl.pathname === path || req.nextUrl.pathname.startsWith(`${path}/`))) {
     return NextResponse.next();
   }
 
@@ -44,7 +45,7 @@ export function middleware(req: NextRequest) {
     host === root ||
     host === `www.${root}` ||
     host === 'localhost' ||
-    (host.endsWith('.vercel.app') && !isImpactHost) ||
+    (host.endsWith('.vercel.app') && !impactHost) ||
     host === '127.0.0.1';
 
   if (isRoot) {

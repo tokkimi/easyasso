@@ -265,7 +265,7 @@ export function StreamingLinks({ content }: { content: any }) {
       {items.length === 0 ? (
         <p className="py-8 text-sm text-gray-400">Ajoutez vos liens Spotify, Deezer, Apple Music, SoundCloud, YouTube.</p>
       ) : (
-        <div className={`mt-5 ${impactStreaming ? 'impact-streaming-row' : 'flex flex-wrap items-center justify-center gap-3'}`}>
+        <div className={`streaming-links-row mt-5 ${impactStreaming ? 'impact-streaming-row' : 'flex flex-wrap items-center justify-center gap-3'}`}>
           {items.map((s) => (
             <a key={s.key} href={safePublicUrl(links[s.key]) || '#'} target="_blank" rel="noreferrer"
               aria-label={s.label}

@@ -10,19 +10,16 @@ import { isPlatformAdmin } from '@/lib/platform-admin';
 import { Sidebar } from './sidebar';
 import { EmailVerificationBanner } from './email-verification-banner';
 import { siteBrand } from '@/lib/site-brand';
-import { IMPACT_HOST } from '@/lib/impact';
+import { isImpactHost, IMPACT_ICONS } from '@/lib/impact';
 
 export async function generateMetadata(): Promise<Metadata> {
   const host = (await headers()).get('host')?.split(':')[0].toLowerCase();
-  if (host === IMPACT_HOST) {
+  if (isImpactHost(host)) {
     return {
       title: { absolute: 'IMPACT · Administration' },
       description: 'Administration du site officiel IMPACT.',
       applicationName: 'IMPACT',
-      icons: {
-        icon: [{ url: '/impact/favicon.png', type: 'image/png' }],
-        apple: [{ url: '/impact/favicon.png', type: 'image/png' }],
-      },
+      icons: { icon: IMPACT_ICONS, apple: IMPACT_ICONS },
       robots: { index: false, follow: false },
     };
   }

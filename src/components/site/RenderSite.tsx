@@ -12,6 +12,7 @@ import { themeStyle, brandCss } from '@/lib/render';
 import { googleFontsHref } from '@/lib/fonts';
 import { canShowPublicSite } from '@/lib/plan';
 import { siteBrand } from '@/lib/site-brand';
+import { IMPACT_ICONS, IMPACT_SUBDOMAIN, isImpactHost } from '@/lib/impact';
 import { VielusosHero } from './VielusosHero';
 import { VielusosBio } from './VielusosBio';
 import { VielusosBooking } from './VielusosBooking';
@@ -46,6 +47,10 @@ export async function loadSiteBySubdomain(subdomain: string) {
 }
 export async function loadSiteByDomain(domain: string) {
   const apex = domain.replace(/^www\./i, '');
+  // IMPACT answers on several hosts (its Vercel alias + its own domain). Resolve
+  // them straight to the IMPACT tenant by subdomain, so a newly linked domain
+  // works without editing the DB customDomain field. Nothing else is affected.
+  if (isImpactHost(domain)) return loadSiteBySubdomain(IMPACT_SUBDOMAIN);
   return prisma.site.findFirst({
     where: { customDomain: { in: [domain, apex, `www.${apex}`] }, domainVerified: true },
     include: {
@@ -67,6 +72,7 @@ export function siteMetadata(site: { name: string; header: unknown; footer: unkn
   const metaBrand = siteBrand({ subdomain });
   const image = metaBrand ? metaBrand.brand.logoUrl : (header.logoUrl || footer.logoUrl);
   const icon = metaBrand?.brand.faviconUrl || image;
+  const iconList = metaBrand?.key === 'impact' ? IMPACT_ICONS : icon ? [{ url: icon }] : undefined;
   const manifest = metaBrand?.key === 'impact' ? '/impact.webmanifest' : metaBrand?.key === 'vielusos' ? '/vielusos.webmanifest' : undefined;
   return {
     title: { absolute: site.name },
@@ -77,7 +83,7 @@ export function siteMetadata(site: { name: string; header: unknown; footer: unkn
     // Each published site uses its own uploaded logo for the browser tab and
     // home-screen shortcut. Fall back to EasyAsso's default only when no logo
     // was provided by the site owner.
-    icons: icon ? { icon: [{ url: icon }], apple: [{ url: icon }] } : undefined,
+    icons: iconList ? { icon: iconList, apple: iconList } : undefined,
     openGraph: { title: site.name, description, type: 'website', siteName: metaBrand ? site.name : undefined, images: image ? [{ url: image }] : undefined },
     twitter: { card: 'summary', title: site.name, description },
   };

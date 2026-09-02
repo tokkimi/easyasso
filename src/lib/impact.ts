@@ -9,10 +9,31 @@ export const IMPACT_SUBDOMAIN = 'impact-djraw';
 // The Vercel deployment domain this profile answers on (handled in middleware).
 export const IMPACT_HOST = 'impact-raw.vercel.app';
 
+// Every host that must resolve to the IMPACT site. The public custom domain and
+// the Vercel alias both map here — matched independently of the DB customDomain
+// field so no re-seed is needed to add a domain. Only IMPACT is affected;
+// VIELUSOS and every other tenant are untouched.
+export const IMPACT_DOMAINS = [
+  IMPACT_HOST,
+  'impactdj-raw.com',
+  'www.impactdj-raw.com',
+];
+
+// True when a request host (or its apex, minus a leading www.) is an IMPACT domain.
+export function isImpactHost(host?: string | null): boolean {
+  if (!host) return false;
+  const h = host.split(':')[0].toLowerCase();
+  const apex = h.replace(/^www\./, '');
+  return IMPACT_DOMAINS.some((d) => d === h || d === apex || d === `www.${apex}`);
+}
+
 // IMPACT owns this identity. Nothing shown to the artist or the public uses an
-// IMPACT owns this identity. The artist email is used for access and contact.
-export const IMPACT_LOGIN_EMAIL = 'impact.djoff@gmail.com';
-export const IMPACT_LOGIN_PASSWORD = 'impact1234';
+// EasyAsso address. The public contact email remains separate from the login.
+// The admin login email can be overridden by the IMPACT_ADMIN_EMAIL env var at
+// seed time. The password is NEVER stored in code — it comes from the
+// IMPACT_ADMIN_PASSWORD env var (or a random one generated at seed time). See
+// prisma/seed.ts.
+export const IMPACT_LOGIN_EMAIL = process.env.IMPACT_ADMIN_EMAIL || 'contact@skorm-agency.com';
 export const IMPACT_CONTACT_EMAIL = 'impact.djoff@gmail.com';
 
 export const IMPACT_SOCIALS = {
@@ -106,6 +127,12 @@ export const IMPACT_TIKTOK_POSTS = [
   'https://www.tiktok.com/@impactdj_raw/video/7646801562802605345',
   'https://www.tiktok.com/@impactdj_raw/video/7645250249606368545',
 ] as const;
+
+// Favicon / tab icon for IMPACT: the neon-blue mask. Drop the file at
+// public/impact/favicon.png (transparent PNG, ~512px). Until it exists the
+// wordmark logo.svg is listed as a graceful fallback so the tab is never blank.
+export const IMPACT_FAVICON_URL = '/impact/favicon.png';
+export const IMPACT_ICONS = [{ url: IMPACT_FAVICON_URL }, { url: '/impact/logo.svg' }];
 
 export const IMPACT_BRAND = {
   logoUrl: '/impact/logo.png',
@@ -412,6 +439,37 @@ html:has(.impact-site[data-impact-theme="light"]), body:has(.impact-site[data-im
 .impact-site section[data-no-translate] { background: rgba(7,11,26,.14) !important; -webkit-backdrop-filter: blur(3px) !important; backdrop-filter: blur(3px) !important; }
 .impact-site[data-impact-theme="light"] section[data-no-translate] { background: rgba(255,255,255,.07) !important; border-color: rgba(47,107,255,.14) !important; -webkit-backdrop-filter: blur(1px) !important; backdrop-filter: blur(1px) !important; }
 .impact-site[data-impact-theme="light"] section[data-no-translate] h2, .impact-site[data-impact-theme="light"] section[data-no-translate] p { color: #07101f !important; text-shadow: none !important; }
+/* IMPACT listening / social icons: a single monochrome row (blue glow),
+   horizontal-scrollable on every width including mobile — no platform colours,
+   no wrapping. Black in light mode, white in dark mode. */
+.impact-site .streaming-links-row, .impact-site .public-social-block {
+  flex-wrap: nowrap !important;
+  justify-content: flex-start !important;
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  padding-bottom: 6px;
+}
+.impact-site .streaming-links-row::-webkit-scrollbar, .impact-site .public-social-block::-webkit-scrollbar { display: none; }
+.impact-site .streaming-links-row > a, .impact-site .public-social-block > a { flex: 0 0 auto; scroll-snap-align: start; }
+/* dark (default): white icons + blue glow */
+.impact-site .streaming-links-row a { color: #ffffff !important; text-shadow: 0 0 12px rgba(47,107,255,.55); }
+.impact-site .streaming-links-row a span { color: inherit !important; }
+.impact-site .public-social-block a { color: #ffffff !important; border-color: rgba(76,201,255,.3) !important; }
+.impact-site .streaming-links-row a svg,
+.impact-site .streaming-links-row a img,
+.impact-site .streaming-links-row a span[style],
+.impact-site .public-social-block a svg,
+.impact-site .public-social-block a img { filter: brightness(0) invert(1) drop-shadow(0 0 7px rgba(47,107,255,.9)) !important; }
+/* light: black icons + blue glow */
+.impact-site[data-impact-theme="light"] .streaming-links-row a { color: #05070f !important; text-shadow: 0 0 10px rgba(47,107,255,.32); }
+.impact-site[data-impact-theme="light"] .public-social-block a { color: #05070f !important; }
+.impact-site[data-impact-theme="light"] .streaming-links-row a svg,
+.impact-site[data-impact-theme="light"] .streaming-links-row a img,
+.impact-site[data-impact-theme="light"] .streaming-links-row a span[style],
+.impact-site[data-impact-theme="light"] .public-social-block a svg,
+.impact-site[data-impact-theme="light"] .public-social-block a img { filter: brightness(0) drop-shadow(0 0 6px rgba(47,107,255,.7)) !important; }
 @media (min-width: 768px) {
   .impact-site .vielusos-player-card, .impact-site .vielusos-video-card { width: calc((100% - 3rem) / 4) !important; max-width: none !important; }
   .impact-site .impact-official-player-card { flex-basis: calc((100% - 3rem) / 4) !important; }

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { ShieldCheck, X } from 'lucide-react';
 import { useLanguage } from './language-provider';
-import { IMPACT_HOST } from '@/lib/impact';
+import { isImpactHost } from '@/lib/impact';
 
 const KEY = 'easyasso-cookie-consent';
 
@@ -14,7 +14,7 @@ export function CookieBanner() {
 
   useEffect(() => {
     const host = window.location.hostname.toLowerCase();
-    setArtist(host === 'vielusos.com' || host === 'www.vielusos.com' ? 'VIELUSOS' : host === IMPACT_HOST ? 'IMPACT' : '');
+    setArtist(host === 'vielusos.com' || host === 'www.vielusos.com' ? 'VIELUSOS' : isImpactHost(host) ? 'IMPACT' : '');
     setVisible(!localStorage.getItem(KEY));
   }, []);
 

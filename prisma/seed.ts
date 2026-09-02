@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
+import { randomBytes } from 'crypto';
 import { createOrganizationForUser } from '../src/lib/bootstrap';
 import { DEFAULT_THEME } from '../src/lib/colors';
 import { SYSTEM_ROLE_PERMISSIONS } from '../src/lib/permissions';
@@ -9,7 +10,6 @@ import {
   IMPACT_HOST,
   IMPACT_BRAND,
   IMPACT_LOGIN_EMAIL,
-  IMPACT_LOGIN_PASSWORD,
   IMPACT_CONTACT_EMAIL,
   IMPACT_SOCIALS,
   IMPACT_TRACKS,
@@ -88,7 +88,13 @@ async function seedImpact() {
   const existing = await prisma.site.findUnique({ where: { subdomain: IMPACT_SUBDOMAIN }, include: { organization: true } });
   const previousProfile = ((existing?.organization.profile as any) || {}) as Record<string, any>;
   const needsContentSetup = Number(previousProfile.impactSeedVersion || 0) < 14;
-  const passwordHash = await bcrypt.hash(IMPACT_LOGIN_PASSWORD, 10);
+  // The admin password never lives in the repo. Use IMPACT_ADMIN_PASSWORD when
+  // provided; otherwise generate a strong random one and print it below. Either
+  // way the IMPACT admin account is (re)set to this value on every seed, so the
+  // old hard-coded password is retired.
+  const envPassword = process.env.IMPACT_ADMIN_PASSWORD;
+  const impactPassword = envPassword || randomBytes(12).toString('base64url');
+  const passwordHash = await bcrypt.hash(impactPassword, 10);
   const legacyEasyAssoUser = await prisma.user.findUnique({ where: { email: 'impact@easyasso.fr' } });
   const legacyAgencyUser = await prisma.user.findUnique({ where: { email: 'contact@skorm-agency.com' } });
   let user = await prisma.user.findUnique({ where: { email: IMPACT_LOGIN_EMAIL } });
@@ -103,6 +109,8 @@ async function seedImpact() {
     }
   }
   if (!user) user = await prisma.user.create({ data: { name: 'IMPACT', email: IMPACT_LOGIN_EMAIL, passwordHash, emailVerified: new Date() } });
+  // Always reset the password so a previously seeded (compromised) one is replaced.
+  await prisma.user.update({ where: { id: user.id }, data: { passwordHash } });
 
   const profile = {
     ...previousProfile,
@@ -230,11 +238,17 @@ async function seedImpact() {
   }
 
   console.log('✅ Profil IMPACT prêt (compte offert, sans abonnement payant).');
-  console.log(`   Connexion IMPACT : ${IMPACT_LOGIN_EMAIL} / ${IMPACT_LOGIN_PASSWORD}`);
+  console.log(`   Connexion IMPACT : ${IMPACT_LOGIN_EMAIL}`);
+  console.log(envPassword
+    ? '   Mot de passe IMPACT : (défini via la variable IMPACT_ADMIN_PASSWORD)'
+    : `   Mot de passe IMPACT (généré, à noter maintenant) : ${impactPassword}`);
   console.log(`   URL interne : /s/${IMPACT_SUBDOMAIN}  ·  domaine : https://${IMPACT_HOST}  ·  admin : /impact-admin`);
 }
 
-const seedRun = process.env.IMPACT_ONLY === '1' ? seedImpact() : main().then(seedImpact);
+// SEED_ONLY=impact seeds ONLY the IMPACT tenant — used when standing up an
+// isolated IMPACT deployment with its own database (no demo org, no VIELUSOS).
+const impactOnly = process.env.SEED_ONLY === 'impact' || process.env.IMPACT_ONLY === '1';
+const seedRun = impactOnly ? seedImpact() : main().then(seedImpact);
 
 seedRun
   .catch((e) => { console.error(e); process.exit(1); })

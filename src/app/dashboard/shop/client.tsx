@@ -205,8 +205,13 @@ export function ShopClient({ enabled: initialEnabled, initial, boutiqueUrl = '',
     cancel();
   }
   async function toggleActive(p: Product) {
-    setProducts((all) => all.map((x) => (x.id === p.id ? { ...x, active: !x.active } : x)));
-    await fetch(`/api/shop/products/${p.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ active: !p.active }) }).catch(() => {});
+    const next = !p.active;
+    setProducts((all) => all.map((x) => (x.id === p.id ? { ...x, active: next } : x)));
+    const response = await fetch(`/api/shop/products/${p.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ active: next }) }).catch(() => null);
+    if (!response?.ok) {
+      setProducts((all) => all.map((x) => (x.id === p.id ? { ...x, active: p.active } : x)));
+      alert('Impossible de modifier la visibilité de ce produit. Réessayez.');
+    }
   }
   async function remove(p: Product) {
     if (!confirm(`Supprimer « ${p.name} » ?`)) return;
@@ -335,8 +340,11 @@ export function ShopClient({ enabled: initialEnabled, initial, boutiqueUrl = '',
             </div>
           )}
 
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-extrabold text-gray-900">Vos produits {products.length > 0 && <span className="text-gray-400">({products.length})</span>}</h2>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h2 className="text-lg font-extrabold text-gray-900">Vos produits {products.length > 0 && <span className="text-gray-400">({products.length})</span>}</h2>
+              {branded && products.some((product) => product.provider === 'contrado') && <p className="text-sm text-gray-500"><span className="font-bold text-green-700">{products.filter((product) => product.active).length} affiché{products.filter((product) => product.active).length > 1 ? 's' : ''}</span> sur le site · choisissez la visibilité sur chaque article.</p>}
+            </div>
             {!draft && <button onClick={startAdd} className="btn btn-primary"><Plus className="h-4 w-4" /> Ajouter un produit</button>}
           </div>
 
@@ -415,10 +423,10 @@ export function ShopClient({ enabled: initialEnabled, initial, boutiqueUrl = '',
                   {p.description && <p className="mt-1 line-clamp-2 text-sm text-gray-500">{p.description}</p>}
                   <p className="mt-1 text-xs text-gray-400">{p.stock == null ? 'Stock illimité' : `${p.stock} en stock`}{(p.images?.length || 0) > 1 ? ` · ${p.images!.length} photos` : ''}</p>
                   {p.provider === 'contrado' && <p className="mt-1 text-[11px] font-semibold uppercase tracking-wide text-[#d33f5c]">Synchronisé avec Contrado</p>}
-                  <div className="mt-3 flex gap-1">
+                  <div className="mt-3 flex flex-wrap gap-2">
                     <button onClick={() => startEdit(p)} className="btn btn-ghost flex-1 text-sm"><Pencil className="h-4 w-4" /> Modifier</button>
-                    <button onClick={() => toggleActive(p)} title={p.active ? 'Masquer' : 'Afficher'} className="grid h-9 w-9 place-items-center rounded-lg text-gray-500 hover:bg-gray-100">{p.active ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}</button>
-                    <button onClick={() => remove(p)} title="Supprimer" className="grid h-9 w-9 place-items-center rounded-lg text-red-500 hover:bg-red-50"><Trash2 className="h-4 w-4" /></button>
+                    <button onClick={() => toggleActive(p)} aria-pressed={p.active} className={`inline-flex min-h-9 items-center justify-center gap-1.5 rounded-lg px-3 text-xs font-bold transition ${p.active ? 'bg-green-50 text-green-700 ring-1 ring-green-200 hover:bg-green-100' : 'bg-gray-100 text-gray-600 ring-1 ring-gray-200 hover:bg-gray-200'}`}>{p.active ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}{p.active ? 'Affiché en ligne' : 'Masqué du site'}</button>
+                    {p.provider !== 'contrado' && <button onClick={() => remove(p)} title="Supprimer" className="grid h-9 w-9 place-items-center rounded-lg text-red-500 hover:bg-red-50"><Trash2 className="h-4 w-4" /></button>}
                   </div>
                 </div>
               </div>

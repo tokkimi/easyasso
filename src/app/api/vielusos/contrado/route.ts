@@ -117,7 +117,6 @@ export async function POST(req: Request) {
               imageUrl: product.images[0] || null,
               category: product.category,
               stock: product.stock,
-              active: product.stock !== 0 && product.priceCents > 0,
             },
           });
         }

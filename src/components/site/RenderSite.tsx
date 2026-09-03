@@ -134,6 +134,7 @@ async function loadShopProducts(organizationId: string) {
       brand: p.brand,
       stock: p.stock,
       provider: p.provider,
+      checkoutUrl: p.provider === "contrado" && typeof (p.externalData as any)?.storeProductURL === "string" ? (p.externalData as any).storeProductURL : "",
       variants: p.provider === "contrado" && Array.isArray((p.externalData as any)?.productVariants)
         ? (p.externalData as any).productVariants.map((variant: any) => ({
             id: String(variant.variantId || ""),

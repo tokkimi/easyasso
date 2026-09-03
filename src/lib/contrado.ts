@@ -132,6 +132,8 @@ export async function readContradoCatalog(apiKey: string, storeId: string) {
         externalData: {
           storeProductId: id,
           storeId,
+          storeProductURL: typeof product.storeProductURL === 'string' ? product.storeProductURL : '',
+          siteUrl: typeof product.siteUrl === 'string' ? product.siteUrl : '',
           productOptions: Array.isArray(variantData.productOptions) ? variantData.productOptions : [],
           productVariants: variants,
           syncedFrom: 'contrado',

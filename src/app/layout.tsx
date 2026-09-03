@@ -1,9 +1,9 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import { Providers } from './providers';
+import { appBaseUrl } from '@/lib/utils';
 
-const ROOT = process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'localhost:3000';
-const BASE_URL = ROOT.includes('localhost') ? `http://${ROOT}` : `https://${ROOT}`;
+const BASE_URL = appBaseUrl();
 const TITLE = 'Easy Asso — Créez le site de votre association, sans compétence technique';
 const DESCRIPTION =
   'Easy Asso permet à toute association de créer un site professionnel, collecter des dons, gérer ses donateurs et sa comptabilité, en toute autonomie.';

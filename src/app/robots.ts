@@ -1,7 +1,7 @@
 import type { MetadataRoute } from 'next';
+import { appBaseUrl } from '@/lib/utils';
 
-const ROOT = process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'localhost:3000';
-const BASE_URL = ROOT.includes('localhost') ? `http://${ROOT}` : `https://${ROOT}`;
+const BASE_URL = appBaseUrl();
 
 export default function robots(): MetadataRoute.Robots {
   return {

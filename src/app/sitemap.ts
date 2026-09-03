@@ -1,9 +1,8 @@
 import type { MetadataRoute } from 'next';
 import { prisma } from '@/lib/prisma';
-import { siteUrlFor } from '@/lib/utils';
+import { appBaseUrl, siteUrlFor } from '@/lib/utils';
 
-const ROOT = process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'localhost:3000';
-const BASE_URL = ROOT.includes('localhost') ? `http://${ROOT}` : `https://${ROOT}`;
+const BASE_URL = appBaseUrl();
 
 export const revalidate = 3600;
 

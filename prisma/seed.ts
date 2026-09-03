@@ -210,7 +210,6 @@ async function seedImpact() {
     const pages: Array<{ title: string; slug: string; order: number; isHome?: boolean; showInNav?: boolean; description: string; blocks: Array<{ type: BlockType; content: any }> }> = [
       { title: 'Accueil', slug: 'accueil', order: 0, isHome: true, description: 'Site officiel IMPACT · Rawstyle DJ/Producer.', blocks: [
         { type: 'stats', content: { variant: 'impact', eyebrow: 'Repères publics', title: 'IMPACT EN CHIFFRES', intro: 'Chiffres relevés sur les profils officiels au moment de la mise à jour.', source: 'Sources : Spotify artiste officiel et SoundCloud officiel IMPACT.', items: IMPACT_STATS } },
-        { type: 'streaming', content: { variant: 'impact', title: '', linkStyle: 'text-white', glowColor: IMPACT_BRAND.neon, links: streamingLinks } },
         { type: 'players', content: { variant: 'impact', sort: 'manual', items: IMPACT_TRACKS.filter((track) => ['Spotify', 'YouTube'].includes(track.source)).map((track) => ({ platform: track.source, url: track.url, title: track.title, artist: track.artist, releaseDate: track.releaseDate, thumbnail: track.thumbnail })), links: {} } },
         { type: 'instagram', content: { variant: 'impact', title: 'IMPACT SUR INSTAGRAM', username: 'impactdj_raw', url: IMPACT_SOCIALS.instagram, count: 15, postUrls: IMPACT_INSTAGRAM_POSTS, tiktokTitle: 'IMPACT SUR TIKTOK', tiktokUsername: 'impactdj_raw', tiktokUrl: IMPACT_SOCIALS.tiktok, tiktokPostUrls: IMPACT_TIKTOK_POSTS } },
       ] },

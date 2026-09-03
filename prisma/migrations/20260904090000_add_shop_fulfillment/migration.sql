@@ -1,9 +1,9 @@
 ALTER TABLE "Order"
-ADD COLUMN "fulfillmentProvider" TEXT,
-ADD COLUMN "fulfillmentReference" TEXT,
-ADD COLUMN "fulfillmentStatus" TEXT,
-ADD COLUMN "fulfillmentError" TEXT;
+ADD COLUMN IF NOT EXISTS "fulfillmentProvider" TEXT,
+ADD COLUMN IF NOT EXISTS "fulfillmentReference" TEXT,
+ADD COLUMN IF NOT EXISTS "fulfillmentStatus" TEXT,
+ADD COLUMN IF NOT EXISTS "fulfillmentError" TEXT;
 
 ALTER TABLE "OrderItem"
-ADD COLUMN "externalVariantId" TEXT,
-ADD COLUMN "externalData" JSONB NOT NULL DEFAULT '{}';
+ADD COLUMN IF NOT EXISTS "externalVariantId" TEXT,
+ADD COLUMN IF NOT EXISTS "externalData" JSONB NOT NULL DEFAULT '{}';

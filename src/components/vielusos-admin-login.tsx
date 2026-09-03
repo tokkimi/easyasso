@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { signIn, useSession } from 'next-auth/react';
 
-export function VielusosAdminLogin() {
+export function VielusosAdminLogin({ logoUrl }: { logoUrl: string }) {
   const router = useRouter();
   const { status } = useSession();
   const [email, setEmail] = useState('');
@@ -32,7 +32,7 @@ export function VielusosAdminLogin() {
       <div className="w-full max-w-md">
         <Link href="/" className="mb-6 flex items-center justify-center gap-3 text-xl text-white">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/vielusos/logo.png" alt="" className="h-14 w-14 object-contain" />
+          <img src={logoUrl} alt="" className="h-14 w-14 object-contain" />
           <span className="font-light uppercase tracking-[0.28em]">VIELUSOS</span>
         </Link>
         <div className="rounded-3xl border border-white/15 bg-black/65 p-6 shadow-2xl backdrop-blur-xl">

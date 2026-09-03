@@ -3,13 +3,13 @@
  * from the general EasyAsso templates. Keep this in one place so the exception
  * never leaks into another tenant's public site or dashboard.
  */
-export const VIELUSOS_SUBDOMAIN = 'ruche-dpjdd9ne';
+export const VIELUSOS_SUBDOMAIN = "ruche-dpjdd9ne";
 
 export const VIELUSOS_BRAND = {
-  logoUrl: '/vielusos/logo.png',
-  backgroundUrl: '/vielusos/background.png',
-  accent: '#d33f5c',
-  surface: '#0b0b10',
+  logoUrl: "/vielusos/logo.png",
+  backgroundUrl: "/vielusos/background.png",
+  accent: "#d33f5c",
+  surface: "#0b0b10",
 };
 
 export const VIELUSOS_SITE_CSS = `
@@ -37,6 +37,26 @@ html:has(.vielusos-site), body:has(.vielusos-site) { min-height: 100%; backgroun
 }
 `;
 
-export function isVielusosSite(site?: { subdomain?: string | null } | null): boolean {
+export function isVielusosSite(
+  site?: { subdomain?: string | null } | null,
+): boolean {
   return site?.subdomain === VIELUSOS_SUBDOMAIN;
+}
+
+export function vielusosStoredLogoUrl(
+  site?: { header?: unknown; footer?: unknown } | null,
+): string {
+  const header = (site?.header as any) || {};
+  const footer = (site?.footer as any) || {};
+  const saved = [header.vielusosLogoUrl, footer.vielusosLogoUrl].find(
+    (value) => typeof value === "string" && value.trim(),
+  );
+  return saved ? String(saved) : VIELUSOS_BRAND.logoUrl;
+}
+
+export function vielusosLogoUrl(
+  site?: { header?: unknown; footer?: unknown } | null,
+): string {
+  const saved = vielusosStoredLogoUrl(site);
+  return saved.startsWith("data:image/") ? "/api/vielusos/logo" : saved;
 }

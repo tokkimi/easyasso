@@ -9,20 +9,22 @@ import { siteUrlFor } from '@/lib/utils';
 import { isPlatformAdmin } from '@/lib/platform-admin';
 import { Sidebar } from './sidebar';
 import { EmailVerificationBanner } from './email-verification-banner';
-import { isVielusosSite, VIELUSOS_BRAND } from '@/lib/vielusos';
+import { isVielusosSite, VIELUSOS_BRAND, VIELUSOS_SUBDOMAIN, vielusosLogoUrl } from '@/lib/vielusos';
 
 export async function generateMetadata(): Promise<Metadata> {
   const host = (await headers()).get('host')?.split(':')[0].toLowerCase();
   const vielusos = host === 'vielusos.com' || host === 'www.vielusos.com';
   if (!vielusos) return { title: 'Tableau de bord' };
+  const site = await prisma.site.findUnique({ where: { subdomain: VIELUSOS_SUBDOMAIN }, select: { header: true, footer: true } });
+  const logoUrl = vielusosLogoUrl(site);
   return {
     title: { absolute: 'VIELUSOS · Administration' },
     description: 'Administration du site officiel VIELUSOS.',
     applicationName: 'VIELUSOS',
-    manifest: '/vielusos.webmanifest',
+    manifest: '/api/vielusos/manifest',
     icons: {
-      icon: [{ url: '/vielusos/logo.png', type: 'image/png' }],
-      apple: [{ url: '/vielusos/logo.png', type: 'image/png' }],
+      icon: [{ url: logoUrl }],
+      apple: [{ url: logoUrl }],
     },
     robots: { index: false, follow: false },
   };
@@ -61,7 +63,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
         published={site?.published ?? false}
         unreadMessages={unreadMessages}
         branded={vielusos}
-        brandLogoUrl={vielusos ? VIELUSOS_BRAND.logoUrl : '/easyasso-logo.png'}
+        brandLogoUrl={vielusos ? vielusosLogoUrl(site) : '/easyasso-logo.png'}
       />
       <main className={`flex-1 lg:ml-64 ${vielusos ? 'text-[#f7f7fb]' : ''}`}>
         {!vielusos && access.isTrial && (

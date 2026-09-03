@@ -1,11 +1,12 @@
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Globe, Check, Copy, CreditCard, ExternalLink, Building2, Save, ShoppingCart, Link2, ShieldCheck, UserRound, Lock, Power } from 'lucide-react';
+import { Globe, Check, Copy, CreditCard, ExternalLink, Building2, Save, ShoppingCart, Link2, ShieldCheck, UserRound, Lock, Power, ImageIcon } from 'lucide-react';
 import { PageHeader } from '@/components/ui';
 import { formatDate } from '@/lib/utils';
 import { canUpgradePlan, PLANS, type PlanId } from '@/lib/plans';
 import { ManualTransferButton } from '@/app/onboarding/manual-transfer-button';
+import { ImageInput } from '@/app/dashboard/editor/controls';
 
 export function SettingsClient({ org, user, site, freeUrl, rootDomain, canDomain, categories, branded = false }: any) {
   const router = useRouter();
@@ -20,6 +21,8 @@ export function SettingsClient({ org, user, site, freeUrl, rootDomain, canDomain
   const [account, setAccount] = useState({ name: user.name || '', email: user.email || '', currentPassword: '', newPassword: '' });
   const [billingLoading, setBillingLoading] = useState('');
   const [billingError, setBillingError] = useState('');
+  const [logoUrl, setLogoUrl] = useState(site.logoUrl || '/vielusos/logo.png');
+  const [savingLogo, setSavingLogo] = useState(false);
 
   async function saveName() {
     await fetch('/api/site', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name }) });
@@ -65,6 +68,18 @@ export function SettingsClient({ org, user, site, freeUrl, rootDomain, canDomain
     }
     setTimeout(() => setMsg(''), 3500);
   }
+  async function saveLogo() {
+    setSavingLogo(true);
+    const res = await fetch('/api/vielusos/brand', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ logoUrl }) });
+    const data = await res.json().catch(() => ({}));
+    setSavingLogo(false);
+    setMsg(res.ok ? 'Logo VIELUSOS mis à jour partout sur le site.' : (data.error || 'Impossible de mettre à jour le logo.'));
+    if (res.ok) {
+      setLogoUrl(data.logoUrl);
+      router.refresh();
+    }
+    setTimeout(() => setMsg(''), 3500);
+  }
   async function togglePublished(value: boolean) {
     setPublished(value);
     const res = await fetch('/api/site', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ published: value }) });
@@ -104,6 +119,17 @@ export function SettingsClient({ org, user, site, freeUrl, rootDomain, canDomain
           <button onClick={saveName} className="btn btn-primary shrink-0">Enregistrer</button>
         </div>
       </div>
+
+      {branded && (
+        <div className="card mb-6">
+          <h2 className="mb-1 flex items-center gap-2 font-bold text-gray-900"><ImageIcon className="h-5 w-5" /> Logo VIELUSOS</h2>
+          <p className="mb-5 text-sm text-gray-500">Importez le logo une seule fois. Il sera utilisé automatiquement dans le header, le footer, la bannière, la bulle de contact, l’administration et l’icône du site.</p>
+          <div className="max-w-sm">
+            <ImageInput value={logoUrl} onChange={setLogoUrl} label="Logo officiel" kind="logo" />
+          </div>
+          <button onClick={saveLogo} disabled={savingLogo} className="btn btn-primary mt-5"><Save className="h-4 w-4" /> {savingLogo ? 'Mise à jour…' : 'Mettre à jour le logo partout'}</button>
+        </div>
+      )}
 
       <div className="card mb-6">
         <h2 className="mb-1 flex items-center gap-2 font-bold text-gray-900"><UserRound className="h-5 w-5" /> Mon compte</h2>

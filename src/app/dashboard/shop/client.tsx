@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Plus, Trash2, Pencil, Save, X, Package, Eye, EyeOff, Star, ArrowLeft, ArrowRight, ImagePlus, ExternalLink, LayoutTemplate, CreditCard, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Plus, Trash2, Pencil, Save, X, Package, Eye, EyeOff, Star, ArrowLeft, ArrowRight, ImagePlus, ExternalLink, LayoutTemplate, CreditCard, CheckCircle2, AlertCircle, RefreshCw, KeyRound, ShieldCheck } from 'lucide-react';
 import { PageHeader } from '@/components/ui';
 
 type Product = {
@@ -14,6 +14,7 @@ type Product = {
   brand?: string;
   stock?: number | null;
   active: boolean;
+  provider?: string | null;
 };
 
 type OrderItem = { id: string; name: string; priceCents: number; quantity: number };
@@ -33,7 +34,9 @@ function mainImage(p: Product) {
   return (p.images && p.images[0]) || p.imageUrl || '';
 }
 
-export function ShopClient({ enabled: initialEnabled, initial, boutiqueUrl = '', hasBoutiquePage: initialHasPage = false, connectStarted = false, connectReady: initialReady = false, orders = [] }: { enabled: boolean; initial: Product[]; boutiqueUrl?: string; hasBoutiquePage?: boolean; connectStarted?: boolean; connectReady?: boolean; orders?: Order[] }) {
+type ContradoStatus = { connected: boolean; storeName?: string | null; syncedAt?: string | null; error?: string | null };
+
+export function ShopClient({ enabled: initialEnabled, initial, boutiqueUrl = '', hasBoutiquePage: initialHasPage = false, connectStarted = false, connectReady: initialReady = false, orders = [], branded = false, contrado: initialContrado = { connected: false } }: { enabled: boolean; initial: Product[]; boutiqueUrl?: string; hasBoutiquePage?: boolean; connectStarted?: boolean; connectReady?: boolean; orders?: Order[]; branded?: boolean; contrado?: ContradoStatus }) {
   const [enabled, setEnabled] = useState(initialEnabled);
   const [products, setProducts] = useState<Product[]>(initial);
   const [draft, setDraft] = useState<Draft | null>(null);
@@ -43,6 +46,10 @@ export function ShopClient({ enabled: initialEnabled, initial, boutiqueUrl = '',
   const [creatingPage, setCreatingPage] = useState(false);
   const [connect, setConnect] = useState({ started: connectStarted, ready: initialReady });
   const [connecting, setConnecting] = useState(false);
+  const [contrado, setContrado] = useState<ContradoStatus>(initialContrado);
+  const [contradoKey, setContradoKey] = useState('');
+  const [syncingContrado, setSyncingContrado] = useState(false);
+  const [contradoMessage, setContradoMessage] = useState('');
   const dragIndex = useRef<number | null>(null);
 
   // Coming back from Stripe onboarding: refresh the account status.
@@ -60,6 +67,32 @@ export function ShopClient({ enabled: initialEnabled, initial, boutiqueUrl = '',
     setConnecting(false);
     if (!res.ok || !data.url) { alert(data.error || 'Connexion Stripe impossible.'); return; }
     window.location.href = data.url;
+  }
+
+  async function syncContrado() {
+    if (!contrado.connected && !contradoKey.trim()) {
+      setContradoMessage('Collez la nouvelle clé API Contrado avant de connecter la boutique.');
+      return;
+    }
+    setSyncingContrado(true);
+    setContradoMessage('');
+    const res = await fetch('/api/vielusos/contrado', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(contradoKey.trim() ? { apiKey: contradoKey.trim() } : {}),
+    });
+    const data = await res.json().catch(() => ({}));
+    setSyncingContrado(false);
+    if (!res.ok) {
+      setContradoMessage(data.error || 'Connexion Contrado impossible.');
+      return;
+    }
+    setContradoKey('');
+    setContrado({ connected: true, storeName: data.storeName, syncedAt: data.syncedAt, error: null });
+    if (Array.isArray(data.products)) setProducts(data.products);
+    setEnabled(true);
+    setHasPage(true);
+    setContradoMessage(`${data.imported || 0} article${data.imported > 1 ? 's' : ''} synchronisé${data.imported > 1 ? 's' : ''}.`);
   }
 
   async function addBoutiquePage() {
@@ -184,6 +217,43 @@ export function ShopClient({ enabled: initialEnabled, initial, boutiqueUrl = '',
   return (
     <div>
       <PageHeader title="Boutique" subtitle="Activez votre boutique et gérez vos produits. Les commandes apparaîtront dans votre comptabilité." />
+
+      {branded && (
+        <section className="card mb-6 border border-[#d33f5c]/25" aria-labelledby="contrado-title">
+          <div className="flex items-start gap-3">
+            <div className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-[#d33f5c]/10 text-[#d33f5c]"><KeyRound className="h-5 w-5" /></div>
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <h2 id="contrado-title" className="font-bold text-gray-900">Catalogue Contrado</h2>
+                  <p className="text-sm text-gray-500">Connexion privée réservée à VIELUSOS. Les visiteurs restent sur votre site.</p>
+                </div>
+                {contrado.connected && <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-3 py-1 text-xs font-bold text-green-700"><CheckCircle2 className="h-3.5 w-3.5" /> Connecté</span>}
+              </div>
+
+              {contrado.connected ? (
+                <div className="mt-4 flex flex-wrap items-end gap-3">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold text-gray-800">{contrado.storeName || 'Boutique VIELUSOS'}</p>
+                    <p className="text-xs text-gray-500">{contrado.syncedAt ? `Dernière synchronisation : ${formatDate(contrado.syncedAt)}` : 'Connexion enregistrée.'}</p>
+                  </div>
+                  <button type="button" onClick={syncContrado} disabled={syncingContrado} className="btn btn-primary"><RefreshCw className={`h-4 w-4 ${syncingContrado ? 'animate-spin' : ''}`} /> {syncingContrado ? 'Synchronisation…' : 'Synchroniser les articles'}</button>
+                </div>
+              ) : (
+                <div className="mt-4">
+                  <label className="label" htmlFor="contrado-key">Nouvelle clé API Contrado</label>
+                  <div className="flex flex-col gap-2 sm:flex-row">
+                    <input id="contrado-key" type="password" autoComplete="new-password" className="input flex-1 font-mono" value={contradoKey} onChange={(event) => setContradoKey(event.target.value)} placeholder="Collez la clé privée générée dans Contrado" />
+                    <button type="button" onClick={syncContrado} disabled={syncingContrado} className="btn btn-primary shrink-0"><ShieldCheck className="h-4 w-4" /> {syncingContrado ? 'Connexion…' : 'Connecter et importer'}</button>
+                  </div>
+                  <p className="mt-2 text-xs text-amber-700">N’utilisez pas la clé visible sur une capture d’écran : révoquez-la dans Contrado et créez-en une nouvelle avec les droits de lecture des produits.</p>
+                </div>
+              )}
+              {(contradoMessage || contrado.error) && <p className={`mt-3 rounded-xl px-3 py-2 text-sm ${(contradoMessage || '').includes('synchronisé') ? 'bg-green-50 text-green-700' : 'bg-amber-50 text-amber-800'}`}>{contradoMessage || contrado.error}</p>}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Activation toggle */}
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-gray-200">
@@ -344,6 +414,7 @@ export function ShopClient({ enabled: initialEnabled, initial, boutiqueUrl = '',
                   </div>
                   {p.description && <p className="mt-1 line-clamp-2 text-sm text-gray-500">{p.description}</p>}
                   <p className="mt-1 text-xs text-gray-400">{p.stock == null ? 'Stock illimité' : `${p.stock} en stock`}{(p.images?.length || 0) > 1 ? ` · ${p.images!.length} photos` : ''}</p>
+                  {p.provider === 'contrado' && <p className="mt-1 text-[11px] font-semibold uppercase tracking-wide text-[#d33f5c]">Synchronisé avec Contrado</p>}
                   <div className="mt-3 flex gap-1">
                     <button onClick={() => startEdit(p)} className="btn btn-ghost flex-1 text-sm"><Pencil className="h-4 w-4" /> Modifier</button>
                     <button onClick={() => toggleActive(p)} title={p.active ? 'Masquer' : 'Afficher'} className="grid h-9 w-9 place-items-center rounded-lg text-gray-500 hover:bg-gray-100">{p.active ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}</button>

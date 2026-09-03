@@ -12,20 +12,20 @@ datasource db {
 // Auth (NextAuth compatible)
 // ---------------------------------------------------------------------------
 model User {
-  id            String       @id @default(cuid())
+  id            String    @id @default(cuid())
   name          String?
-  email         String       @unique
+  email         String    @unique
   emailVerified DateTime?
   image         String?
   passwordHash  String?
-  isSuperAdmin  Boolean      @default(false)
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @updatedAt
+  isSuperAdmin  Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
   accounts    Account[]
   sessions    Session[]
   memberships Membership[]
-  invitesSent Invitation[]   @relation("InvitedBy")
+  invitesSent Invitation[] @relation("InvitedBy")
 }
 
 model Account {
@@ -41,7 +41,8 @@ model Account {
   scope             String?
   id_token          String?
   session_state     String?
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@unique([provider, providerAccountId])
 }
 
@@ -50,13 +51,14 @@ model Session {
   sessionToken String   @unique
   userId       String
   expires      DateTime
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model VerificationToken {
   identifier String
   token      String   @unique
   expires    DateTime
+
   @@unique([identifier, token])
 }
 
@@ -72,35 +74,36 @@ enum PlanStatus {
 }
 
 model Organization {
-  id            String     @id @default(cuid())
-  name          String
-  slug          String     @unique
-  planStatus    PlanStatus @default(TRIAL)
-  trialEndsAt   DateTime?
-  stripeCustomerId String?
-  stripeSessionId  String?
-  airwallexPaymentLinkId String? @unique
-  paidAt        DateTime?
-  createdAt     DateTime   @default(now())
-  updatedAt     DateTime   @updatedAt
-  profile       Json       @default("{}")
+  id                     String     @id @default(cuid())
+  name                   String
+  slug                   String     @unique
+  planStatus             PlanStatus @default(TRIAL)
+  trialEndsAt            DateTime?
+  stripeCustomerId       String?
+  stripeSessionId        String?
+  airwallexPaymentLinkId String?    @unique
+  paidAt                 DateTime?
+  createdAt              DateTime   @default(now())
+  updatedAt              DateTime   @updatedAt
+  profile                Json       @default("{}")
 
-  memberships   Membership[]
-  invitations   Invitation[]
-  site          Site?
-  donors        Donor[]
-  campaigns     Campaign[]
-  donations     Donation[]
-  categories    Category[]
-  transactions  Transaction[]
-  subscribers   NewsletterSubscriber[]
-  events        SiteEvent[]
-  contactMessages ContactMessage[]
+  memberships      Membership[]
+  invitations      Invitation[]
+  site             Site?
+  donors           Donor[]
+  campaigns        Campaign[]
+  donations        Donation[]
+  categories       Category[]
+  transactions     Transaction[]
+  subscribers      NewsletterSubscriber[]
+  events           SiteEvent[]
+  contactMessages  ContactMessage[]
   platformMessages PlatformMessage[]
-  roles         Role[]
-  products      Product[]
-  orders        Order[]
+  roles            Role[]
+  products         Product[]
+  orders           Order[]
   customerProfiles CustomerProfile[]
+  integrations     ExternalIntegration[]
 }
 
 enum SystemRole {
@@ -113,30 +116,32 @@ enum SystemRole {
 }
 
 model Membership {
-  id             String       @id @default(cuid())
+  id             String     @id @default(cuid())
   userId         String
   organizationId String
-  systemRole     SystemRole   @default(MEMBER)
+  systemRole     SystemRole @default(MEMBER)
   roleId         String?
-  createdAt      DateTime     @default(now())
+  createdAt      DateTime   @default(now())
 
   user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   role         Role?        @relation(fields: [roleId], references: [id])
+
   @@unique([userId, organizationId])
 }
 
 // Custom roles with granular permission list (see lib/permissions.ts)
 model Role {
-  id             String       @id @default(cuid())
+  id             String   @id @default(cuid())
   organizationId String
   name           String
-  permissions    String[]     @default([])
-  isSystem       Boolean      @default(false)
-  createdAt      DateTime     @default(now())
+  permissions    String[] @default([])
+  isSystem       Boolean  @default(false)
+  createdAt      DateTime @default(now())
 
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   memberships  Membership[]
+
   @@unique([organizationId, name])
 }
 
@@ -152,6 +157,7 @@ model Invitation {
 
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   invitedBy    User?        @relation("InvitedBy", fields: [invitedById], references: [id])
+
   @@unique([organizationId, email])
 }
 
@@ -178,27 +184,28 @@ model Site {
 }
 
 model Page {
-  id        String   @id @default(cuid())
-  siteId    String
-  title     String
-  slug      String
-  order     Int      @default(0)
-  isHome    Boolean  @default(false)
-  showInNav Boolean  @default(true)
-  seoTitle  String?
+  id             String   @id @default(cuid())
+  siteId         String
+  title          String
+  slug           String
+  order          Int      @default(0)
+  isHome         Boolean  @default(false)
+  showInNav      Boolean  @default(true)
+  seoTitle       String?
   seoDescription String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   site   Site    @relation(fields: [siteId], references: [id], onDelete: Cascade)
   blocks Block[]
+
   @@unique([siteId, slug])
 }
 
 model Block {
   id        String   @id @default(cuid())
   pageId    String
-  type      String   // text | heading | image | video | social | button | columns | spacer | html
+  type      String // text | heading | image | video | social | button | columns | spacer | html
   order     Int      @default(0)
   content   Json     @default("{}")
   style     Json     @default("{}")
@@ -233,41 +240,41 @@ model Donor {
 }
 
 model Campaign {
-  id             String   @id @default(cuid())
+  id             String    @id @default(cuid())
   organizationId String
   name           String
   description    String?
-  goalCents      Int      @default(0)
+  goalCents      Int       @default(0)
   startDate      DateTime?
   endDate        DateTime?
-  status         String   @default("ACTIVE") // DRAFT | ACTIVE | CLOSED
-  externalUrl    String?  // HelloAsso or other external donation link
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  status         String    @default("ACTIVE") // DRAFT | ACTIVE | CLOSED
+  externalUrl    String? // HelloAsso or other external donation link
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   donations    Donation[]
 }
 
 model Donation {
-  id             String   @id @default(cuid())
-  organizationId String
-  donorId        String?
-  campaignId     String?
-  amountCents    Int
-  currency       String   @default("EUR")
-  method         String   @default("STRIPE") // STRIPE | HELLOASSO | CASH | CHECK | TRANSFER | OTHER
-  status         String   @default("COMPLETED") // PENDING | COMPLETED | REFUNDED | FAILED
-  isRecurring    Boolean  @default(false)
-  message        String?
-  receivedAt      DateTime?
+  id                String    @id @default(cuid())
+  organizationId    String
+  donorId           String?
+  campaignId        String?
+  amountCents       Int
+  currency          String    @default("EUR")
+  method            String    @default("STRIPE") // STRIPE | HELLOASSO | CASH | CHECK | TRANSFER | OTHER
+  status            String    @default("COMPLETED") // PENDING | COMPLETED | REFUNDED | FAILED
+  isRecurring       Boolean   @default(false)
+  message           String?
+  receivedAt        DateTime?
   receivedReference String?
-  proofDocuments Json     @default("[]")
-  stripePaymentId String?
-  receiptNumber  String?
-  receiptIssued  Boolean  @default(false)
-  donatedAt      DateTime @default(now())
-  createdAt      DateTime @default(now())
+  proofDocuments    Json      @default("[]")
+  stripePaymentId   String?
+  receiptNumber     String?
+  receiptIssued     Boolean   @default(false)
+  donatedAt         DateTime  @default(now())
+  createdAt         DateTime  @default(now())
 
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   donor        Donor?       @relation(fields: [donorId], references: [id], onDelete: SetNull)
@@ -285,15 +292,16 @@ model Category {
   color          String?
   createdAt      DateTime @default(now())
 
-  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organization Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   transactions Transaction[]
+
   @@unique([organizationId, name, kind])
 }
 
 model Transaction {
   id             String   @id @default(cuid())
   organizationId String
-  kind           String   // INCOME | EXPENSE
+  kind           String // INCOME | EXPENSE
   label          String
   amountCents    Int
   categoryId     String?
@@ -307,107 +315,136 @@ model Transaction {
 }
 
 model NewsletterSubscriber {
-  id             String   @id @default(cuid())
+  id             String       @id @default(cuid())
   organizationId String
   email          String
-  createdAt      DateTime @default(now())
-  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdAt      DateTime     @default(now())
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
   @@unique([organizationId, email])
 }
 
 // Lightweight analytics
 model SiteEvent {
-  id             String   @id @default(cuid())
+  id             String       @id @default(cuid())
   organizationId String
-  type           String   // pageview | donation | signup
+  type           String // pageview | donation | signup
   path           String?
   referrer       String?
-  createdAt      DateTime @default(now())
-  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdAt      DateTime     @default(now())
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
   @@index([organizationId, createdAt])
 }
 
 // Two-way conversation between the EasyAsso platform team and an association.
 model PlatformMessage {
-  id             String   @id @default(cuid())
+  id             String       @id @default(cuid())
   organizationId String
-  fromAdmin      Boolean  @default(false)
+  fromAdmin      Boolean      @default(false)
   authorName     String
   body           String
   readByAdmin    DateTime?
   readByOrg      DateTime?
-  createdAt      DateTime @default(now())
+  createdAt      DateTime     @default(now())
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
   @@index([organizationId, createdAt])
 }
 
 model Product {
-  id             String   @id @default(cuid())
+  id             String       @id @default(cuid())
   organizationId String
   name           String
-  description    String   @default("")
-  priceCents     Int      @default(0)
-  currency       String   @default("eur")
-  imageUrl       String?  // kept in sync with images[0] for back-compat
-  images         Json     @default("[]") // ordered photos; images[0] = main image
-  category       String   @default("")
-  brand          String   @default("")
-  stock          Int?     // null = unlimited stock
-  active         Boolean  @default(true)
-  order          Int      @default(0)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  description    String       @default("")
+  priceCents     Int          @default(0)
+  currency       String       @default("eur")
+  imageUrl       String? // kept in sync with images[0] for back-compat
+  images         Json         @default("[]") // ordered photos; images[0] = main image
+  category       String       @default("")
+  brand          String       @default("")
+  stock          Int? // null = unlimited stock
+  active         Boolean      @default(true)
+  order          Int          @default(0)
+  provider       String?
+  externalId     String?
+  externalData   Json         @default("{}")
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, provider, externalId])
   @@index([organizationId, order])
 }
 
-model Order {
-  id                    String   @id @default(cuid())
-  organizationId        String
-  status                String   @default("PENDING") // PENDING | PAID | SHIPPED | CANCELLED
-  customerName          String   @default("")
-  customerEmail         String   @default("")
-  customerPhone         String   @default("")
-  shippingAddress       String   @default("")
-  totalCents            Int      @default(0)
-  currency              String   @default("eur")
-  stripeSessionId       String?  @unique
-  stripePaymentIntentId String?
-  createdAt             DateTime @default(now())
-  updatedAt             DateTime @updatedAt
+model ExternalIntegration {
+  id              String    @id @default(cuid())
+  organizationId  String
+  provider        String
+  secretEncrypted String
+  storeId         String?
+  storeName       String?
+  lastSyncedAt    DateTime?
+  lastError       String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  items        OrderItem[]
+
+  @@unique([organizationId, provider])
+  @@index([organizationId])
+}
+
+model Order {
+  id                    String       @id @default(cuid())
+  organizationId        String
+  status                String       @default("PENDING") // PENDING | PAID | SHIPPED | CANCELLED
+  customerName          String       @default("")
+  customerEmail         String       @default("")
+  customerPhone         String       @default("")
+  shippingAddress       String       @default("")
+  totalCents            Int          @default(0)
+  currency              String       @default("eur")
+  stripeSessionId       String?      @unique
+  stripePaymentIntentId String?
+  createdAt             DateTime     @default(now())
+  updatedAt             DateTime     @updatedAt
+  organization          Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  items                 OrderItem[]
+
   @@index([organizationId, createdAt])
 }
 
 model OrderItem {
-  id         String @id @default(cuid())
+  id         String  @id @default(cuid())
   orderId    String
   productId  String?
   name       String
   priceCents Int
-  quantity   Int    @default(1)
-  order      Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  quantity   Int     @default(1)
+  order      Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
   @@index([orderId])
 }
 
 model CustomerProfile {
-  id              String   @id @default(cuid())
+  id              String       @id @default(cuid())
   organizationId  String
   email           String
-  name            String   @default("")
-  phone           String   @default("")
-  shippingAddress String   @default("")
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  lastSeenAt      DateTime @default(now())
+  name            String       @default("")
+  phone           String       @default("")
+  shippingAddress String       @default("")
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  lastSeenAt      DateTime     @default(now())
   organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
   @@unique([organizationId, email])
   @@index([organizationId, updatedAt])
 }
 
 model ContactMessage {
-  id             String   @id @default(cuid())
+  id             String       @id @default(cuid())
   organizationId String
   name           String
   email          String
@@ -416,8 +453,9 @@ model ContactMessage {
   message        String
   readAt         DateTime?
   archivedAt     DateTime?
-  createdAt      DateTime @default(now())
+  createdAt      DateTime     @default(now())
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
   @@index([organizationId, createdAt])
   @@index([organizationId, readAt])
 }

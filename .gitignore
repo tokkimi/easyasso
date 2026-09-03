@@ -9,3 +9,5 @@ out
 prisma/dev.db
 /coverage
 next-env.d.ts
+.env*
+*.tsbuildinfo

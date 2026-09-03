@@ -118,6 +118,8 @@ async function loadShopProducts(organizationId: string) {
       category: true,
       brand: true,
       stock: true,
+      provider: true,
+      externalData: true,
     },
   });
   return rows.map((p) => {
@@ -131,6 +133,15 @@ async function loadShopProducts(organizationId: string) {
       category: p.category,
       brand: p.brand,
       stock: p.stock,
+      provider: p.provider,
+      variants: p.provider === "contrado" && Array.isArray((p.externalData as any)?.productVariants)
+        ? (p.externalData as any).productVariants.map((variant: any) => ({
+            id: String(variant.variantId || ""),
+            label: Array.isArray(variant.variantOptions) ? variant.variantOptions.map((option: any) => String(option.optionValueName || option.optionName || "")).filter(Boolean).join(" · ") : "",
+            priceCents: Math.max(0, Math.round(Number(variant.rrp || 0) * 100)),
+            options: Array.isArray(variant.variantOptions) ? variant.variantOptions : [],
+          })).filter((variant: any) => variant.id)
+        : [],
     };
   });
 }

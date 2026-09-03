@@ -81,7 +81,7 @@ export function ContactBubble({ name, slogan, sloganEn, logoUrl, email, phone, o
   );
 
   return (
-    <div className={`fixed bottom-4 z-[60] w-[min(92vw,20rem)] font-sans ${position === 'left' ? 'left-4' : 'right-4'}`} style={{ color: textColor }} data-no-translate>
+    <div className={`contact-bubble fixed bottom-4 z-[60] w-[min(92vw,20rem)] font-sans ${position === 'left' ? 'left-4' : 'right-4'}`} style={{ color: textColor }} data-no-translate>
       {open && (
         <div className={`mb-3 overflow-hidden rounded-3xl border border-white/15 text-white shadow-2xl backdrop-blur-2xl ${branded ? 'bg-neutral-900/50' : ''}`} style={branded ? undefined : { backgroundColor: `${backgroundColor}d9`, color: textColor }}>
           <div className="flex items-start justify-between px-4 pb-3 pt-4">

@@ -3,6 +3,8 @@ import { stripe } from '@/lib/stripe';
 import { prisma } from '@/lib/prisma';
 import { planFor } from '@/lib/plans';
 import { activateOrganization } from '@/lib/activation';
+import { createContradoOrder } from '@/lib/contrado';
+import { decryptSecret } from '@/lib/secret-box';
 
 // Merge extra keys into an organization's JSON profile without clobbering it.
 async function patchProfile(orgId: string, patch: Record<string, any>) {
@@ -66,10 +68,10 @@ export async function POST(req: Request) {
           data: {
             status: 'PAID',
             stripePaymentIntentId: (session.payment_intent as string) || null,
-            customerName: details.name || '',
-            customerEmail: details.email || '',
-            customerPhone: details.phone || '',
-            shippingAddress: address,
+            customerName: details.name || order.customerName,
+            customerEmail: details.email || order.customerEmail,
+            customerPhone: details.phone || order.customerPhone,
+            shippingAddress: order.shippingAddress || address,
           },
         });
         // Decrement stock for tracked products.
@@ -91,6 +93,50 @@ export async function POST(req: Request) {
             reference: order.id,
           },
         });
+
+        // Paid Contrado items are sent to production without exposing Contrado
+        // to the customer. A failed fulfilment is recorded for the shop owner.
+        try {
+          const productIds = order.items.map((item) => item.productId).filter(Boolean) as string[];
+          const products = await prisma.product.findMany({ where: { id: { in: productIds }, provider: 'contrado' } });
+          const byId = new Map(products.map((product) => [product.id, product]));
+          const lines = order.items.flatMap((item) => {
+            const product = item.productId ? byId.get(item.productId) : null;
+            const storeProductId = Number(product?.externalId);
+            if (!product || !Number.isFinite(storeProductId)) return [];
+            return [{
+              storeProductId,
+              externalReferenceId: item.id,
+              variantId: item.externalVariantId || undefined,
+              selectedOptions: Array.isArray((item.externalData as any)?.selectedOptions) ? (item.externalData as any).selectedOptions : [],
+              quantity: item.quantity,
+              price: item.priceCents / 100,
+            }];
+          });
+          if (lines.length) {
+            const integration = await prisma.externalIntegration.findUnique({ where: { organizationId_provider: { organizationId: order.organizationId, provider: 'contrado' } } });
+            if (!integration) throw new Error('Connexion Contrado introuvable.');
+            const [address1 = '', locality = '', countryCode = 'FR'] = order.shippingAddress.split('\n');
+            const localityMatch = locality.match(/^(\S+)\s+(.+)$/);
+            const fulfilment = await createContradoOrder(decryptSecret(integration.secretEncrypted), integration.storeId || '', {
+              referenceId: order.id,
+              totalAmount: order.totalCents / 100,
+              recipient: {
+                name: order.customerName,
+                email: order.customerEmail,
+                phone: order.customerPhone,
+                address1,
+                postCode: localityMatch?.[1] || '',
+                city: localityMatch?.[2] || locality,
+                countryCode,
+              },
+              lines,
+            });
+            await prisma.order.update({ where: { id: order.id }, data: { fulfillmentProvider: 'contrado', fulfillmentReference: fulfilment.referenceId, fulfillmentStatus: fulfilment.status, fulfillmentError: null } });
+          }
+        } catch (fulfilmentError: any) {
+          await prisma.order.update({ where: { id: order.id }, data: { fulfillmentProvider: 'contrado', fulfillmentStatus: 'ERROR', fulfillmentError: String(fulfilmentError?.message || 'Envoi Contrado impossible').slice(0, 500) } }).catch(() => {});
+        }
       }
       return NextResponse.json({ received: true });
     }

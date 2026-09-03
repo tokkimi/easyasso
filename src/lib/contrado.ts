@@ -142,3 +142,47 @@ export async function readContradoCatalog(apiKey: string, storeId: string) {
   }
   return products;
 }
+
+export async function createContradoOrder(apiKey: string, storeId: string, order: {
+  referenceId: string;
+  totalAmount: number;
+  recipient: { name: string; email: string; phone?: string; address1: string; city: string; postCode: string; countryCode: string };
+  lines: Array<{ storeProductId: number; externalReferenceId?: string; variantId?: string; quantity: number; price: number; selectedOptions?: any[] }>;
+}) {
+  const response = await fetch(`${CONTRADO_API_BASE}/orders/create`, {
+    method: 'POST',
+    headers: {
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+      'X-API-Key': apiKey,
+      'X-Store-Id': storeId,
+      'X-Culture-Code': 'fr-FR',
+    },
+    body: JSON.stringify({
+      externalReferenceId: order.referenceId,
+      recipient: {
+        name: order.recipient.name,
+        email: order.recipient.email,
+        phone: order.recipient.phone || '',
+        recipientPhone: order.recipient.phone || '',
+        address1: order.recipient.address1,
+        city: order.recipient.city,
+        postCode: order.recipient.postCode,
+        countryCode: order.recipient.countryCode,
+      },
+      lineItem: order.lines,
+      totalAmount: order.totalAmount,
+      currencyCode: 'EUR',
+      cultureCode: 'fr-FR',
+      forceInsert: false,
+    }),
+    cache: 'no-store',
+    signal: AbortSignal.timeout(20_000),
+  });
+  const payload = await response.json().catch(() => null);
+  if (!response.ok || payload?.success === false) {
+    throw new Error(safeMessage(payload?.message || payload?.error?.message, `Contrado a refusé la commande (${response.status}).`));
+  }
+  const data = unwrap(payload) || payload || {};
+  return { referenceId: String(data.referenceId || order.referenceId), status: String(data.status || 'SUBMITTED') };
+}

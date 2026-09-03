@@ -407,6 +407,10 @@ model Order {
   currency              String       @default("eur")
   stripeSessionId       String?      @unique
   stripePaymentIntentId String?
+  fulfillmentProvider   String?
+  fulfillmentReference  String?
+  fulfillmentStatus     String?
+  fulfillmentError      String?
   createdAt             DateTime     @default(now())
   updatedAt             DateTime     @updatedAt
   organization          Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
@@ -422,6 +426,8 @@ model OrderItem {
   name       String
   priceCents Int
   quantity   Int     @default(1)
+  externalVariantId String?
+  externalData Json @default("{}")
   order      Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
   @@index([orderId])

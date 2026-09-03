@@ -15,7 +15,7 @@ export async function POST(req: Request) {
 
   const body = await req.json().catch(() => ({}));
   const organizationId = String(body.organizationId || '');
-  const rawItems: { productId?: string; quantity?: number }[] = Array.isArray(body.items) ? body.items : [];
+  const rawItems: { productId?: string; quantity?: number; variantId?: string }[] = Array.isArray(body.items) ? body.items : [];
   const rawGuest = body.guest && typeof body.guest === 'object' ? body.guest : {};
   const clean = (value: unknown, max = 200) => String(value || '').trim().slice(0, max);
   const guest = {
@@ -32,7 +32,7 @@ export async function POST(req: Request) {
   if (!guest.name || !/^\S+@\S+\.\S+$/.test(guest.email) || !guest.address || !guest.postalCode || !guest.city) {
     return NextResponse.json({ error: 'Complétez vos coordonnées de livraison.' }, { status: 400 });
   }
-  if (!['FR', 'BE', 'CH', 'LU', 'MC'].includes(guest.country)) {
+  if (!['FR', 'BE', 'CH', 'LU', 'MC', 'DE', 'ES', 'IT', 'NL', 'GB', 'US', 'CA'].includes(guest.country)) {
     return NextResponse.json({ error: 'Pays de livraison non pris en charge.' }, { status: 400 });
   }
 
@@ -48,17 +48,24 @@ export async function POST(req: Request) {
   const ids = Array.from(new Set(rawItems.map((i) => String(i.productId || '')).filter(Boolean)));
   const products = await prisma.product.findMany({ where: { id: { in: ids }, organizationId, active: true } });
   const byId = new Map(products.map((p) => [p.id, p]));
-  const lines: { product: (typeof products)[number]; quantity: number }[] = [];
+  const lines: { product: (typeof products)[number]; quantity: number; unitPrice: number; variantId?: string; variantLabel?: string; selectedOptions: any[] }[] = [];
   for (const item of rawItems) {
     const p = byId.get(String(item.productId));
     if (!p) continue;
     const qty = Math.max(1, Math.min(99, Math.floor(Number(item.quantity) || 1)));
     if (p.stock != null && p.stock < qty) return NextResponse.json({ error: `Stock insuffisant pour « ${p.name} ».` }, { status: 409 });
-    lines.push({ product: p, quantity: qty });
+    const variants = Array.isArray((p.externalData as any)?.productVariants) ? (p.externalData as any).productVariants : [];
+    const variant = item.variantId ? variants.find((candidate: any) => String(candidate.variantId) === String(item.variantId)) : null;
+    if (p.provider === 'contrado' && variants.length && !variant) return NextResponse.json({ error: `Choisissez les options pour « ${p.name} ».` }, { status: 400 });
+    const variantPrice = Number(variant?.rrp);
+    const unitPrice = Number.isFinite(variantPrice) && variantPrice > 0 ? Math.round(variantPrice * 100) : p.priceCents;
+    const selectedOptions = Array.isArray(variant?.variantOptions) ? variant.variantOptions : [];
+    const variantLabel = selectedOptions.map((option: any) => String(option.optionValueName || option.optionName || '')).filter(Boolean).join(' · ');
+    lines.push({ product: p, quantity: qty, unitPrice, variantId: variant ? String(variant.variantId) : undefined, variantLabel, selectedOptions });
   }
   if (lines.length === 0) return NextResponse.json({ error: 'Aucun article valide dans le panier.' }, { status: 400 });
 
-  const total = lines.reduce((s, l) => s + l.product.priceCents * l.quantity, 0);
+  const total = lines.reduce((s, l) => s + l.unitPrice * l.quantity, 0);
   const appUrl = appBaseUrl();
   const base = returnPath ? `${appUrl}${returnPath}` : appUrl;
 
@@ -72,7 +79,7 @@ export async function POST(req: Request) {
       customerPhone: guest.phone,
       shippingAddress: `${guest.address}\n${guest.postalCode} ${guest.city}\n${guest.country}`,
       totalCents: total,
-      items: { create: lines.map((l) => ({ productId: l.product.id, name: l.product.name, priceCents: l.product.priceCents, quantity: l.quantity })) },
+      items: { create: lines.map((l) => ({ productId: l.product.id, name: l.variantLabel ? `${l.product.name} — ${l.variantLabel}` : l.product.name, priceCents: l.unitPrice, quantity: l.quantity, externalVariantId: l.variantId, externalData: { selectedOptions: l.selectedOptions } })) },
     },
   });
 
@@ -88,16 +95,14 @@ export async function POST(req: Request) {
         quantity: l.quantity,
         price_data: {
           currency: 'eur',
-          unit_amount: l.product.priceCents,
-          product_data: { name: l.product.name, ...(l.product.imageUrl && String(l.product.imageUrl).startsWith('http') ? { images: [l.product.imageUrl] } : {}) },
+          unit_amount: l.unitPrice,
+          product_data: { name: l.variantLabel ? `${l.product.name} — ${l.variantLabel}` : l.product.name, ...(l.product.imageUrl && String(l.product.imageUrl).startsWith('http') ? { images: [l.product.imageUrl] } : {}) },
         },
       })),
       payment_intent_data: {
         transfer_data: { destination: connectAccount },
         ...(feeAmount > 0 ? { application_fee_amount: feeAmount } : {}),
       },
-      shipping_address_collection: { allowed_countries: ['FR', 'BE', 'CH', 'LU', 'MC'] },
-      phone_number_collection: { enabled: true },
       success_url: `${base}?order=success`,
       cancel_url: `${base}?order=cancelled`,
       metadata: { orderType: 'shop', orderId: order.id, organizationId },

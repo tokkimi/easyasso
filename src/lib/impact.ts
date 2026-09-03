@@ -377,7 +377,7 @@ html:has(.impact-site[data-impact-theme="light"]), body:has(.impact-site[data-im
 .impact-hero { position: relative; z-index: 2; width: 100%; height: auto !important; max-height: none; margin: 0; aspect-ratio: 16/9; border: 0; border-bottom: 1px solid rgba(76,201,255,.18); border-radius: 0; background: #02030a; box-shadow: 0 24px 80px rgba(0,0,0,.32), 0 0 44px rgba(47,107,255,.16); }
 .impact-hero::after { content: ""; pointer-events: none; position: absolute; inset: auto 0 0; z-index: 1; height: 28%; background: linear-gradient(180deg, rgba(2,3,10,0), #02030a 82%); }
 .impact-hero-light-media { display: none; }
-.impact-hero-dark-media { display: block; filter: none; transform: scale(1.008); transform-origin: center top; object-position: center center; }
+.impact-hero-dark-media { display: block; filter: none; transform: translateY(3.25rem) scale(1.045); transform-origin: center center; object-position: center center; }
 .impact-site:not([data-impact-theme="light"]) .impact-hero { border-bottom: 0; }
 .impact-hero-overlay { display: none; }
 .impact-hero-content { display: none !important; }
@@ -486,7 +486,7 @@ html:has(.impact-site[data-impact-theme="light"]), body:has(.impact-site[data-im
   .impact-light-fixed-background-base, .impact-light-fixed-background-glitch { background-position: right top; background-size: min(156vw,44rem) auto; }
   .impact-hero, .impact-site[data-impact-theme="light"] .impact-hero { width: 100%; margin-top: 0; border-left: 0; border-right: 0; border-radius: 0; }
   .impact-page-home .impact-hero { height: clamp(19rem, 46dvh, 27rem) !important; aspect-ratio: auto; }
-  .impact-page-home .impact-hero-dark-media { object-position: center center; transform: scale(1.02); }
+  .impact-page-home .impact-hero-dark-media { object-position: center center; transform: translateY(1.35rem) scale(1.035); }
   .impact-page-home .impact-stats { padding-top: 1.55rem; }
   .impact-site .impact-social-row, .impact-site .impact-streaming-row { justify-content: flex-start; padding-left: .5rem; padding-right: .5rem; }
   .impact-playlist-button { height: 2.95rem; width: 2.95rem; }

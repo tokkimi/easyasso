@@ -140,7 +140,7 @@ export function ShopCatalog({ products, title, intro, search = true, showCategor
     event.preventDefault();
     if (!cart.length) return;
     if (branded) {
-      window.location.href = 'https://www.contrado.fr/stores/vielusos';
+      window.location.href = 'https://www.contrado.fr/estore/basket';
       return;
     }
     if (!canCheckout) return;

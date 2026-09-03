@@ -190,7 +190,7 @@ export function PublicHeader({
               <LanguageSwitcher variant="inline" />
             </span>
           )}
-          {!brandedHeader && header.showCta !== false && cta && (
+          {!brandedHeader && header.showCta !== false && cta?.text?.trim() && cta?.href?.trim() && (
             <a
               href={
                 cta.href.startsWith("/") ? `${basePath}${cta.href}` : cta.href
@@ -244,7 +244,7 @@ export function PublicHeader({
                   }
                 : undefined
             }
-            className={`public-header-dropdown absolute left-3 right-3 top-[calc(100%+0.5rem)] z-50 rounded-2xl p-3 shadow-2xl ${brandedHeader ? "!block border border-white/15 bg-[#0b0b10]/75 text-white shadow-black/60 backdrop-blur-2xl" : glassMenu ? "border border-white/20 text-white shadow-black/30" : "ring-1 ring-black/10"}`}
+            className={`public-header-dropdown absolute left-3 right-3 top-[calc(100%+0.5rem)] z-50 rounded-2xl p-3 shadow-2xl sm:left-auto sm:right-5 sm:w-[22rem] ${brandedHeader ? "!block border border-white/15 bg-[#0b0b10]/80 text-white shadow-black/60 backdrop-blur-2xl" : glassMenu ? "border border-white/20 text-white shadow-black/30" : "ring-1 ring-black/10"}`}
           >
             {header.showNav && (
               <nav className="flex flex-col">
@@ -290,7 +290,7 @@ export function PublicHeader({
                 {t("Espace client")}
               </Link>
             )}
-            {header.showCta !== false && cta && (
+            {header.showCta !== false && cta?.text?.trim() && cta?.href?.trim() && (
               <a
                 href={
                   cta.href.startsWith("/") ? `${basePath}${cta.href}` : cta.href

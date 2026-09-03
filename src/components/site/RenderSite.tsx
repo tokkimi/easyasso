@@ -399,6 +399,7 @@ export async function RenderSite({
               organizationId={site.organizationId}
               products={b.type === "shop" ? products : undefined}
               shopReady={b.type === "shop" ? shopReady : undefined}
+              branded={vielusos}
             />
           ))
         )}

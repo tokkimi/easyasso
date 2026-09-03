@@ -1,27 +1,17 @@
 'use client';
-import { useEffect, useMemo, useState } from 'react';
-import { Search, X, Heart, ChevronLeft, ChevronRight, ShoppingBag, Plus, Minus, Trash2 } from 'lucide-react';
+import { FormEvent, useEffect, useMemo, useState } from 'react';
+import { Search, X, Heart, ChevronLeft, ChevronRight, ShoppingBag, Plus, Minus, Trash2, LockKeyhole } from 'lucide-react';
 
-export type ShopProduct = {
-  id: string;
-  name: string;
-  description: string;
-  priceCents: number;
-  images: string[];
-  category?: string;
-  brand?: string;
-  stock?: number | null;
-};
-
+export type ShopProduct = { id: string; name: string; description: string; priceCents: number; images: string[]; category?: string; brand?: string; stock?: number | null };
 type CartLine = { id: string; name: string; priceCents: number; image?: string; qty: number };
+type GuestDetails = { name: string; email: string; phone: string; address: string; postalCode: string; city: string; country: string };
+const EMPTY_GUEST: GuestDetails = { name: '', email: '', phone: '', address: '', postalCode: '', city: '', country: 'FR' };
 
 function euros(cents: number) {
-  return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: (cents % 100 ? 2 : 0) }).format((cents || 0) / 100);
+  return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: cents % 100 ? 2 : 0 }).format((cents || 0) / 100);
 }
 
-export function ShopCatalog({
-  products, title, intro, search = true, showCategories = true, columns = 4, organizationId = '', canCheckout = false,
-}: { products: ShopProduct[]; title?: string; intro?: string; search?: boolean; showCategories?: boolean; columns?: number; organizationId?: string; canCheckout?: boolean }) {
+export function ShopCatalog({ products, title, intro, search = true, showCategories = true, columns = 4, organizationId = '', canCheckout = false, branded = false }: { products: ShopProduct[]; title?: string; intro?: string; search?: boolean; showCategories?: boolean; columns?: number; organizationId?: string; canCheckout?: boolean; branded?: boolean }) {
   const [q, setQ] = useState('');
   const [cat, setCat] = useState('');
   const [sort, setSort] = useState<'recent' | 'price-asc' | 'price-desc'>('recent');
@@ -31,253 +21,68 @@ export function ShopCatalog({
   const [paying, setPaying] = useState(false);
   const [favorites, setFavorites] = useState<string[]>([]);
   const [showFavorites, setShowFavorites] = useState(false);
-
-  const storageKey = `easyasso-cart-${organizationId}`;
-  const favoritesKey = `easyasso-favorites-${organizationId}`;
-  useEffect(() => {
-    try { const raw = localStorage.getItem(storageKey); if (raw) setCart(JSON.parse(raw)); } catch {}
-  }, [storageKey]);
-  useEffect(() => {
-    try { localStorage.setItem(storageKey, JSON.stringify(cart)); } catch {}
-  }, [cart, storageKey]);
-  useEffect(() => {
-    try { const raw = localStorage.getItem(favoritesKey); if (raw) setFavorites(JSON.parse(raw)); } catch {}
-  }, [favoritesKey]);
-  useEffect(() => {
-    try { localStorage.setItem(favoritesKey, JSON.stringify(favorites)); } catch {}
-  }, [favorites, favoritesKey]);
+  const [guest, setGuest] = useState<GuestDetails>(EMPTY_GUEST);
+  const storageKey = `${branded ? 'vielusos' : 'easyasso'}-cart-${organizationId}`;
+  const favoritesKey = `${branded ? 'vielusos' : 'easyasso'}-favorites-${organizationId}`;
+  const guestKey = `${branded ? 'vielusos' : 'easyasso'}-guest-${organizationId}`;
+  useEffect(() => { try { const raw = localStorage.getItem(storageKey); if (raw) setCart(JSON.parse(raw)); } catch {} }, [storageKey]);
+  useEffect(() => { try { localStorage.setItem(storageKey, JSON.stringify(cart)); } catch {} }, [cart, storageKey]);
+  useEffect(() => { try { const raw = localStorage.getItem(favoritesKey); if (raw) setFavorites(JSON.parse(raw)); } catch {} }, [favoritesKey]);
+  useEffect(() => { try { localStorage.setItem(favoritesKey, JSON.stringify(favorites)); } catch {} }, [favorites, favoritesKey]);
+  useEffect(() => { try { const raw = localStorage.getItem(guestKey); if (raw) setGuest({ ...EMPTY_GUEST, ...JSON.parse(raw) }); } catch {} }, [guestKey]);
+  useEffect(() => { try { localStorage.setItem(guestKey, JSON.stringify(guest)); } catch {} }, [guest, guestKey]);
 
   const categories = useMemo(() => Array.from(new Set(products.map((p) => p.category).filter(Boolean))) as string[], [products]);
   const list = useMemo(() => {
-    let l = products.slice();
-    if (showFavorites) l = l.filter((p) => favorites.includes(p.id));
-    if (cat) l = l.filter((p) => p.category === cat);
+    let result = products.slice();
+    if (showFavorites) result = result.filter((p) => favorites.includes(p.id));
+    if (cat) result = result.filter((p) => p.category === cat);
     const query = q.trim().toLowerCase();
-    if (query) l = l.filter((p) => [p.name, p.brand, p.category, p.description].some((v) => (v || '').toLowerCase().includes(query)));
-    if (sort === 'price-asc') l.sort((a, b) => a.priceCents - b.priceCents);
-    else if (sort === 'price-desc') l.sort((a, b) => b.priceCents - a.priceCents);
-    return l;
+    if (query) result = result.filter((p) => [p.name, p.brand, p.category, p.description].some((value) => (value || '').toLowerCase().includes(query)));
+    if (sort === 'price-asc') result.sort((a, b) => a.priceCents - b.priceCents);
+    else if (sort === 'price-desc') result.sort((a, b) => b.priceCents - a.priceCents);
+    return result;
   }, [products, cat, q, sort, favorites, showFavorites]);
-
   const gridCols = columns >= 4 ? 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4' : columns === 3 ? 'grid-cols-2 md:grid-cols-3' : 'grid-cols-2';
-  const cartCount = cart.reduce((s, l) => s + l.qty, 0);
-  const cartTotal = cart.reduce((s, l) => s + l.priceCents * l.qty, 0);
+  const cartCount = cart.reduce((sum, line) => sum + line.qty, 0);
+  const cartTotal = cart.reduce((sum, line) => sum + line.priceCents * line.qty, 0);
+  const muted = branded ? 'text-white/55' : 'text-gray-500';
+  const strong = branded ? 'text-white' : 'text-gray-900';
+  const field = branded ? 'border-white/15 bg-white/[.045] text-white placeholder:text-white/30 focus:border-white/60' : 'border-gray-200 bg-white text-gray-900 focus:border-[var(--brand)]';
+  const primary = branded ? 'bg-white text-black hover:bg-white/85' : 'bg-[var(--brand)] text-white hover:opacity-90';
 
-  function addToCart(p: ShopProduct, qty = 1) {
-    setCart((c) => {
-      const found = c.find((l) => l.id === p.id);
-      if (found) return c.map((l) => (l.id === p.id ? { ...l, qty: Math.min(99, l.qty + qty) } : l));
-      return [...c, { id: p.id, name: p.name, priceCents: p.priceCents, image: p.images[0], qty }];
-    });
-    setOpen(null);
-    setCartOpen(true);
+  function addToCart(product: ShopProduct, qty = 1) {
+    setCart((current) => { const found = current.find((line) => line.id === product.id); return found ? current.map((line) => line.id === product.id ? { ...line, qty: Math.min(99, line.qty + qty) } : line) : [...current, { id: product.id, name: product.name, priceCents: product.priceCents, image: product.images[0], qty }]; });
+    setOpen(null); setCartOpen(true);
   }
-  function setQty(id: string, qty: number) {
-    setCart((c) => (qty <= 0 ? c.filter((l) => l.id !== id) : c.map((l) => (l.id === id ? { ...l, qty: Math.min(99, qty) } : l))));
-  }
-  function toggleFavorite(id: string) {
-    setFavorites((items) => items.includes(id) ? items.filter((x) => x !== id) : [...items, id]);
-  }
-
-  async function checkout() {
-    if (cart.length === 0) return;
-    setPaying(true);
+  function setQty(id: string, qty: number) { setCart((current) => qty <= 0 ? current.filter((line) => line.id !== id) : current.map((line) => line.id === id ? { ...line, qty: Math.min(99, qty) } : line)); }
+  function toggleFavorite(id: string) { setFavorites((items) => items.includes(id) ? items.filter((item) => item !== id) : [...items, id]); }
+  async function checkout(event: FormEvent) {
+    event.preventDefault(); if (cart.length === 0 || !canCheckout) return; setPaying(true);
     const returnPath = typeof window !== 'undefined' ? window.location.pathname : '';
-    const res = await fetch('/api/shop/checkout', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ organizationId, returnPath, items: cart.map((l) => ({ productId: l.id, quantity: l.qty })) }),
-    });
-    const data = await res.json().catch(() => ({}));
-    setPaying(false);
+    const res = await fetch('/api/shop/checkout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ organizationId, returnPath, guest, items: cart.map((line) => ({ productId: line.id, quantity: line.qty })) }) });
+    const data = await res.json().catch(() => ({})); setPaying(false);
     if (!res.ok || !data.url) { alert(data.error || 'Paiement impossible pour le moment.'); return; }
     window.location.href = data.url;
   }
+  useEffect(() => { if (typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('order') === 'success') { setCart([]); try { localStorage.removeItem(storageKey); } catch {} } }, [storageKey]);
 
-  // Clear the cart after a successful return from Stripe.
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    if (new URLSearchParams(window.location.search).get('order') === 'success') { setCart([]); try { localStorage.removeItem(storageKey); } catch {} }
-  }, [storageKey]);
-
-  return (
-    <div className="mx-auto w-full max-w-6xl px-4">
-      {title && <h2 className="text-center text-3xl font-extrabold text-gray-900 md:text-4xl">{title}</h2>}
-      {intro && <p className="mx-auto mt-2 max-w-2xl text-center text-gray-500">{intro}</p>}
-
-      {showCategories && categories.length > 0 && (
-        <div className="mt-6 -mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          <button onClick={() => setCat('')} className={`shrink-0 rounded-full px-4 py-2 text-sm font-semibold transition ${cat === '' ? 'bg-[var(--brand)] text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>Tout</button>
-          {categories.map((c) => (
-            <button key={c} onClick={() => setCat(c)} className={`shrink-0 rounded-full px-4 py-2 text-sm font-semibold transition ${cat === c ? 'bg-[var(--brand)] text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>{c}</button>
-          ))}
-        </div>
-      )}
-
-      {(search || products.length > 3) && (
-        <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          {search ? (
-            <div className="relative flex-1">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-              <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Rechercher un produit, une marque…" className="w-full rounded-xl border border-gray-200 bg-white py-2.5 pl-9 pr-3 text-sm outline-none focus:border-[var(--brand)]" />
-            </div>
-          ) : <div />}
-          <select value={sort} onChange={(e) => setSort(e.target.value as any)} className="rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-[var(--brand)]">
-            <option value="recent">Plus récents</option>
-            <option value="price-asc">Prix croissant</option>
-            <option value="price-desc">Prix décroissant</option>
-          </select>
-          <button
-            type="button"
-            onClick={() => setShowFavorites((v) => !v)}
-            className={`inline-flex items-center justify-center gap-2 rounded-xl border px-3 py-2.5 text-sm font-bold transition ${showFavorites ? 'border-[var(--brand)] bg-[var(--brand)] text-white' : 'border-gray-200 bg-white text-gray-700 hover:border-[var(--brand)] hover:text-[var(--brand)]'}`}
-          >
-            <Heart className={`h-4 w-4 ${showFavorites ? 'fill-current' : ''}`} />
-            Favoris {favorites.length > 0 ? `(${favorites.length})` : ''}
-          </button>
-        </div>
-      )}
-
-      {list.length === 0 ? (
-        <p className="py-16 text-center text-gray-400">{products.length === 0 ? 'La boutique arrive bientôt.' : showFavorites ? 'Aucun favori pour le moment.' : 'Aucun produit ne correspond à votre recherche.'}</p>
-      ) : (
-        <div className={`mt-6 grid gap-4 ${gridCols}`}>
-          {list.map((p) => (
-            <button key={p.id} onClick={() => setOpen(p)} className="group text-left">
-              <div className="relative aspect-square w-full overflow-hidden rounded-2xl bg-gray-100">
-                {p.images[0] ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={p.images[0]} alt={p.name} loading="lazy" className="h-full w-full object-cover transition duration-300 group-hover:scale-105" />
-                ) : null}
-                <span
-                  role="button"
-                  tabIndex={0}
-                  aria-label={favorites.includes(p.id) ? 'Retirer des favoris' : 'Ajouter aux favoris'}
-                  onClick={(e) => { e.stopPropagation(); toggleFavorite(p.id); }}
-                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); toggleFavorite(p.id); } }}
-                  className={`absolute bottom-2 right-2 grid h-9 w-9 place-items-center rounded-full bg-white/95 shadow-sm transition ${favorites.includes(p.id) ? 'text-rose-500' : 'text-gray-500 hover:text-rose-500'}`}
-                >
-                  <Heart className={`h-4 w-4 ${favorites.includes(p.id) ? 'fill-current' : ''}`} />
-                </span>
-              </div>
-              <div className="mt-2">
-                {(p.brand || p.category) && <p className="truncate text-[11px] font-bold uppercase tracking-wide text-gray-500"><span className="text-[var(--brand)]">{p.brand}</span>{p.brand && p.category ? ' · ' : ''}{p.category}</p>}
-                <p className="mt-0.5 line-clamp-2 text-sm font-medium leading-snug text-gray-900">{p.name}</p>
-                <p className="mt-1 font-extrabold text-gray-900">{euros(p.priceCents)}</p>
-              </div>
-            </button>
-          ))}
-        </div>
-      )}
-
-      {open && <ProductModal product={open} canCheckout={canCheckout} isFavorite={favorites.includes(open.id)} onToggleFavorite={() => toggleFavorite(open.id)} onAdd={addToCart} onClose={() => setOpen(null)} />}
-
-      {/* Floating cart */}
-      {canCheckout && cartCount > 0 && !cartOpen && (
-        <button onClick={() => setCartOpen(true)} className="fixed bottom-5 right-5 z-50 flex items-center gap-2 rounded-full bg-[var(--brand)] px-5 py-3 font-bold text-white shadow-lg">
-          <ShoppingBag className="h-5 w-5" /> {cartCount} · {euros(cartTotal)}
-        </button>
-      )}
-
-      {cartOpen && (
-        <div className="fixed inset-0 z-[60] flex justify-end bg-black/50" onClick={() => setCartOpen(false)}>
-          <div className="flex h-full w-full max-w-md flex-col bg-white" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between border-b border-gray-100 p-4">
-              <p className="text-lg font-extrabold text-gray-900">Votre panier</p>
-              <button onClick={() => setCartOpen(false)} className="grid h-9 w-9 place-items-center rounded-xl text-gray-500 hover:bg-gray-100"><X className="h-5 w-5" /></button>
-            </div>
-            <div className="flex-1 overflow-y-auto p-4">
-              {cart.length === 0 ? <p className="py-16 text-center text-gray-400">Votre panier est vide.</p> : cart.map((l) => (
-                <div key={l.id} className="flex items-center gap-3 border-b border-gray-100 py-3">
-                  <div className="h-16 w-16 shrink-0 overflow-hidden rounded-lg bg-gray-100">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    {l.image && <img src={l.image} alt="" className="h-full w-full object-cover" />}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-semibold text-gray-900">{l.name}</p>
-                    <p className="text-sm text-gray-500">{euros(l.priceCents)}</p>
-                    <div className="mt-1 flex items-center gap-2">
-                      <button onClick={() => setQty(l.id, l.qty - 1)} className="grid h-7 w-7 place-items-center rounded-md border border-gray-200"><Minus className="h-3.5 w-3.5" /></button>
-                      <span className="w-6 text-center text-sm font-semibold">{l.qty}</span>
-                      <button onClick={() => setQty(l.id, l.qty + 1)} className="grid h-7 w-7 place-items-center rounded-md border border-gray-200"><Plus className="h-3.5 w-3.5" /></button>
-                      <button onClick={() => setQty(l.id, 0)} className="ml-auto text-gray-400 hover:text-red-500"><Trash2 className="h-4 w-4" /></button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div className="border-t border-gray-100 p-4">
-              <div className="mb-3 flex items-center justify-between text-lg font-extrabold text-gray-900"><span>Total</span><span>{euros(cartTotal)}</span></div>
-              <button onClick={checkout} disabled={paying || cart.length === 0} className="w-full rounded-xl bg-[var(--brand)] py-3 font-bold text-white transition hover:opacity-90 disabled:opacity-50">{paying ? 'Redirection…' : 'Payer par carte'}</button>
-              <p className="mt-2 text-center text-xs text-gray-400">Paiement sécurisé par Stripe · Livraison renseignée à l’étape suivante</p>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
+  return <div className={`mx-auto w-full max-w-none px-[5vw] sm:px-[10vw] ${branded ? 'vielusos-shop text-white' : ''}`}>
+    {title && <h2 className={`text-center text-3xl font-extrabold md:text-4xl ${strong}`}>{title}</h2>}
+    {intro && <p className={`mx-auto mt-2 max-w-2xl text-center ${muted}`}>{intro}</p>}
+    {showCategories && categories.length > 0 && <div className="mt-6 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"><FilterButton active={!cat} branded={branded} onClick={() => setCat('')}>Tout</FilterButton>{categories.map((category) => <FilterButton key={category} active={cat === category} branded={branded} onClick={() => setCat(category)}>{category}</FilterButton>)}</div>}
+    {(search || products.length > 3) && <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center"><div className="relative flex-1"><Search className={`pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 ${muted}`} /><input value={q} onChange={(event) => setQ(event.target.value)} placeholder="Rechercher un produit…" className={`w-full rounded-xl border py-2.5 pl-9 pr-3 text-sm outline-none ${field}`} /></div><select value={sort} onChange={(event) => setSort(event.target.value as typeof sort)} className={`rounded-xl border px-3 py-2.5 text-sm outline-none ${field}`}><option value="recent">Plus récents</option><option value="price-asc">Prix croissant</option><option value="price-desc">Prix décroissant</option></select><FilterButton active={showFavorites} branded={branded} onClick={() => setShowFavorites((value) => !value)}><Heart className={`h-4 w-4 ${showFavorites ? 'fill-current' : ''}`} /> Favoris {favorites.length ? `(${favorites.length})` : ''}</FilterButton></div>}
+    {list.length === 0 ? <p className={`py-16 text-center ${muted}`}>{products.length === 0 ? 'La boutique arrive bientôt.' : 'Aucun produit ne correspond à votre recherche.'}</p> : <div className={`mt-6 grid gap-4 md:gap-6 ${gridCols}`}>{list.map((product) => <button key={product.id} onClick={() => setOpen(product)} className="group text-left"><div className={`relative aspect-square overflow-hidden rounded-2xl border ${branded ? 'border-white/10 bg-black/40' : 'border-transparent bg-gray-100'}`}>{product.images[0] && <img src={product.images[0]} alt={product.name} loading="lazy" className={`h-full w-full transition duration-300 group-hover:scale-[1.025] ${branded ? 'object-contain' : 'object-cover'}`} />}<span role="button" tabIndex={0} onClick={(event) => { event.stopPropagation(); toggleFavorite(product.id); }} className={`absolute bottom-2 right-2 grid h-9 w-9 place-items-center rounded-full ${branded ? 'border border-white/15 bg-black/70 text-white' : 'bg-white text-gray-500'}`}><Heart className={`h-4 w-4 ${favorites.includes(product.id) ? 'fill-current' : ''}`} /></span></div><div className="mt-3">{(product.brand || product.category) && <p className={`truncate text-[11px] font-medium uppercase tracking-[.18em] ${muted}`}>{product.brand}{product.brand && product.category ? ' · ' : ''}{product.category}</p>}<p className={`mt-1 line-clamp-2 text-sm font-medium ${strong}`}>{product.name}</p><p className={`mt-1 font-semibold ${strong}`}>{euros(product.priceCents)}</p></div></button>)}</div>}
+    {open && <ProductModal product={open} branded={branded} isFavorite={favorites.includes(open.id)} onToggleFavorite={() => toggleFavorite(open.id)} onAdd={addToCart} onClose={() => setOpen(null)} />}
+    {cartCount > 0 && !cartOpen && <button onClick={() => setCartOpen(true)} className={`fixed bottom-5 right-5 z-50 flex items-center gap-2 rounded-full border px-5 py-3 font-bold shadow-2xl ${branded ? 'border-white/20 bg-[#0b0b10] text-white' : 'border-transparent bg-[var(--brand)] text-white'}`}><ShoppingBag className="h-5 w-5" /> {cartCount} · {euros(cartTotal)}</button>}
+    {cartOpen && <div className="fixed inset-0 z-[60] flex justify-end bg-black/70 backdrop-blur-sm" onClick={() => setCartOpen(false)}><div className={`flex h-full w-full max-w-lg flex-col border-l ${branded ? 'border-white/15 bg-[#0b0b10] text-white' : 'border-gray-200 bg-white text-gray-900'}`} onClick={(event) => event.stopPropagation()}><div className={`flex items-center justify-between border-b p-4 ${branded ? 'border-white/10' : 'border-gray-100'}`}><div><p className={`text-lg font-semibold ${strong}`}>Votre panier</p><p className={`text-xs ${muted}`}>Commande sans création de compte</p></div><button onClick={() => setCartOpen(false)} className="grid h-9 w-9 place-items-center rounded-xl"><X className="h-5 w-5" /></button></div><form onSubmit={checkout} className="flex min-h-0 flex-1 flex-col"><div className="flex-1 overflow-y-auto p-4">{cart.map((line) => <div key={line.id} className={`flex items-center gap-3 border-b py-3 ${branded ? 'border-white/10' : 'border-gray-100'}`}><div className={`h-16 w-16 shrink-0 overflow-hidden rounded-lg ${branded ? 'bg-black' : 'bg-gray-100'}`}>{line.image && <img src={line.image} alt="" className="h-full w-full object-contain" />}</div><div className="min-w-0 flex-1"><p className={`truncate text-sm font-semibold ${strong}`}>{line.name}</p><p className={`text-sm ${muted}`}>{euros(line.priceCents)}</p><div className="mt-1 flex items-center gap-2"><button type="button" onClick={() => setQty(line.id, line.qty - 1)} className="grid h-7 w-7 place-items-center rounded-md border border-current/20"><Minus className="h-3.5 w-3.5" /></button><span className="w-6 text-center text-sm">{line.qty}</span><button type="button" onClick={() => setQty(line.id, line.qty + 1)} className="grid h-7 w-7 place-items-center rounded-md border border-current/20"><Plus className="h-3.5 w-3.5" /></button><button type="button" onClick={() => setQty(line.id, 0)} className={`ml-auto ${muted}`}><Trash2 className="h-4 w-4" /></button></div></div></div>)}{cart.length > 0 && <div className="mt-6"><p className={`text-sm font-semibold ${strong}`}>Coordonnées de livraison</p><p className={`mt-1 text-xs ${muted}`}>Aucun compte client nécessaire.</p><div className="mt-3 grid gap-3 sm:grid-cols-2"><GuestField label="Nom complet" value={guest.name} onChange={(value) => setGuest({ ...guest, name: value })} className={field} autoComplete="name" /><GuestField label="E-mail" value={guest.email} onChange={(value) => setGuest({ ...guest, email: value })} className={field} type="email" autoComplete="email" /><GuestField label="Téléphone" value={guest.phone} onChange={(value) => setGuest({ ...guest, phone: value })} className={field} type="tel" autoComplete="tel" required={false} /><label className={`text-xs font-medium ${muted}`}>Pays<select required value={guest.country} onChange={(event) => setGuest({ ...guest, country: event.target.value })} className={`mt-1 w-full rounded-xl border px-3 py-2.5 text-sm outline-none ${field}`}><option value="FR">France</option><option value="BE">Belgique</option><option value="CH">Suisse</option><option value="LU">Luxembourg</option><option value="MC">Monaco</option></select></label><div className="sm:col-span-2"><GuestField label="Adresse" value={guest.address} onChange={(value) => setGuest({ ...guest, address: value })} className={field} autoComplete="street-address" /></div><GuestField label="Code postal" value={guest.postalCode} onChange={(value) => setGuest({ ...guest, postalCode: value })} className={field} autoComplete="postal-code" /><GuestField label="Ville" value={guest.city} onChange={(value) => setGuest({ ...guest, city: value })} className={field} autoComplete="address-level2" /></div></div>}</div><div className={`border-t p-4 ${branded ? 'border-white/10' : 'border-gray-100'}`}><div className={`mb-3 flex justify-between text-lg font-semibold ${strong}`}><span>Total</span><span>{euros(cartTotal)}</span></div><button type="submit" disabled={paying || !cart.length || !canCheckout} className={`flex w-full items-center justify-center gap-2 rounded-xl py-3 font-bold disabled:cursor-not-allowed disabled:opacity-45 ${primary}`}><LockKeyhole className="h-4 w-4" />{paying ? 'Redirection…' : 'Continuer vers le paiement sécurisé'}</button><p className={`mt-2 text-center text-xs ${muted}`}>{canCheckout ? 'Paiement sécurisé par Stripe · sans compte client' : 'Le compte Stripe de VIELUSOS doit encore être activé dans l’administration.'}</p></div></form></div></div>}
+  </div>;
 }
 
-function ProductModal({ product, canCheckout, isFavorite, onToggleFavorite, onAdd, onClose }: { product: ShopProduct; canCheckout: boolean; isFavorite: boolean; onToggleFavorite: () => void; onAdd: (p: ShopProduct, qty: number) => void; onClose: () => void }) {
-  const [i, setI] = useState(0);
-  const [qty, setQty] = useState(1);
-  const imgs = product.images.length ? product.images : [''];
-  const soldOut = product.stock != null && product.stock <= 0;
-  const prev = () => setI((v) => (v - 1 + imgs.length) % imgs.length);
-  const next = () => setI((v) => (v + 1) % imgs.length);
-  return (
-    <div className="fixed inset-0 z-[60] flex items-end justify-center bg-black/50 p-0 sm:items-center sm:p-4" onClick={onClose}>
-      <div className="max-h-[92vh] w-full max-w-3xl overflow-y-auto rounded-t-3xl bg-white sm:rounded-3xl" onClick={(e) => e.stopPropagation()}>
-        <div className="relative">
-          <div className="relative aspect-square w-full overflow-hidden bg-gray-100 sm:aspect-[4/3]">
-            {imgs[i] ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={imgs[i]} alt={product.name} className="h-full w-full object-contain" />
-            ) : null}
-            {imgs.length > 1 && (
-              <>
-                <button onClick={prev} className="absolute left-2 top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full bg-white/90 text-gray-700 shadow"><ChevronLeft className="h-5 w-5" /></button>
-                <button onClick={next} className="absolute right-2 top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full bg-white/90 text-gray-700 shadow"><ChevronRight className="h-5 w-5" /></button>
-              </>
-            )}
-          </div>
-          <button onClick={onClose} className="absolute right-3 top-3 grid h-9 w-9 place-items-center rounded-full bg-white/90 text-gray-700 shadow"><X className="h-5 w-5" /></button>
-          {imgs.length > 1 && (
-            <div className="flex justify-center gap-1.5 py-2">
-              {imgs.map((_, idx) => <button key={idx} onClick={() => setI(idx)} className={`h-1.5 rounded-full transition-all ${idx === i ? 'w-5 bg-[var(--brand)]' : 'w-1.5 bg-gray-300'}`} />)}
-            </div>
-          )}
-        </div>
-        <div className="p-5">
-          {(product.brand || product.category) && <p className="text-xs font-bold uppercase tracking-wide text-gray-500"><span className="text-[var(--brand)]">{product.brand}</span>{product.brand && product.category ? ' · ' : ''}{product.category}</p>}
-          <div className="mt-1 flex items-start justify-between gap-3">
-            <h3 className="text-xl font-extrabold text-gray-900">{product.name}</h3>
-            <div className="flex shrink-0 items-center gap-2">
-              <p className="text-xl font-extrabold text-gray-900">{euros(product.priceCents)}</p>
-              <button
-                type="button"
-                onClick={onToggleFavorite}
-                className={`grid h-10 w-10 place-items-center rounded-full border transition ${isFavorite ? 'border-rose-200 bg-rose-50 text-rose-500' : 'border-gray-200 text-gray-500 hover:border-rose-200 hover:text-rose-500'}`}
-                aria-label={isFavorite ? 'Retirer des favoris' : 'Ajouter aux favoris'}
-              >
-                <Heart className={`h-5 w-5 ${isFavorite ? 'fill-current' : ''}`} />
-              </button>
-            </div>
-          </div>
-          {product.stock != null && <p className="mt-1 text-sm text-gray-500">{product.stock > 0 ? `${product.stock} en stock` : 'Épuisé'}</p>}
-          {product.description && <p className="mt-3 whitespace-pre-wrap leading-relaxed text-gray-600">{product.description}</p>}
-          {canCheckout && !soldOut && (
-            <div className="mt-5 flex items-center gap-3">
-              <div className="flex items-center rounded-xl border border-gray-200">
-                <button onClick={() => setQty((q) => Math.max(1, q - 1))} className="grid h-11 w-11 place-items-center text-gray-600"><Minus className="h-4 w-4" /></button>
-                <span className="w-8 text-center font-semibold">{qty}</span>
-                <button onClick={() => setQty((q) => Math.min(99, q + 1))} className="grid h-11 w-11 place-items-center text-gray-600"><Plus className="h-4 w-4" /></button>
-              </div>
-              <button onClick={() => onAdd(product, qty)} className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-[var(--brand)] py-3 font-bold text-white transition hover:opacity-90"><ShoppingBag className="h-5 w-5" /> Ajouter au panier</button>
-            </div>
-          )}
-          {soldOut && <p className="mt-5 rounded-xl bg-gray-100 py-3 text-center font-semibold text-gray-500">Produit épuisé</p>}
-        </div>
-      </div>
-    </div>
-  );
+function FilterButton({ active, branded, onClick, children }: { active: boolean; branded: boolean; onClick: () => void; children: React.ReactNode }) { return <button type="button" onClick={onClick} className={`flex shrink-0 items-center justify-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold transition ${active ? (branded ? 'border-white bg-white text-black' : 'border-transparent bg-[var(--brand)] text-white') : (branded ? 'border-white/15 bg-white/[.04] text-white/70 hover:bg-white/10' : 'border-transparent bg-gray-100 text-gray-700 hover:bg-gray-200')}`}>{children}</button>; }
+function GuestField({ label, value, onChange, className, type = 'text', autoComplete, required = true }: { label: string; value: string; onChange: (value: string) => void; className: string; type?: string; autoComplete?: string; required?: boolean }) { return <label className="text-xs font-medium text-current/65">{label}<input required={required} type={type} value={value} onChange={(event) => onChange(event.target.value)} autoComplete={autoComplete} className={`mt-1 w-full rounded-xl border px-3 py-2.5 text-sm outline-none ${className}`} /></label>; }
+
+function ProductModal({ product, branded, isFavorite, onToggleFavorite, onAdd, onClose }: { product: ShopProduct; branded: boolean; isFavorite: boolean; onToggleFavorite: () => void; onAdd: (product: ShopProduct, qty: number) => void; onClose: () => void }) {
+  const [index, setIndex] = useState(0); const [qty, setQty] = useState(1); const images = product.images.length ? product.images : ['']; const soldOut = product.stock != null && product.stock <= 0; const strong = branded ? 'text-white' : 'text-gray-900'; const muted = branded ? 'text-white/60' : 'text-gray-500';
+  return <div className="fixed inset-0 z-[60] flex items-end justify-center bg-black/75 backdrop-blur-sm sm:items-center sm:p-4" onClick={onClose}><div className={`max-h-[94vh] w-full max-w-4xl overflow-y-auto rounded-t-3xl border sm:rounded-3xl ${branded ? 'border-white/15 bg-[#0b0b10]' : 'border-transparent bg-white'}`} onClick={(event) => event.stopPropagation()}><div className="grid md:grid-cols-[1.2fr_.8fr]"><div className={`relative min-w-0 ${branded ? 'bg-black/40' : 'bg-gray-100'}`}><div className="relative aspect-square overflow-hidden">{images[index] && <img src={images[index]} alt={`${product.name} — vue ${index + 1}`} className="h-full w-full object-contain" />}{images.length > 1 && <><button onClick={() => setIndex((value) => (value - 1 + images.length) % images.length)} className="absolute left-3 top-1/2 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full border border-white/20 bg-black/65 text-white"><ChevronLeft /></button><button onClick={() => setIndex((value) => (value + 1) % images.length)} className="absolute right-3 top-1/2 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full border border-white/20 bg-black/65 text-white"><ChevronRight /></button></>}</div>{images.length > 1 && <div className="flex gap-2 overflow-x-auto p-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">{images.map((image, imageIndex) => <button key={`${image}-${imageIndex}`} onClick={() => setIndex(imageIndex)} className={`h-16 w-16 shrink-0 overflow-hidden rounded-lg border ${index === imageIndex ? 'border-white' : 'border-white/15 opacity-60'}`}><img src={image} alt="" className="h-full w-full object-contain" /></button>)}</div>}</div><div className="relative flex flex-col p-5 md:p-7"><button onClick={onClose} className={`absolute right-4 top-4 grid h-9 w-9 place-items-center rounded-full border ${branded ? 'border-white/15 bg-black/50 text-white' : 'border-gray-200 bg-white text-gray-700'}`}><X /></button>{(product.brand || product.category) && <p className={`pr-12 text-xs uppercase tracking-[.18em] ${muted}`}>{product.brand}{product.brand && product.category ? ' · ' : ''}{product.category}</p>}<h3 className={`mt-2 pr-12 text-2xl font-semibold ${strong}`}>{product.name}</h3><p className={`mt-3 text-xl font-semibold ${strong}`}>{euros(product.priceCents)}</p>{product.stock != null && <p className={`mt-1 text-sm ${muted}`}>{product.stock > 0 ? `${product.stock} en stock` : 'Épuisé'}</p>}{product.description && <p className={`mt-5 whitespace-pre-wrap text-sm leading-relaxed ${branded ? 'text-white/70' : 'text-gray-600'}`}>{product.description}</p>}<button type="button" onClick={onToggleFavorite} className={`mt-5 inline-flex w-fit items-center gap-2 rounded-full border px-3 py-2 text-sm ${branded ? 'border-white/15 text-white/70' : 'border-gray-200 text-gray-600'}`}><Heart className={`h-4 w-4 ${isFavorite ? 'fill-current' : ''}`} />{isFavorite ? 'Dans mes favoris' : 'Ajouter aux favoris'}</button>{!soldOut && <div className="mt-auto flex items-center gap-3 pt-6"><div className="flex items-center rounded-xl border border-current/20"><button onClick={() => setQty((value) => Math.max(1, value - 1))} className={`grid h-11 w-11 place-items-center ${muted}`}><Minus /></button><span className={`w-8 text-center ${strong}`}>{qty}</span><button onClick={() => setQty((value) => Math.min(99, value + 1))} className={`grid h-11 w-11 place-items-center ${muted}`}><Plus /></button></div><button onClick={() => onAdd(product, qty)} className={`flex flex-1 items-center justify-center gap-2 rounded-xl py-3 font-bold ${branded ? 'bg-white text-black' : 'bg-[var(--brand)] text-white'}`}><ShoppingBag className="h-5 w-5" />Ajouter au panier</button></div>}{soldOut && <p className={`mt-5 rounded-xl py-3 text-center ${branded ? 'bg-white/5 text-white/50' : 'bg-gray-100 text-gray-500'}`}>Produit épuisé</p>}</div></div></div></div>;
 }

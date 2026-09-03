@@ -41,8 +41,8 @@ function Btn({ b, basePath = '' }: { b: ButtonConfig; basePath?: string }) {
   );
 }
 
-export function PublicBlock({ type, content, style, basePath = '', organizationId, products, shopReady }: { type: string; content: any; style: BlockStyle; basePath?: string; organizationId?: string; products?: ShopProduct[]; shopReady?: boolean }) {
-  const inner = renderInner(type, content, style, basePath, organizationId, products, shopReady);
+export function PublicBlock({ type, content, style, basePath = '', organizationId, products, shopReady, branded = false }: { type: string; content: any; style: BlockStyle; basePath?: string; organizationId?: string; products?: ShopProduct[]; shopReady?: boolean; branded?: boolean }) {
+  const inner = renderInner(type, content, style, basePath, organizationId, products, shopReady, branded);
   // Drop the old default sky-blue band (it also left white borders on the sides
   // of width-constrained blocks).
   const cleanBg = (bg?: string) => (bg && bg.toLowerCase() !== '#f1f5ff' ? bg : undefined);
@@ -60,7 +60,7 @@ export function PublicBlock({ type, content, style, basePath = '', organizationI
   );
 }
 
-function renderInner(type: string, content: any, style: BlockStyle, basePath: string, organizationId?: string, products?: ShopProduct[], shopReady?: boolean) {
+function renderInner(type: string, content: any, style: BlockStyle, basePath: string, organizationId?: string, products?: ShopProduct[], shopReady?: boolean, branded = false) {
   switch (type) {
     case 'heading':
       return <h2 style={{ color: style.color, fontSize: style.fontSize ? `${style.fontSize}px` : undefined }} className="font-extrabold leading-tight">{content.text}</h2>;
@@ -241,6 +241,7 @@ function renderInner(type: string, content: any, style: BlockStyle, basePath: st
           columns={content.columns || 4}
           organizationId={organizationId}
           canCheckout={!!shopReady}
+          branded={branded}
         />
       );
     case 'tracks':

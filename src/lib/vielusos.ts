@@ -8,7 +8,7 @@ export const VIELUSOS_SUBDOMAIN = "ruche-dpjdd9ne";
 export const VIELUSOS_BRAND = {
   logoUrl: "/vielusos/logo.png",
   backgroundUrl: "/vielusos/background.png",
-  accent: "#d33f5c",
+  accent: "#f2f2f2",
   surface: "#0b0b10",
 };
 

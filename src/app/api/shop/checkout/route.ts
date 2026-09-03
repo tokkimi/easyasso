@@ -16,8 +16,25 @@ export async function POST(req: Request) {
   const body = await req.json().catch(() => ({}));
   const organizationId = String(body.organizationId || '');
   const rawItems: { productId?: string; quantity?: number }[] = Array.isArray(body.items) ? body.items : [];
+  const rawGuest = body.guest && typeof body.guest === 'object' ? body.guest : {};
+  const clean = (value: unknown, max = 200) => String(value || '').trim().slice(0, max);
+  const guest = {
+    name: clean(rawGuest.name, 120),
+    email: clean(rawGuest.email, 200).toLowerCase(),
+    phone: clean(rawGuest.phone, 40),
+    address: clean(rawGuest.address, 250),
+    postalCode: clean(rawGuest.postalCode, 24),
+    city: clean(rawGuest.city, 100),
+    country: clean(rawGuest.country, 2).toUpperCase(),
+  };
   const returnPath = typeof body.returnPath === 'string' && body.returnPath.startsWith('/') ? body.returnPath : '';
   if (!organizationId || rawItems.length === 0) return NextResponse.json({ error: 'Panier vide.' }, { status: 400 });
+  if (!guest.name || !/^\S+@\S+\.\S+$/.test(guest.email) || !guest.address || !guest.postalCode || !guest.city) {
+    return NextResponse.json({ error: 'Complétez vos coordonnées de livraison.' }, { status: 400 });
+  }
+  if (!['FR', 'BE', 'CH', 'LU', 'MC'].includes(guest.country)) {
+    return NextResponse.json({ error: 'Pays de livraison non pris en charge.' }, { status: 400 });
+  }
 
   const org = await prisma.organization.findUnique({ where: { id: organizationId } });
   if (!org) return NextResponse.json({ error: 'Boutique introuvable.' }, { status: 404 });
@@ -50,6 +67,10 @@ export async function POST(req: Request) {
     data: {
       organizationId,
       status: 'PENDING',
+      customerName: guest.name,
+      customerEmail: guest.email,
+      customerPhone: guest.phone,
+      shippingAddress: `${guest.address}\n${guest.postalCode} ${guest.city}\n${guest.country}`,
       totalCents: total,
       items: { create: lines.map((l) => ({ productId: l.product.id, name: l.product.name, priceCents: l.product.priceCents, quantity: l.quantity })) },
     },
@@ -60,6 +81,8 @@ export async function POST(req: Request) {
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
       payment_method_types: ['card'],
+      customer_email: guest.email,
+      billing_address_collection: 'required',
       locale: profile.language === 'en' ? 'en' : 'fr',
       line_items: lines.map((l) => ({
         quantity: l.quantity,

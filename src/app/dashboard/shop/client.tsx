@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Plus, Trash2, Pencil, Save, X, Package, Eye, EyeOff, Star, ArrowLeft, ArrowRight, ImagePlus, ExternalLink, LayoutTemplate, CreditCard, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Plus, Trash2, Pencil, Save, X, Package, Eye, EyeOff, Star, ArrowLeft, ArrowRight, ImagePlus, ExternalLink, LayoutTemplate, CreditCard, CheckCircle2, AlertCircle, Link2, RefreshCw, Loader2 } from 'lucide-react';
 import { PageHeader } from '@/components/ui';
 
 type Product = {
@@ -19,6 +19,8 @@ type Product = {
 type OrderItem = { id: string; name: string; priceCents: number; quantity: number };
 type Order = { id: string; status: string; customerName: string; customerEmail: string; customerPhone: string; shippingAddress: string; totalCents: number; createdAt: string; items: OrderItem[] };
 
+type Feed = { url: string; hasToken: boolean; lastCount: number | null; lastImportAt: string | null };
+
 type Draft = { name: string; description: string; priceEuros: string; images: string[]; category: string; brand: string; stock: string };
 
 const EMPTY: Draft = { name: '', description: '', priceEuros: '', images: [], category: '', brand: '', stock: '' };
@@ -33,7 +35,7 @@ function mainImage(p: Product) {
   return (p.images && p.images[0]) || p.imageUrl || '';
 }
 
-export function ShopClient({ enabled: initialEnabled, initial, boutiqueUrl = '', hasBoutiquePage: initialHasPage = false, connectStarted = false, connectReady: initialReady = false, orders = [] }: { enabled: boolean; initial: Product[]; boutiqueUrl?: string; hasBoutiquePage?: boolean; connectStarted?: boolean; connectReady?: boolean; orders?: Order[] }) {
+export function ShopClient({ enabled: initialEnabled, initial, boutiqueUrl = '', hasBoutiquePage: initialHasPage = false, connectStarted = false, connectReady: initialReady = false, orders = [], feed: initialFeed }: { enabled: boolean; initial: Product[]; boutiqueUrl?: string; hasBoutiquePage?: boolean; connectStarted?: boolean; connectReady?: boolean; orders?: Order[]; feed?: Feed }) {
   const [enabled, setEnabled] = useState(initialEnabled);
   const [products, setProducts] = useState<Product[]>(initial);
   const [draft, setDraft] = useState<Draft | null>(null);
@@ -44,6 +46,41 @@ export function ShopClient({ enabled: initialEnabled, initial, boutiqueUrl = '',
   const [connect, setConnect] = useState({ started: connectStarted, ready: initialReady });
   const [connecting, setConnecting] = useState(false);
   const dragIndex = useRef<number | null>(null);
+
+  // External catalogue (Contrado) connection
+  const [feed, setFeed] = useState<Feed>(initialFeed || { url: '', hasToken: false, lastCount: null, lastImportAt: null });
+  const [feedUrl, setFeedUrl] = useState(initialFeed?.url || '');
+  const [feedToken, setFeedToken] = useState('');
+  const [importing, setImporting] = useState(false);
+  const [feedMsg, setFeedMsg] = useState<{ ok: boolean; text: string } | null>(null);
+
+  async function importFeed() {
+    if (!feedUrl.trim()) { setFeedMsg({ ok: false, text: 'Ajoutez le lien de l’API Contrado.' }); return; }
+    setImporting(true);
+    setFeedMsg(null);
+    const res = await fetch('/api/shop/import', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url: feedUrl.trim(), token: feedToken.trim() || undefined }) }).catch(() => null);
+    const data = await res?.json().catch(() => ({}));
+    setImporting(false);
+    if (!res || !res.ok) { setFeedMsg({ ok: false, text: data?.error || 'Connexion impossible. Vérifiez le lien et le jeton.' }); return; }
+    setFeed({ url: feedUrl.trim(), hasToken: feedToken.trim() ? true : feed.hasToken, lastCount: data.count, lastImportAt: new Date().toISOString() });
+    setFeedToken('');
+    if (typeof data.count === 'number' && data.count > 0) {
+      setFeedMsg({ ok: true, text: `${data.count} article${data.count > 1 ? 's' : ''} importé${data.count > 1 ? 's' : ''} depuis Contrado. Ils s’affichent sur votre boutique.` });
+      window.location.reload();
+    } else {
+      const d = data.diagnostic;
+      const hint = d ? ` (réponse reçue — champs détectés : ${(d.itemKeys || []).slice(0, 8).join(', ') || 'aucun'}).` : '';
+      setFeedMsg({ ok: false, text: `Connexion réussie mais aucun article reconnu${hint} Envoyez-moi un exemple de la réponse pour affiner.` });
+    }
+  }
+
+  async function disconnectFeed() {
+    if (!confirm('Déconnecter Contrado et retirer les articles importés ? (Vos produits ajoutés à la main sont conservés.)')) return;
+    setImporting(true);
+    const res = await fetch('/api/shop/import', { method: 'DELETE' }).catch(() => null);
+    setImporting(false);
+    if (res && res.ok) window.location.reload();
+  }
 
   // Coming back from Stripe onboarding: refresh the account status.
   useEffect(() => {
@@ -221,6 +258,48 @@ export function ShopClient({ enabled: initialEnabled, initial, boutiqueUrl = '',
             ) : (
               <button onClick={addBoutiquePage} disabled={creatingPage} className="btn btn-primary"><Plus className="h-4 w-4" /> {creatingPage ? 'Création…' : 'Créer la page Boutique'}</button>
             )}
+          </div>
+
+          {/* Connexion boutique externe — Contrado */}
+          <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+            <div className="flex items-center gap-3">
+              <div className={`grid h-10 w-10 place-items-center rounded-xl ring-1 ${feed.lastCount ? 'bg-brand-50 text-brand-600 ring-brand-100' : 'bg-gray-100 text-gray-500 ring-gray-200'}`}><Link2 className="h-5 w-5" /></div>
+              <div>
+                <p className="font-bold text-gray-900">Connecter votre boutique Contrado</p>
+                <p className="text-sm text-gray-600">Vos articles Contrado sont récupérés et affichés <strong>sur votre site</strong> — vos clients ne sont jamais redirigés vers Contrado.</p>
+              </div>
+            </div>
+
+            {feed.lastCount != null && feed.lastCount > 0 && (
+              <p className="mt-3 flex items-center gap-1.5 text-sm text-green-700"><CheckCircle2 className="h-4 w-4" /> {feed.lastCount} article{feed.lastCount > 1 ? 's' : ''} importé{feed.lastCount > 1 ? 's' : ''} depuis Contrado{feed.lastImportAt ? ` · ${formatDate(feed.lastImportAt)}` : ''}.</p>
+            )}
+
+            <div className="mt-3 grid gap-3 sm:grid-cols-2">
+              <div>
+                <label className="label">Lien de l’API Contrado</label>
+                <input className="input" type="url" value={feedUrl} onChange={(e) => setFeedUrl(e.target.value)} placeholder="https://…contrado…/api/…" />
+              </div>
+              <div>
+                <label className="label">Jeton / clé API {feed.hasToken && <span className="font-normal text-gray-400">— enregistré, laissez vide pour garder</span>}</label>
+                <input className="input" type="password" value={feedToken} onChange={(e) => setFeedToken(e.target.value)} placeholder={feed.hasToken ? '•••••••• (enregistré)' : 'Collez votre clé API'} autoComplete="off" />
+              </div>
+            </div>
+
+            {feedMsg && (
+              <p className={`mt-3 flex items-start gap-1.5 text-sm ${feedMsg.ok ? 'text-green-700' : 'text-amber-700'}`}>
+                {feedMsg.ok ? <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" /> : <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />} {feedMsg.text}
+              </p>
+            )}
+
+            <div className="mt-3 flex flex-wrap gap-2">
+              <button onClick={importFeed} disabled={importing} className="btn btn-primary">
+                {importing ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />} {importing ? 'Connexion…' : feed.lastCount ? 'Actualiser les articles' : 'Connecter et importer'}
+              </button>
+              {feed.lastCount != null && (
+                <button onClick={disconnectFeed} disabled={importing} className="btn btn-ghost text-red-500"><X className="h-4 w-4" /> Déconnecter</button>
+              )}
+            </div>
+            <p className="mt-2 text-xs text-gray-400">La clé API est stockée de façon sécurisée et n’est jamais affichée aux visiteurs. Cliquez « Actualiser » quand vous ajoutez des articles sur Contrado.</p>
           </div>
 
           {/* Payments — Stripe Connect */}

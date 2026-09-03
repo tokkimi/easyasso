@@ -18,6 +18,8 @@ export default async function ShopPage() {
   const enabled = Boolean(profile.shopEnabled ?? profile.hasShop);
   const boutiqueUrl = site ? `${siteUrlFor(site.subdomain, site.customDomain, site.domainVerified)}/boutique` : '';
   const hasBoutiquePage = Boolean(site?.pages.some((p) => p.slug === 'boutique'));
+  const feedRaw = profile.shopFeed || {};
+  const feed = { url: feedRaw.url || '', hasToken: Boolean(feedRaw.token), lastCount: feedRaw.lastCount ?? null, lastImportAt: feedRaw.lastImportAt ?? null };
   return (
     <ShopClient
       enabled={enabled}
@@ -27,6 +29,7 @@ export default async function ShopPage() {
       connectStarted={Boolean(profile.stripeConnectAccountId)}
       connectReady={Boolean(profile.stripeConnectReady)}
       orders={JSON.parse(JSON.stringify(orders))}
+      feed={feed}
     />
   );
 }

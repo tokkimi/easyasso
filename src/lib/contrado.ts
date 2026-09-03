@@ -34,6 +34,22 @@ function listFrom(payload: any, keys: string[]): any[] {
   return Object.keys(value).length ? [value] : [];
 }
 
+function recordsWithKey(payload: any, key: string): JsonRecord[] {
+  const records: JsonRecord[] = [];
+  const seen = new Set<any>();
+  const visit = (value: any, depth: number) => {
+    if (depth > 6 || value == null || typeof value !== 'object' || seen.has(value)) return;
+    seen.add(value);
+    if (!Array.isArray(value) && key in value) {
+      records.push(value);
+      return;
+    }
+    for (const child of Array.isArray(value) ? value : Object.values(value)) visit(child, depth + 1);
+  };
+  visit(payload, 0);
+  return records;
+}
+
 async function request(apiKey: string, path: string, storeId?: string) {
   const response = await fetch(`${CONTRADO_API_BASE}${path}`, {
     headers: {
@@ -80,7 +96,7 @@ export async function readContradoStore(apiKey: string) {
   const store = stores[0];
   if (!store) throw new Error('Aucune boutique Contrado n’est liée à cette clé.');
   return {
-    storeId: String(store.storeId || ''),
+    storeId: String(store.storeId ?? ''),
     storeName: String(store.storeName || store.storeShortName || 'VIELUSOS'),
   };
 }
@@ -90,8 +106,8 @@ export async function readContradoCatalog(apiKey: string, storeId: string) {
     request(apiKey, `/stores/products?PageNumber=1&PageSize=${MAX_SYNCED_PRODUCTS}`, storeId),
     request(apiKey, '/stores/collections?PageNumber=1&PageSize=100', storeId).catch(() => null),
   ]);
-  const rawProducts = listFrom(productsPayload, ['products', 'items', 'results', 'values']).slice(0, MAX_SYNCED_PRODUCTS);
-  const collections = listFrom(collectionsPayload, ['collections', 'items', 'results', 'values']);
+  const rawProducts = recordsWithKey(productsPayload, 'storeProductId').slice(0, MAX_SYNCED_PRODUCTS);
+  const collections = recordsWithKey(collectionsPayload, 'storeCollectionId');
   const categoryById = new Map(collections.map((item) => [String(item.storeCollectionId || item.collectionId || ''), String(item.storeCollectionName || item.name || 'Collection')]));
 
   const products: ContradoSyncProduct[] = [];
@@ -102,7 +118,7 @@ export async function readContradoCatalog(apiKey: string, storeId: string) {
       if (!Number.isFinite(id) || id <= 0) return null;
       const variantsPayload = await request(apiKey, `/stores/products/${id}/option-variants`, storeId).catch(() => null);
       const variantData = unwrap(variantsPayload) || {};
-      const variants = Array.isArray(variantData.productVariants) ? variantData.productVariants : [];
+      const variants = recordsWithKey(variantData, 'variantId');
       const prices = variants.map(variantPrice).filter(Number.isFinite);
       const price = prices.length ? Math.min(...prices) : 0;
       return {

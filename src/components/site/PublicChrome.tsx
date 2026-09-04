@@ -103,10 +103,12 @@ export function PublicHeader({
   header,
   nav,
   basePath,
+  overlayHero = false,
 }: {
   header: HeaderConfig;
   nav: NavItem[];
   basePath: string;
+  overlayHero?: boolean;
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const { t } = useLanguage();
@@ -135,8 +137,17 @@ export function PublicHeader({
     basePath === "#" ? "#client" : `${basePath || ""}/client`;
   return (
     <header
-      style={{ background: header.background, color: header.textColor }}
-      className={`public-header-shell ${header.sticky ? "sticky top-0 z-40" : ""} border-b border-black/5 backdrop-blur`}
+      style={{
+        background: overlayHero ? "rgba(5, 5, 9, 0.28)" : header.background,
+        color: header.textColor,
+      }}
+      className={`public-header-shell ${
+        overlayHero
+          ? "absolute inset-x-0 top-0 z-40"
+          : header.sticky
+            ? "sticky top-0 z-40"
+            : ""
+      } ${overlayHero ? "border-b border-white/10" : "border-b border-black/5"} backdrop-blur`}
     >
       <div className="relative flex w-full items-center justify-between gap-3 px-3 py-3 sm:px-5 lg:px-8">
         <Link

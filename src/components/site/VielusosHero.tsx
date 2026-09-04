@@ -3,7 +3,7 @@ import { VIELUSOS_BRAND } from '@/lib/vielusos';
 
 export function VielusosHero({ title, logoUrl, config }: { title: string; logoUrl: string; config?: HeaderConfig['vielusosHero'] }) {
   return (
-    <section className="relative isolate aspect-video w-full overflow-hidden bg-[#08080c]" aria-label={title}>
+    <section className="vielusos-hero relative isolate aspect-video w-full overflow-hidden bg-[#08080c]" aria-label={title}>
       <video className="absolute inset-0 h-full w-full object-contain opacity-80" autoPlay muted loop playsInline preload="metadata" poster={VIELUSOS_BRAND.backgroundUrl} aria-hidden="true">
         <source src={config?.videoUrl || '/vielusos/banner.mp4'} type="video/mp4" />
       </video>

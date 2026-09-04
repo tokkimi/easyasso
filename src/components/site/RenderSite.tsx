@@ -365,7 +365,7 @@ export async function RenderSite({
 
   return (
     <div
-      className={`flex min-h-screen flex-col ${vielusos ? "vielusos-site" : ""}`}
+      className={`flex min-h-screen flex-col ${vielusos ? "vielusos-site relative" : ""}`}
       style={publicSiteStyle(theme, vielusos)}
     >
       {fontHref && <link rel="stylesheet" href={fontHref} />}
@@ -381,7 +381,12 @@ export async function RenderSite({
         }}
       />
       <PageViewTracker organizationId={site.organizationId} path={page.slug} />
-      <PublicHeader header={publicHeader} nav={nav} basePath={basePath} />
+      <PublicHeader
+        header={publicHeader}
+        nav={nav}
+        basePath={basePath}
+        overlayHero={vielusos && page.isHome}
+      />
       {vielusos && page.isHome && (
         <VielusosHero
           title={site.name}

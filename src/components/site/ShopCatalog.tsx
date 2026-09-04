@@ -89,10 +89,11 @@ export function ShopCatalog({ products, title, intro, search = true, showCategor
       setGuest((current) => ({ ...current, name: current.name || profile.name || '', email: current.email || profile.email || '' }));
     } catch {}
   }, [organizationId]);
+  const shopOverlayOpen = cartOpen || Boolean(openProduct);
   useEffect(() => {
-    document.body.classList.toggle('shop-cart-open', cartOpen);
+    document.body.classList.toggle('shop-cart-open', shopOverlayOpen);
     return () => document.body.classList.remove('shop-cart-open');
-  }, [cartOpen]);
+  }, [shopOverlayOpen]);
   useEffect(() => {
     if (typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('order') === 'success') {
       setCart([]);
@@ -174,7 +175,7 @@ export function ShopCatalog({ products, title, intro, search = true, showCategor
       {visibleProducts.map((product) => {
         const soldOut = product.stock != null && product.stock <= 0;
         return <article key={product.id} className="group min-w-0">
-          <button type="button" onClick={() => setOpenProduct(product)} className={`relative block aspect-square w-full overflow-hidden rounded-2xl border ${branded ? 'border-white/10 bg-black/40' : 'border-transparent bg-gray-100'}`}>{product.images[0] && <img src={product.images[0]} alt={product.name} loading="lazy" className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.025]" />}</button>
+          <button type="button" onClick={() => setOpenProduct(product)} className={`relative block aspect-square w-full overflow-hidden rounded-2xl border ${branded ? 'border-white/10 bg-black/40' : 'border-transparent bg-gray-100'}`}>{product.images[0] && <img src={product.images[0]} alt={product.name} loading="lazy" className="h-full w-full object-cover transition duration-300 md:group-hover:scale-[1.025]" />}</button>
           <div className="mt-3">{(product.brand || product.category) && <p className={`truncate text-[10px] uppercase tracking-[.2em] ${muted}`}>{product.brand}{product.brand && product.category ? ' · ' : ''}{product.category}</p>}<button type="button" onClick={() => setOpenProduct(product)} className={`mt-1 line-clamp-2 text-left text-sm font-light uppercase tracking-[.06em] ${strong}`}>{product.name}</button><p className={`mt-1 text-sm font-normal ${strong}`}>{product.variants?.length ? `À partir de ${euros(product.priceCents)}` : euros(product.priceCents)}</p></div>
           <div className="mt-3 flex gap-2"><button type="button" onClick={() => product.variants?.length ? setOpenProduct(product) : addToCart(product)} disabled={soldOut} className={`flex flex-1 items-center justify-center gap-2 rounded-full px-3 py-2.5 text-[11px] font-normal uppercase tracking-[.1em] disabled:opacity-40 ${primary}`}><ShoppingBag className="h-4 w-4" />{product.variants?.length ? 'Choisir les options' : 'Ajouter au panier'}</button><button type="button" onClick={() => toggleFavorite(product.id)} className={`grid h-10 w-10 place-items-center rounded-full border ${branded ? 'border-white/20 text-white' : 'border-gray-300 text-gray-600'}`} aria-label="Favori"><Heart className={`h-4 w-4 ${favorites.includes(product.id) ? 'fill-current' : ''}`} /></button></div>
         </article>;
@@ -223,12 +224,13 @@ function ProductModal({ product, branded, isFavorite, onFavorite, onAdd, onClose
   const muted = branded ? 'text-white/60' : 'text-gray-500';
   const soldOut = product.stock != null && product.stock <= 0;
 
-  return <div className="fixed inset-0 z-[100] flex items-end justify-center bg-black/75 backdrop-blur-sm sm:items-center sm:p-4" onClick={onClose}>
-    <div className={`max-h-[92dvh] w-full max-w-4xl overflow-y-auto rounded-t-3xl border sm:rounded-3xl ${branded ? 'border-white/15 bg-[#0b0b10]' : 'border-transparent bg-white'}`} onClick={(event) => event.stopPropagation()}>
+  return <div className="fixed inset-0 z-[100] flex items-stretch justify-center bg-black/75 sm:items-center sm:p-4 sm:backdrop-blur-sm" onClick={onClose}>
+    <div className={`h-[100dvh] w-full max-w-4xl touch-pan-y overflow-y-auto overscroll-contain border sm:h-auto sm:max-h-[92dvh] sm:rounded-3xl ${branded ? 'border-white/15 bg-[#0b0b10]' : 'border-transparent bg-white'}`} onClick={(event) => event.stopPropagation()}>
       <div className="grid md:grid-cols-[1.2fr_.8fr]">
         <div className={`relative ${branded ? 'bg-black/40' : 'bg-gray-100'}`}>
-          <div className="relative aspect-square">
+          <div className="relative aspect-[4/3] sm:aspect-square">
             {images[imageIndex] && <img src={images[imageIndex]} alt={`${product.name} — vue ${imageIndex + 1}`} className="h-full w-full object-cover" />}
+            <button onClick={onClose} aria-label="Fermer la fiche produit" className="absolute right-3 top-3 z-10 grid h-10 w-10 place-items-center rounded-full border border-white/20 bg-black/70 text-white md:hidden"><X className="h-4 w-4" /></button>
             {images.length > 1 && <>
               <button onClick={() => setImageIndex((value) => (value - 1 + images.length) % images.length)} className="absolute left-3 top-1/2 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full border border-white/20 bg-black/65 text-white"><ChevronLeft /></button>
               <button onClick={() => setImageIndex((value) => (value + 1) % images.length)} className="absolute right-3 top-1/2 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full border border-white/20 bg-black/65 text-white"><ChevronRight /></button>
@@ -236,13 +238,13 @@ function ProductModal({ product, branded, isFavorite, onFavorite, onAdd, onClose
           </div>
           {images.length > 1 && <div className="flex gap-2 overflow-x-auto p-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">{images.map((image, index) => <button key={`${image}-${index}`} onClick={() => setImageIndex(index)} className={`h-14 w-14 shrink-0 overflow-hidden rounded-lg border ${imageIndex === index ? 'border-white' : 'border-white/15 opacity-60'}`}><img src={image} alt="" className="h-full w-full object-cover" /></button>)}</div>}
         </div>
-        <div className="relative flex flex-col p-5 md:p-7">
-          <button onClick={onClose} className={`absolute right-4 top-4 grid h-9 w-9 place-items-center rounded-full border ${branded ? 'border-white/15 text-white' : 'border-gray-200 text-gray-700'}`}><X className="h-4 w-4" /></button>
+        <div className="relative flex flex-col p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] md:p-7">
+          <button onClick={onClose} aria-label="Fermer la fiche produit" className={`absolute right-4 top-4 hidden h-9 w-9 place-items-center rounded-full border md:grid ${branded ? 'border-white/15 text-white' : 'border-gray-200 text-gray-700'}`}><X className="h-4 w-4" /></button>
           {(product.brand || product.category) && <p className={`pr-12 text-[10px] uppercase tracking-[.2em] ${muted}`}>{product.brand}{product.brand && product.category ? ' · ' : ''}{product.category}</p>}
           <h3 className={`mt-2 pr-12 text-xl font-light uppercase tracking-[.08em] ${strong}`}>{product.name}</h3>
           <p className={`mt-3 text-lg font-normal ${strong}`}>{euros(price)}</p>
           {product.description && <p className={`mt-4 whitespace-pre-wrap text-sm font-light leading-relaxed ${branded ? 'text-white/70' : 'text-gray-600'}`}>{product.description}</p>}
-          {variants.length ? <label className={`mt-5 text-[11px] uppercase tracking-[.12em] ${muted}`}>Taille / finition<select value={variantId} onChange={(event) => setVariantId(event.target.value)} className={`mt-2 w-full rounded-xl border px-3 py-3 text-sm font-light ${branded ? 'border-white/20 bg-[#15151b] text-white' : 'border-gray-200 bg-white text-gray-900'}`}>{variants.map((item) => <option key={item.id} value={item.id}>{item.label || item.id} — {euros(item.priceCents)}</option>)}</select></label> : null}
+          {variants.length ? <label className={`mt-5 text-xs uppercase tracking-[.12em] ${muted}`}>Taille / finition<select value={variantId} onChange={(event) => setVariantId(event.target.value)} className={`mt-2 w-full rounded-xl border px-3 py-3 text-base font-light sm:text-sm ${branded ? 'border-white/20 bg-[#15151b] text-white' : 'border-gray-200 bg-white text-gray-900'}`}>{variants.map((item) => <option key={item.id} value={item.id}>{item.label || item.id} — {euros(item.priceCents)}</option>)}</select></label> : null}
           <button type="button" onClick={onFavorite} className={`mt-4 inline-flex w-fit items-center gap-2 text-xs ${muted}`}><Heart className={`h-4 w-4 ${isFavorite ? 'fill-current' : ''}`} />{isFavorite ? 'Dans mes favoris' : 'Ajouter aux favoris'}</button>
           {!soldOut && <div className="mt-auto flex items-center gap-3 pt-5">
             <div className="flex items-center rounded-xl border border-current/20"><button onClick={() => setQuantity((value) => Math.max(1, value - 1))} className={`grid h-11 w-10 place-items-center ${muted}`}><Minus className="h-4 w-4" /></button><span className={`w-7 text-center text-sm ${strong}`}>{quantity}</span><button onClick={() => setQuantity((value) => Math.min(99, value + 1))} className={`grid h-11 w-10 place-items-center ${muted}`}><Plus className="h-4 w-4" /></button></div>

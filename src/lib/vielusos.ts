@@ -14,15 +14,16 @@ export const VIELUSOS_BRAND = {
 
 export const VIELUSOS_SITE_CSS = `
 html:has(.vielusos-site), body:has(.vielusos-site) { min-height: 100%; background: #0b0b10 !important; }
-.vielusos-site { min-height: 100dvh; background-color: #0b0b10 !important; }
-.vielusos-site main { background: transparent; font-family: "Montserrat", "Helvetica Neue", Arial, sans-serif; font-weight: 300; }
+.vielusos-site { min-height: 100dvh; background-color: #0b0b10 !important; font-family: "Montserrat", "Helvetica Neue", Arial, sans-serif !important; font-weight: 300; }
+.vielusos-site * { font-family: "Montserrat", "Helvetica Neue", Arial, sans-serif !important; }
+.vielusos-site main { background: transparent; font-weight: 300; }
 .vielusos-site .public-block-shell .text-gray-900, .vielusos-site .public-block-shell .text-gray-950 { color: #f7f7fb !important; }
 .vielusos-site .public-block-shell .text-gray-600, .vielusos-site .public-block-shell .text-gray-500 { color: rgba(247,247,251,.72) !important; }
 .vielusos-site .public-block-shell .bg-white { background: rgba(10,10,15,.68) !important; }
 .vielusos-site .public-block-shell .ring-gray-100 { --tw-ring-color: rgba(255,255,255,.18) !important; }
 .vielusos-site .public-header-shell, .vielusos-site .public-footer-shell { background: #0b0b10 !important; }
 .vielusos-site .public-footer-shell { margin-bottom: 0 !important; }
-.vielusos-site main h2 { font-family: "Cormorant Garamond", "Times New Roman", serif !important; font-size: clamp(1.75rem, 3vw, 2.5rem) !important; line-height: 1 !important; font-weight: 300 !important; letter-spacing: .18em !important; text-transform: uppercase !important; }
+.vielusos-site main h2 { font-size: clamp(1.75rem, 3vw, 2.5rem) !important; line-height: 1 !important; font-weight: 300 !important; letter-spacing: .18em !important; text-transform: uppercase !important; }
 .vielusos-site .vielusos-fluid { width: 80% !important; max-width: none !important; padding-left: 0 !important; padding-right: 0 !important; }
 .vielusos-site .vielusos-media-shell { padding-left: 0 !important; padding-right: 0 !important; }
 @media (min-width: 768px) {

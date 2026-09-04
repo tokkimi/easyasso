@@ -106,7 +106,7 @@ function renderInner(type: string, content: any, style: BlockStyle, basePath: st
       return (
         <div className={`flex gap-4 ${justifyClass(s.align)}`}>
           {items.map(({ k, url, Icon, asset }) => (
-            <a key={k} href={safePublicUrl(url) || '#'} target="_blank" rel="noreferrer" aria-label={k} title={k} className="grid h-11 w-11 place-items-center rounded-xl border border-current/15 text-gray-600 transition hover:-translate-y-0.5 hover:text-brand-600">{asset ? <img src={asset} alt="" className="h-6 w-6 object-contain" /> : <Icon className="h-6 w-6" />}</a>
+            <a key={k} href={safePublicUrl(url) || '#'} target="_blank" rel="noreferrer" aria-label={k} title={k} className={`grid h-11 w-11 place-items-center rounded-xl border border-current/15 transition hover:-translate-y-0.5 ${branded ? 'text-white/80 hover:text-white' : 'text-gray-600 hover:text-brand-600'}`}>{asset ? <img src={asset} alt="" className={`h-6 w-6 object-contain ${branded ? 'brightness-0 invert' : ''}`} /> : <Icon className="h-6 w-6" />}</a>
           ))}
         </div>
       );
@@ -249,9 +249,9 @@ function renderInner(type: string, content: any, style: BlockStyle, basePath: st
     case 'videos':
       return <VideoGrid content={content} />;
     case 'streaming':
-      return <StreamingLinks content={content} />;
+      return <StreamingLinks content={content} branded={branded} />;
     case 'players':
-      return <OfficialPlayers content={content} />;
+      return <OfficialPlayers content={content} branded={branded} />;
     case 'instagram':
       return <InstagramPreview content={content} />;
     default:

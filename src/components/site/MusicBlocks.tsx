@@ -124,7 +124,7 @@ const STREAMING = [
   { key: 'bandcamp', label: 'Bandcamp', color: '#1DA0C3' },
   { key: 'tidal', label: 'TIDAL', color: '#000000' },
 ];
-function StreamingIcon({ k }: { k: string }) {
+function StreamingIcon({ k, monochrome = false }: { k: string; monochrome?: boolean }) {
   if (k === 'youtube') return <Youtube className="h-5 w-5" />;
   const officialMarks: Record<string, string> = {
     youtubeMusic: 'https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/youtubemusic.svg',
@@ -134,7 +134,7 @@ function StreamingIcon({ k }: { k: string }) {
     tidal: 'https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/tidal.svg',
   };
   if (officialMarks[k]) return <span aria-hidden="true" className="block h-5 w-5 bg-current" style={{ WebkitMask: `url(${officialMarks[k]}) center / contain no-repeat`, mask: `url(${officialMarks[k]}) center / contain no-repeat` }} />;
-  if (k === 'appleMusic') return <img src="/integrations/applemusic.svg" alt="" className="h-5 w-5 object-contain" />;
+  if (k === 'appleMusic') return <img src="/integrations/applemusic.svg" alt="" className={`h-5 w-5 object-contain ${monochrome ? 'brightness-0 invert' : ''}`} />;
   if (k === 'soundcloud') {
     return <svg viewBox="0 0 44 28" className="h-5 w-8" aria-hidden="true"><path fill="currentColor" d="M31 27H11a11 11 0 0 1 0-22 12 12 0 0 1 21 5 8.5 8.5 0 0 1-1 17ZM3 15h2v10H3Zm5-6h2v18H8Zm5-4h2v22h-2Zm5-1h2v23h-2Zm5 2h2v21h-2Z" /></svg>;
   }
@@ -142,7 +142,7 @@ function StreamingIcon({ k }: { k: string }) {
     return <svg viewBox="0 0 32 32" className="h-5 w-5" aria-hidden="true"><circle cx="16" cy="16" r="16" fill="currentColor" /><path d="M8.2 12.2c5.4-1.8 11.3-1 15.2 1.3M9.5 16c4.4-1.3 9-.8 12.2 1M10.7 19.5c3.2-.9 6.5-.5 9 .7" fill="none" stroke="currentColor" strokeLinecap="round" strokeWidth="2.2" className="text-black/75" /></svg>;
   }
   if (k === 'deezer') {
-    return <svg viewBox="0 0 36 30" className="h-5 w-6" aria-hidden="true"><path fill="#ff0092" d="M0 20h7v7H0z" /><path fill="#ff8c00" d="M8 13h7v14H8z" /><path fill="#00c7f2" d="M16 6h7v21h-7z" /><path fill="#a238ff" d="M24 0h7v27h-7z" /></svg>;
+      return <svg viewBox="0 0 36 30" className="h-5 w-6" aria-hidden="true"><path fill={monochrome ? 'currentColor' : '#ff0092'} d="M0 20h7v7H0z" /><path fill={monochrome ? 'currentColor' : '#ff8c00'} d="M8 13h7v14H8z" /><path fill={monochrome ? 'currentColor' : '#00c7f2'} d="M16 6h7v21h-7z" /><path fill={monochrome ? 'currentColor' : '#a238ff'} d="M24 0h7v27h-7z" /></svg>;
   }
   return <Music2 className="h-5 w-5" />;
 }
@@ -153,7 +153,7 @@ function streamingLinkClass(style: string) {
   if (style === 'text-black') return 'bg-transparent px-2 text-gray-950 shadow-none hover:opacity-75';
   return 'bg-gray-950 text-white hover:opacity-90';
 }
-export function StreamingLinks({ content }: { content: any }) {
+export function StreamingLinks({ content, branded = false }: { content: any; branded?: boolean }) {
   const links = content?.links || {};
   const items = STREAMING.filter((s) => links[s.key]);
   const linkStyle = content?.linkStyle || 'dark-button';
@@ -169,8 +169,8 @@ export function StreamingLinks({ content }: { content: any }) {
           {items.map((s) => (
             <a key={s.key} href={safePublicUrl(links[s.key]) || '#'} target="_blank" rel="noreferrer"
               className={`inline-flex items-center gap-2.5 rounded-full py-3 text-sm font-bold transition ${textOnly ? '' : 'px-5'} ${streamingLinkClass(linkStyle)}`}
-              style={textOnly ? undefined : { boxShadow: `0 12px 26px -12px ${(glowColor || s.color)}aa` }}>
-              <span style={{ color: s.color }}><StreamingIcon k={s.key} /></span> {s.label}
+              style={textOnly ? undefined : { boxShadow: `0 12px 26px -12px ${(branded ? '#ffffff' : glowColor || s.color)}aa` }}>
+              <span style={{ color: branded ? '#ffffff' : s.color }}><StreamingIcon k={s.key} monochrome={branded} /></span> {s.label}
             </a>
           ))}
         </div>
@@ -245,18 +245,18 @@ function platformLabel(platform: string) {
   return 'Lecteur';
 }
 
-function PlatformLogo({ platform }: { platform: string }) {
+function PlatformLogo({ platform, monochrome = false }: { platform: string; monochrome?: boolean }) {
   if (platform === 'youtube') {
     return (
-      <span className="inline-flex items-center gap-2 font-black text-[#ff0000]" aria-label="YouTube">
-        <span className="grid h-7 w-10 place-items-center rounded-lg bg-[#ff0000] text-white"><Play className="h-4 w-4 fill-current" /></span>
+      <span className={`inline-flex items-center gap-2 font-black ${monochrome ? 'text-white' : 'text-[#ff0000]'}`} aria-label="YouTube">
+        <span className={`grid h-7 w-10 place-items-center rounded-lg ${monochrome ? 'bg-white text-black' : 'bg-[#ff0000] text-white'}`}><Play className="h-4 w-4 fill-current" /></span>
         YouTube
       </span>
     );
   }
   if (platform === 'spotify') {
     return (
-      <span className="inline-flex items-center gap-2 font-black text-[#1db954]">
+      <span className={`inline-flex items-center gap-2 font-black ${monochrome ? 'text-white' : 'text-[#1db954]'}`}>
         <svg viewBox="0 0 32 32" className="h-7 w-7" aria-hidden="true"><circle cx="16" cy="16" r="16" fill="currentColor" /><path d="M8.2 12.2c5.4-1.8 11.3-1 15.2 1.3M9.5 16c4.4-1.3 9-.8 12.2 1M10.7 19.5c3.2-.9 6.5-.5 9 .7" fill="none" stroke="#0a0a0a" strokeLinecap="round" strokeWidth="2.2" /></svg>
         Spotify
       </span>
@@ -264,7 +264,7 @@ function PlatformLogo({ platform }: { platform: string }) {
   }
   if (platform === 'soundcloud') {
     return (
-      <span className="inline-flex items-center gap-2 font-black text-[#ff5500]">
+      <span className={`inline-flex items-center gap-2 font-black ${monochrome ? 'text-white' : 'text-[#ff5500]'}`}>
         <svg viewBox="0 0 44 28" className="h-7 w-11" aria-hidden="true"><path fill="currentColor" d="M31 27H11a11 11 0 0 1 0-22 12 12 0 0 1 21 5 8.5 8.5 0 0 1-1 17ZM3 15h2v10H3Zm5-6h2v18H8Zm5-4h2v22h-2Zm5-1h2v23h-2Zm5 2h2v21h-2Z" /></svg>
         SoundCloud
       </span>
@@ -272,9 +272,9 @@ function PlatformLogo({ platform }: { platform: string }) {
   }
   if (platform === 'deezer') {
     return (
-      <span className="inline-flex items-center gap-2 font-black text-[#a238ff]">
+      <span className={`inline-flex items-center gap-2 font-black ${monochrome ? 'text-white' : 'text-[#a238ff]'}`}>
         <svg viewBox="0 0 36 30" className="h-7 w-9" aria-hidden="true">
-          <path fill="#ff0092" d="M0 20h7v7H0z" /><path fill="#ff8c00" d="M8 13h7v14H8z" /><path fill="#00c7f2" d="M16 6h7v21h-7z" /><path fill="#a238ff" d="M24 0h7v27h-7z" />
+          <path fill={monochrome ? 'currentColor' : '#ff0092'} d="M0 20h7v7H0z" /><path fill={monochrome ? 'currentColor' : '#ff8c00'} d="M8 13h7v14H8z" /><path fill={monochrome ? 'currentColor' : '#00c7f2'} d="M16 6h7v21h-7z" /><path fill={monochrome ? 'currentColor' : '#a238ff'} d="M24 0h7v27h-7z" />
         </svg>
         Deezer
       </span>
@@ -283,7 +283,7 @@ function PlatformLogo({ platform }: { platform: string }) {
   return <span className="inline-flex items-center gap-2 font-black"><Music2 className="h-6 w-6" />Lecteur</span>;
 }
 
-export function OfficialPlayers({ content }: { content: any }) {
+export function OfficialPlayers({ content, branded = false }: { content: any; branded?: boolean }) {
   const [playing, setPlaying] = useState<Record<string, boolean>>({});
   const items: PlayerItem[] = Array.isArray(content?.items) ? content.items : [];
   // Also surface platform URLs saved in the site's streaming-links settings.
@@ -321,7 +321,7 @@ export function OfficialPlayers({ content }: { content: any }) {
             return (
               <section key={platform} aria-labelledby={`${railId}-title`}>
                 <div id={`${railId}-title`} className="mb-3 flex items-center gap-2 text-sm font-black uppercase tracking-[0.16em] text-white/85">
-                  <PlatformLogo platform={platform} />
+                  <PlatformLogo platform={platform} monochrome={branded} />
                 </div>
                 <div className="relative">
                   <button type="button" aria-label={`${platformLabel(platform)} précédent`} onClick={() => document.getElementById(railId)?.scrollBy({ left: -330, behavior: 'smooth' })} className="absolute left-1 top-1/2 z-10 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full bg-black/65 text-white shadow-lg backdrop-blur transition hover:bg-black/85 focus:outline-none focus:ring-2 focus:ring-white/80"><ChevronLeft className="h-5 w-5" /></button>
@@ -443,7 +443,7 @@ export function InstagramPreview({ content }: { content: any }) {
     return (
       <section className="vielusos-fluid mx-auto w-full max-w-7xl px-6 py-10 md:px-16 md:py-14 lg:px-20">
         <div className="flex items-center gap-3" aria-label="Instagram">
-          <span className="grid h-7 w-7 place-items-center rounded-lg bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-600"><Instagram className="h-4 w-4 text-white" /></span>
+          <span className="grid h-7 w-7 place-items-center rounded-lg border border-white/35 bg-transparent"><Instagram className="h-4 w-4 text-white" /></span>
           <span className="text-[9px] font-semibold uppercase tracking-[0.42em] text-white/45">Social</span>
         </div>
         <div className="mt-3 flex items-end justify-between gap-4">

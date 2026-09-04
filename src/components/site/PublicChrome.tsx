@@ -79,7 +79,7 @@ function SocialMark({
       <img
         src="https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/9e/a0/59/9ea0590d-68e5-d649-ca93-e31becb08410/AppIcon-0-0-1x_U007emarketing-0-11-0-85-220.png/128x128bb.jpg"
         alt=""
-        className="h-[18px] w-[18px] rounded-[4px] object-contain"
+        className={`h-[18px] w-[18px] rounded-[4px] object-contain ${monochrome ? "grayscale brightness-0 invert" : ""}`}
       />
     );
   if (key === "tiktok")
@@ -153,6 +153,15 @@ export function PublicHeader({
             <span className="truncate">{header.logoText}</span>
           )}
         </Link>
+        {brandedHeader && header.showNav && (
+          <nav className="public-header-desktop absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 items-center justify-center gap-8 text-center text-sm font-light uppercase tracking-[0.18em]">
+            {nav.filter((page) => page.isHome || page.slug === "boutique").map((page) => (
+              <Link key={page.slug} href={link(page.slug, page.isHome)} className="text-white/70 transition hover:text-white">
+                {t(page.title)}
+              </Link>
+            ))}
+          </nav>
+        )}
         {!brandedHeader && (
           <div className="public-header-desktop min-w-0 flex-[2_1_0%] items-center justify-center gap-4">
             {header.showNav && (

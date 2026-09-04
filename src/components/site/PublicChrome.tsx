@@ -231,7 +231,7 @@ export function PublicHeader({
           {brandedHeader && header.showCta !== false && cta?.href?.trim() && (
             <a
               href={cta.href.startsWith('/') ? `${basePath}${cta.href}` : cta.href}
-              className="vielusos-action inline-flex min-h-10 shrink-0 items-center justify-center transition"
+              className="vielusos-action hidden min-h-10 shrink-0 items-center justify-center transition sm:inline-flex"
             >
               {cta.text?.trim() || 'BOOKING'}
             </a>
@@ -320,6 +320,15 @@ export function PublicHeader({
                 <UserRound className="h-4 w-4" />
                 {t("Espace client")}
               </Link>
+            )}
+            {brandedHeader && header.showCta !== false && cta?.href?.trim() && (
+              <a
+                href={cta.href.startsWith('/') ? `${basePath}${cta.href}` : cta.href}
+                onClick={() => setMenuOpen(false)}
+                className="vielusos-action mt-3 flex min-h-11 items-center justify-center sm:hidden"
+              >
+                {cta.text?.trim() || 'BOOKING'}
+              </a>
             )}
             {!brandedHeader && header.showCta !== false && cta?.text?.trim() && cta?.href?.trim() && (
               <a

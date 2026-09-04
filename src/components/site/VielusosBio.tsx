@@ -45,7 +45,7 @@ export function VielusosBio({ blocks = [], config }: { blocks?: any[]; config?: 
       <div className="mx-auto grid max-w-6xl gap-8 md:grid-cols-[1.05fr_.95fr] md:items-center">
         <div>
           <p className="text-xs font-medium uppercase tracking-[0.32em] text-white/55">{eyebrow}</p>
-          <h2 className="mt-3 text-4xl font-light uppercase tracking-[0.16em] text-white md:text-5xl">{title}</h2>
+          <h2 className="vielusos-title mt-3 text-4xl font-light uppercase tracking-[0.16em] text-white md:text-5xl">{title}</h2>
           <div className="mt-6 space-y-5 text-base font-light leading-8 text-white/70 md:text-lg">
             {paragraphs.map((text, index) => <p key={index} className={index === paragraphs.length - 1 && text.length < 80 ? 'text-sm tracking-[0.18em] text-white/55' : ''}>{text}</p>)}
           </div>

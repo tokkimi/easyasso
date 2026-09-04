@@ -12,8 +12,8 @@ export function VielusosHero({ title, logoUrl, config }: { title: string; logoUr
         <div className="flex max-w-xl flex-col items-center">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           {config?.showLogo !== false && <img src={logoUrl} alt="" className="mb-5 h-32 w-32 object-contain opacity-95 drop-shadow-[0_0_18px_rgba(255,255,255,.18)] md:h-44 md:w-44" />}
-          {config?.showName !== false && <p className="text-4xl font-light uppercase leading-none tracking-[0.32em] text-white md:text-6xl">{title.toUpperCase()}</p>}
-          {config?.showTagline !== false && <h1 className="mt-5 text-lg font-light uppercase tracking-[0.24em] text-white/85 md:text-2xl">POWER OF EMOTION</h1>}
+          {config?.showName !== false && <p className="vielusos-title text-4xl font-light uppercase leading-none tracking-[0.32em] text-white md:text-6xl">{title.toUpperCase()}</p>}
+          {config?.showTagline !== false && <h1 className="vielusos-title mt-5 text-lg font-light uppercase tracking-[0.24em] text-white/85 md:text-2xl">POWER OF EMOTION</h1>}
         </div>
       </div>
     </section>

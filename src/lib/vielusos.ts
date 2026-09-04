@@ -14,6 +14,8 @@ export const VIELUSOS_BRAND = {
 
 export const VIELUSOS_FONT_STACK =
   '"Montserrat", "Helvetica Neue", Arial, sans-serif';
+export const VIELUSOS_TITLE_FONT_STACK =
+  '"Cormorant Garamond", "Times New Roman", serif';
 
 export const VIELUSOS_SITE_CSS = `
 html:has(.vielusos-site), body:has(.vielusos-site) { min-height: 100%; background: #0b0b10 !important; }
@@ -42,6 +44,7 @@ html:has(.vielusos-site), body:has(.vielusos-site) { min-height: 100%; backgroun
 }
 .vielusos-site .vielusos-action:hover { background: #fff !important; color: #09090d !important; border-color: #fff !important; }
 .vielusos-site .vielusos-action:disabled { opacity: .45 !important; }
+.vielusos-site .vielusos-title, .vielusos-site main h2 { font-family: ${VIELUSOS_TITLE_FONT_STACK} !important; }
 .vielusos-site main h2 { font-size: clamp(1.75rem, 3vw, 2.5rem) !important; line-height: 1 !important; font-weight: 300 !important; letter-spacing: .18em !important; text-transform: uppercase !important; }
 .vielusos-site .vielusos-fluid { width: 80% !important; max-width: none !important; padding-left: 0 !important; padding-right: 0 !important; }
 .vielusos-site .vielusos-media-shell { padding-left: 0 !important; padding-right: 0 !important; }

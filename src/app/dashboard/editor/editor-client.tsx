@@ -648,7 +648,12 @@ export function EditorClient({
                 <PublicHeader
                   header={previewHeader as any}
                   nav={pages
-                    .filter((p) => p.showInNav)
+                    .filter(
+                      (p) =>
+                        p.showInNav ||
+                        (branded &&
+                          (p.isHome || ["boutique", "shop"].includes(p.slug))),
+                    )
                     .map((p) => ({
                       title: p.title,
                       slug: p.slug,
@@ -780,7 +785,12 @@ export function EditorClient({
                   orgId={(initial as any).organizationId || "preview"}
                   basePath="#"
                   nav={pages
-                    .filter((p) => p.showInNav)
+                    .filter(
+                      (p) =>
+                        p.showInNav ||
+                        (branded &&
+                          (p.isHome || ["boutique", "shop"].includes(p.slug))),
+                    )
                     .map((p) => ({
                       title: p.title,
                       slug: p.slug,

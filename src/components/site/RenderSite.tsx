@@ -250,7 +250,12 @@ export async function RenderSite({
     : { ...footer, columns: columnsWithHeaderSocials };
   const shopEnabled = Boolean(profile.shopEnabled ?? profile.hasShop);
   const nav = site.pages
-    .filter((p) => p.showInNav && (p.slug !== "boutique" || shopEnabled))
+    .filter((p) => {
+      const primaryVielusosPage =
+        vielusos && (p.isHome || ["boutique", "shop"].includes(p.slug));
+      return (p.showInNav || primaryVielusosPage) &&
+        (!["boutique", "shop"].includes(p.slug) || shopEnabled);
+    })
     .map((p) => ({ title: p.title, slug: p.slug, isHome: p.isHome }));
   const theme = (site.theme as any) || {};
   const fontHref = googleFontsHref(theme.font);

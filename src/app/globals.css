@@ -24,6 +24,9 @@ button, a, input, select, textarea { touch-action: manipulation; }
 
 .public-header-shell, .public-footer-shell, .contact-block, .public-block-shell { container-type: inline-size; }
 .public-header-desktop { display: flex; }
+@media (min-width: 901px) {
+  .vielusos-site .vielusos-primary-nav-link { display: none; }
+}
 .public-header-menu-button, .public-header-dropdown { display: none; }
 .contact-block { grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); }
 .contact-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); }

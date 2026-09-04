@@ -128,6 +128,9 @@ export function PublicHeader({
   };
   const link = (slug: string, isHome: boolean) =>
     isHome ? basePath || "/" : `${basePath}/${slug}`;
+  const isPrimaryBrandPage = (page: NavItem) =>
+    page.isHome || ["boutique", "shop"].includes(page.slug.toLowerCase());
+  const brandedPrimaryNav = nav.filter(isPrimaryBrandPage);
   const customerHref =
     basePath === "#" ? "#client" : `${basePath || ""}/client`;
   return (
@@ -155,9 +158,9 @@ export function PublicHeader({
         </Link>
         {brandedHeader && header.showNav && (
           <nav className="public-header-desktop absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 items-center justify-center gap-8 text-center text-sm font-light uppercase tracking-[0.18em]">
-            {nav.filter((page) => page.isHome || page.slug === "boutique").map((page) => (
+            {brandedPrimaryNav.map((page) => (
               <Link key={page.slug} href={link(page.slug, page.isHome)} className="text-white/70 transition hover:text-white">
-                {t(page.title)}
+                {t(page.isHome ? "Accueil" : "Boutique")}
               </Link>
             ))}
           </nav>
@@ -270,7 +273,7 @@ export function PublicHeader({
                     key={p.slug}
                     href={link(p.slug, p.isHome)}
                     onClick={() => setMenuOpen(false)}
-                    className={`rounded-xl px-4 py-3 text-base font-semibold ${brandedHeader || glassMenu ? "border-b border-white/10 hover:bg-white/10" : "hover:bg-black/5"}`}
+                    className={`rounded-xl px-4 py-3 text-base font-semibold ${brandedHeader && isPrimaryBrandPage(p) ? "vielusos-primary-nav-link " : ""}${brandedHeader || glassMenu ? "border-b border-white/10 hover:bg-white/10" : "hover:bg-black/5"}`}
                   >
                     {t(p.title)}
                   </Link>

@@ -265,7 +265,7 @@ function EventShowcase({ content }: { content: any }) {
   return (
     <section className="relative overflow-hidden px-5 py-14 text-white md:px-12 md:py-24">
       <div className="vielusos-fluid mx-auto max-w-7xl">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.55em] text-white/45">{content.eyebrow || 'Live'}</p>
+        <p className="vielusos-eyebrow text-[10px] font-semibold uppercase tracking-[0.55em] text-white/45">{content.eyebrow || 'Live'}</p>
         <h2 className="vielusos-title mt-5 text-5xl font-light uppercase tracking-[0.22em] md:text-7xl">{content.title || 'Next date'}</h2>
         <div className="mt-10 grid gap-8 lg:grid-cols-[minmax(0,1.25fr)_minmax(260px,.75fr)] lg:items-center">
           <div className="mx-auto w-full max-w-[760px] overflow-hidden rounded-[1.75rem] border border-white/15 bg-black/30 p-2 shadow-[0_30px_100px_rgba(0,0,0,.5)]">
@@ -286,7 +286,7 @@ function EventShowcase({ content }: { content: any }) {
 }
 
 function SectionHeading({ eyebrow, title, intro }: { eyebrow?: string; title?: string; intro?: string }) {
-  return <div><p className="text-[8px] font-semibold uppercase tracking-[0.24em] text-white/45 sm:text-[10px] sm:tracking-[0.5em]">{eyebrow}</p>{title && <h2 className="mt-4 text-white">{title}</h2>}{intro && <p className="mt-4 max-w-2xl text-xs font-light leading-6 text-white/50 sm:text-sm sm:leading-7">{intro}</p>}</div>;
+  return <div><p className="vielusos-eyebrow text-[8px] font-semibold uppercase tracking-[0.24em] text-white/45 sm:text-[10px] sm:tracking-[0.5em]">{eyebrow}</p>{title && <h2 className="mt-4 text-white">{title}</h2>}{intro && <p className="mt-4 max-w-2xl text-xs font-medium leading-6 text-white/50 sm:text-sm sm:leading-7">{intro}</p>}</div>;
 }
 
 function StatsShowcase({ content }: { content: any }) {

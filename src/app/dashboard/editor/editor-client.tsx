@@ -53,7 +53,11 @@ import { PublicHeader, PublicFooter } from "@/components/site/PublicChrome";
 import { VielusosHero } from "@/components/site/VielusosHero";
 import { VielusosBio } from "@/components/site/VielusosBio";
 import { themeStyle, brandCss } from "@/lib/render";
-import { VIELUSOS_BRAND, VIELUSOS_SITE_CSS } from "@/lib/vielusos";
+import {
+  VIELUSOS_BRAND,
+  VIELUSOS_FONT_STACK,
+  VIELUSOS_SITE_CSS,
+} from "@/lib/vielusos";
 import { googleFontsHref } from "@/lib/fonts";
 import { ColorGrid, AlignPicker, Field, Toggle, ImageInput } from "./controls";
 
@@ -390,7 +394,7 @@ export function EditorClient({
       {branded && (
         <link
           rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&family=Montserrat:wght@300;400;500&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600&display=swap"
         />
       )}
       <style
@@ -622,6 +626,7 @@ export function EditorClient({
               ...themeStyle(initial.theme),
               ...(branded
                 ? {
+                    fontFamily: VIELUSOS_FONT_STACK,
                     backgroundColor: VIELUSOS_BRAND.surface,
                     backgroundImage: `linear-gradient(rgba(8,8,12,.72),rgba(8,8,12,.72)),url(${VIELUSOS_BRAND.backgroundUrl})`,
                     backgroundSize: "cover",
@@ -710,6 +715,7 @@ export function EditorClient({
                         style={b.style}
                         basePath="#"
                         organizationId={(initial as any).organizationId}
+                        branded={branded}
                       />
                       {canEdit && selectedBlock === b.id && (
                         <div className="absolute right-2 top-2 flex gap-1 rounded-lg bg-gray-900/90 p-1 text-white">

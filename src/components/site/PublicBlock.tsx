@@ -266,7 +266,7 @@ function EventShowcase({ content }: { content: any }) {
     <section className="relative overflow-hidden px-5 py-14 text-white md:px-12 md:py-24">
       <div className="vielusos-fluid mx-auto max-w-7xl">
         <p className="text-[10px] font-semibold uppercase tracking-[0.55em] text-white/45">{content.eyebrow || 'Live'}</p>
-        <h2 className="mt-5 text-5xl font-light uppercase tracking-[0.22em] md:text-7xl" style={{ fontFamily: '"Cormorant Garamond", "Times New Roman", serif' }}>{content.title || 'Next date'}</h2>
+        <h2 className="mt-5 text-5xl font-light uppercase tracking-[0.22em] md:text-7xl">{content.title || 'Next date'}</h2>
         <div className="mt-10 grid gap-8 lg:grid-cols-[minmax(0,1.25fr)_minmax(260px,.75fr)] lg:items-center">
           <div className="mx-auto w-full max-w-[760px] overflow-hidden rounded-[1.75rem] border border-white/15 bg-black/30 p-2 shadow-[0_30px_100px_rgba(0,0,0,.5)]">
             {image ? <img src={image} alt={content.eventName || ''} className="mx-auto h-auto max-h-[520px] w-full rounded-[1.35rem] object-contain" /> : <div className="grid aspect-[16/10] place-items-center rounded-[1.35rem] border border-dashed border-white/20 text-sm text-white/40">Ajoutez l’affiche dans l’éditeur</div>}
@@ -274,7 +274,7 @@ function EventShowcase({ content }: { content: any }) {
           <div className="lg:pl-4">
             <p className="text-7xl font-semibold leading-none tracking-tight md:text-8xl">{content.day}</p>
             <p className="mt-3 text-[11px] font-semibold uppercase tracking-[0.32em] text-white/50">{content.month}</p>
-            <h3 className="mt-8 text-3xl font-light uppercase tracking-[0.08em] md:text-4xl" style={{ fontFamily: '"Cormorant Garamond", "Times New Roman", serif' }}>{content.eventName}</h3>
+            <h3 className="mt-8 text-3xl font-light uppercase tracking-[0.08em] md:text-4xl">{content.eventName}</h3>
             <p className="mt-4 text-xs font-semibold uppercase leading-6 tracking-[0.22em] text-white/45">{content.venue}{content.city && <><br />{content.city}</>}</p>
             {content.time && <p className="mt-6 inline-flex rounded-full border border-white/20 px-5 py-3 text-[11px] font-bold uppercase tracking-[0.24em] text-white/85">{content.time}</p>}
             {href && <div><a href={href} target="_blank" rel="noreferrer" className="mt-5 inline-flex rounded-full border border-white/45 px-7 py-3 text-[11px] font-bold uppercase tracking-[0.28em] transition hover:bg-white hover:text-black">{content.buttonText || 'Tickets'}</a></div>}
@@ -296,5 +296,5 @@ function StatsShowcase({ content }: { content: any }) {
 
 function EventHistory({ content }: { content: any }) {
   const items = Array.isArray(content.items) ? content.items : [];
-  return <section className="px-5 py-12 text-white md:px-12 md:py-20"><div className="vielusos-fluid mx-auto max-w-7xl"><SectionHeading eyebrow={content.eyebrow} title={content.title} /><div className="mt-8 flex snap-x snap-mandatory gap-3 overflow-x-auto pb-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:mt-10 md:grid md:grid-cols-3 md:overflow-visible md:pb-0">{items.map((item: any, index: number) => <article key={index} className="w-[82%] shrink-0 snap-start rounded-2xl border border-white/15 bg-black/20 p-5 backdrop-blur-sm md:w-auto md:p-6"><p className="text-[8px] font-semibold uppercase tracking-[0.18em] text-white/40 sm:text-[9px] sm:tracking-[0.22em]">{item.date}</p><h3 className="mt-4 text-lg font-light uppercase tracking-[0.08em] text-white sm:mt-5 sm:text-xl" style={{ fontFamily: '"Cormorant Garamond", "Times New Roman", serif' }}>{item.name}</h3><p className="mt-3 text-[8px] font-semibold uppercase tracking-[0.16em] text-white/40 sm:text-[9px] sm:tracking-[0.2em]">{item.location}</p></article>)}</div></div></section>;
+  return <section className="px-5 py-12 text-white md:px-12 md:py-20"><div className="vielusos-fluid mx-auto max-w-7xl"><SectionHeading eyebrow={content.eyebrow} title={content.title} /><div className="mt-8 flex snap-x snap-mandatory gap-3 overflow-x-auto pb-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:mt-10 md:grid md:grid-cols-3 md:overflow-visible md:pb-0">{items.map((item: any, index: number) => <article key={index} className="w-[82%] shrink-0 snap-start rounded-2xl border border-white/15 bg-black/20 p-5 backdrop-blur-sm md:w-auto md:p-6"><p className="text-[8px] font-semibold uppercase tracking-[0.18em] text-white/40 sm:text-[9px] sm:tracking-[0.22em]">{item.date}</p><h3 className="mt-4 text-lg font-light uppercase tracking-[0.08em] text-white sm:mt-5 sm:text-xl">{item.name}</h3><p className="mt-3 text-[8px] font-semibold uppercase tracking-[0.16em] text-white/40 sm:text-[9px] sm:tracking-[0.2em]">{item.location}</p></article>)}</div></div></section>;
 }

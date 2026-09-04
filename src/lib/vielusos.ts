@@ -12,10 +12,13 @@ export const VIELUSOS_BRAND = {
   surface: "#0b0b10",
 };
 
+export const VIELUSOS_FONT_STACK =
+  '"Montserrat", "Helvetica Neue", Arial, sans-serif';
+
 export const VIELUSOS_SITE_CSS = `
 html:has(.vielusos-site), body:has(.vielusos-site) { min-height: 100%; background: #0b0b10 !important; }
-.vielusos-site { min-height: 100dvh; background-color: #0b0b10 !important; font-family: "Montserrat", "Helvetica Neue", Arial, sans-serif !important; font-weight: 300; }
-.vielusos-site * { font-family: "Montserrat", "Helvetica Neue", Arial, sans-serif !important; }
+.vielusos-site { min-height: 100dvh; background-color: #0b0b10 !important; font-family: ${VIELUSOS_FONT_STACK} !important; font-weight: 300; }
+.vielusos-site *, .vielusos-site *::before, .vielusos-site *::after { font-family: ${VIELUSOS_FONT_STACK} !important; }
 .vielusos-site main { background: transparent; font-weight: 300; }
 .vielusos-site .public-block-shell .text-gray-900, .vielusos-site .public-block-shell .text-gray-950 { color: #f7f7fb !important; }
 .vielusos-site .public-block-shell .text-gray-600, .vielusos-site .public-block-shell .text-gray-500 { color: rgba(247,247,251,.72) !important; }

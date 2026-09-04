@@ -18,6 +18,7 @@ import { canShowPublicSite } from "@/lib/plan";
 import {
   isVielusosSite,
   VIELUSOS_BRAND,
+  VIELUSOS_FONT_STACK,
   vielusosLogoUrl,
 } from "@/lib/vielusos";
 import { VIELUSOS_SITE_CSS } from "@/lib/vielusos";
@@ -432,6 +433,7 @@ function publicSiteStyle(theme: any, vielusos: boolean): React.CSSProperties {
   if (!vielusos) return base;
   return {
     ...base,
+    fontFamily: VIELUSOS_FONT_STACK,
     backgroundColor: VIELUSOS_BRAND.surface,
     backgroundImage: `linear-gradient(rgba(8, 8, 12, .72), rgba(8, 8, 12, .72)), url(${VIELUSOS_BRAND.backgroundUrl})`,
     backgroundPosition: "center top",

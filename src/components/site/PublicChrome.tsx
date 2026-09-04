@@ -220,7 +220,7 @@ export function PublicHeader({
           {brandedHeader && header.showCta !== false && cta?.href?.trim() && (
             <a
               href={cta.href.startsWith('/') ? `${basePath}${cta.href}` : cta.href}
-              className="inline-flex min-h-10 shrink-0 items-center justify-center rounded-full border border-white/25 bg-white/10 px-3 text-xs font-semibold tracking-[0.12em] text-white backdrop-blur transition hover:border-white/50 hover:bg-white/15 sm:px-4"
+              className="vielusos-action inline-flex min-h-10 shrink-0 items-center justify-center transition"
             >
               {cta.text?.trim() || 'BOOKING'}
             </a>

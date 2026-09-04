@@ -78,7 +78,7 @@ export function CustomerAccessForm({
           />
         </label>
       </div>
-      <button disabled={loading} className={`mt-4 w-full rounded-xl px-5 py-3 font-bold text-white transition hover:opacity-90 disabled:opacity-60 ${branded ? '!bg-[#d33f5c]' : 'bg-[var(--brand)]'}`}>
+      <button disabled={loading} className={`mt-4 w-full transition disabled:opacity-60 ${branded ? 'vielusos-action' : 'rounded-xl bg-[var(--brand)] px-5 py-3 font-bold text-white hover:opacity-90'}`}>
         {loading ? (en ? 'Opening…' : 'Ouverture…') : (en ? 'Sign in / create my customer account' : 'Connexion / inscription client')}
       </button>
       {message && <p className="mt-3 rounded-xl bg-green-50 px-4 py-3 text-sm font-semibold text-green-700">{message}</p>}

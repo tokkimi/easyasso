@@ -118,7 +118,7 @@ export function ShopCatalog({ products, title, intro, search = true, showCategor
   const strong = branded ? 'text-white' : 'text-gray-900';
   const muted = branded ? 'text-white/55' : 'text-gray-500';
   const field = branded ? 'border-white/15 bg-white/[.045] text-white placeholder:text-white/30 focus:border-white/60' : 'border-gray-200 bg-white text-gray-900 focus:border-[var(--brand)]';
-  const primary = branded ? 'bg-white text-black hover:bg-white/85' : 'bg-[var(--brand)] text-white hover:opacity-90';
+  const primary = branded ? 'vielusos-action' : 'bg-[var(--brand)] text-white hover:opacity-90';
 
   function addToCart(product: ShopProduct, quantity = 1, variant?: ShopVariant) {
     const key = `${product.id}:${variant?.id || 'default'}`;
@@ -246,7 +246,7 @@ function ProductModal({ product, branded, isFavorite, onFavorite, onAdd, onClose
           <button type="button" onClick={onFavorite} className={`mt-4 inline-flex w-fit items-center gap-2 text-xs ${muted}`}><Heart className={`h-4 w-4 ${isFavorite ? 'fill-current' : ''}`} />{isFavorite ? 'Dans mes favoris' : 'Ajouter aux favoris'}</button>
           {!soldOut && <div className="mt-auto flex items-center gap-3 pt-5">
             <div className="flex items-center rounded-xl border border-current/20"><button onClick={() => setQuantity((value) => Math.max(1, value - 1))} className={`grid h-11 w-10 place-items-center ${muted}`}><Minus className="h-4 w-4" /></button><span className={`w-7 text-center text-sm ${strong}`}>{quantity}</span><button onClick={() => setQuantity((value) => Math.min(99, value + 1))} className={`grid h-11 w-10 place-items-center ${muted}`}><Plus className="h-4 w-4" /></button></div>
-            <button onClick={() => onAdd(product, quantity, variant)} className={`flex flex-1 items-center justify-center gap-2 rounded-xl py-3 text-xs font-normal uppercase tracking-[.08em] ${branded ? 'bg-white text-black' : 'bg-[var(--brand)] text-white'}`}><ShoppingBag className="h-4 w-4" />Ajouter au panier</button>
+            <button onClick={() => onAdd(product, quantity, variant)} className={`flex flex-1 items-center justify-center gap-2 ${branded ? 'vielusos-action' : 'rounded-xl bg-[var(--brand)] py-3 text-xs font-normal uppercase tracking-[.08em] text-white'}`}><ShoppingBag className="h-4 w-4" />Ajouter au panier</button>
           </div>}
         </div>
       </div>

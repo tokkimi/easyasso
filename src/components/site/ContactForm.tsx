@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { CheckCircle2, Send } from 'lucide-react';
 
-export function ContactForm({ organizationId, content }: { organizationId?: string; content: any }) {
+export function ContactForm({ organizationId, content, branded = false }: { organizationId?: string; content: any; branded?: boolean }) {
   const en = content.locale === 'en';
   const [form, setForm] = useState({ name: '', email: '', phone: '', subject: '', message: '', website: '' });
   const [state, setState] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
@@ -33,7 +33,7 @@ export function ContactForm({ organizationId, content }: { organizationId?: stri
         <div className="contact-fields grid gap-3"><input className="input" placeholder={en ? 'Phone (optional)' : 'Téléphone (optionnel)'} value={form.phone} onChange={(e) => set('phone', e.target.value)} /><input className="input" placeholder={en ? 'Subject' : 'Objet'} value={form.subject} onChange={(e) => set('subject', e.target.value)} /></div>
         <textarea className="input min-h-32" required minLength={10} placeholder={en ? 'Your message' : 'Votre message'} value={form.message} onChange={(e) => set('message', e.target.value)} />
         {state === 'error' && <p className="text-sm text-red-600">{en ? 'Your message could not be sent. Check the fields and try again.' : 'Le message n’a pas pu être envoyé. Vérifiez les champs et réessayez.'}</p>}
-        <button className="btn btn-primary w-full" disabled={state === 'sending'}><Send className="h-4 w-4" /> {state === 'sending' ? (en ? 'Sending…' : 'Envoi…') : (content.buttonText || (en ? 'Send message' : 'Envoyer le message'))}</button>
+        <button className={`${branded ? 'vielusos-action' : 'btn btn-primary'} w-full`} disabled={state === 'sending'}><Send className="h-4 w-4" /> {state === 'sending' ? (en ? 'Sending…' : 'Envoi…') : (content.buttonText || (en ? 'Send message' : 'Envoyer le message'))}</button>
       </form>
     </div>
   );

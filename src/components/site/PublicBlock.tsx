@@ -27,7 +27,7 @@ function themedColor(color: string) {
   return color?.toLowerCase() === LEGACY_BLUE ? 'var(--brand)' : color;
 }
 
-function Btn({ b, basePath = '' }: { b: ButtonConfig; basePath?: string }) {
+function Btn({ b, basePath = '', branded = false }: { b: ButtonConfig; basePath?: string; branded?: boolean }) {
   if (!b?.text) return null;
   const href = b.href?.startsWith('/') ? `${basePath}${b.href}` : safePublicUrl(b.href) || '#';
   const color = themedColor(b.color);
@@ -36,7 +36,7 @@ function Btn({ b, basePath = '' }: { b: ButtonConfig; basePath?: string }) {
     : { background: 'transparent', color, border: `2px solid ${color}` };
   return (
     <div className={`flex ${justifyClass(b.align)}`}>
-      <a href={href} style={style} className="inline-flex items-center rounded-lg px-6 py-3 text-sm font-semibold transition hover:opacity-90">{b.text}</a>
+      <a href={href} style={branded ? undefined : style} className={`${branded ? 'vielusos-action' : 'rounded-lg px-6 py-3 text-sm font-semibold hover:opacity-90'} inline-flex items-center transition`}>{b.text}</a>
     </div>
   );
 }
@@ -83,7 +83,7 @@ function renderInner(type: string, content: any, style: BlockStyle, basePath: st
       ) : null;
     }
     case 'button':
-      return content.button ? <Btn b={content.button} basePath={basePath} /> : null;
+      return content.button ? <Btn b={content.button} basePath={basePath} branded={branded} /> : null;
     case 'social': {
       const s: SocialConfig = content.social || {};
       const items = [
@@ -158,8 +158,8 @@ function renderInner(type: string, content: any, style: BlockStyle, basePath: st
             {content.title && <h2 className="text-3xl font-extrabold drop-shadow md:text-5xl">{content.title}</h2>}
             {content.subtitle && <p className={`mt-3 max-w-2xl whitespace-pre-wrap text-lg drop-shadow ${textAlign === 'center' ? 'mx-auto' : textAlign === 'right' ? 'ml-auto' : 'mr-auto'}`}>{content.subtitle}</p>}
             {(content.button?.text || content.button2?.text) && <div className={`mt-6 flex flex-wrap gap-3 ${textAlign === 'center' ? 'justify-center' : textAlign === 'right' ? 'justify-end' : 'justify-start'}`}>
-              {content.button?.text && <Btn b={{ ...content.button, align: textAlign }} basePath={basePath} />}
-              {content.button2?.text && <Btn b={{ ...content.button2, align: textAlign }} basePath={basePath} />}
+              {content.button?.text && <Btn b={{ ...content.button, align: textAlign }} basePath={basePath} branded={branded} />}
+              {content.button2?.text && <Btn b={{ ...content.button2, align: textAlign }} basePath={basePath} branded={branded} />}
             </div>}
           </div>
         </div>
@@ -175,7 +175,7 @@ function renderInner(type: string, content: any, style: BlockStyle, basePath: st
         <div className="flex flex-col justify-center text-left">
           {content.title && <h3 className="text-2xl font-extrabold text-gray-900 md:text-3xl" style={{ color: style.color }}>{content.title}</h3>}
           {content.text && <p className="mt-3 whitespace-pre-wrap leading-relaxed text-gray-600">{content.text}</p>}
-          {content.button?.text && <div className="mt-5"><Btn b={content.button} basePath={basePath} /></div>}
+          {content.button?.text && <div className="mt-5"><Btn b={content.button} basePath={basePath} branded={branded} /></div>}
         </div>
       );
       return (
@@ -221,11 +221,11 @@ function renderInner(type: string, content: any, style: BlockStyle, basePath: st
         <div className="mx-auto max-w-3xl px-6 text-center">
           {content.title && <h3 className="text-2xl font-extrabold text-gray-900 md:text-3xl">{content.title}</h3>}
           {content.text && <p className="mx-auto mt-2 max-w-xl text-gray-600">{content.text}</p>}
-          {content.button?.text && <div className="mt-5"><Btn b={content.button} basePath={basePath} /></div>}
+          {content.button?.text && <div className="mt-5"><Btn b={content.button} basePath={basePath} branded={branded} /></div>}
         </div>
       );
     case 'contact':
-      return <ContactForm organizationId={organizationId} content={content} />;
+      return <ContactForm organizationId={organizationId} content={content} branded={branded} />;
     case 'donation':
       return <DonationBlock content={content} organizationId={organizationId} />;
     case 'leetchi':
@@ -277,7 +277,7 @@ function EventShowcase({ content }: { content: any }) {
             <h3 className="mt-8 text-3xl font-light uppercase tracking-[0.08em] md:text-4xl">{content.eventName}</h3>
             <p className="mt-4 text-xs font-semibold uppercase leading-6 tracking-[0.22em] text-white/45">{content.venue}{content.city && <><br />{content.city}</>}</p>
             {content.time && <p className="mt-6 inline-flex rounded-full border border-white/20 px-5 py-3 text-[11px] font-bold uppercase tracking-[0.24em] text-white/85">{content.time}</p>}
-            {href && <div><a href={href} target="_blank" rel="noreferrer" className="mt-5 inline-flex rounded-full border border-white/45 px-7 py-3 text-[11px] font-bold uppercase tracking-[0.28em] transition hover:bg-white hover:text-black">{content.buttonText || 'Tickets'}</a></div>}
+            {href && <div><a href={href} target="_blank" rel="noreferrer" className="vielusos-action mt-5 inline-flex transition">{content.buttonText || 'Tickets'}</a></div>}
           </div>
         </div>
       </div>

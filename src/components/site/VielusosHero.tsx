@@ -4,10 +4,9 @@ import { VIELUSOS_BRAND } from '@/lib/vielusos';
 export function VielusosHero({ title, logoUrl, config }: { title: string; logoUrl: string; config?: HeaderConfig['vielusosHero'] }) {
   return (
     <section className="vielusos-hero relative isolate aspect-video w-full overflow-hidden bg-[#08080c]" aria-label={title}>
-      <video className="absolute inset-0 h-full w-full object-contain opacity-80" autoPlay muted loop playsInline preload="metadata" poster={VIELUSOS_BRAND.backgroundUrl} aria-hidden="true">
+      <video className="absolute inset-0 h-full w-full object-contain" autoPlay muted loop playsInline preload="metadata" poster={VIELUSOS_BRAND.backgroundUrl} aria-hidden="true">
         <source src={config?.videoUrl || '/vielusos/banner.mp4'} type="video/mp4" />
       </video>
-      <div className="absolute inset-0 bg-gradient-to-b from-black/45 via-black/20 to-[#08080c]" aria-hidden="true" />
       <div className="relative flex h-full items-center justify-center px-6 text-center">
         <div className="flex max-w-xl flex-col items-center">
           {/* eslint-disable-next-line @next/next/no-img-element */}

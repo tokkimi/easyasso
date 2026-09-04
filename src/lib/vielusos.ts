@@ -19,14 +19,16 @@ export const VIELUSOS_TITLE_FONT_STACK =
 
 export const VIELUSOS_SITE_CSS = `
 html:has(.vielusos-site), body:has(.vielusos-site) { min-height: 100%; background: #0b0b10 !important; }
-.vielusos-site { min-height: 100dvh; background-color: #0b0b10 !important; font-family: ${VIELUSOS_FONT_STACK} !important; font-weight: 300; }
+.vielusos-site { min-height: 100dvh; background-color: #0b0b10 !important; font-family: ${VIELUSOS_FONT_STACK} !important; font-weight: 300; letter-spacing: .12em; }
 .vielusos-site *, .vielusos-site *::before, .vielusos-site *::after { font-family: ${VIELUSOS_FONT_STACK} !important; }
+.vielusos-site :where(p, li, label, small, figcaption, time, dt, dd):not(.vielusos-title) { font-family: ${VIELUSOS_FONT_STACK} !important; font-weight: 300 !important; letter-spacing: .12em !important; }
 .vielusos-site main { background: transparent; font-weight: 300; }
 .vielusos-site .public-block-shell .text-gray-900, .vielusos-site .public-block-shell .text-gray-950 { color: #f7f7fb !important; }
 .vielusos-site .public-block-shell .text-gray-600, .vielusos-site .public-block-shell .text-gray-500 { color: rgba(247,247,251,.72) !important; }
 .vielusos-site .public-block-shell .bg-white { background: rgba(10,10,15,.68) !important; }
 .vielusos-site .public-block-shell .ring-gray-100 { --tw-ring-color: rgba(255,255,255,.18) !important; }
-.vielusos-site .public-header-shell, .vielusos-site .public-footer-shell { background: #0b0b10 !important; }
+.vielusos-site .public-header-shell:not(.public-header-overlay), .vielusos-site .public-footer-shell { background: #0b0b10 !important; }
+.vielusos-site .public-header-overlay { background: rgba(5,5,9,.06) !important; }
 .vielusos-site .public-footer-shell { margin-bottom: 0 !important; }
 .vielusos-site .vielusos-action {
   background: rgba(0,0,0,.18) !important;
@@ -44,7 +46,7 @@ html:has(.vielusos-site), body:has(.vielusos-site) { min-height: 100%; backgroun
 }
 .vielusos-site .vielusos-action:hover { background: #fff !important; color: #09090d !important; border-color: #fff !important; }
 .vielusos-site .vielusos-action:disabled { opacity: .45 !important; }
-.vielusos-site .vielusos-title, .vielusos-site main h2 { font-family: ${VIELUSOS_TITLE_FONT_STACK} !important; }
+.vielusos-site .vielusos-title, .vielusos-site main :where(h1, h2, h3, h4, h5, h6) { font-family: ${VIELUSOS_TITLE_FONT_STACK} !important; }
 .vielusos-site main h2 { font-size: clamp(1.75rem, 3vw, 2.5rem) !important; line-height: 1 !important; font-weight: 300 !important; letter-spacing: .18em !important; text-transform: uppercase !important; }
 .vielusos-site .vielusos-fluid { width: 80% !important; max-width: none !important; padding-left: 0 !important; padding-right: 0 !important; }
 .vielusos-site .vielusos-media-shell { padding-left: 0 !important; padding-right: 0 !important; }

@@ -138,16 +138,16 @@ export function PublicHeader({
   return (
     <header
       style={{
-        background: overlayHero ? "rgba(5, 5, 9, 0.28)" : header.background,
+        background: overlayHero ? "rgba(5, 5, 9, 0.06)" : header.background,
         color: header.textColor,
       }}
       className={`public-header-shell ${
         overlayHero
-          ? "absolute inset-x-0 top-0 z-40"
+          ? "public-header-overlay absolute inset-x-0 top-0 z-40"
           : header.sticky
             ? "sticky top-0 z-40"
             : ""
-      } ${overlayHero ? "border-b border-white/10" : "border-b border-black/5"} backdrop-blur`}
+      } ${overlayHero ? "border-b border-white/10" : "border-b border-black/5 backdrop-blur"}`}
     >
       <div className="relative flex w-full items-center justify-between gap-3 px-3 py-3 sm:px-5 lg:px-8">
         <Link

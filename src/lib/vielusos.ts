@@ -19,11 +19,9 @@ export const VIELUSOS_TITLE_FONT_STACK =
 
 export const VIELUSOS_SITE_CSS = `
 html:has(.vielusos-site), body:has(.vielusos-site) { min-height: 100%; background: #0b0b10 !important; }
-.vielusos-site { min-height: 100dvh; background-color: #0b0b10 !important; font-family: ${VIELUSOS_FONT_STACK} !important; }
+.vielusos-site { min-height: 100dvh; background-color: #0b0b10 !important; font-family: ${VIELUSOS_FONT_STACK} !important; font-weight: 300; }
 .vielusos-site *, .vielusos-site *::before, .vielusos-site *::after { font-family: ${VIELUSOS_FONT_STACK} !important; }
-.vielusos-site :where(p, span, a, li, label, small, figcaption, time, dt, dd, input, textarea, select, option):not(.vielusos-title):not(.vielusos-title *):not(.vielusos-action):not(.vielusos-action *):not(button *):not(h1 *):not(h2 *):not(h3 *):not(h4 *):not(h5 *):not(h6 *) { font-family: ${VIELUSOS_FONT_STACK} !important; font-weight: 600 !important; letter-spacing: .24em !important; }
-.vielusos-site .vielusos-eyebrow { font-weight: 600 !important; letter-spacing: .24em !important; }
-.vielusos-site main { background: transparent; }
+.vielusos-site main { background: transparent; font-weight: 300; }
 .vielusos-site .public-block-shell .text-gray-900, .vielusos-site .public-block-shell .text-gray-950 { color: #f7f7fb !important; }
 .vielusos-site .public-block-shell .text-gray-600, .vielusos-site .public-block-shell .text-gray-500 { color: rgba(247,247,251,.72) !important; }
 .vielusos-site .public-block-shell .bg-white { background: rgba(10,10,15,.68) !important; }
@@ -48,15 +46,13 @@ html:has(.vielusos-site), body:has(.vielusos-site) { min-height: 100%; backgroun
 .vielusos-site .vielusos-action:hover { background: #fff !important; color: #09090d !important; border-color: #fff !important; }
 .vielusos-site .vielusos-action:disabled { opacity: .45 !important; }
 .vielusos-site .vielusos-title, .vielusos-site main :where(h1, h2, h3, h4, h5, h6) { font-family: ${VIELUSOS_TITLE_FONT_STACK} !important; }
+.vielusos-site .vielusos-track-title { font-family: ${VIELUSOS_FONT_STACK} !important; font-weight: 600 !important; letter-spacing: .24em !important; text-transform: uppercase !important; }
+.vielusos-site .vielusos-artist-name { font-family: ${VIELUSOS_TITLE_FONT_STACK} !important; font-weight: 300 !important; letter-spacing: .18em !important; text-transform: uppercase !important; }
 .vielusos-site main h2 { font-size: clamp(1.75rem, 3vw, 2.5rem) !important; line-height: 1 !important; font-weight: 300 !important; letter-spacing: .18em !important; text-transform: uppercase !important; }
 .vielusos-site .vielusos-fluid { width: 80% !important; max-width: none !important; padding-left: 0 !important; padding-right: 0 !important; }
 .vielusos-site .vielusos-media-shell { padding-left: 0 !important; padding-right: 0 !important; }
 @media (min-width: 768px) {
   .vielusos-site .vielusos-player-card, .vielusos-site .vielusos-video-card { width: calc((100% - 3rem) / 4) !important; max-width: none !important; }
-}
-@media (min-width: 640px) {
-  .vielusos-site :where(p, span, a, li, label, small, figcaption, time, dt, dd, input, textarea, select, option):not(.vielusos-title):not(.vielusos-title *):not(.vielusos-action):not(.vielusos-action *):not(button *):not(h1 *):not(h2 *):not(h3 *):not(h4 *):not(h5 *):not(h6 *),
-  .vielusos-site .vielusos-eyebrow { letter-spacing: .5em !important; }
 }
 @media (max-width: 640px) {
   .vielusos-site .public-footer-grid { justify-items: center; text-align: center; }

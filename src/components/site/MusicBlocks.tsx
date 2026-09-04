@@ -350,8 +350,8 @@ export function OfficialPlayers({ content, branded = false }: { content: any; br
                           <div className="flex h-[144px] shrink-0 flex-col justify-between gap-2 border-b border-white/20 bg-transparent p-3">
                             <div className="sr-only"><PlatformLogo platform={platform} /></div>
                             <div className="min-h-0">
-                              <h3 className="line-clamp-2 text-base font-extrabold text-white">{item.title || `${platformLabel(platform)} ${i + 1}`}</h3>
-                              {item.artist && <p className="mt-1 truncate text-sm text-white/70">{item.artist}</p>}
+                              <h3 className="vielusos-track-title line-clamp-2 text-base text-white">{item.title || `${platformLabel(platform)} ${i + 1}`}</h3>
+                              {item.artist && <p className="vielusos-artist-name mt-1 truncate text-base text-white/70">{item.artist}</p>}
                               {item.releaseDate && <p className="mt-2 inline-flex items-center gap-1 text-xs font-bold text-white/50"><CalendarDays className="h-3.5 w-3.5" /> {new Date(item.releaseDate).toLocaleDateString('fr-FR')}</p>}
                             </div>
                           </div>

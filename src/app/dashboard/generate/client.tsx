@@ -45,7 +45,7 @@ function prepareLogoForGeneration(value: string): Promise<string> {
 
 type Preview = { id: string; name: string; preview: string; family: 'association' | 'shop' | 'music' };
 
-export function GenerateClient({ orgName, profile, categories, previews = [], welcome, initialLogo = '' }: { orgName: string; profile: any; categories: { id: string; name: string }[]; previews?: Preview[]; welcome: boolean; initialLogo?: string }) {
+export function GenerateClient({ orgName, profile, categories, previews = [], welcome, initialLogo = '' }: { orgName: string; profile: any; categories: { id: string; name: string; family?: string }[]; previews?: Preview[]; welcome: boolean; initialLogo?: string }) {
   const [f, setF] = useState({
     name: orgName || '', year: profile.year || '', mission: profile.mission || '', functioning: profile.functioning || '', actions: profile.actions || '',
     siteType: (profile.siteType || (profile.hasShop && profile.isAssociation === false ? 'shop' : 'association')) as 'association' | 'shop' | 'other' | 'music',
@@ -73,6 +73,10 @@ export function GenerateClient({ orgName, profile, categories, previews = [], we
   const actionsLabel = isMusic ? 'Vos sorties, scènes et projets actuels' : isShop ? 'Votre savoir-faire / vos gammes' : 'Vos actions / activités concrètes';
   const beneficiariesLabel = isMusic ? 'Votre public / l’expérience recherchée' : isShop ? 'Votre clientèle' : 'Public aidé / bénéficiaires';
   const visualPreviews = isMusic ? [] : previews.filter((p) => (isShop ? p.family === 'shop' : p.family === 'association'));
+  // Only offer categories that match the chosen site type — a shop or music
+  // category picked for an association would build the site on the wrong
+  // template, whose blocks never receive the generated text.
+  const categoryOptions = categories.filter((c) => (isShop ? c.family === 'shop' : c.family === 'association'));
 
   function setArr(setter: (v: string[]) => void, arr: string[], i: number, v: string) { setter(arr.map((x, j) => (j === i ? v : x))); }
 
@@ -137,7 +141,7 @@ export function GenerateClient({ orgName, profile, categories, previews = [], we
           <p className="mb-2 text-sm font-bold text-gray-900">Quel type de site voulez-vous créer ?</p>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
             {([['association', 'Association'], ['shop', 'Boutique'], ['music', 'Site musical'], ['other', 'Autre projet']] as const).map(([value, label]) => (
-              <button key={value} type="button" onClick={() => setF((s) => ({ ...s, siteType: value, hasShop: value === 'shop' ? true : value === 'music' ? false : s.hasShop }))} className={`rounded-xl border-2 px-2 py-2 text-sm font-semibold transition ${f.siteType === value ? 'border-brand-600 bg-white text-brand-700' : 'border-transparent bg-white/70 text-gray-600 hover:bg-white'}`}>{label}</button>
+              <button key={value} type="button" onClick={() => setF((s) => ({ ...s, siteType: value, category: '', hasShop: value === 'shop' ? true : value === 'music' ? false : s.hasShop }))} className={`rounded-xl border-2 px-2 py-2 text-sm font-semibold transition ${f.siteType === value ? 'border-brand-600 bg-white text-brand-700' : 'border-transparent bg-white/70 text-gray-600 hover:bg-white'}`}>{label}</button>
             ))}
           </div>
           {(f.siteType === 'association' || f.siteType === 'other') && (
@@ -251,12 +255,14 @@ export function GenerateClient({ orgName, profile, categories, previews = [], we
 
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label={beneficiariesLabel}><input className="input" value={f.beneficiaries} onChange={(e) => set('beneficiaries', e.target.value)} placeholder={isMusic ? 'Ex : clubbers, auditeurs de techno mélodique, énergie cathartique…' : isShop ? 'ex : femmes, amateurs de mode, familles…' : 'personnes âgées, enfants, animaux…'} /></Field>
-          <Field label={isShop ? 'Catégorie de boutique' : 'Type d’association'}>
-            <select className="input" value={f.category} onChange={(e) => set('category', e.target.value)}>
-              <option value="">Détection automatique ✨</option>
-              {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-            </select>
-          </Field>
+          {!isMusic && (
+            <Field label={isShop ? 'Catégorie de boutique' : 'Type d’association'}>
+              <select className="input" value={f.category} onChange={(e) => set('category', e.target.value)}>
+                <option value="">Détection automatique ✨</option>
+                {categoryOptions.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+              </select>
+            </Field>
+          )}
         </div>
 
         <Field label="Choses à savoir (infos utiles)">

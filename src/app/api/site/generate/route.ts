@@ -67,8 +67,11 @@ export async function POST(req: Request) {
 
     // Fetch cause-themed photos from Unsplash (when configured) so images are
     // coherent AND varied; empty array falls back to the curated photo set.
+    // Only association sites use cause imagery — music, shop and other projects
+    // use neutral placeholders, so they must never pull a cause photo (that is
+    // how a music site once ended up with a football picture).
     const causeId = pickTemplateId([input.mission, input.functioning, input.goodToKnow, input.beneficiaries, input.actions].filter(Boolean).join(' '), input.category);
-    const themePhotos = await fetchCausePhotos(causePhotoQuery(causeId));
+    const themePhotos = siteType === 'association' ? await fetchCausePhotos(causePhotoQuery(causeId)) : [];
 
     // Music/artist site: build from the provided links, with real thumbnails.
     let generated: any;

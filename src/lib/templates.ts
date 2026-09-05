@@ -52,6 +52,36 @@ export function createPhotoAllocator(causeId: string, userPhotos: string[] = [],
   };
 }
 
+const slugSeed = (value: string) =>
+  (value || 'easyasso')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '') || 'easyasso';
+
+// A neutral, on-brand placeholder image for NON-association sites (music, shop,
+// other). These must never borrow the association cause photos — those are
+// cause-specific (food banks, animals, a football pitch…) and would put, e.g.,
+// a football photo on a music site. We reuse the same picsum seeds the music and
+// shop templates already rely on, so the look stays coherent.
+export function placeholderImage(seed: string, w = 1200, h = 800, grayscale = false) {
+  return `https://picsum.photos/seed/${slugSeed(seed)}/${w}/${h}${grayscale ? '?grayscale' : ''}`;
+}
+
+// Photo dispenser for non-association sites: uploaded photos first, then
+// coherent neutral placeholders (grayscale for the dark music theme) — never the
+// association cause photos.
+export function createPlaceholderAllocator(seed: string, userPhotos: string[] = [], grayscale = false) {
+  const users = userPhotos.filter(Boolean);
+  let u = 0;
+  let s = 0;
+  return (w = 1200, h = 800): string => {
+    if (u < users.length) return users[u++];
+    return placeholderImage(`${seed}-${s++}`, w, h, grayscale);
+  };
+}
+
 type Layout = 'classic' | 'impact' | 'editorial' | 'visual' | 'warm';
 
 interface Card { icon: string; title: string; text: string }

@@ -1,4 +1,4 @@
-import { TEMPLATES, getTemplate, createPhotoAllocator, templateImage, type BuiltTemplate } from './templates';
+import { TEMPLATES, getTemplate, createPhotoAllocator, createPlaceholderAllocator, placeholderImage, type BuiltTemplate } from './templates';
 import { defaultStyleFor } from './blocks';
 
 // Keyword signals to auto-pick the closest template from a free description.
@@ -389,14 +389,23 @@ export function buildMusicSite(
     story ? firstSentence(story) : (en ? `${name} develops a musical universe where every release, image and performance belongs to the same artistic direction.` : `${name} développe un univers musical où chaque sortie, chaque image et chaque performance participent à une même direction artistique.`),
     sound ? (en ? `Its sound is defined by ${sound}` : `Son identité sonore se distingue par ${sound}`) : (genreLabel ? (en ? `At the heart of the project: ${genreLabel}, approached as a living language rather than a fixed formula.` : `Au cœur du projet : la ${genreLabel}, pensée comme un langage vivant plutôt que comme une formule figée.`) : ''),
   ]);
-  const heroImage = media.tracks.find((t) => t.thumbnail)?.thumbnail || input.logoUrl || templateImage('club-sportif', 1, 1600, 760);
+  // Fallback hero for an artist with no track thumbnails and no logo: a neutral,
+  // dark-friendly placeholder — NEVER an association cause photo (those include a
+  // football pitch, which is how a music site ended up with a sports photo).
+  const realHero = media.tracks.find((t) => t.thumbnail)?.thumbnail || input.logoUrl || '';
+  const heroImage = realHero || placeholderImage(`${name}-${input.genre || 'music'}-hero`, 1600, 760, true);
+  // Secondary image slots reuse a real cover/photo when there is one (consistent
+  // artwork), but fall back to DISTINCT neutral placeholders when the artist gave
+  // no media at all — so the page never shows the same grey box five times.
+  const altPool = createPlaceholderAllocator(`${name}-${input.genre || 'music'}-alt`, [], true);
+  const altImage = (w = 900, h = 700) => realHero || altPool(w, h);
   const streamingFilled = Object.values(media.streaming || {}).some(Boolean);
   const playerItems = musicPlayerItems(media.tracks, media.videos);
   const s = (list: { type: string; content: any; style?: any }[]) => list.map((b, order) => ({ type: b.type, order, content: b.content, style: { ...defaultStyleFor(b.type as any), ...(b.style || {}) } }));
 
   const home = s([
     { type: 'banner', content: { image: heroImage, title: name, subtitle: tagline, overlay: 55, height: 520, button: streamingFilled ? { text: en ? 'Listen' : 'Écouter', href: '#ecouter', color: '#ffffff', variant: 'solid', align: 'center' } : undefined } },
-    { type: 'textimage', content: { title: en ? 'The project' : 'Le projet', text: homeIntro, image: input.photos?.[1] || input.photos?.[0] || heroImage, imageSide: 'right', button: { text: en ? 'Read the biography' : 'Lire la bio', href: '/bio', color: accent, variant: 'outline', align: 'left' } } },
+    { type: 'textimage', content: { title: en ? 'The project' : 'Le projet', text: homeIntro, image: input.photos?.[1] || input.photos?.[0] || altImage(900, 700), imageSide: 'right', button: { text: en ? 'Read the biography' : 'Lire la bio', href: '/bio', color: accent, variant: 'outline', align: 'left' } } },
     { type: 'cards', content: { columns: 3, items: [
       { icon: 'Music2', title: en ? 'Sound' : 'Son', text: sound || genreLabel || (en ? 'A precise musical identity, shaped release after release.' : 'Une identité musicale précise, façonnée sortie après sortie.') },
       { icon: 'Sparkles', title: en ? 'Universe' : 'Univers', text: story ? firstSentence(story) : (en ? 'Music and imagery are developed as one coherent artistic language.' : 'Le son et l’image se répondent dans une même direction artistique.') },
@@ -419,11 +428,11 @@ export function buildMusicSite(
     ]) });
   }
   pages.push({ title: en ? 'About' : 'Bio', slug: 'bio', isHome: false, showInNav: true, blocks: s([
-    { type: 'banner', content: { image: input.photos?.[0] || heroImage, title: en ? `About ${name}` : `À propos de ${name}`, subtitle: tagline, overlay: 58, height: 380 } },
-    { type: 'textimage', content: { title: en ? 'Story and direction' : 'Parcours et direction', text: bio, image: input.photos?.[1] || heroImage, imageSide: 'right' } },
+    { type: 'banner', content: { image: input.photos?.[0] || altImage(1600, 760), title: en ? `About ${name}` : `À propos de ${name}`, subtitle: tagline, overlay: 58, height: 380 } },
+    { type: 'textimage', content: { title: en ? 'Story and direction' : 'Parcours et direction', text: bio, image: input.photos?.[1] || altImage(900, 700), imageSide: 'right' } },
     { type: 'heading', content: { text: en ? 'A musical language' : 'Un langage musical' } },
     { type: 'text', content: { text: sound || (en ? `${name} builds each track as part of a wider universe, balancing production choices, emotion and the energy intended for the listener.` : `${name} construit chaque morceau comme une partie d’un univers plus large, en reliant les choix de production, l’émotion et l’énergie destinée à l’auditeur.`) } },
-    ...(live ? [{ type: 'textimage', content: { title: en ? 'On stage' : 'Sur scène', text: live, image: input.photos?.[2] || input.photos?.[0] || heroImage, imageSide: 'left' } }] : []),
+    ...(live ? [{ type: 'textimage', content: { title: en ? 'On stage' : 'Sur scène', text: live, image: input.photos?.[2] || input.photos?.[0] || altImage(900, 700), imageSide: 'left' } }] : []),
   ]) });
   pages.push({ title: 'Contact', slug: 'contact', isHome: false, showInNav: true, blocks: s([
     { type: 'heading', content: { text: 'Contact' } },
@@ -453,15 +462,30 @@ export function buildMusicSite(
 // Produce a fully customized template from the questionnaire + assets.
 export function buildGeneratedSite(input: GenerateInput, themePhotos: string[] = []): BuiltTemplate {
   const detectText = [input.mission, input.functioning, input.goodToKnow, input.beneficiaries, input.actions, input.description].filter(Boolean).join(' ');
-  const id = pickTemplateId(detectText, input.category);
   const requested = getTemplate(input.category || '');
+  // Only honour the chosen category as a base template when its family matches an
+  // association site. A shop/music category picked for an association would
+  // otherwise become the base — and its blocks (streaming, tracks, shop…) never
+  // receive the generated copy, leaving the site with almost no text.
+  const associationCategory = requested?.family === 'association' ? input.category : undefined;
+  const id = pickTemplateId(detectText, associationCategory);
+  const associationBase = (getTemplate(id)?.family === 'association' ? getTemplate(id) : undefined)
+    || TEMPLATES.find((template) => template.family === 'association')
+    || TEMPLATES[0];
   const base = input.siteType === 'shop'
     ? ((requested?.family === 'shop' ? requested : undefined) || TEMPLATES.find((template) => template.family === 'shop') || TEMPLATES[0])
-    : getTemplate(id) || TEMPLATES[0];
+    : associationBase;
   const t: BuiltTemplate = JSON.parse(JSON.stringify(base));
   const copy = composeCopy(input);
   const photos = (input.photos || []).filter(Boolean);
-  const image = createImagePicker(photos, id, themePhotos);
+  // Association sites use the cause's real themed photos; every other site type
+  // (shop, other project) uses neutral placeholders so it never inherits a
+  // cause-specific image (a food-bank or football photo on a shop, say).
+  const useCausePhotos = input.siteType === 'association' || !input.siteType;
+  const makeImage = () => useCausePhotos
+    ? createImagePicker(photos, id, themePhotos)
+    : createPlaceholderAllocator(base.id, photos, false);
+  const image = makeImage();
 
   t.id = `${base.id}-generated`;
   t.name = copy.name;
@@ -533,7 +557,7 @@ export function buildGeneratedSite(input: GenerateInput, themePhotos: string[] =
       title, slug, isHome: slug === 'home', showInNav: true,
       blocks: [block('heading', { text: title }), block('text', { text: intro }), ...extra],
     });
-    const englishImage = createImagePicker(photos, id, themePhotos);
+    const englishImage = makeImage();
     t.pages = [
       { title: 'Home', slug: 'home', isHome: true, showInNav: true, blocks: [
         block('banner', { image: englishImage(1600, 760), title: copy.name, subtitle: copy.heroSubtitle, overlay: 45, height: 460, button: { text: 'Discover', href: '/contact', color: '#ffffff', variant: 'solid', align: 'center' } }),
@@ -551,7 +575,7 @@ export function buildGeneratedSite(input: GenerateInput, themePhotos: string[] =
       blocks: [block('heading', { text: title }), block('text', { text: intro }), ...extra],
     });
     const mission = input.mission || `${copy.name} brings people together around a meaningful cause.`;
-    const englishImage = createImagePicker(photos, id, themePhotos);
+    const englishImage = makeImage();
     t.id = `${base.id}-generated`;
     t.header.logoText = copy.name;
     t.footer.logoText = copy.name;

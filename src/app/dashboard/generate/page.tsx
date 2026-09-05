@@ -11,7 +11,7 @@ export const dynamic = 'force-dynamic';
 export default async function GeneratePage({ searchParams }: { searchParams: Promise<{ welcome?: string }> }) {
   const ctx = await requirePermission(PERMISSIONS.SITE_EDIT);
   const { welcome } = await searchParams;
-  const categories = TEMPLATES.map((t) => ({ id: t.id, name: t.name }));
+  const categories = TEMPLATES.map((t) => ({ id: t.id, name: t.name, family: t.family }));
   const previews = TEMPLATES.map((t) => ({ id: t.id, name: t.name, preview: t.preview, family: t.family }));
   const site = await prisma.site.findUnique({
     where: { organizationId: ctx.organization!.id },

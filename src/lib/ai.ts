@@ -1,5 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk';
-import { getTemplate, TEMPLATES, createPhotoAllocator, type BuiltTemplate } from './templates';
+import { getTemplate, TEMPLATES, createPhotoAllocator, createPlaceholderAllocator, type BuiltTemplate } from './templates';
 import { pickTemplateId, type GenerateInput } from './generate';
 import { defaultStyleFor } from './blocks';
 
@@ -397,9 +397,12 @@ export async function aiGenerateSite(input: GenerateInput, themePhotos: string[]
       : { label: input.language === 'en' ? 'Learn more' : 'Découvrir', href: '/contact' };
 
   const detect = [input.mission, input.functioning, input.goodToKnow, input.beneficiaries, input.actions].filter(Boolean).join(' ');
-  const baseId = pickTemplateId(detect, input.category);
   const requested = getTemplate(input.category || '');
   const desiredFamily = isShop ? 'shop' : input.siteType === 'music' ? 'music' : 'association';
+  // Only let a category drive the cause detection when it is an association
+  // template; a shop/music category must not steer an association site's images.
+  const associationCategory = requested?.family === 'association' ? input.category : undefined;
+  const baseId = pickTemplateId(detect, associationCategory);
   const base = (requested?.family === desiredFamily ? requested : undefined)
     || TEMPLATES.find((template) => template.family === desiredFamily)
     || getTemplate(baseId)
@@ -409,7 +412,12 @@ export async function aiGenerateSite(input: GenerateInput, themePhotos: string[]
   const photos = (input.photos || []).filter(Boolean);
   const language = input.language === 'en' ? 'en' : 'fr';
   // One allocator for the whole site → the same image is never used twice.
-  const nextPhoto = createPhotoAllocator(baseId, photos, themePhotos);
+  // Association sites use the cause's themed photos; music and shop sites use
+  // neutral placeholders so they never inherit a cause image (e.g. a football
+  // photo pulled in because the artist described "club" or "clubbers").
+  const nextPhoto = desiredFamily === 'association'
+    ? createPhotoAllocator(baseId, photos, themePhotos)
+    : createPlaceholderAllocator(base.id, photos, desiredFamily === 'music');
 
   t.id = `${base.id}-ai-generated`;
   t.name = name;

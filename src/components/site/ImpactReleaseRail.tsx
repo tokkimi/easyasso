@@ -59,6 +59,15 @@ const IMPACT_CATALOG: { title: string; url: string }[] = [
   { title: 'POWER OF DESTRUCTION', url: 'https://soundcloud.com/impactdj_raw/power-of-destruction' },
 ];
 
+// IMPACT artist profiles, shown as a row of icons under the releases.
+const IMPACT_PROFILES: { platform: string; url: string }[] = [
+  { platform: 'spotify', url: 'https://open.spotify.com/artist/3AiyQHD9YDWhPX6rKJLkXZ' },
+  { platform: 'deezer', url: 'https://link.deezer.com/s/32FJ0eJdg95ujwvQN8jFV' },
+  { platform: 'applemusic', url: 'https://music.apple.com/fr/artist/impact/1815586907' },
+  { platform: 'soundcloud', url: 'https://on.soundcloud.com/gFkxJhH119PUD8bvJG' },
+  { platform: 'youtube', url: 'https://www.youtube.com/channel/UCdqrxBgSQ7ReX0FmaQBIAfw' },
+];
+
 // The editor stores one entry per platform link. Entries sharing a title are
 // one release: one card on the site, and the platform choice when clicked.
 function groupReleases(content: any): Release[] {
@@ -155,6 +164,17 @@ export function ImpactReleaseRail({ content }: { content: any }) {
               </button>
             );
           })}
+        </div>
+      )}
+
+      {releases.length > 0 && (
+        <div className="mt-8 flex flex-wrap items-center justify-center gap-7">
+          {IMPACT_PROFILES.map((profile) => (
+            <a key={profile.platform} href={profile.url} target="_blank" rel="noreferrer" aria-label={`IMPACT sur ${PLATFORMS[profile.platform].label}`} className="opacity-90 transition hover:scale-110 hover:opacity-100">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={PLATFORMS[profile.platform].icon} alt="" className="h-9 w-9 object-contain [filter:brightness(0)_invert(1)]" />
+            </a>
+          ))}
         </div>
       )}
 

@@ -1,5 +1,4 @@
 import { customAlphabet } from 'nanoid';
-import { IMPACT_HOST, isImpactHost } from './impact';
 
 // URL-safe slug fragments (no ambiguous chars)
 const nano = customAlphabet('23456789abcdefghijkmnpqrstuvwxyz', 8);
@@ -16,7 +15,7 @@ export function slugify(input: string): string {
   return input
     .toLowerCase()
     .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
+    .replace(/[\u0300-\u036f]/g, '')
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '')
     .slice(0, 60) || 'page';
@@ -52,9 +51,9 @@ export function appBaseUrl(): string {
 export function siteUrlFor(subdomain: string, customDomain?: string | null, domainVerified = false): string {
   // Never send an owner or visitor to an unverified domain: DNS and SSL may
   // still point elsewhere. The permanent EasyAsso address remains available.
-  // IMPACT always lives on its own domain, whatever is stored in the DB
-  // (older seeds stored the legacy Vercel alias, which serves a stale build).
-  if (isImpactHost(customDomain)) return `https://${IMPACT_HOST}`;
+  // IMPACT always lives on impactdj-raw.com. Older seeds stored the legacy
+  // alias impact-raw.vercel.app, which serves a stale build on a dead database.
+  if (customDomain && /^(?:www\.)?(?:impact-raw\.vercel\.app|impactdj-raw\.vercel\.app|impactdj-raw\.com)$/i.test(customDomain)) return 'https://impactdj-raw.com';
   if (customDomain && domainVerified) return `https://${customDomain}`;
   const root = rootDomain();
   const protocol = root.includes('localhost') ? 'http' : 'https';

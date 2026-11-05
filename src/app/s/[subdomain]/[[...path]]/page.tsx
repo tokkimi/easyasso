@@ -15,5 +15,5 @@ export async function generateMetadata({ params }: { params: Promise<{ subdomain
 export default async function PublicSite({ params }: { params: Promise<{ subdomain: string; path?: string[] }> }) {
   const { subdomain, path } = await params;
   const site = await loadSiteBySubdomain(subdomain);
-  return <RenderSite site={site as any} basePath={`/s/${subdomain}`} slug={path?.[0]} subSlug={path?.[1]} />;
+  return <RenderSite site={site as any} basePath={`/s/${subdomain}`} slug={path?.[0]} />;
 }

@@ -6,11 +6,8 @@
  */
 export const IMPACT_SUBDOMAIN = 'impact-djraw';
 
-// The public address of the IMPACT site. Links shown in the dashboard
-// ("Aperçu", "Voir la page") must point here: the old Vercel alias
-// impact-raw.vercel.app still serves a stale deployment on another database.
-export const IMPACT_HOST = 'impactdj-raw.com';
-export const IMPACT_LEGACY_HOST = 'impact-raw.vercel.app';
+// The Vercel deployment domain this profile answers on (handled in middleware).
+export const IMPACT_HOST = 'impact-raw.vercel.app';
 
 // Every host that must resolve to the IMPACT site. The public custom domain and
 // the Vercel alias both map here — matched independently of the DB customDomain
@@ -18,7 +15,6 @@ export const IMPACT_LEGACY_HOST = 'impact-raw.vercel.app';
 // VIELUSOS and every other tenant are untouched.
 export const IMPACT_DOMAINS = [
   IMPACT_HOST,
-  IMPACT_LEGACY_HOST,
   'impactdj-raw.vercel.app',
   'impactdj-raw.com',
   'www.impactdj-raw.com',

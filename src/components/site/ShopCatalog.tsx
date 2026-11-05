@@ -1,5 +1,7 @@
 'use client';
 import { useEffect, useMemo, useState } from 'react';
+import { usePathname } from 'next/navigation';
+import { createPortal } from 'react-dom';
 import { Search, X, Heart, ChevronLeft, ChevronRight, ShoppingBag, Plus, Minus, Trash2 } from 'lucide-react';
 
 export type ShopProduct = {
@@ -20,11 +22,19 @@ function euros(cents: number) {
 }
 
 export function ShopCatalog({
-  products, title, intro, search = true, showCategories = true, columns = 4, organizationId = '', canCheckout = false, basePath = '', product,
-}: { products: ShopProduct[]; title?: string; intro?: string; search?: boolean; showCategories?: boolean; columns?: number; organizationId?: string; canCheckout?: boolean; basePath?: string; product?: ShopProduct }) {
+  products, title, intro, search = true, showCategories = true, columns = 4, organizationId = '', canCheckout = false,
+}: { products: ShopProduct[]; title?: string; intro?: string; search?: boolean; showCategories?: boolean; columns?: number; organizationId?: string; canCheckout?: boolean }) {
   const [q, setQ] = useState('');
   const [cat, setCat] = useState('');
   const [sort, setSort] = useState<'recent' | 'price-asc' | 'price-desc'>('recent');
+  // Each product has its own page: <boutique>/<productId>. The page is the
+  // Boutique page itself; this catalogue switches to the product view.
+  const pathname = usePathname() || '';
+  const routeMatch = pathname.match(/^(.*?)\/boutique(?:\/([^/]+))?\/?$/);
+  const shopBase = routeMatch ? `${routeMatch[1]}/boutique` : '/boutique';
+  const productId = routeMatch?.[2] ? decodeURIComponent(routeMatch[2]) : '';
+  const product = productId ? products.find((p) => p.id === productId) || null : null;
+  const productHref = (id: string) => `${shopBase}/${encodeURIComponent(id)}`;
   const [cart, setCart] = useState<CartLine[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
   const [paying, setPaying] = useState(false);
@@ -98,15 +108,25 @@ export function ShopCatalog({
     if (new URLSearchParams(window.location.search).get('order') === 'success') { setCart([]); try { localStorage.removeItem(storageKey); } catch {} }
   }, [storageKey]);
 
-  const productHref = (id: string) => `${basePath}/boutique/${encodeURIComponent(id)}`;
+  useEffect(() => { if (productId) window.scrollTo({ top: 0 }); }, [productId]);
+  // The cart is rendered at the root of the page so the site's contact bubble
+  // and the block layout can never cover the "Payer" button.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  const toBody = (node: React.ReactNode) => (mounted ? createPortal(node, document.body) : null);
 
   return (
     <div className="mx-auto w-full max-w-6xl px-4">
-      {product ? (
-        <>
-          <a href={`${basePath}/boutique`} className="mb-4 inline-flex items-center gap-1 text-sm font-semibold text-gray-500 hover:text-[var(--brand)]"><ChevronLeft className="h-4 w-4" /> Retour à la boutique</a>
-          <ProductDetail product={product} canCheckout={canCheckout} isFavorite={favorites.includes(product.id)} onToggleFavorite={() => toggleFavorite(product.id)} onAdd={addToCart} />
-        </>
+      {productId ? (
+        <div id="shop-product-view">
+          {/* On a product page, show only the product: hide the Boutique banner
+              and other blocks of the page around this catalogue. */}
+          <style>{`main:has(#shop-product-view) > :not(:has(#shop-product-view)) { display: none !important; }`}</style>
+          <a href={shopBase} className="mb-4 inline-flex items-center gap-1 rounded-full bg-black/40 px-3 py-1.5 text-sm font-semibold text-white backdrop-blur hover:bg-black/60"><ChevronLeft className="h-4 w-4" /> Retour à la boutique</a>
+          {product
+            ? <ProductDetail product={product} canCheckout={canCheckout} isFavorite={favorites.includes(product.id)} onToggleFavorite={() => toggleFavorite(product.id)} onAdd={addToCart} />
+            : <p className="rounded-3xl bg-white py-16 text-center text-gray-500">Ce produit n’est plus disponible.</p>}
+        </div>
       ) : (<>
       {title && <h2 className="text-center text-3xl font-extrabold text-gray-900 md:text-4xl">{title}</h2>}
       {intro && <p className="mx-auto mt-2 max-w-2xl text-center text-gray-500">{intro}</p>}
@@ -177,15 +197,16 @@ export function ShopCatalog({
       )}
       </>)}
 
+      {toBody(<>
       {/* Floating cart */}
       {canCheckout && cartCount > 0 && !cartOpen && (
-        <button onClick={() => setCartOpen(true)} className="fixed bottom-5 right-5 z-50 flex items-center gap-2 rounded-full bg-[var(--brand)] px-5 py-3 font-bold text-white shadow-lg">
+        <button onClick={() => setCartOpen(true)} className="fixed bottom-24 right-5 z-[85] flex items-center gap-2 rounded-full bg-[var(--brand)] px-5 py-3 font-bold text-white shadow-lg">
           <ShoppingBag className="h-5 w-5" /> {cartCount} · {euros(cartTotal)}
         </button>
       )}
 
       {cartOpen && (
-        <div className="fixed inset-0 z-[60] flex justify-end bg-black/50" onClick={() => setCartOpen(false)}>
+        <div className="fixed inset-0 z-[90] flex justify-end bg-black/50" onClick={() => setCartOpen(false)}>
           <div className="flex h-full w-full max-w-md flex-col bg-white" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between border-b border-gray-100 p-4">
               <p className="text-lg font-extrabold text-gray-900">Votre panier</p>
@@ -220,11 +241,12 @@ export function ShopCatalog({
           </div>
         </div>
       )}
+      </>)}
     </div>
   );
 }
 
-// Full product page (one URL per product: /boutique/<id>).
+// Full product page: photos, description, stock, quantity and add to cart.
 function ProductDetail({ product, canCheckout, isFavorite, onToggleFavorite, onAdd }: { product: ShopProduct; canCheckout: boolean; isFavorite: boolean; onToggleFavorite: () => void; onAdd: (p: ShopProduct, qty: number) => void }) {
   const [i, setI] = useState(0);
   const [qty, setQty] = useState(1);
@@ -233,7 +255,7 @@ function ProductDetail({ product, canCheckout, isFavorite, onToggleFavorite, onA
   const prev = () => setI((v) => (v - 1 + imgs.length) % imgs.length);
   const next = () => setI((v) => (v + 1) % imgs.length);
   return (
-    <article className="grid gap-6 overflow-hidden rounded-3xl bg-white text-gray-900 shadow-sm ring-1 ring-gray-200 md:grid-cols-2 md:gap-0">
+    <article className="grid overflow-hidden rounded-3xl bg-white text-gray-900 shadow-sm ring-1 ring-gray-200 md:grid-cols-2">
         <div className="relative">
           <div className="relative aspect-square w-full overflow-hidden bg-gray-100">
             {imgs[i] ? (

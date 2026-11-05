@@ -25,5 +25,5 @@ export async function generateMetadata({ params }: { params: Promise<{ host: str
 export default async function CustomDomainSite({ params }: { params: Promise<{ host: string; path?: string[] }> }) {
   const { host, path } = await params;
   const site = await loadSiteByDomain(decodeURIComponent(host));
-  return <RenderSite site={site as any} basePath="" slug={path?.[0]} subSlug={path?.[1]} />;
+  return <RenderSite site={site as any} basePath="" slug={path?.[0]} />;
 }

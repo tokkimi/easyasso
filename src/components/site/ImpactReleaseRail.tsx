@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { usePathname } from 'next/navigation';
+import { ImpactShows } from './ImpactShows';
 import { X } from 'lucide-react';
 import { safePublicUrl } from '@/lib/render';
 
@@ -123,6 +125,9 @@ function PlatformName({ platform }: { platform: string }) {
 // highlighted "OUT NOW"); clicking one opens the choice of platforms.
 export function ImpactReleaseRail({ content }: { content: any }) {
   const releases = groupReleases(content);
+  // On the home page, the next shows and the booking button follow the releases.
+  const pathname = usePathname() || '';
+  const isHome = pathname === '/' || /^\/s\/[^/]+\/?$/.test(pathname);
   const [open, setOpen] = useState<Release | null>(null);
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
@@ -177,6 +182,8 @@ export function ImpactReleaseRail({ content }: { content: any }) {
           ))}
         </div>
       )}
+
+      {isHome && <ImpactShows content={{ title: 'Prochaines dates', items: [] }} auto />}
 
       {mounted && open && createPortal(
         <div className="fixed inset-0 z-[95] flex items-end justify-center bg-black/75 p-0 backdrop-blur-sm sm:items-center sm:p-4" onClick={() => setOpen(null)} role="dialog" aria-modal="true" aria-label={open.title}>

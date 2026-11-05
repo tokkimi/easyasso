@@ -16,6 +16,8 @@ export type ShopProduct = {
 };
 
 type CartLine = { id: string; name: string; priceCents: number; image?: string; qty: number };
+type ShippingRate = { id: string; name: string; countryCodes: string[]; priceCents: number; freeAboveCents: number | null; minOrderCents: number; maxOrderCents: number | null; minDeliveryDays: number | null; maxDeliveryDays: number | null };
+const SHIP_COUNTRIES: [string, string][] = [['FR', 'France'], ['BE', 'Belgique'], ['CH', 'Suisse'], ['LU', 'Luxembourg'], ['MC', 'Monaco']];
 
 function euros(cents: number) {
   return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: (cents % 100 ? 2 : 0) }).format((cents || 0) / 100);
@@ -72,6 +74,15 @@ export function ShopCatalog({
   const gridCols = columns >= 4 ? 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4' : columns === 3 ? 'grid-cols-2 md:grid-cols-3' : 'grid-cols-2';
   const cartCount = cart.reduce((s, l) => s + l.qty, 0);
   const cartTotal = cart.reduce((s, l) => s + l.priceCents * l.qty, 0);
+  // Delivery cost shown before payment, with the same rule as the checkout:
+  // first active rate for the country whose order range fits the cart.
+  const [rates, setRates] = useState<ShippingRate[] | null>(null);
+  useEffect(() => {
+    if (!cartOpen || rates || !organizationId) return;
+    fetch(`/api/public/shipping-rates?organizationId=${encodeURIComponent(organizationId)}`).then((r) => r.json()).then((d) => setRates(Array.isArray(d.rates) ? d.rates : [])).catch(() => setRates([]));
+  }, [cartOpen, rates, organizationId]);
+  const rate = (rates || []).find((r) => r.countryCodes.includes(shippingCountry) && cartTotal >= (r.minOrderCents || 0) && (r.maxOrderCents == null || cartTotal <= r.maxOrderCents)) || null;
+  const shippingCents = rate ? (rate.freeAboveCents != null && cartTotal >= rate.freeAboveCents ? 0 : rate.priceCents) : 0;
 
   function addToCart(p: ShopProduct, qty = 1) {
     setCart((c) => {
@@ -238,10 +249,16 @@ export function ShopCatalog({
               ))}
             </div>
             <div className="border-t border-gray-100 p-4">
-              <label className="mb-3 block text-sm font-bold text-gray-700">Pays de livraison<select className="input mt-1" value={shippingCountry} onChange={(e)=>setShippingCountry(e.target.value)}><option value="FR">France</option><option value="BE">Belgique</option><option value="CH">Suisse</option><option value="LU">Luxembourg</option><option value="MC">Monaco</option></select></label>
-              <div className="mb-3 flex items-center justify-between text-lg font-extrabold text-gray-900"><span>Total</span><span>{euros(cartTotal)}</span></div>
+              <label className="mb-3 block text-sm font-bold text-gray-700">Pays de livraison<select className="input mt-1" value={shippingCountry} onChange={(e)=>setShippingCountry(e.target.value)}>{SHIP_COUNTRIES.map(([code, label]) => <option key={code} value={code}>{label}</option>)}</select></label>
+              <div className="mb-1 flex items-center justify-between text-sm text-gray-600"><span>Sous-total</span><span>{euros(cartTotal)}</span></div>
+              <div className="mb-3 flex items-start justify-between gap-3 text-sm text-gray-600">
+                <span>Livraison{rate ? ` · ${rate.name}` : ''}{rate && rate.minDeliveryDays != null ? ` (${rate.minDeliveryDays}–${rate.maxDeliveryDays || rate.minDeliveryDays} jours)` : ''}</span>
+                <span className="shrink-0 font-semibold">{rates === null ? '…' : shippingCents === 0 ? 'Offerte' : euros(shippingCents)}</span>
+              </div>
+              {rate && rate.freeAboveCents != null && shippingCents > 0 && <p className="-mt-2 mb-3 text-xs text-gray-500">Livraison offerte dès {euros(rate.freeAboveCents)} d’achat.</p>}
+              <div className="mb-3 flex items-center justify-between text-lg font-extrabold text-gray-900"><span>Total</span><span>{euros(cartTotal + shippingCents)}</span></div>
               <button onClick={checkout} disabled={paying || cart.length === 0} className="w-full rounded-xl bg-[var(--brand)] py-3 font-bold text-white transition hover:opacity-90 disabled:opacity-50">{paying ? 'Redirection…' : 'Payer par carte'}</button>
-              <p className="mt-2 text-center text-xs text-gray-400">Paiement sécurisé par Stripe · Livraison renseignée à l’étape suivante</p>
+              <p className="mt-2 text-center text-xs text-gray-400">Paiement sécurisé par Stripe · Adresse de livraison demandée à l’étape suivante</p>
             </div>
           </div>
         </div>

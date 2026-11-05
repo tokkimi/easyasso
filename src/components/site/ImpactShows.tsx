@@ -18,7 +18,13 @@ function parseDay(value?: string) {
 // leads to the booking page. Managed in the editor with the same block as the
 // releases: Titre = event, Artiste = lieu / ville, Date = date, Pochette =
 // affiche, Lien = billetterie.
-export function ImpactShows({ content, bookingHref = '/booking' }: { content: any; bookingHref?: string }) {
+export function ImpactShows({ content, bookingHref = '/booking', auto = false }: { content: any; bookingHref?: string; auto?: boolean }) {
+  // The automatic section (under the releases) steps aside as soon as a real
+  // "Prochaines dates" block exists on the page.
+  const [hidden, setHidden] = useState(false);
+  useEffect(() => {
+    if (auto && document.querySelector('[data-impact-shows="block"]')) setHidden(true);
+  }, [auto]);
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const shows = (Array.isArray(content?.items) ? content.items : [])
@@ -46,8 +52,9 @@ export function ImpactShows({ content, bookingHref = '/booking' }: { content: an
     if (el && card) el.scrollTo({ left: card.offsetLeft - el.offsetLeft, behavior: 'smooth' });
   };
 
+  if (hidden) return null;
   return (
-    <section className="vielusos-fluid mx-auto w-full max-w-4xl px-4 pt-6 text-white">
+    <section data-impact-shows={auto ? 'auto' : 'block'} className={`vielusos-fluid mx-auto w-full max-w-4xl px-4 text-white ${auto ? 'px-0 pt-14' : 'pt-6'}`}>
       <h2 className="text-3xl font-black uppercase tracking-tight md:text-4xl">{content?.title || 'Prochaines dates'}</h2>
       {content?.intro && <p className="mt-2 max-w-2xl text-sm leading-relaxed opacity-60">{content.intro}</p>}
       {shows.length === 0 ? (

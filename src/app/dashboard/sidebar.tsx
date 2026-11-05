@@ -17,6 +17,7 @@ const NAV = [
   { href: '/dashboard/identity', label: 'Identité (logo, couleurs)', icon: Fingerprint, perm: PERMISSIONS.SITE_EDIT },
   { href: '/dashboard/themes', label: 'Modèles de site', icon: LayoutTemplate, perm: PERMISSIONS.SITE_EDIT },
   { href: '/dashboard/shop', label: 'Boutique', icon: ShoppingBag, perm: PERMISSIONS.SHOP_VIEW },
+  { href: '/dashboard/livraison', label: 'Livraison & frais de port', icon: Truck, perm: PERMISSIONS.SHOP_VIEW },
   { href: '/dashboard/logistics', label: 'Commandes & logistique', icon: Truck, perm: PERMISSIONS.LOGISTICS_VIEW },
   { href: '/dashboard/donations', label: 'Dons', icon: HandCoins, perm: PERMISSIONS.DONATIONS_VIEW },
   { href: '/dashboard/campaigns', label: 'Campagnes', icon: Megaphone, perm: PERMISSIONS.CAMPAIGNS_VIEW },

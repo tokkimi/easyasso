@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 import { DEFAULT_HEADER, DEFAULT_FOOTER, type HeaderConfig, type FooterConfig } from '@/lib/blocks';
 import { PublicBlock } from './PublicBlock';
+import { ShopCatalog } from './ShopCatalog';
 import { PublicHeader, PublicFooter } from './PublicChrome';
 import { ContactBubble } from './ContactBubble';
 import { CustomerAccessForm } from './CustomerAccessForm';
@@ -90,28 +91,38 @@ export function siteMetadata(site: { name: string; header: unknown; footer: unkn
 }
 
 // Active products for a tenant shop, newest first, shaped for the catalogue.
+type ProductRow = Awaited<ReturnType<typeof prisma.product.findMany>>[number];
+
+function toShopProduct(p: ProductRow) {
+  const images = Array.isArray(p.images) ? (p.images as string[]) : [];
+  return {
+    id: p.id,
+    name: p.name,
+    description: p.description,
+    priceCents: p.priceCents,
+    images: images.length ? images : p.imageUrl ? [p.imageUrl] : [],
+    category: p.category,
+    brand: p.brand,
+    stock: p.stock,
+  };
+}
+
+// One active product of this organization, for its own page /boutique/<id>.
+async function loadShopProduct(organizationId: string, id: string) {
+  const row = await prisma.product.findFirst({ where: { id, organizationId, active: true } });
+  return row ? toShopProduct(row) : null;
+}
+
 async function loadShopProducts(organizationId: string) {
   const rows = await prisma.product.findMany({
     where: { organizationId, active: true },
     orderBy: { createdAt: 'desc' },
     take: 500,
   });
-  return rows.map((p) => {
-    const images = Array.isArray(p.images) ? (p.images as string[]) : [];
-    return {
-      id: p.id,
-      name: p.name,
-      description: p.description,
-      priceCents: p.priceCents,
-      images: images.length ? images : p.imageUrl ? [p.imageUrl] : [],
-      category: p.category,
-      brand: p.brand,
-      stock: p.stock,
-    };
-  });
+  return rows.map(toShopProduct);
 }
 
-export async function RenderSite({ site, basePath, slug }: { site: SiteWithPages; basePath: string; slug?: string }) {
+export async function RenderSite({ site, basePath, slug, subSlug }: { site: SiteWithPages; basePath: string; slug?: string; subSlug?: string }) {
   if (!site) notFound();
   if (!site.published || !canShowPublicSite(site.organization)) return <SiteOffline />;
 
@@ -237,6 +248,28 @@ export async function RenderSite({ site, basePath, slug }: { site: SiteWithPages
   }
 
   if (slug === 'boutique' && !shopEnabled) notFound();
+
+  // Product page: /boutique/<productId>. Every product gets its own page as soon
+  // as it is created and active — nothing to set up in the editor.
+  if (slug === 'boutique' && subSlug) {
+    const product = await loadShopProduct(site.organizationId, decodeURIComponent(subSlug));
+    if (!product) notFound();
+    return (
+      <div className={`flex min-h-screen flex-col ${brand?.siteClass ?? ''} ${brand?.key === 'impact' ? 'impact-page-inner' : ''}`} style={publicSiteStyle(theme, brand)}>
+        {fontHref && <link rel="stylesheet" href={fontHref} />}
+        {brand?.fontsHref && <link rel="stylesheet" href={brand.fontsHref} />}
+        <style dangerouslySetInnerHTML={{ __html: `${brandCss(theme.primary)}${brand?.css ?? ''}` }} />
+        <PageViewTracker organizationId={site.organizationId} path={`boutique/${product.id}`} />
+        <PublicHeader header={publicHeader} nav={nav} basePath={basePath} />
+        <main className="flex-1 py-8">
+          <ShopCatalog products={[]} product={product} organizationId={site.organizationId} canCheckout={Boolean(profile.stripeConnectReady)} basePath={basePath} />
+        </main>
+        <PublicFooter footer={publicFooter} orgId={site.organizationId} basePath={basePath} nav={nav} />
+        {bubble}
+      </div>
+    );
+  }
+  if (subSlug) notFound();
 
   if (brand && slug === 'booking') {
     const bookingCopy = {

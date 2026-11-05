@@ -282,6 +282,7 @@ function renderInner(type: string, content: any, style: BlockStyle, basePath: st
           columns={content.columns || 4}
           organizationId={organizationId}
           canCheckout={!!shopReady}
+          basePath={basePath}
         />
       );
     case 'tracks':

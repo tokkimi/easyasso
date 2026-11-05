@@ -376,6 +376,7 @@ export function ShopClient({ enabled: initialEnabled, initial, boutiqueUrl = '',
                   <p className="mt-1 text-xs text-gray-400">{p.stock == null ? 'Stock illimité' : `${p.stock} en stock`}{(p.images?.length || 0) > 1 ? ` · ${p.images!.length} photos` : ''}</p>
                   <div className="mt-3 flex gap-1">
                     <button onClick={() => startEdit(p)} className="btn btn-ghost flex-1 text-sm"><Pencil className="h-4 w-4" /> Modifier</button>
+                    {boutiqueUrl && enabled && p.active && <a href={`${boutiqueUrl}/${encodeURIComponent(p.id)}`} target="_blank" rel="noreferrer" title="Voir la page produit" className="grid h-9 w-9 place-items-center rounded-lg text-gray-500 hover:bg-gray-100"><ExternalLink className="h-4 w-4" /></a>}
                     <button onClick={() => toggleActive(p)} title={p.active ? 'Masquer' : 'Afficher'} className="grid h-9 w-9 place-items-center rounded-lg text-gray-500 hover:bg-gray-100">{p.active ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}</button>
                     <button onClick={() => remove(p)} title="Supprimer" className="grid h-9 w-9 place-items-center rounded-lg text-red-500 hover:bg-red-50"><Trash2 className="h-4 w-4" /></button>
                   </div>

@@ -20,12 +20,11 @@ function euros(cents: number) {
 }
 
 export function ShopCatalog({
-  products, title, intro, search = true, showCategories = true, columns = 4, organizationId = '', canCheckout = false,
-}: { products: ShopProduct[]; title?: string; intro?: string; search?: boolean; showCategories?: boolean; columns?: number; organizationId?: string; canCheckout?: boolean }) {
+  products, title, intro, search = true, showCategories = true, columns = 4, organizationId = '', canCheckout = false, basePath = '', product,
+}: { products: ShopProduct[]; title?: string; intro?: string; search?: boolean; showCategories?: boolean; columns?: number; organizationId?: string; canCheckout?: boolean; basePath?: string; product?: ShopProduct }) {
   const [q, setQ] = useState('');
   const [cat, setCat] = useState('');
   const [sort, setSort] = useState<'recent' | 'price-asc' | 'price-desc'>('recent');
-  const [open, setOpen] = useState<ShopProduct | null>(null);
   const [cart, setCart] = useState<CartLine[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
   const [paying, setPaying] = useState(false);
@@ -70,7 +69,6 @@ export function ShopCatalog({
       if (found) return c.map((l) => (l.id === p.id ? { ...l, qty: Math.min(99, l.qty + qty) } : l));
       return [...c, { id: p.id, name: p.name, priceCents: p.priceCents, image: p.images[0], qty }];
     });
-    setOpen(null);
     setCartOpen(true);
   }
   function setQty(id: string, qty: number) {
@@ -100,8 +98,16 @@ export function ShopCatalog({
     if (new URLSearchParams(window.location.search).get('order') === 'success') { setCart([]); try { localStorage.removeItem(storageKey); } catch {} }
   }, [storageKey]);
 
+  const productHref = (id: string) => `${basePath}/boutique/${encodeURIComponent(id)}`;
+
   return (
     <div className="mx-auto w-full max-w-6xl px-4">
+      {product ? (
+        <>
+          <a href={`${basePath}/boutique`} className="mb-4 inline-flex items-center gap-1 text-sm font-semibold text-gray-500 hover:text-[var(--brand)]"><ChevronLeft className="h-4 w-4" /> Retour à la boutique</a>
+          <ProductDetail product={product} canCheckout={canCheckout} isFavorite={favorites.includes(product.id)} onToggleFavorite={() => toggleFavorite(product.id)} onAdd={addToCart} />
+        </>
+      ) : (<>
       {title && <h2 className="text-center text-3xl font-extrabold text-gray-900 md:text-4xl">{title}</h2>}
       {intro && <p className="mx-auto mt-2 max-w-2xl text-center text-gray-500">{intro}</p>}
 
@@ -143,7 +149,7 @@ export function ShopCatalog({
       ) : (
         <div className={`mt-6 grid gap-4 ${gridCols}`}>
           {list.map((p) => (
-            <button key={p.id} onClick={() => setOpen(p)} className="group text-left">
+            <a key={p.id} href={productHref(p.id)} className="group block text-left">
               <div className="relative aspect-square w-full overflow-hidden rounded-2xl bg-gray-100">
                 {p.images[0] ? (
                   // eslint-disable-next-line @next/next/no-img-element
@@ -153,7 +159,7 @@ export function ShopCatalog({
                   role="button"
                   tabIndex={0}
                   aria-label={favorites.includes(p.id) ? 'Retirer des favoris' : 'Ajouter aux favoris'}
-                  onClick={(e) => { e.stopPropagation(); toggleFavorite(p.id); }}
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleFavorite(p.id); }}
                   onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); toggleFavorite(p.id); } }}
                   className={`absolute bottom-2 right-2 grid h-9 w-9 place-items-center rounded-full bg-white/95 shadow-sm transition ${favorites.includes(p.id) ? 'text-rose-500' : 'text-gray-500 hover:text-rose-500'}`}
                 >
@@ -165,12 +171,11 @@ export function ShopCatalog({
                 <p className="mt-0.5 line-clamp-2 text-sm font-medium leading-snug text-gray-900">{p.name}</p>
                 <p className="mt-1 font-extrabold text-gray-900">{euros(p.priceCents)}</p>
               </div>
-            </button>
+            </a>
           ))}
         </div>
       )}
-
-      {open && <ProductModal product={open} canCheckout={canCheckout} isFavorite={favorites.includes(open.id)} onToggleFavorite={() => toggleFavorite(open.id)} onAdd={addToCart} onClose={() => setOpen(null)} />}
+      </>)}
 
       {/* Floating cart */}
       {canCheckout && cartCount > 0 && !cartOpen && (
@@ -219,7 +224,8 @@ export function ShopCatalog({
   );
 }
 
-function ProductModal({ product, canCheckout, isFavorite, onToggleFavorite, onAdd, onClose }: { product: ShopProduct; canCheckout: boolean; isFavorite: boolean; onToggleFavorite: () => void; onAdd: (p: ShopProduct, qty: number) => void; onClose: () => void }) {
+// Full product page (one URL per product: /boutique/<id>).
+function ProductDetail({ product, canCheckout, isFavorite, onToggleFavorite, onAdd }: { product: ShopProduct; canCheckout: boolean; isFavorite: boolean; onToggleFavorite: () => void; onAdd: (p: ShopProduct, qty: number) => void }) {
   const [i, setI] = useState(0);
   const [qty, setQty] = useState(1);
   const imgs = product.images.length ? product.images : [''];
@@ -227,10 +233,9 @@ function ProductModal({ product, canCheckout, isFavorite, onToggleFavorite, onAd
   const prev = () => setI((v) => (v - 1 + imgs.length) % imgs.length);
   const next = () => setI((v) => (v + 1) % imgs.length);
   return (
-    <div className="fixed inset-0 z-[60] flex items-end justify-center bg-black/50 p-0 sm:items-center sm:p-4" onClick={onClose}>
-      <div className="max-h-[92vh] w-full max-w-3xl overflow-y-auto rounded-t-3xl bg-white sm:rounded-3xl" onClick={(e) => e.stopPropagation()}>
+    <article className="grid gap-6 overflow-hidden rounded-3xl bg-white text-gray-900 shadow-sm ring-1 ring-gray-200 md:grid-cols-2 md:gap-0">
         <div className="relative">
-          <div className="relative aspect-square w-full overflow-hidden bg-gray-100 sm:aspect-[4/3]">
+          <div className="relative aspect-square w-full overflow-hidden bg-gray-100">
             {imgs[i] ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={imgs[i]} alt={product.name} className="h-full w-full object-contain" />
@@ -242,17 +247,16 @@ function ProductModal({ product, canCheckout, isFavorite, onToggleFavorite, onAd
               </>
             )}
           </div>
-          <button onClick={onClose} className="absolute right-3 top-3 grid h-9 w-9 place-items-center rounded-full bg-white/90 text-gray-700 shadow"><X className="h-5 w-5" /></button>
           {imgs.length > 1 && (
             <div className="flex justify-center gap-1.5 py-2">
               {imgs.map((_, idx) => <button key={idx} onClick={() => setI(idx)} className={`h-1.5 rounded-full transition-all ${idx === i ? 'w-5 bg-[var(--brand)]' : 'w-1.5 bg-gray-300'}`} />)}
             </div>
           )}
         </div>
-        <div className="p-5">
+        <div className="p-5 md:p-8">
           {(product.brand || product.category) && <p className="text-xs font-bold uppercase tracking-wide text-gray-500"><span className="text-[var(--brand)]">{product.brand}</span>{product.brand && product.category ? ' · ' : ''}{product.category}</p>}
           <div className="mt-1 flex items-start justify-between gap-3">
-            <h3 className="text-xl font-extrabold text-gray-900">{product.name}</h3>
+            <h1 className="text-2xl font-extrabold text-gray-900 md:text-3xl">{product.name}</h1>
             <div className="flex shrink-0 items-center gap-2">
               <p className="text-xl font-extrabold text-gray-900">{euros(product.priceCents)}</p>
               <button
@@ -278,8 +282,8 @@ function ProductModal({ product, canCheckout, isFavorite, onToggleFavorite, onAd
             </div>
           )}
           {soldOut && <p className="mt-5 rounded-xl bg-gray-100 py-3 text-center font-semibold text-gray-500">Produit épuisé</p>}
+          {!canCheckout && !soldOut && <p className="mt-5 rounded-xl bg-gray-50 px-4 py-3 text-center text-sm text-gray-500">La commande en ligne sera bientôt disponible.</p>}
         </div>
-      </div>
-    </div>
+    </article>
   );
 }

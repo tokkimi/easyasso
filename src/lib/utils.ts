@@ -1,4 +1,5 @@
 import { customAlphabet } from 'nanoid';
+import { IMPACT_HOST, isImpactHost } from './impact';
 
 // URL-safe slug fragments (no ambiguous chars)
 const nano = customAlphabet('23456789abcdefghijkmnpqrstuvwxyz', 8);
@@ -51,6 +52,9 @@ export function appBaseUrl(): string {
 export function siteUrlFor(subdomain: string, customDomain?: string | null, domainVerified = false): string {
   // Never send an owner or visitor to an unverified domain: DNS and SSL may
   // still point elsewhere. The permanent EasyAsso address remains available.
+  // IMPACT always lives on its own domain, whatever is stored in the DB
+  // (older seeds stored the legacy Vercel alias, which serves a stale build).
+  if (isImpactHost(customDomain)) return `https://${IMPACT_HOST}`;
   if (customDomain && domainVerified) return `https://${customDomain}`;
   const root = rootDomain();
   const protocol = root.includes('localhost') ? 'http' : 'https';

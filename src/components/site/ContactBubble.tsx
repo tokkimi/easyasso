@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Phone, MessageSquare, Mail, MessagesSquare, CalendarDays, X, Send, CheckCircle2 } from 'lucide-react';
 import { useLanguage } from '@/components/language-provider';
 
@@ -36,6 +36,44 @@ export function ContactBubble({ name, slogan, sloganEn, logoUrl, email, phone, o
   const [view, setView] = useState<'menu' | 'message'>('menu');
   const [form, setForm] = useState({ name: '', email: '', message: '', website: '' });
   const [state, setState] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
+  // The bubble can be dragged anywhere on the screen (finger or mouse) so it
+  // never hides content; its position is remembered on this device.
+  const boxRef = useRef<HTMLDivElement>(null);
+  const [offset, setOffset] = useState({ x: 0, y: 0 });
+  const drag = useRef<{ startX: number; startY: number; baseX: number; baseY: number; minX: number; maxX: number; minY: number; maxY: number; moved: boolean } | null>(null);
+  const justDragged = useRef(false);
+  const storageKey = `easyasso-bubble-${organizationId || 'site'}`;
+  useEffect(() => {
+    try { const saved = JSON.parse(localStorage.getItem(storageKey) || 'null'); if (saved && typeof saved.x === 'number' && typeof saved.y === 'number') setOffset(saved); } catch {}
+  }, [storageKey]);
+  function onPointerDown(e: React.PointerEvent) {
+    const rect = boxRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    drag.current = {
+      startX: e.clientX, startY: e.clientY, baseX: offset.x, baseY: offset.y,
+      minX: offset.x - rect.left + 8, maxX: offset.x + (window.innerWidth - rect.right) - 8,
+      minY: offset.y - rect.top + 8, maxY: offset.y + (window.innerHeight - rect.bottom) - 8,
+      moved: false,
+    };
+  }
+  function onPointerMove(e: React.PointerEvent) {
+    const d = drag.current;
+    if (!d) return;
+    const dx = e.clientX - d.startX;
+    const dy = e.clientY - d.startY;
+    if (!d.moved && Math.hypot(dx, dy) < 6) return;
+    if (!d.moved) { d.moved = true; (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId); }
+    setOffset({ x: Math.min(d.maxX, Math.max(d.minX, d.baseX + dx)), y: Math.min(d.maxY, Math.max(d.minY, d.baseY + dy)) });
+  }
+  function onPointerUp() {
+    const d = drag.current;
+    drag.current = null;
+    if (d?.moved) {
+      justDragged.current = true;
+      setTimeout(() => { justDragged.current = false; }, 0);
+      setOffset((o) => { try { localStorage.setItem(storageKey, JSON.stringify(o)); } catch {} return o; });
+    }
+  }
   const set = (k: string, v: string) => setForm((c) => ({ ...c, [k]: v }));
 
   const initial = (name || 'A').trim().charAt(0).toUpperCase();
@@ -87,7 +125,9 @@ export function ContactBubble({ name, slogan, sloganEn, logoUrl, email, phone, o
   );
 
   return (
-    <div className={`fixed bottom-4 z-[60] w-[min(92vw,20rem)] font-sans ${position === 'left' ? 'left-4' : 'right-4'}`} style={{ color: textColor }} data-no-translate>
+    <div ref={boxRef} className={`easyasso-contact-bubble fixed bottom-4 z-[100] w-[min(92vw,20rem)] font-sans ${position === 'left' ? 'left-4' : 'right-4'}`} style={{ color: textColor, transform: `translate(${offset.x}px, ${offset.y}px)`, touchAction: 'none' }} data-no-translate>
+      {/* Hidden while the cart or another full-screen panel is open. */}
+      <style>{`body[data-overlay-open] .easyasso-contact-bubble { display: none !important; }`}</style>
       {open && (
         <div className={`mb-3 overflow-hidden rounded-3xl border border-white/15 text-white shadow-2xl backdrop-blur-2xl ${branded ? 'bg-neutral-900/50' : ''}`} style={branded ? undefined : { backgroundColor: `${backgroundColor}d9`, color: textColor }}>
           <div className="flex items-start justify-between px-4 pb-3 pt-4">
@@ -133,7 +173,7 @@ export function ContactBubble({ name, slogan, sloganEn, logoUrl, email, phone, o
       )}
 
       {!open && (
-        <button type="button" onClick={() => setOpen(true)} className={`flex w-full items-center gap-3 rounded-3xl border border-white/15 px-4 py-2.5 text-white shadow-2xl backdrop-blur-2xl transition ${branded ? 'bg-neutral-900/50 hover:bg-neutral-900/60' : 'hover:brightness-110'}`} style={branded ? undefined : { backgroundColor: `${backgroundColor}d9`, color: textColor }}>
+        <button type="button" onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={onPointerUp} onPointerCancel={onPointerUp} onDragStart={(e) => e.preventDefault()} onClick={() => { if (!justDragged.current) setOpen(true); }} title={en ? 'Drag to move' : 'Glisser pour déplacer'} className={`flex w-full cursor-grab select-none active:cursor-grabbing [&_img]:pointer-events-none items-center gap-3 rounded-3xl border border-white/15 px-4 py-2.5 text-white shadow-2xl backdrop-blur-2xl transition ${branded ? 'bg-neutral-900/50 hover:bg-neutral-900/60' : 'hover:brightness-110'}`} style={branded ? undefined : { backgroundColor: `${backgroundColor}d9`, color: textColor }}>
           {Identity}
         </button>
       )}

@@ -114,6 +114,11 @@ export function ShopCatalog({
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
   const toBody = (node: React.ReactNode) => (mounted ? createPortal(node, document.body) : null);
+  useEffect(() => {
+    if (!cartOpen) return;
+    document.body.setAttribute('data-overlay-open', 'cart');
+    return () => document.body.removeAttribute('data-overlay-open');
+  }, [cartOpen]);
 
   return (
     <div className="mx-auto w-full max-w-6xl px-4">

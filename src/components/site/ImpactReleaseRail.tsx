@@ -39,6 +39,26 @@ function platformOf(rawUrl = '', declared = '') {
 const ORDER = ['spotify', 'applemusic', 'deezer', 'youtube', 'soundcloud', 'beatport', 'bandcamp', 'hardstyle', 'shotgun', 'link'];
 const titleKey = (t: string) => t.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '');
 
+// Every official IMPACT link per release, so a release shows all of its
+// platforms even when a block only lists some of them. Links added in the
+// editor (same title) are merged with these.
+const IMPACT_CATALOG: { title: string; url: string }[] = [
+  { title: 'MAYDAY', url: 'https://open.spotify.com/track/593KEnbri737YiL6rqQ6rh' },
+  { title: 'MAYDAY', url: 'https://music.apple.com/fr/song/mayday/1860372401' },
+  { title: 'MAYDAY', url: 'https://www.youtube.com/watch?v=XDoDJk4KxT0' },
+  { title: 'MAYDAY', url: 'https://soundcloud.com/impactdj_raw/mayday' },
+  { title: 'YOU MADE IT', url: 'https://open.spotify.com/track/00Wuied8VMJHv1FQEvQgTe' },
+  { title: 'YOU MADE IT', url: 'https://music.apple.com/fr/song/you-made-it/1879401619' },
+  { title: 'YOU MADE IT', url: 'https://soundcloud.com/impactdj_raw/you-made-it' },
+  { title: 'LOCK THE DOOR', url: 'https://open.spotify.com/track/2yMBrQS2RaEuaqeoMg79Kb' },
+  { title: 'LOCK THE DOOR', url: 'https://music.apple.com/fr/song/lock-the-door/1840803496' },
+  { title: 'LOCK THE DOOR', url: 'https://www.youtube.com/watch?v=wgzh2zgDcNc' },
+  { title: 'LOCK THE DOOR', url: 'https://soundcloud.com/impactdj_raw/lock-the-door-vf-2' },
+  { title: 'POWER OF DESTRUCTION', url: 'https://open.spotify.com/track/02UzYVHuaclC9y4HMo4qtN' },
+  { title: 'POWER OF DESTRUCTION', url: 'https://www.youtube.com/watch?v=LfrPnKEjGKY' },
+  { title: 'POWER OF DESTRUCTION', url: 'https://soundcloud.com/impactdj_raw/power-of-destruction' },
+];
+
 // The editor stores one entry per platform link. Entries sharing a title are
 // one release: one card on the site, and the platform choice when clicked.
 function groupReleases(content: any): Release[] {
@@ -61,6 +81,12 @@ function groupReleases(content: any): Release[] {
     if (!release.links.some((l) => l.url === url)) release.links.push({ platform, url });
     map.set(key, release);
   });
+  for (const entry of IMPACT_CATALOG) {
+    const release = map.get(titleKey(entry.title));
+    if (release && !release.links.some((l) => l.url === entry.url || l.platform === platformOf(entry.url))) {
+      release.links.push({ platform: platformOf(entry.url), url: entry.url });
+    }
+  }
   const releases = Array.from(map.values());
   releases.forEach((r) => r.links.sort((a, b) => ORDER.indexOf(a.platform) - ORDER.indexOf(b.platform)));
   if (content?.sort !== 'manual') {
@@ -96,8 +122,9 @@ export function ImpactReleaseRail({ content }: { content: any }) {
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(null); };
     const overflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
+    document.body.setAttribute('data-overlay-open', 'release');
     window.addEventListener('keydown', onKey);
-    return () => { document.body.style.overflow = overflow; window.removeEventListener('keydown', onKey); };
+    return () => { document.body.style.overflow = overflow; document.body.removeAttribute('data-overlay-open'); window.removeEventListener('keydown', onKey); };
   }, [open]);
 
   return (
